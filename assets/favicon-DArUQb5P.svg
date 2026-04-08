@@ -1,0 +1,9 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="g1" x1="20.5" y1="16" x2="100" y2="200" gradientUnits="userSpaceOnUse">
+<stop stop-color="#ACAAFF" />
+<stop offset="1" stop-color="#C0E8FF" />
+</linearGradient>
+</defs>
+<path d="M156.06 143.94L112.13 100l43.93-43.94L200 100l-43.94 43.94zM43.94 143.94L0 100l43.94-43.94L87.87 100l-43.93 43.94zM100 200l-43.94-43.94L100 112.13l43.94 43.93L100 200zM100 87.87L56.06 43.94 100 0l43.94 43.94-43.94 43.93z" fill="url(#g1)"/>
+</svg>
