@@ -1,0 +1,574 @@
+<template>
+    <div class="panel">
+        <div class="panel-header">
+            <div class="header-title">
+                <input
+                    v-if="isEditingProjectName"
+                    ref="projectNameInputRef"
+                    v-model="projectNameDraft"
+                    class="project-name-input"
+                    type="text"
+                    placeholder="未命名工程"
+                    @keydown.enter.prevent="submitProjectName"
+                    @keydown.esc.prevent="resetProjectNameDraft"
+                    @blur="submitProjectName"
+                />
+                <template v-else>
+                    <h3
+                        class="project-name-display"
+                        title="双击重命名工程"
+                        @dblclick="startProjectNameEdit"
+                    >
+                        {{ logStore.projectName || '未命名工程' }}
+                    </h3>
+                </template>
+            </div>
+        </div>
+
+        <div class="chunk-list-scroll">
+            <div
+                v-for="doc in logStore.documents"
+                :key="doc.docId"
+                class="document-group"
+            >
+                <div
+                    class="doc-header"
+                    @click="handleToggleExpand(doc)"
+                    @dragover="
+                        handleDocHeaderDragOver(
+                            $event,
+                            doc.docId,
+                            doc.chunks.length,
+                        )
+                    "
+                    @drop="
+                        handleChunkDrop($event, doc.docId, doc.chunks.length)
+                    "
+                >
+                    <span
+                        class="expand-icon"
+                        :class="{ 'is-expanded': doc.isExpanded }"
+                    >
+                        <ChevronRight class="ui-icon" />
+                    </span>
+
+                    <input
+                        v-if="editingDocId === doc.docId"
+                        ref="renameInputRef"
+                        v-model="renameDraft"
+                        class="rename-input doc-name"
+                        type="text"
+                        @click.stop
+                        @dblclick.stop
+                        @keydown.enter.prevent="submitDocumentRename(doc)"
+                        @keydown.esc.prevent="cancelRename"
+                        @blur="submitDocumentRename(doc)"
+                    />
+                    <span
+                        v-else
+                        class="doc-name"
+                        @dblclick.stop="startDocumentRename(doc)"
+                    >
+                        {{ doc.docName }}
+                    </span>
+                    <span class="doc-count">({{ doc.chunks.length }})</span>
+
+                    <div class="doc-actions">
+                        <button
+                            class="action-button action-button-warning icon-interactive is-warning"
+                            title="移除文档"
+                            @click.stop="handleRemoveDoc(doc.docId)"
+                        >
+                            <Trash2 class="ui-icon" />
+                        </button>
+                    </div>
+                </div>
+
+                <div v-if="doc.isExpanded" class="chunk-items-container">
+                    <div
+                        v-if="
+                            dropIndicator.docId === doc.docId &&
+                            dropIndicator.index === 0 &&
+                            chunkDrag.isDragging.value
+                        "
+                        class="drop-indicator"
+                    ></div>
+                    <div
+                        class="drop-zone"
+                        @dragover="handleChunkDragOver($event, doc.docId, 0)"
+                        @drop="handleChunkDrop($event, doc.docId, 0)"
+                    ></div>
+
+                    <div
+                        v-for="(chunk, chunkIndex) in doc.chunks"
+                        :key="chunk.chunkId"
+                        class="chunk-slot"
+                    >
+                        <div
+                            class="chunk-item"
+                            :class="{
+                                'is-active':
+                                    uiStore.activeChunkId === chunk.chunkId,
+                            }"
+                            draggable="true"
+                            @click="uiStore.setActiveChunk(chunk.chunkId)"
+                            @dragstart="
+                                handleChunkDragStart($event, chunk.chunkId)
+                            "
+                            @dragover="
+                                handleChunkDragOver(
+                                    $event,
+                                    doc.docId,
+                                    chunkIndex + 1,
+                                )
+                            "
+                            @drop="
+                                handleChunkDrop(
+                                    $event,
+                                    doc.docId,
+                                    chunkIndex + 1,
+                                )
+                            "
+                            @dragend="handleChunkDragEnd"
+                        >
+                            <input
+                                v-if="editingChunkId === chunk.chunkId"
+                                ref="renameInputRef"
+                                v-model="renameDraft"
+                                class="rename-input chunk-name"
+                                type="text"
+                                @click.stop
+                                @dblclick.stop
+                                @keydown.enter.prevent="
+                                    submitChunkRename(chunk)
+                                "
+                                @keydown.esc.prevent="cancelRename"
+                                @blur="submitChunkRename(chunk)"
+                            />
+                            <span
+                                v-else
+                                class="chunk-name"
+                                @dblclick.stop="startChunkRename(chunk)"
+                            >
+                                {{ chunk.chunkName || '未命名分块' }}
+                            </span>
+
+                            <div class="chunk-actions">
+                                <button
+                                    v-if="chunkIndex < doc.chunks.length - 1"
+                                    class="action-button"
+                                    title="向下合并"
+                                    @click.stop="
+                                        handleMerge(
+                                            chunk.chunkId,
+                                            doc.chunks[chunkIndex + 1].chunkId,
+                                        )
+                                    "
+                                >
+                                    <ChevronsDown class="ui-icon" />
+                                </button>
+                                <button
+                                    class="action-button action-button-warning icon-interactive is-warning"
+                                    title="删除分块"
+                                    @click.stop="handleDelete(chunk.chunkId)"
+                                >
+                                    <Trash2 class="ui-icon" />
+                                </button>
+                            </div>
+                        </div>
+
+                        <div
+                            v-if="
+                                dropIndicator.docId === doc.docId &&
+                                dropIndicator.index === chunkIndex + 1 &&
+                                chunkDrag.isDragging.value
+                            "
+                            class="drop-indicator"
+                        ></div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="logStore.documents.length === 0" class="empty-hint">
+                暂无数据，点击右上角或拖入文件进行导入
+            </div>
+        </div>
+    </div>
+</template>
+
+<script setup lang="ts">
+import { ChevronRight, ChevronsDown, Trash2 } from '@lucide/vue';
+import { nextTick, reactive, ref, watch } from 'vue';
+import { useChunkDragDrop } from '@/composables/useDragDrop';
+import { useChunkEditorStore } from '@/stores/editorStore/chunkStore';
+import { useLogStore } from '@/stores/logStore';
+import { useStyleStore } from '@/stores/styleStore';
+import { useUiStore } from '@/stores/uiStore';
+import type { Chunk, LogDocument } from '@/types/log';
+
+const logStore = useLogStore();
+const styleStore = useStyleStore();
+const uiStore = useUiStore();
+const chunkEditorStore = useChunkEditorStore();
+const chunkDrag = useChunkDragDrop();
+
+const editingDocId = ref('');
+const editingChunkId = ref('');
+const renameDraft = ref('');
+const renameInputRef = ref<HTMLInputElement | null>(null);
+const projectNameDraft = ref('');
+const isEditingProjectName = ref(false);
+const projectNameInputRef = ref<HTMLInputElement | null>(null);
+
+const dropIndicator = reactive<{ docId: string; index: number | null }>({
+    docId: '',
+    index: null,
+});
+
+watch(
+    () => logStore.projectName,
+    (nextProjectName) => {
+        projectNameDraft.value = nextProjectName;
+    },
+    { immediate: true },
+);
+
+function startProjectNameEdit() {
+    projectNameDraft.value = logStore.projectName;
+    isEditingProjectName.value = true;
+    nextTick(() => {
+        projectNameInputRef.value?.focus();
+        projectNameInputRef.value?.select();
+    });
+}
+
+function submitProjectName() {
+    logStore.setProjectName(projectNameDraft.value.trim());
+    projectNameDraft.value = logStore.projectName;
+    isEditingProjectName.value = false;
+}
+
+function resetProjectNameDraft() {
+    projectNameDraft.value = logStore.projectName;
+    isEditingProjectName.value = false;
+}
+
+function handleToggleExpand(doc: LogDocument) {
+    logStore.updateDocument(doc.docId, { isExpanded: !doc.isExpanded });
+}
+
+function handleRemoveDoc(docId: string) {
+    if (confirm('确定要删除这个文档及其所有消息吗？这不会删除原始文件。')) {
+        logStore.removeDocument(docId);
+        styleStore.syncSystemRulesFromMessages(logStore.allMessages);
+    }
+}
+
+function focusRenameInput() {
+    nextTick(() => {
+        renameInputRef.value?.focus();
+        renameInputRef.value?.select();
+    });
+}
+
+function cancelRename() {
+    editingDocId.value = '';
+    editingChunkId.value = '';
+    renameDraft.value = '';
+}
+
+function startDocumentRename(doc: LogDocument) {
+    editingChunkId.value = '';
+    editingDocId.value = doc.docId;
+    renameDraft.value = doc.docName;
+    focusRenameInput();
+}
+
+function startChunkRename(chunk: Chunk) {
+    editingDocId.value = '';
+    editingChunkId.value = chunk.chunkId;
+    renameDraft.value = chunk.chunkName;
+    focusRenameInput();
+}
+
+function submitDocumentRename(doc: LogDocument) {
+    if (editingDocId.value !== doc.docId) return;
+
+    const nextName = renameDraft.value.trim();
+    if (!nextName) {
+        cancelRename();
+        return;
+    }
+
+    chunkEditorStore.renameDocument(doc.docId, nextName);
+    cancelRename();
+}
+
+function submitChunkRename(chunk: Chunk) {
+    if (editingChunkId.value !== chunk.chunkId) return;
+
+    const nextName = renameDraft.value.trim();
+    if (!nextName) {
+        cancelRename();
+        return;
+    }
+
+    chunkEditorStore.updateChunk(chunk.chunkId, { chunkName: nextName });
+    cancelRename();
+}
+
+function handleMerge(currentChunkId: string, nextChunkId: string) {
+    chunkEditorStore.mergeChunks([currentChunkId, nextChunkId]);
+}
+
+function handleDelete(chunkId: string) {
+    if (confirm('确定要删除这个场景及其所有消息吗？')) {
+        chunkEditorStore.deleteChunk(chunkId);
+        if (uiStore.activeChunkId === chunkId) {
+            uiStore.setActiveChunk('');
+        }
+    }
+}
+
+function setDropIndicator(docId: string, index: number) {
+    dropIndicator.docId = docId;
+    dropIndicator.index = index;
+}
+
+function clearDropIndicator() {
+    dropIndicator.docId = '';
+    dropIndicator.index = null;
+}
+
+function handleChunkDragStart(event: DragEvent, chunkId: string) {
+    clearDropIndicator();
+    chunkDrag.onDragStart(event, chunkId);
+}
+
+function handleChunkDragOver(event: DragEvent, docId: string, index: number) {
+    setDropIndicator(docId, index);
+    chunkDrag.onDragOver(event);
+}
+
+function handleDocHeaderDragOver(
+    event: DragEvent,
+    docId: string,
+    index: number,
+) {
+    setDropIndicator(docId, index);
+    chunkDrag.onDragOver(event);
+}
+
+function handleChunkDrop(event: DragEvent, docId: string, index: number) {
+    clearDropIndicator();
+    chunkDrag.onDrop(event, docId, index);
+}
+
+function handleChunkDragEnd() {
+    clearDropIndicator();
+    chunkDrag.onDragEnd();
+}
+</script>
+
+<style scoped>
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-light);
+    flex-shrink: 0;
+    height: 42px;
+    /* 防止输入框和文字切换时抖动 */
+    box-sizing: border-box;
+}
+
+.project-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.project-label {
+    flex-shrink: 0;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.project-name-input {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 6px 8px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    outline: none;
+}
+
+.project-name-input:focus {
+    border-color: var(--active-accent);
+}
+
+.list-panel-header {
+    border-bottom: 1px solid var(--border-light);
+}
+
+.chunk-list-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 4px 0;
+}
+
+.document-group {
+    margin-bottom: 2px;
+}
+
+.doc-header {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: var(--bg-secondary);
+    cursor: pointer;
+    user-select: none;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.doc-header:hover {
+    background-color: var(--hover-bg);
+}
+
+.doc-name {
+    flex: 1;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.doc-count {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: 4px;
+}
+
+.chunk-items-container {
+    background-color: var(--bg-primary);
+}
+
+.chunk-item {
+    display: flex;
+    align-items: center;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    padding-left: 26px;
+    padding-right: 12px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.chunk-slot {
+    position: relative;
+}
+
+.chunk-item:hover {
+    background-color: var(--hover-bg);
+}
+
+.chunk-item.is-active {
+    background-color: var(--selection-bg);
+    outline: 1px solid var(--active-accent);
+    outline-offset: -1px;
+    color: var(--active-accent);
+}
+
+.chunk-name {
+    flex: 1;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-left: 4px;
+}
+
+.rename-input {
+    width: 100px;
+    padding: 4px;
+    background: var(--bg-primary);
+    border: 1px solid var(--active-accent);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    outline: none;
+}
+
+.drop-zone {
+    height: 4px;
+    transition: background-color 0.2s;
+}
+
+.drop-zone:hover {
+    background-color: var(--active-accent);
+}
+
+.drop-indicator {
+    height: 0;
+    border-top: 2px solid var(--active-accent);
+    margin: 2px 0 2px 0;
+    position: relative;
+    z-index: 1;
+}
+
+.chunk-actions,
+.doc-actions {
+    display: none;
+    align-items: center;
+    gap: 4px;
+}
+
+.chunk-item:hover .chunk-actions,
+.doc-header:hover .doc-actions {
+    display: flex;
+}
+
+.action-button {
+    background: none;
+    border: none;
+    padding: 0px 2px;
+    cursor: pointer;
+    border-radius: 4px;
+    color: var(--icon-color);
+    opacity: 0.75;
+}
+
+.action-button:hover {
+    background-color: var(--border-light);
+    opacity: 1;
+}
+
+.action-button :deep(.ui-icon) {
+    width: 14px;
+    height: 14px;
+}
+
+.action-button-warning:hover,
+.action-button-warning:focus-visible {
+    color: var(--color-warning);
+}
+
+.empty-hint {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+</style>
