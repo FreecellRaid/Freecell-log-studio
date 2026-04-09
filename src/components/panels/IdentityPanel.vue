@@ -17,11 +17,20 @@
         <div class="panel-block-list">
             <div class="list-header" :style="gridStyle">
                 <span class="header-cell">名称/账号</span>
-                <div class="col-resize-handle" @mousedown="startColResize(0, $event)" />
+                <div
+                    class="col-resize-handle"
+                    @mousedown="startColResize(0, $event)"
+                />
                 <span class="header-cell">发言</span>
-                <div class="col-resize-handle" @mousedown="startColResize(1, $event)" />
+                <div
+                    class="col-resize-handle"
+                    @mousedown="startColResize(1, $event)"
+                />
                 <span class="header-cell">身份</span>
-                <div class="col-resize-handle" @mousedown="startColResize(2, $event)" />
+                <div
+                    class="col-resize-handle"
+                    @mousedown="startColResize(2, $event)"
+                />
                 <span class="header-cell">染色</span>
             </div>
 
@@ -284,7 +293,9 @@ function measureText(text: string, font: string): number {
 }
 
 /** 根据当前数据计算各列理想宽度 */
-function calcIdealColWidths(items: IdentityListItem[]): [number, number, number, number] {
+function calcIdealColWidths(
+    items: IdentityListItem[],
+): [number, number, number, number] {
     if (items.length === 0) {
         return [80, 40, MIN_ROLE_WIDTH, COLOR_COL_WIDTH];
     }
@@ -300,7 +311,8 @@ function calcIdealColWidths(items: IdentityListItem[]): [number, number, number,
     // 发言列：最大数字宽度 + badge padding
     const countFont = '10px sans-serif';
     const maxCountW = items.reduce(
-        (max, item) => Math.max(max, measureText(String(item.msgCount), countFont)),
+        (max, item) =>
+            Math.max(max, measureText(String(item.msgCount), countFont)),
         0,
     );
     const countCol = Math.max(MIN_COL_WIDTH, maxCountW + 16); // badge padding 2×6 + 余量
@@ -329,13 +341,26 @@ watch(
             colWidths[3] = colorW;
             colWidths[0] = available - countW - roleW - colorW;
         } else {
-            // 空间不够：推宽侧边栏来适配
-            colWidths[0] = nameW;
+            // 空间不够：优先保持当前用户设定的侧边栏宽度
             colWidths[1] = countW;
             colWidths[2] = roleW;
             colWidths[3] = colorW;
-            const needed = idealTotal + GRID_OVERHEAD;
-            uiStore.leftPanelWidth = Math.min(PANEL_MAX_WIDTH, needed);
+            const remainingForName = available - (countW + roleW + colorW);
+
+            if (remainingForName >= MIN_COL_WIDTH) {
+                // 只要还能满足最小宽度，就直接在内部压缩名称列，不推侧边栏
+                colWidths[0] = remainingForName;
+            } else {
+                colWidths[0] = MIN_COL_WIDTH;
+                const minimalNeeded =
+                    MIN_COL_WIDTH + countW + roleW + colorW + GRID_OVERHEAD;
+                if (uiStore.leftPanelWidth < minimalNeeded) {
+                    uiStore.leftPanelWidth = Math.min(
+                        PANEL_MAX_WIDTH,
+                        minimalNeeded,
+                    );
+                }
+            }
         }
     },
     { immediate: true },
