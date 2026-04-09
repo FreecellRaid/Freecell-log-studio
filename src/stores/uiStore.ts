@@ -1,6 +1,10 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
+/** 侧边栏面板布局常量 */
+export const PANEL_MIN_WIDTH = 150;
+export const PANEL_MAX_WIDTH = 600;
+
 function uiStore() {
     // 深色模式
     const isDarkMode = ref(false);
@@ -45,6 +49,7 @@ function uiStore() {
     const activeChunkId = ref<string | null>(null);
     const activeLeftPanel = ref('chunks');
     const leftVisible = ref(true);
+    const leftPanelWidth = ref(232);
     const rightVisible = ref(false);
     const exportPreviewVisible = ref(false);
 
@@ -78,7 +83,7 @@ function uiStore() {
     function toggleExportPreview() {
         exportPreviewVisible.value = !exportPreviewVisible.value;
     }
-    
+
     const exportPreviewAlwaysWhite = ref(false);
     function toggleExportPreviewAlwaysWhite() {
         exportPreviewAlwaysWhite.value = !exportPreviewAlwaysWhite.value;
@@ -87,6 +92,7 @@ function uiStore() {
     return {
         activeLeftPanel,
         leftVisible,
+        leftPanelWidth,
         setLeftPanel,
         toggleLeftSidebar,
 

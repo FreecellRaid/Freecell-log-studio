@@ -165,7 +165,11 @@
             </div>
         </nav>
 
-        <aside v-if="uiStore.leftVisible" class="side-panel">
+        <aside
+            v-if="uiStore.leftVisible"
+            class="side-panel"
+            :style="{ width: uiStore.leftPanelWidth + 'px' }"
+        >
             <div class="panel-content">
                 <div
                     v-if="uiStore.activeLeftPanel === 'chunks'"
@@ -199,6 +203,12 @@
                 </div>
             </div>
         </aside>
+
+        <div
+            v-if="uiStore.leftVisible"
+            class="resize-handle"
+            @mousedown="startResize"
+        />
     </div>
 </template>
 
@@ -215,7 +225,7 @@ import {
 } from '@lucide/vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useStyleStore } from '@/stores/styleStore';
-import { useUiStore } from '@/stores/uiStore';
+import { useUiStore, PANEL_MIN_WIDTH, PANEL_MAX_WIDTH } from '@/stores/uiStore';
 import ChunkListPanel from '@/components/panels/ChunkListPanel.vue';
 import IdentityPanel from '@/components/panels/IdentityPanel.vue';
 import RuleEditorPanel from '@/components/panels/RuleEditorPanel.vue';
@@ -228,6 +238,34 @@ const showSettings = ref(false);
 const closeSettings = () => {
     showSettings.value = false;
 };
+
+function startResize(e: MouseEvent) {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = uiStore.leftPanelWidth;
+
+    function onMouseMove(ev: MouseEvent) {
+        const delta = ev.clientX - startX;
+        const newWidth = Math.min(
+            PANEL_MAX_WIDTH,
+            Math.max(PANEL_MIN_WIDTH, startWidth + delta),
+        );
+        uiStore.leftPanelWidth = newWidth;
+    }
+
+    function onMouseUp() {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+    }
+
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+}
+
 onMounted(() => {
     window.addEventListener('click', closeSettings);
 });
@@ -255,9 +293,8 @@ watch(
 .sidebar-left-container {
     display: flex;
     height: 100%;
-    width: 280px;
-    transition: width 0.2s ease;
     background-color: var(--bg-sidebar);
+    position: relative;
 }
 
 .sidebar-left-container.is-collapsed {
@@ -317,12 +354,27 @@ watch(
 
 /* 内容面板样式 */
 .side-panel {
-    width: 232px;
     background-color: var(--bg-sidebar);
     display: flex;
     flex-direction: column;
     min-width: 0;
     min-height: 0;
+    flex-shrink: 0;
+}
+
+.resize-handle {
+    position: absolute;
+    top: 0;
+    right: -2px;
+    width: 4px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 10;
+}
+
+.resize-handle:hover,
+.resize-handle:active {
+    background-color: var(--active-accent);
 }
 
 .panel-content {
