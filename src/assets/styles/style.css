@@ -17,6 +17,7 @@
     /* 交互态 */
     --hover-bg: #e8e8e8;
     --active-accent: #007acc;
+    --inactive-accent: #c9cbcc;
     --selection-bg: #e6f7ff;
     --color-warning: #ff4d4f;
 
@@ -40,6 +41,7 @@
     --border-color: #444444;
     --hover-bg: #37373d;
     --active-accent: #2fa5f4;
+    --active-accent: #575859;
     --selection-bg: #264f78;
     --color-warning: #ff4d4f;
 
@@ -58,6 +60,212 @@ body,
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: var(--text-primary);
     background-color: var(--bg-workspace);
+}
+
+/* 中间三栏容器 */
+.middle-section {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+/* 通用icon样式 */
+.ui-icon {
+    width: 1em;
+    height: 1em;
+    display: inline-block;
+    flex-shrink: 0;
+    color: currentColor;
+    stroke-width: 1.9;
+}
+
+.icon-interactive {
+    color: var(--icon-color);
+    transition:
+        color 0.15s ease,
+        opacity 0.15s ease,
+        background-color 0.15s ease;
+}
+
+.icon-interactive:hover,
+.icon-interactive:focus-visible,
+.icon-interactive.is-active {
+    color: var(--icon-color-strong);
+}
+
+.icon-interactive.is-warning:hover,
+.icon-interactive.is-warning:focus-visible,
+.icon-interactive.is-warning.is-active {
+    color: var(--color-warning);
+}
+
+/* layers样式 */
+.top-bar {
+    height: 40px;
+    display: flex;
+    color: var(--text-primary);
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 16px;
+    background-color: var(--bg-topbar);
+    border-bottom: 1px solid var(--border-color);
+    z-index: 10;
+}
+
+/* 侧边栏通用样式 */
+.sidebar {
+    background-color: var(--bg-sidebar);
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-left {
+    border-right: 1px solid var(--border-color);
+}
+
+.sidebar-right {
+    border-left: 1px solid var(--border-color);
+    width: 280px;
+}
+
+.workspace {
+    flex: 1;
+    background-color: var(--bg-workspace);
+    overflow-y: auto;
+    position: relative;
+}
+.status-bar {
+    height: 16px;
+    background-color: var(--bg-statusbar);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    font-size: 12px;
+}
+
+/* 通用Panel样式 */
+.panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    color: var(--text-primary);
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+}
+
+.header-title {
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.header-title h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* 通用面板顶栏按钮 */
+.header-action-button {
+    background: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--icon-color);
+}
+
+.header-action-button:hover {
+    background: var(--hover-bg);
+}
+
+.header-action-button .ui-icon {
+    width: 16px;
+    height: 16px;
+}
+
+/* 通用Panel占位符 */
+.panel-empty-hint {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+/* 通用Panel折叠块 */
+.panel-block-list {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+}
+
+.expand-icon {
+    margin-right: 8px;
+    width: 12px;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease;
+}
+
+.expand-icon.is-expanded {
+    transform: rotate(90deg);
+}
+
+/* 通用view样式 */
+.view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: var(--bg-workspace);
+}
+
+.view-header {
+    height: 40px;
+    min-height: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-topbar);
+    z-index: 2;
+}
+
+.view-title {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.view-title h2 {
+    font-size: 16px;
+    margin: 0;
+    color: var(--text-muted);
+}
+
+.view-title .icon-view-title {
+    width: 14px;
+    height: 14px;
+    color: var(--icon-color);
 }
 
 /* 滚动条，不知道为什么无论怎么写就是去不掉这个圆角 */
@@ -102,188 +310,4 @@ body,
     flex-direction: column;
     height: 100vh;
     overflow: hidden;
-}
-
-/* 顶栏 */
-.top-bar {
-    height: 40px;
-    display: flex;
-    color: var(--text-primary);
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 16px;
-    background-color: var(--bg-topbar);
-    border-bottom: 1px solid var(--border-color);
-    z-index: 10;
-}
-
-/* 中间三栏容器 */
-.middle-section {
-    flex: 1;
-    display: flex;
-    overflow: hidden;
-}
-
-/* 侧边栏通用样式 */
-.sidebar {
-    background-color: var(--bg-sidebar);
-    display: flex;
-    flex-direction: column;
-}
-
-.sidebar-left {
-    border-right: 1px solid var(--border-color);
-}
-
-.sidebar-right {
-    border-left: 1px solid var(--border-color);
-    width: 280px;
-}
-
-/* 面板通用样式 */
-.panel {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    min-height: 0;
-    overflow: hidden;
-    color: var(--text-primary);
-}
-
-.panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 12px;
-    border-bottom: 1px solid var(--border-light);
-    flex-shrink: 0;
-}
-
-.header-title {
-    margin-top: 4px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.header-title h3 {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-/* 通用面板顶栏按钮 */
-.header-action-button {
-    background: none;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--icon-color);
-}
-
-.header-action-button:hover {
-    background: var(--hover-bg);
-}
-
-.header-action-button .ui-icon {
-    width: 16px;
-    height: 16px;
-}
-
-/* 通用占位符 */
-.panel-empty-hint {
-    padding: 20px;
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 13px;
-}
-
-/* 通用折叠块 */
-.panel-block-list {
-    flex: 1;
-    min-height: 0;
-    overflow: auto;
-}
-
-.expand-icon {
-    margin-right: 8px;
-    width: 12px;
-    color: var(--text-muted);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.15s ease;
-}
-
-.expand-icon.is-expanded {
-    transform: rotate(90deg);
-}
-
-/* 主工作区 */
-.workspace {
-    flex: 1;
-    background-color: var(--bg-workspace);
-    overflow-y: auto;
-    position: relative;
-}
-
-/* 底栏 */
-.status-bar {
-    height: 16px;
-    background-color: var(--bg-statusbar);
-    color: var(--text-primary);
-    display: flex;
-    align-items: center;
-    padding: 0 10px;
-    font-size: 12px;
-}
-
-.panel-header {
-    padding: 8px 12px;
-    font-size: 11px;
-    font-weight: bold;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    letter-spacing: 1px;
-}
-
-pre {
-    margin: 0;
-    padding: 10px;
-    font-family: 'Consolas', 'Monaco', monospace;
-    font-size: 13px;
-    color: var(--text-primary);
-}
-
-.ui-icon {
-    width: 1em;
-    height: 1em;
-    display: inline-block;
-    flex-shrink: 0;
-    color: currentColor;
-    stroke-width: 1.9;
-}
-
-.icon-interactive {
-    color: var(--icon-color);
-    transition:
-        color 0.15s ease,
-        opacity 0.15s ease,
-        background-color 0.15s ease;
-}
-
-.icon-interactive:hover,
-.icon-interactive:focus-visible,
-.icon-interactive.is-active {
-    color: var(--icon-color-strong);
-}
-
-.icon-interactive.is-warning:hover,
-.icon-interactive.is-warning:focus-visible,
-.icon-interactive.is-warning.is-active {
-    color: var(--color-warning);
 }

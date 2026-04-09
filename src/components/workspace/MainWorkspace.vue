@@ -4,13 +4,12 @@
 
         <template v-else>
             <ExportPreview v-if="uiStore.exportPreviewVisible" />
-            
             <template v-else>
                 <ChunkView
                     v-if="uiStore.activeChunkId"
                     :chunk-id="uiStore.activeChunkId"
                 />
-                <ChunkView v-else :chunk-id="logStore.allChunks[0].chunkId" />
+                <DefaultView v-else />
             </template>
         </template>
     </div>
@@ -23,6 +22,7 @@ import { useUiStore } from '@/stores/uiStore';
 import FileImporter from '@/components/common/FileImporter.vue';
 import ChunkView from './ChunkView.vue';
 import ExportPreview from './ExportPreview.vue';
+import DefaultView from '@/components/workspace/DefaultView.vue';
 
 const logStore = useLogStore();
 const uiStore = useUiStore();
