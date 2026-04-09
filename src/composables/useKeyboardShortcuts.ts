@@ -28,7 +28,7 @@ export function useKeyboardShortcuts(handlers: KeyboardShortcutHandlers = {}) {
         }
 
         // Esc -> 取消选择
-        if ( event.key === 'Esc' || event.key ==='Escape') {
+        if (event.key === 'Esc' || event.key === 'Escape') {
             event.preventDefault();
             handlers.clearSelection?.();
             return;

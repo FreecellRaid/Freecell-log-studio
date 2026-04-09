@@ -6,19 +6,28 @@ import type {
     MessageFilter,
 } from '@/types/log';
 import type { ImportRow } from '@/types/import';
-import { generateId } from "@/utils/id";
+import { generateId } from '@/utils/id';
 import { matchesMessageFilter } from '@/editor/filter';
 
 //----核心数据解析----
-export function transformRowToMessage(row: ImportRow, index: number, importTime: Date): Message {
+export function transformRowToMessage(
+    row: ImportRow,
+    index: number,
+    importTime: Date,
+): Message {
     let name = row.playerName?.trim() || '';
     let account = row.account?.trim() || '';
     let note = row.note?.trim() || '';
 
     // 身份兜底互补
-    if (!name && !account) { name = '未知角色'; account = 'Unknown'; }
-    else if (!name) { name = account; }
-    else if (!account) { account = `${name}_ID`; }
+    if (!name && !account) {
+        name = '未知角色';
+        account = 'Unknown';
+    } else if (!name) {
+        name = account;
+    } else if (!account) {
+        account = `${name}_ID`;
+    }
 
     const content = row.content;
     const firstLine = content.split('\n')[0] || '';
@@ -116,18 +125,21 @@ export function buildLogDocument(
     rows: ImportRow[],
     fileName: string,
     docIndex: number,
-    splitKeyword?: MessageFilter
+    splitKeyword?: MessageFilter,
 ): LogDocument {
     const docId = generateId();
     const importTime = new Date();
-    const messages = rows.map((r, i) => transformRowToMessage(r, i, importTime));
+    const messages = rows.map((r, i) =>
+        transformRowToMessage(r, i, importTime),
+    );
     const chunks = chunkMessages(messages, docId, splitKeyword);
 
     return {
         docId,
         docName: fileName,
-        docIndex, chunks,
-        isExpanded: true
+        docIndex,
+        chunks,
+        isExpanded: true,
     };
 }
 

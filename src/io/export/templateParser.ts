@@ -1,4 +1,4 @@
-import type { ExportRow, ExportFormat } from "@/types/export";
+import type { ExportRow, ExportFormat } from '@/types/export';
 
 type TokenType = 'text' | 'placeholder' | 'newline' | 'tab';
 

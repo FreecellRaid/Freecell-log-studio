@@ -6,7 +6,10 @@ import { useStyleStore } from '@/stores/styleStore';
 import { useUiStore } from '@/stores/uiStore';
 import type { ProjectFile } from '@/types/project';
 import { useFilter } from './useFilter';
-import { buildProjectFile, sanitizeProjectFilename } from '@/io/localStorage/project';
+import {
+    buildProjectFile,
+    sanitizeProjectFilename,
+} from '@/io/localStorage/project';
 import {
     loadStoredProjects,
     saveProjectToLocalStorage,

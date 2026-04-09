@@ -22,7 +22,8 @@ export function dispatchAdapter(text: string): ImportAdapter {
 }
 
 // 标准(以及看起来标准)的导入格式，匹配header行，兼容各种缺字段和各种时间
-const HEADER_REGEX = /^(.*?)\s*(\d{4}[/-]\d{1,2}[/-]\d{1,2}\s+\d{1,2}:\d{1,2}:\d{1,2}|\d{1,2}:\d{1,2}:\d{1,2})\s*$/;
+const HEADER_REGEX =
+    /^(.*?)\s*(\d{4}[/-]\d{1,2}[/-]\d{1,2}\s+\d{1,2}:\d{1,2}:\d{1,2}|\d{1,2}:\d{1,2}:\d{1,2})\s*$/;
 
 const StandardImportAdapter: ImportAdapter = {
     id: 'standard-adapter',
@@ -54,7 +55,9 @@ const StandardImportAdapter: ImportAdapter = {
                 rows.push({
                     playerName,
                     account,
-                    time: currentTimeMatch ? parseLogDate(currentTimeMatch) : undefined,
+                    time: currentTimeMatch
+                        ? parseLogDate(currentTimeMatch)
+                        : undefined,
                     content: cleanContent(rawContent),
                 });
             }
@@ -74,11 +77,14 @@ const StandardImportAdapter: ImportAdapter = {
         flushBuffer();
 
         return rows;
-    }
+    },
 };
 
 // 通用身份提取器：处理 Header 字符串中的 Name 和 Account，解决各类括号嵌套问题。
-function extractIdentity(header: string): { playerName: string; account: string } {
+function extractIdentity(header: string): {
+    playerName: string;
+    account: string;
+} {
     const trimmedHeader = header.trim();
     const matches = Array.from(trimmedHeader.matchAll(/\((.*?)\)/g));
 
@@ -97,7 +103,9 @@ function extractIdentity(header: string): { playerName: string; account: string 
         const lastParen = trimmedHeader.lastIndexOf(')');
         if (firstParen !== -1 && lastParen > firstParen) {
             const name = trimmedHeader.slice(0, firstParen).trim();
-            const account = trimmedHeader.slice(firstParen + 1, lastParen).trim();
+            const account = trimmedHeader
+                .slice(firstParen + 1, lastParen)
+                .trim();
             return { playerName: name, account };
         }
     }
@@ -139,7 +147,9 @@ export const PaintedLogAdapter: ImportAdapter = {
                 rows.push({
                     playerName: currentPlayer,
                     account: '',
-                    time: currentTimeStr ? parseLogDate(currentTimeStr) : undefined,
+                    time: currentTimeStr
+                        ? parseLogDate(currentTimeStr)
+                        : undefined,
                     content: cleanContent(rawContent),
                 });
             }
@@ -168,9 +178,8 @@ export const PaintedLogAdapter: ImportAdapter = {
         flushBuffer();
 
         return rows;
-    }
+    },
 };
-
 
 // Ccfolia 格式
 // <p style="color: metaRow ;">
@@ -178,7 +187,8 @@ export const PaintedLogAdapter: ImportAdapter = {
 // <span> palyerName </span> :
 // <span> content </span>
 // </p>
-const CCFOLIA_ENTRY_REGEX = /<p\s+style="color:\s*([^"]+?)\s*;?">[\s\S]*?<span>\s*(.*?)\s*<\/span>\s*<span>\s*(.*?)\s*<\/span>\s*:[\s\S]*?<span>([\s\S]*?)<\/span>\s*<\/p>/g;
+const CCFOLIA_ENTRY_REGEX =
+    /<p\s+style="color:\s*([^"]+?)\s*;?">[\s\S]*?<span>\s*(.*?)\s*<\/span>\s*<span>\s*(.*?)\s*<\/span>\s*:[\s\S]*?<span>([\s\S]*?)<\/span>\s*<\/p>/g;
 
 export const CcfoliaImportAdapter: ImportAdapter = {
     id: 'ccfolia-adapter',
@@ -223,7 +233,7 @@ export const CcfoliaImportAdapter: ImportAdapter = {
         }
 
         return rows;
-    }
+    },
 };
 
 const ALL_ADAPTERS: ImportAdapter[] = [

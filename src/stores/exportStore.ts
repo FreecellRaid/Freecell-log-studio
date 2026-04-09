@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import type { ExportFormat } from '@/types/export';
-import { generateId } from "@/utils/id";
+import { generateId } from '@/utils/id';
 
 const PRESETS: ExportFormat[] = [
     {
@@ -75,7 +75,7 @@ const PRESETS: ExportFormat[] = [
         chunkSeparator: '',
         messageTemplate: '{{name}}:{{content}}',
         messageSeparator: '\n',
-    }
+    },
 ];
 
 export const useExportStore = defineStore('export', {

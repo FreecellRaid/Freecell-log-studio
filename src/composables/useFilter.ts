@@ -33,7 +33,6 @@ export function useFilter() {
         lastSelectedMessageId.value = null;
     }
 
-    // 别把这块改成箭头函数谢谢
     // 过滤器匹配
     function selectMessagesByFilter(filter: MessageFilter) {
         const docs = logStore.documents;

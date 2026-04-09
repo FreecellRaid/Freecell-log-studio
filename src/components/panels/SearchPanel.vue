@@ -4,17 +4,31 @@
             <div class="header-title">
                 <h3>搜索与筛选</h3>
             </div>
-            <button class="header-action-button icon-interactive" @click="clearAllFilters" title="清空筛选">
+            <button
+                class="header-action-button icon-interactive"
+                @click="clearAllFilters"
+                title="清空筛选"
+            >
                 <RefreshCcw class="ui-icon" />
             </button>
         </div>
 
         <div class="search-controls">
             <div class="search-input-wrapper">
-                <input v-model="quickSearch" type="text" placeholder="搜索消息内容..." class="main-search-input"
-                    @keydown.enter="handleSearch" />
-                <button class="expand-toggle icon-interactive" @click="isAdvancedExpanded = !isAdvancedExpanded" :title="isAdvancedExpanded ? '收起高级筛选' : '展开高级筛选'
-                    ">
+                <input
+                    v-model="quickSearch"
+                    type="text"
+                    placeholder="搜索消息内容..."
+                    class="main-search-input"
+                    @keydown.enter="handleSearch"
+                />
+                <button
+                    class="expand-toggle icon-interactive"
+                    @click="isAdvancedExpanded = !isAdvancedExpanded"
+                    :title="
+                        isAdvancedExpanded ? '收起高级筛选' : '展开高级筛选'
+                    "
+                >
                     <FunnelXIcon v-if="isAdvancedExpanded" class="ui-icon" />
                     <FunnelIcon v-else class="ui-icon" />
                 </button>
@@ -24,15 +38,30 @@
                 <div v-if="isAdvancedExpanded" class="advanced-options">
                     <div class="form-group">
                         <label>角色名</label>
-                        <input class="form-group-input" v-model="filter.playerName" type="text" placeholder="匹配角色..." />
+                        <input
+                            class="form-group-input"
+                            v-model="filter.playerName"
+                            type="text"
+                            placeholder="匹配角色..."
+                        />
                     </div>
                     <div class="form-group">
                         <label>账号</label>
-                        <input class="form-group-input" v-model="filter.account" type="text" placeholder="匹配账号..." />
+                        <input
+                            class="form-group-input"
+                            v-model="filter.account"
+                            type="text"
+                            placeholder="匹配账号..."
+                        />
                     </div>
                     <div class="form-group">
                         <label>备注</label>
-                        <input class="form-group-input" v-model="filter.note" type="text" placeholder="匹配备注..." />
+                        <input
+                            class="form-group-input"
+                            v-model="filter.note"
+                            type="text"
+                            placeholder="匹配备注..."
+                        />
                     </div>
                     <div class="form-row">
                         <div class="form-group flex-1">
@@ -71,11 +100,18 @@
             </transition>
         </div>
 
-        <div class="search-summary" v-if="searchResults.length > 0 || hasActiveFilter">
+        <div
+            class="search-summary"
+            v-if="searchResults.length > 0 || hasActiveFilter"
+        >
             <span class="count-text">
                 找到 {{ searchResults.length }} 条结果
             </span>
-            <button class="btn-primary btn-sm" :disabled="searchResults.length === 0" @click="selectAllMatches">
+            <button
+                class="btn-primary btn-sm"
+                :disabled="searchResults.length === 0"
+                @click="selectAllMatches"
+            >
                 全选
             </button>
         </div>
@@ -86,11 +122,17 @@
                     hasActiveFilter ? '未找到匹配的消息' : '输入关键词开始搜索'
                 }}
             </div>
-            <div v-for="msg in searchResults" :key="msg.messageId" class="result-item" :class="{
-                'is-selected': filterStore.selectedMessageIds.value.has(
-                    msg.messageId,
-                ),
-            }" @click="filterStore.toggleMessageSelection(msg.messageId)">
+            <div
+                v-for="msg in searchResults"
+                :key="msg.messageId"
+                class="result-item"
+                :class="{
+                    'is-selected': filterStore.selectedMessageIds.value.has(
+                        msg.messageId,
+                    ),
+                }"
+                @click="filterStore.toggleMessageSelection(msg.messageId)"
+            >
                 <div class="result-meta">
                     <span class="result-name">
                         {{ msg.playerName || '未知角色' }}
@@ -386,7 +428,6 @@ const truncate = (str: string, len: number) => {
 }
 
 @media (max-width: 768px) {
-
     .search-input-wrapper,
     .form-row {
         flex-direction: column;

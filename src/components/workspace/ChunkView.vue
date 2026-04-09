@@ -1,8 +1,8 @@
 <template>
-    <div class="chunk-view">
-        <header class="chunk-header">
-            <div class="chunk-title">
-                <FileText class="ui-icon icon-placeholder" />
+    <div class="view">
+        <header class="view-header">
+            <div class="view-title">
+                <FileText class="ui-icon icon-view-title" />
                 <h2>{{ currentChunk?.chunkName || '未知场景' }}</h2>
                 <span class="msg-count">({{ messages.length }} 条消息)</span>
             </div>
@@ -69,7 +69,7 @@ import { useMessageDragDrop } from '@/composables/useDragDrop';
 import MessageItem from '@/components/common/MessageItem.vue';
 import { useMessageEditorStore } from '@/stores/editorStore/messageStore';
 import { useChunkEditorStore } from '@/stores/editorStore/chunkStore';
-import { generateId } from "@/utils/id";
+import { generateId } from '@/utils/id';
 import type { Message } from '@/types/log';
 
 const props = defineProps<{ chunkId: string }>();
@@ -222,46 +222,7 @@ function handleActionDelete(msgId: string) {
 </script>
 
 <style scoped>
-.chunk-view {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    background-color: var(--bg-workspace);
-}
-
-/* 顶部工具栏 */
-.chunk-header {
-    height: 40px;
-    min-height: 40px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 20px;
-    border-bottom: 1px solid var(--border-color);
-    background-color: var(--bg-topbar);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-    z-index: 2;
-}
-
-.chunk-title {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-}
-
-.chunk-title h2 {
-    font-size: 16px;
-    margin: 0;
-    color: var(--text-muted);
-}
-
-.chunk-title .icon-placeholder {
-    width: 14px;
-    height: 14px;
-    color: var(--icon-color);
-}
-
-.chunk-title .msg-count {
+.view-title .msg-count {
     font-size: 12px;
     color: var(--text-muted);
 }

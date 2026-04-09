@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { useLogStore } from '@/stores/logStore';
 import { useHistoryStore } from '@/stores/historyStore';
-import { generateId } from "@/utils/id";
+import { generateId } from '@/utils/id';
 import type { Chunk, LogDocument } from '@/types/log';
 
 export const useChunkEditorStore = defineStore('chunkEditor', () => {
@@ -175,7 +175,6 @@ export const useChunkEditorStore = defineStore('chunkEditor', () => {
         if (msgIndex === -1 || msgIndex === 0) return;
 
         historyStore.captureSnapshot();
-
 
         const remainingMessages = chunk.messages.splice(msgIndex);
         const newChunk: Chunk = {

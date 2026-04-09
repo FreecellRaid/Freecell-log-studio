@@ -8,9 +8,7 @@ import { useProjectManager } from './useProjectManager';
 
 // 统一换行符并移除0宽字符，防止正则崩掉
 function preprocessText(text: string): string {
-    return text
-        .replace(/\r\n|\r/g, '\n')
-        .replace(/[\u200B-\u200D\uFEFF]/g, '');
+    return text.replace(/\r\n|\r/g, '\n').replace(/[\u200B-\u200D\uFEFF]/g, '');
 }
 
 export async function importFiles(
@@ -61,9 +59,13 @@ export function useFileImport() {
                 }),
             }))
             .filter(
-                (entry): entry is {
+                (
+                    entry,
+                ): entry is {
                     file: File;
-                    project: NonNullable<ReturnType<typeof tryParseProjectFile>>;
+                    project: NonNullable<
+                        ReturnType<typeof tryParseProjectFile>
+                    >;
                 } => entry.project !== null,
             );
 
@@ -84,8 +86,8 @@ export function useFileImport() {
         }
 
         const documents = await importFiles(
-            fileEntries.map(e => ({ name: e.file.name, text: e.text })),
-            logStore.documents.length
+            fileEntries.map((e) => ({ name: e.file.name, text: e.text })),
+            logStore.documents.length,
         );
 
         if (documents.length === 0) {

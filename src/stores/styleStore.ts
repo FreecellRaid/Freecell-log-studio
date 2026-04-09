@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import type { ColorRule, ColorMode, ViewSettings } from '@/types/config';
 import type { Message } from '@/types/log';
-import { generateId } from "@/utils/id";
+import { generateId } from '@/utils/id';
 import { collectIdentityValues } from '@/editor/identity';
 
 function ruleStore() {

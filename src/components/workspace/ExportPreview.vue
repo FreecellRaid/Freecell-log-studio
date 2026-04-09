@@ -1,12 +1,15 @@
 <template>
-    <div class="chunk-view"
-    :class="{ 'preview-always-white': uiStore.exportPreviewAlwaysWhite }">
-        <header class="chunk-header">
-            <div class="chunk-title">
-                <Eye class="ui-icon icon-placeholder" />
+    <div
+        class="view"
+        :class="{ 'preview-always-white': uiStore.exportPreviewAlwaysWhite }"
+    >
+        <header class="view-header">
+            <div class="view-title">
+                <Eye class="ui-icon icon-view-title" />
                 <h2>导出预览</h2>
                 <span class="msg-count" v-if="activeFormat">
-                    当前模板: {{ activeFormat.formatName }} ({{ rows.length }} 项)
+                    当前模板: {{ activeFormat.formatName }} ({{ rows.length }}
+                    项)
                 </span>
             </div>
         </header>
@@ -15,47 +18,121 @@
             <div v-if="rows.length === 0" class="empty-chunk-hint">
                 当前没有可导出的内容。
             </div>
-            
+
             <template v-else>
-                <div v-for="(row, index) in rows" :key="index" class="preview-row">
-                    
-                    <div v-if="row.type === 'documentSeparator' && activeFormat.docSeparator" class="separator-preview">
-                        <span v-for="(token, tIdx) in docSeparatorTokens" :key="'doc-'+tIdx">
-                            <template v-if="token.type === 'text'">{{ token.value }}</template>
+                <div
+                    v-for="(row, index) in rows"
+                    :key="index"
+                    class="preview-row"
+                >
+                    <div
+                        v-if="
+                            row.type === 'documentSeparator' &&
+                            activeFormat.docSeparator
+                        "
+                        class="separator-preview"
+                    >
+                        <span
+                            v-for="(token, tIdx) in docSeparatorTokens"
+                            :key="'doc-' + tIdx"
+                        >
+                            <template v-if="token.type === 'text'">
+                                {{ token.value }}
+                            </template>
                             <br v-else-if="token.type === 'newline'" />
-                            <span v-else-if="token.type === 'tab'" class="tab-space"></span>
-                            <template v-else-if="token.type === 'placeholder' && token.value === 'name'">{{ row.content }}</template>
+                            <span
+                                v-else-if="token.type === 'tab'"
+                                class="tab-space"
+                            ></span>
+                            <template
+                                v-else-if="
+                                    token.type === 'placeholder' &&
+                                    token.value === 'name'
+                                "
+                            >
+                                {{ row.content }}
+                            </template>
                         </span>
                     </div>
 
-                    <div v-else-if="row.type === 'chunkSeparator' && activeFormat.chunkSeparator" class="separator-preview">
-                        <span v-for="(token, tIdx) in chunkSeparatorTokens" :key="'chunk-'+tIdx">
-                            <template v-if="token.type === 'text'">{{ token.value }}</template>
+                    <div
+                        v-else-if="
+                            row.type === 'chunkSeparator' &&
+                            activeFormat.chunkSeparator
+                        "
+                        class="separator-preview"
+                    >
+                        <span
+                            v-for="(token, tIdx) in chunkSeparatorTokens"
+                            :key="'chunk-' + tIdx"
+                        >
+                            <template v-if="token.type === 'text'">
+                                {{ token.value }}
+                            </template>
                             <br v-else-if="token.type === 'newline'" />
-                            <span v-else-if="token.type === 'tab'" class="tab-space"></span>
-                            <template v-else-if="token.type === 'placeholder' && token.value === 'name'">{{ row.content }}</template>
+                            <span
+                                v-else-if="token.type === 'tab'"
+                                class="tab-space"
+                            ></span>
+                            <template
+                                v-else-if="
+                                    token.type === 'placeholder' &&
+                                    token.value === 'name'
+                                "
+                            >
+                                {{ row.content }}
+                            </template>
                         </span>
                     </div>
 
-                    <div v-else-if="row.type === 'message'" class="message-preview">
-                        <span v-for="(token, tIdx) in messageTokens" :key="'msg-'+tIdx">
-                            <template v-if="token.type === 'text'">{{ token.value }}</template>
+                    <div
+                        v-else-if="row.type === 'message'"
+                        class="message-preview"
+                    >
+                        <span
+                            v-for="(token, tIdx) in messageTokens"
+                            :key="'msg-' + tIdx"
+                        >
+                            <template v-if="token.type === 'text'">
+                                {{ token.value }}
+                            </template>
                             <br v-else-if="token.type === 'newline'" />
-                            <span v-else-if="token.type === 'tab'" class="tab-space"></span>
-                            <span v-else-if="token.type === 'placeholder'" :style="getStyleForPlaceholder(token.value, row)">
-                                {{ getPlaceholderValue(token.value, row, activeFormat) }}
+                            <span
+                                v-else-if="token.type === 'tab'"
+                                class="tab-space"
+                            ></span>
+                            <span
+                                v-else-if="token.type === 'placeholder'"
+                                :style="
+                                    getStyleForPlaceholder(token.value, row)
+                                "
+                            >
+                                {{
+                                    getPlaceholderValue(
+                                        token.value,
+                                        row,
+                                        activeFormat,
+                                    )
+                                }}
                             </span>
                         </span>
 
                         <span class="message-separator">
-                            <span v-for="(token, tIdx) in messageSeparatorTokens" :key="'sep-'+tIdx">
-                                <template v-if="token.type === 'text'">{{ token.value }}</template>
+                            <span
+                                v-for="(token, tIdx) in messageSeparatorTokens"
+                                :key="'sep-' + tIdx"
+                            >
+                                <template v-if="token.type === 'text'">
+                                    {{ token.value }}
+                                </template>
                                 <br v-else-if="token.type === 'newline'" />
-                                <span v-else-if="token.type === 'tab'" class="tab-space"></span>
+                                <span
+                                    v-else-if="token.type === 'tab'"
+                                    class="tab-space"
+                                ></span>
                             </span>
                         </span>
                     </div>
-
                 </div>
             </template>
         </div>
@@ -68,7 +145,7 @@ import { Eye } from '@lucide/vue';
 import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
 import { useExportStore } from '@/stores/exportStore';
-import { useUiStore } from "@/stores/uiStore";
+import { useUiStore } from '@/stores/uiStore';
 import { flattenLogToRows } from '@/io/export/flattener';
 import { parseTemplate, getPlaceholderValue } from '@/io/export/templateParser';
 import type { ExportRow } from '@/types/export';
@@ -82,70 +159,48 @@ const rows = computed(() => {
     return flattenLogToRows(
         logStore.documents,
         styleStore.viewSettings,
-        styleStore.activeRules
+        styleStore.activeRules,
     );
 });
 
 // 性能优化：将当前格式的模板字符串预解析为 Token 数组
-const messageTokens = computed(() => parseTemplate(activeFormat.value.messageTemplate));
-const messageSeparatorTokens = computed(() => parseTemplate(activeFormat.value.messageSeparator));
-const docSeparatorTokens = computed(() => parseTemplate(activeFormat.value.docSeparator || ''));
-const chunkSeparatorTokens = computed(() => parseTemplate(activeFormat.value.chunkSeparator || ''));
+const messageTokens = computed(() =>
+    parseTemplate(activeFormat.value.messageTemplate),
+);
+const messageSeparatorTokens = computed(() =>
+    parseTemplate(activeFormat.value.messageSeparator),
+);
+const docSeparatorTokens = computed(() =>
+    parseTemplate(activeFormat.value.docSeparator || ''),
+);
+const chunkSeparatorTokens = computed(() =>
+    parseTemplate(activeFormat.value.chunkSeparator || ''),
+);
 
-function getStyleForPlaceholder(key: string, row: ExportRow): Record<string, string> {
-    const exportStyle = key === 'name' ? row.nameStyle : (key === 'content' ? row.contentStyle : null);
-    
+function getStyleForPlaceholder(
+    key: string,
+    row: ExportRow,
+): Record<string, string> {
+    const exportStyle =
+        key === 'name'
+            ? row.nameStyle
+            : key === 'content'
+              ? row.contentStyle
+              : null;
+
     if (!exportStyle) return {};
-    
+
     const css: Record<string, string> = {};
     if (exportStyle.color) css.color = exportStyle.color;
     if (exportStyle.bold) css.fontWeight = 'bold';
     if (exportStyle.italic) css.fontStyle = 'italic';
-    
+
     return css;
 }
 </script>
 
 <style scoped>
-.chunk-view {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    background-color: var(--bg-workspace);
-}
-
-.chunk-header {
-    height: 40px;
-    min-height: 40px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 20px;
-    border-bottom: 1px solid var(--border-color);
-    background-color: var(--bg-topbar);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-    z-index: 2;
-}
-
-.chunk-title {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-}
-
-.chunk-title h2 {
-    font-size: 16px;
-    margin: 0;
-    color: var(--text-muted);
-}
-
-.chunk-title .icon-placeholder {
-    width: 14px;
-    height: 14px;
-    color: var(--icon-color);
-}
-
-.chunk-title .msg-count {
+.view-title .msg-count {
     font-size: 12px;
     color: var(--text-muted);
 }
@@ -176,15 +231,14 @@ function getStyleForPlaceholder(key: string, row: ExportRow): Record<string, str
 /* 用于模拟 Tab 缩进的占位符 */
 .tab-space {
     display: inline-block;
-    width: 2em; 
+    width: 2em;
 }
 
 .separator-preview {
-    color: var(--text-muted); 
+    color: var(--text-muted);
 }
 
 .message-preview {
-
     word-break: break-word;
 }
 

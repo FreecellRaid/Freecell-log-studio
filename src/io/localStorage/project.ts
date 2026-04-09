@@ -2,7 +2,7 @@ import type { ColorRule, ViewSettings } from '@/types/config';
 import type { LogDocument, MessageFilter } from '@/types/log';
 import { isRoleType } from '@/types/log';
 import type { ProjectFile } from '@/types/project';
-import { generateId } from "@/utils/id";
+import { generateId } from '@/utils/id';
 
 export const PROJECT_FILE_VERSION = 1 as const;
 
@@ -262,8 +262,8 @@ function normalizeDocuments(rawDocuments: unknown): LogDocument[] {
                         typeof chunk.docId === 'string'
                             ? chunk.docId
                             : typeof doc.docId === 'string'
-                                ? doc.docId
-                                : generateId(),
+                              ? doc.docId
+                              : generateId(),
                     chunkName:
                         typeof chunk.chunkName === 'string'
                             ? chunk.chunkName
@@ -286,8 +286,8 @@ function normalizeDocuments(rawDocuments: unknown): LogDocument[] {
                                 typeof message.chunkId === 'string'
                                     ? message.chunkId
                                     : typeof chunk.chunkId === 'string'
-                                        ? chunk.chunkId
-                                        : generateId(),
+                                      ? chunk.chunkId
+                                      : generateId(),
                             messageIndex:
                                 typeof message.messageIndex === 'number'
                                     ? message.messageIndex
@@ -346,8 +346,8 @@ function normalizeRules(rawRules: unknown): ColorRule[] {
             color: typeof rule.color === 'string' ? rule.color : '#1976D2',
             colorArea:
                 rule.colorArea === 'all' ||
-                    rule.colorArea === 'playerName' ||
-                    rule.colorArea === 'content'
+                rule.colorArea === 'playerName' ||
+                rule.colorArea === 'content'
                     ? rule.colorArea
                     : 'all',
             priority: typeof rule.priority === 'number' ? rule.priority : 0,
@@ -393,7 +393,7 @@ function normalizeViewSettings(rawViewSettings: unknown): ViewSettings {
                 : defaults.enableMarkdown,
         colorMode:
             rawViewSettings.colorMode === 'account' ||
-                rawViewSettings.colorMode === 'playerName'
+            rawViewSettings.colorMode === 'playerName'
                 ? rawViewSettings.colorMode
                 : defaults.colorMode,
     };
@@ -418,7 +418,7 @@ export function normalizeProjectFile(
             : '';
     const time =
         typeof rawProject.time === 'string' &&
-            !Number.isNaN(new Date(rawProject.time).getTime())
+        !Number.isNaN(new Date(rawProject.time).getTime())
             ? rawProject.time
             : new Date().toISOString();
 

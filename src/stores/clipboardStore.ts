@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import type { Message } from '@/types/log';
-import { generateId } from "@/utils/id";
+import { generateId } from '@/utils/id';
 
 export const useClipboardStore = defineStore('clipboard', () => {
     const copiedMessages = ref<Message[]>([]);

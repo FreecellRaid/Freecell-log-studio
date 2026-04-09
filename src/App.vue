@@ -5,11 +5,10 @@
 <script setup lang="ts">
 import Editor from './views/Editor.vue';
 import { useUiStore } from './stores/uiStore';
-import {useScrollbarVisibility} from "@/composables/useScrollbarVisibility";
-import { onMounted} from 'vue';
+import { useScrollbarVisibility } from '@/composables/useScrollbarVisibility';
+import { onMounted } from 'vue';
 const uiStore = useUiStore();
 onMounted(() => {
     useScrollbarVisibility();
 });
-
 </script>

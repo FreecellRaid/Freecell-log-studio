@@ -2,10 +2,7 @@
     "extends": "@vue/tsconfig/tsconfig.dom.json",
     "compilerOptions": {
         "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-        "types": [
-            "vite/client"
-        ],
-        /* Linting */
+        "types": ["vite/client"],
         "strict": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
@@ -15,11 +12,7 @@
         "target": "ESNext",
         "useDefineForClassFields": true,
         "module": "ESNext",
-        "lib": [
-            "ESNext",
-            "DOM",
-            "DOM.Iterable"
-        ],
+        "lib": ["ESNext", "DOM", "DOM.Iterable"],
         "skipLibCheck": true,
         "moduleResolution": "bundler",
         "allowImportingTsExtensions": false,
@@ -28,15 +21,9 @@
         "noEmit": true,
         "jsx": "preserve",
         "paths": {
-            "@/*": [
-                "./src/*"
-            ]
+            "@/*": ["./src/*"]
         },
         "noImplicitReturns": true
     },
-    "include": [
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "src/**/*.vue"
-    ]
+    "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
 }

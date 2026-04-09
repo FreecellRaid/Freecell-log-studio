@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import type { LogDocument } from '@/types/log';
 import { useHistoryStore } from './historyStore';
-import { generateId } from "@/utils/id";
+import { generateId } from '@/utils/id';
 import { deriveDefaultProjectName } from '@/io/localStorage/project';
 
 export function newlogStore() {
