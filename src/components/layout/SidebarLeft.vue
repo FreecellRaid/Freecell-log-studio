@@ -208,7 +208,7 @@
             v-if="uiStore.leftVisible"
             class="resize-handle"
             @mousedown="startResize"
-        />
+        ></div>
     </div>
 </template>
 
@@ -387,22 +387,12 @@ watch(
     min-height: 0;
 }
 
-.placeholder-text {
-    font-size: 13px;
-    color: var(--text-muted);
-    margin-top: 20px;
-}
-
 /* 设置弹出框样式 */
-.nav-item {
-    position: relative;
-}
-
 .settings-popover {
     position: absolute;
     left: 48px;
     bottom: 16px;
-    width: 207px;
+    width: 200px;
     background-color: var(--bg-sidebar);
     border: 1px solid var(--border-color);
     padding: 12px;
@@ -421,13 +411,6 @@ watch(
 
 .settings-section {
     margin-bottom: 12px;
-}
-
-.section-title {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin: 0 0 8px 4px;
-    text-transform: uppercase;
 }
 
 .setting-item {
