@@ -15,7 +15,7 @@
         </header>
 
         <div class="message-list-container export-preview-content">
-            <div v-if="rows.length === 0" class="empty-chunk-hint">
+            <div v-if="rows.length === 0" class="view-empty-hint">
                 当前没有可导出的内容。
             </div>
 
@@ -200,11 +200,6 @@ function getStyleForPlaceholder(
 </script>
 
 <style scoped>
-.view-title .msg-count {
-    font-size: 12px;
-    color: var(--text-muted);
-}
-
 .message-list-container {
     flex: 1;
     overflow-y: auto;
@@ -217,15 +212,6 @@ function getStyleForPlaceholder(
     font-size: 14px;
     line-height: 1.5;
     color: var(--text-primary);
-}
-
-.empty-chunk-hint {
-    text-align: center;
-    margin-top: 60px;
-    color: var(--text-muted);
-    font-size: 13px;
-    line-height: 1.6;
-    padding: 40px 20px;
 }
 
 /* 用于模拟 Tab 缩进的占位符 */

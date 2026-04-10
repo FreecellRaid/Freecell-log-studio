@@ -5,17 +5,16 @@
                 <LayoutDashboard class="ui-icon icon-view-title" />
                 <h2>工作台</h2>
             </div>
-            <div class="header-actions"></div>
         </header>
 
         <div class="welcome-content">
             <div class="welcome-container">
                 <div class="icon-container">
-                    <Layers class="ui-icon icon" />
+                    <Dices class="ui-icon icon" />
                 </div>
 
-                <p class="kaomoji-egg" :title="currentKaomoji.hint">
-                    {{ currentKaomoji.text }} {{ currentKaomoji.hint }}
+                <p class="kaomoji-egg">
+                    {{ currentKaomoji.text }}
                 </p>
 
                 <div class="foot-hint">
@@ -35,20 +34,20 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { Layers, LayoutDashboard } from '@lucide/vue';
+import { Dices, LayoutDashboard } from '@lucide/vue';
 
 const kaomojis = [
-    { text: '(*^▽^*)', hint: '今天也要跑团哦！' },
-    { text: '(๑•̀ㅂ•́)و✧', hint: '大成功!!!!' },
-    { text: 'φ(>ω<*) ', hint: '正在记录关键线索...' },
-    { text: 'O(∩_∩)O', hint: '日志整理中' },
-    { text: '(╯°Д°)╯', hint: '大失败！(╯°Д°)╯︵ ┻━┻' },
-    { text: '（〃｀ 3′〃）', hint: 'DM 正在注视着你' },
-    { text: 'ヽ(✿✿▽ﾟ)诺', hint: '结档撒花！' },
-    { text: 'ヘ(_ _ヘ)', hint: 'san check 中...' },
+    { text: '(*^▽^*) 今天也要愉快的跑团哦！' },
+    { text: '(๑•̀ㅂ•́)و✧ 大成功!!!!' },
+    { text: 'φ(>ω<*) 正在记录关键线索...' },
+    { text: 'O(∩_∩)O 日志整理中' },
+    { text: '大失败！(╯°Д°)╯︵ ┻━┻' },
+    { text: '（〃｀ 3′〃）DM 正在注视着你' },
+    { text: 'ヽ(✿✿▽ﾟ)诺 结档撒花！' },
+    { text: 'ヘ(_ _ヘ) san check 中...' },
 ];
 
-const currentKaomoji = ref({ text: '', hint: '' });
+const currentKaomoji = ref({ text: '' });
 
 onMounted(() => {
     const randomIndex = Math.floor(Math.random() * kaomojis.length);

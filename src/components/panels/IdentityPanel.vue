@@ -5,7 +5,7 @@
                 <h3>{{ isPlayerMode ? '角色管理' : '账号管理' }}</h3>
             </div>
             <button
-                class="header-action-button icon-interactive"
+                class="panel-header-action-button icon-interactive"
                 @click="toggleDisplayMode"
                 :title="isPlayerMode ? '切换到按账号管理' : '切换到按角色管理'"
             >

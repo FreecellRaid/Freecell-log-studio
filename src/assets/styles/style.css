@@ -41,7 +41,7 @@
     --border-color: #444444;
     --hover-bg: #37373d;
     --active-accent: #2fa5f4;
-    --active-accent: #575859;
+    --inactive-accent: #575859;
     --selection-bg: #264f78;
     --color-warning: #ff4d4f;
 
@@ -111,18 +111,12 @@ body,
     z-index: 10;
 }
 
-/* 侧边栏通用样式 */
-.sidebar {
-    background-color: var(--bg-sidebar);
-    display: flex;
-    flex-direction: column;
-}
-
 .sidebar-left {
     border-right: 1px solid var(--border-color);
 }
 
 .sidebar-right {
+    background-color: var(--bg-sidebar);
     border-left: 1px solid var(--border-color);
     width: 280px;
 }
@@ -181,7 +175,7 @@ body,
 }
 
 /* 通用面板顶栏按钮 */
-.header-action-button {
+.panel-header-action-button {
     background: none;
     border: none;
     border-radius: 4px;
@@ -192,16 +186,15 @@ body,
     color: var(--icon-color);
 }
 
-.header-action-button:hover {
+.panel-header-action-button:hover {
     background: var(--hover-bg);
 }
 
-.header-action-button .ui-icon {
+.panel-header-action-button .ui-icon {
     width: 16px;
     height: 16px;
 }
 
-/* 通用Panel占位符 */
 .panel-empty-hint {
     padding: 20px;
     text-align: center;
@@ -259,13 +252,27 @@ body,
 .view-title h2 {
     font-size: 16px;
     margin: 0;
-    color: var(--text-muted);
+    color: var(--text-primary);
 }
 
 .view-title .icon-view-title {
     width: 14px;
     height: 14px;
     color: var(--icon-color);
+}
+
+.view-title .msg-count {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.view-empty-hint {
+    text-align: center;
+    margin-top: 60px;
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 40px 20px;
 }
 
 /* 滚动条，不知道为什么无论怎么写就是去不掉这个圆角 */

@@ -51,7 +51,7 @@
                 </div>
             </template>
 
-            <div v-else class="empty-chunk-hint">
+            <div v-else class="view-empty-hint">
                 该场景目前没有任何消息。
                 <br />
                 可以从左侧其他场景中拖拽消息到此处。
@@ -222,12 +222,6 @@ function handleActionDelete(msgId: string) {
 </script>
 
 <style scoped>
-.view-title .msg-count {
-    font-size: 12px;
-    color: var(--text-muted);
-}
-
-/* 消息列表容器 */
 .message-list-container {
     flex: 1;
     overflow-y: auto;
@@ -245,15 +239,5 @@ function handleActionDelete(msgId: string) {
     height: 0;
     border-top: 2px solid var(--active-accent);
     z-index: 1;
-}
-
-/* 空状态提示 */
-.empty-chunk-hint {
-    text-align: center;
-    margin-top: 60px;
-    color: var(--text-muted);
-    font-size: 13px;
-    line-height: 1.6;
-    padding: 40px 20px;
 }
 </style>

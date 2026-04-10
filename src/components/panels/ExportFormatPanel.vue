@@ -5,7 +5,7 @@
                 <h3>导出模板</h3>
             </div>
             <button
-                class="header-action-button icon-interactive"
+                class="panel-header-action-button icon-interactive"
                 @click="handleCreateFormat"
                 title="新建模板"
             >
@@ -185,7 +185,6 @@ function handleDelete(id: string) {
 </script>
 
 <style scoped>
-/* 块级样式统一 */
 .config-block {
     overflow: hidden;
 }
@@ -217,7 +216,6 @@ function handleDelete(id: string) {
     white-space: nowrap;
 }
 
-/* 按钮悬浮显示逻辑 */
 .icon-button {
     display: inline-flex;
     align-items: center;

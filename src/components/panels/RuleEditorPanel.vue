@@ -5,7 +5,7 @@
                 <h3>自定义染色规则</h3>
             </div>
             <button
-                class="header-action-button icon-interactive"
+                class="panel-header-action-button icon-interactive"
                 @click="handleCreateRule"
                 title="创建规则"
             >

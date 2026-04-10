@@ -14,11 +14,7 @@
                     @blur="submitProjectName"
                 />
                 <template v-else>
-                    <h3
-                        class="project-name-display"
-                        title="双击重命名工程"
-                        @dblclick="startProjectNameEdit"
-                    >
+                    <h3 title="双击重命名工程" @dblclick="startProjectNameEdit">
                         {{ logStore.projectName || '未命名工程' }}
                     </h3>
                 </template>
@@ -189,7 +185,10 @@
                 </div>
             </div>
 
-            <div v-if="logStore.documents.length === 0" class="empty-hint">
+            <div
+                v-if="logStore.documents.length === 0"
+                class="panel-empty-hint"
+            >
                 暂无数据，点击右上角或拖入文件进行导入
             </div>
         </div>
@@ -372,30 +371,9 @@ function handleChunkDragEnd() {
 
 <style scoped>
 .panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 12px;
-    border-bottom: 1px solid var(--border-light);
-    flex-shrink: 0;
     height: 42px;
     /* 防止输入框和文字切换时抖动 */
     box-sizing: border-box;
-}
-
-.project-meta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-}
-
-.project-label {
-    flex-shrink: 0;
-    font-size: 11px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
 }
 
 .project-name-input {
@@ -414,10 +392,6 @@ function handleChunkDragEnd() {
 
 .project-name-input:focus {
     border-color: var(--active-accent);
-}
-
-.list-panel-header {
-    border-bottom: 1px solid var(--border-light);
 }
 
 .chunk-list-scroll {
@@ -563,12 +537,5 @@ function handleChunkDragEnd() {
 .action-button-warning:hover,
 .action-button-warning:focus-visible {
     color: var(--color-warning);
-}
-
-.empty-hint {
-    padding: 20px;
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 13px;
 }
 </style>

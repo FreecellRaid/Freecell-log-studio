@@ -5,7 +5,7 @@
                 <h3>搜索与筛选</h3>
             </div>
             <button
-                class="header-action-button icon-interactive"
+                class="panel-header-action-button icon-interactive"
                 @click="clearAllFilters"
                 title="清空筛选"
             >
