@@ -17,9 +17,9 @@ export function useExport() {
 
     function buildRows() {
         const { documents } = logStore;
-        const { viewSettings, activeRules } = styleStore;
+        const { viewSettings, enabledRules } = styleStore;
 
-        return flattenLogToRows(documents, viewSettings, activeRules);
+        return flattenLogToRows(documents, viewSettings, enabledRules);
     }
 
     async function exportWithAdapter(
@@ -39,7 +39,7 @@ export function useExport() {
 
     // ===== 对外接口 =====
 
-    const exportAsText = (format: ExportFormat = exportStore.activeFormat) => {
+    const exportAsText = (format: ExportFormat = exportStore.currentFormat) => {
         exportWithAdapter(
             textAdapter,
             format,
@@ -48,7 +48,7 @@ export function useExport() {
         );
     };
 
-    const exportAsHtml = (format: ExportFormat = exportStore.activeFormat) => {
+    const exportAsHtml = (format: ExportFormat = exportStore.currentFormat) => {
         exportWithAdapter(
             htmlAdapter,
             format,
@@ -57,12 +57,12 @@ export function useExport() {
         );
     };
 
-    const exportAsDoc = (format: ExportFormat = exportStore.activeFormat) => {
+    const exportAsDoc = (format: ExportFormat = exportStore.currentFormat) => {
         exportWithAdapter(docAdapter, format, '.doc', 'application/msword');
     };
 
     const exportAsDocx = async (
-        format: ExportFormat = exportStore.activeFormat,
+        format: ExportFormat = exportStore.currentFormat,
     ) => {
         const { docxAdapter } =
             await import('@/io/export/adapters/docxAdapter');

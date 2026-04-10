@@ -9,7 +9,7 @@
                     class="nav-item"
                     :class="{
                         active:
-                            uiStore.activeLeftPanel === 'chunks' &&
+                            uiStore.currentLeftPanel === 'chunks' &&
                             uiStore.leftVisible,
                     }"
                     title="文件列表"
@@ -21,7 +21,7 @@
                     class="nav-item"
                     :class="{
                         active:
-                            uiStore.activeLeftPanel === 'characters' &&
+                            uiStore.currentLeftPanel === 'characters' &&
                             uiStore.leftVisible,
                     }"
                     title="角色列表"
@@ -33,7 +33,7 @@
                     class="nav-item"
                     :class="{
                         active:
-                            uiStore.activeLeftPanel === 'rules' &&
+                            uiStore.currentLeftPanel === 'rules' &&
                             uiStore.leftVisible,
                     }"
                     title="染色规则"
@@ -45,7 +45,7 @@
                     class="nav-item"
                     :class="{
                         active:
-                            uiStore.activeLeftPanel === 'search' &&
+                            uiStore.currentLeftPanel === 'search' &&
                             uiStore.leftVisible,
                     }"
                     title="搜索过滤"
@@ -57,7 +57,7 @@
                     class="nav-item"
                     :class="{
                         active:
-                            uiStore.activeLeftPanel === 'exportFormats' &&
+                            uiStore.currentLeftPanel === 'exportFormats' &&
                             uiStore.leftVisible,
                     }"
                     title="导出模板"
@@ -170,40 +170,40 @@
             class="side-panel"
             :style="{ width: uiStore.leftPanelWidth + 'px' }"
             :data-focus-area="
-                uiStore.activeLeftPanel === 'chunks'
+                uiStore.currentLeftPanel === 'chunks'
                     ? 'chunkList'
-                    : uiStore.activeLeftPanel === 'search'
+                    : uiStore.currentLeftPanel === 'search'
                       ? 'search'
                       : 'otherPanel'
             "
         >
             <div class="panel-content">
                 <div
-                    v-if="uiStore.activeLeftPanel === 'chunks'"
+                    v-if="uiStore.currentLeftPanel === 'chunks'"
                     class="panel-slot"
                 >
                     <ChunkListPanel />
                 </div>
                 <div
-                    v-else-if="uiStore.activeLeftPanel === 'characters'"
+                    v-else-if="uiStore.currentLeftPanel === 'characters'"
                     class="panel-slot"
                 >
                     <IdentityPanel />
                 </div>
                 <div
-                    v-else-if="uiStore.activeLeftPanel === 'rules'"
+                    v-else-if="uiStore.currentLeftPanel === 'rules'"
                     class="panel-slot"
                 >
                     <RuleEditorPanel />
                 </div>
                 <div
-                    v-else-if="uiStore.activeLeftPanel === 'search'"
+                    v-else-if="uiStore.currentLeftPanel === 'search'"
                     class="panel-slot"
                 >
                     <SearchPanel />
                 </div>
                 <div
-                    v-else-if="uiStore.activeLeftPanel === 'exportFormats'"
+                    v-else-if="uiStore.currentLeftPanel === 'exportFormats'"
                     class="panel-slot"
                 >
                     <ExportFormatPanel />

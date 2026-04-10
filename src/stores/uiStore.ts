@@ -60,14 +60,18 @@ function uiStore() {
     // 当前正在编辑的分块 ID
     const activeChunkId = ref<string | null>(null);
     const activeLeftPanel = ref('chunks');
+    
     const leftVisible = ref(true);
     const leftPanelWidth = ref(232);
     const rightVisible = ref(false);
     const exportPreviewVisible = ref(false);
     const helpDocumentVisible = ref(false);
+
     const focusArea = ref<FocusArea>('defaultView');
     const lastActiveView = ref<FocusArea>('defaultView');
     const focusBeforeModal = ref<FocusArea>('defaultView');
+    const focusedChunkId = ref<string | null>(null);
+    const focusedFormatId = ref<string | null>(null);
 
     function setActiveChunk(id: string | null) {
         activeChunkId.value = id;
@@ -78,6 +82,22 @@ function uiStore() {
         if (area !== 'input' && area !== 'modal' && area !== 'none') {
             lastActiveView.value = area;
         }
+
+        if (area !== 'chunkView') {
+            focusedChunkId.value = null;
+        }
+
+        if (area !== 'exportPreview') {
+            focusedFormatId.value = null;
+        }
+    }
+
+    function setFocusedChunkId(chunkId: string | null) {
+        focusedChunkId.value = chunkId;
+    }
+
+    function setFocusedFormatId(formatId: string | null) {
+        focusedFormatId.value = formatId;
     }
 
     function syncWorkspaceFocusArea() {
@@ -188,7 +208,11 @@ function uiStore() {
         setActiveChunk,
         focusArea,
         lastActiveView,
+        focusedChunkId,
+        focusedFormatId,
         setFocusArea,
+        setFocusedChunkId,
+        setFocusedFormatId,
         syncWorkspaceFocusArea,
         showHidden,
         toggleShowHidden,
