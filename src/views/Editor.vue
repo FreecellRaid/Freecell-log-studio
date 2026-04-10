@@ -11,7 +11,7 @@
                 <MainWorkspace />
             </section>
 
-            <aside v-if="uiStore.rightVisible" class="sidebar-right">
+            <aside v-if="uiStore.rightSidebarVisible" class="sidebar-right">
                 <SidebarRight />
             </aside>
         </main>

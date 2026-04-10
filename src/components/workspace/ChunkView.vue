@@ -1,5 +1,10 @@
 <template>
-    <div class="view">
+    <div
+        class="view"
+        :data-focus-id="props.chunkId"
+        :class="{ 'is-active': uiStore.activeFocus.id === props.chunkId }"
+        @pointerdown="uiStore.setFocus({ type: 'window', id: props.chunkId })"
+    >
         <header class="view-header">
             <div class="view-title">
                 <FileText class="ui-icon icon-view-title" />
@@ -62,13 +67,14 @@
 
 <script setup lang="ts">
 import { FileText } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useLogStore } from '@/stores/logStore';
 import { useFilter } from '@/composables/useFilter';
 import { useMessageDragDrop } from '@/composables/useDragDrop';
 import MessageItem from '@/components/common/MessageItem.vue';
 import { useMessageEditorStore } from '@/stores/editorStore/messageStore';
 import { useChunkEditorStore } from '@/stores/editorStore/chunkStore';
+import { useUiStore } from '@/stores/uiStore';
 import { generateId } from '@/utils/id';
 import type { Message } from '@/types/log';
 
@@ -77,6 +83,17 @@ const logStore = useLogStore();
 const filterTool = useFilter();
 const dragDropTool = useMessageDragDrop();
 const dropIndicatorIndex = ref<number | null>(null);
+const uiStore = useUiStore();
+const messageEditorStore = useMessageEditorStore();
+const chunkEditorStore = useChunkEditorStore();
+
+// 组件挂载时注册窗口
+onMounted(() => {
+    uiStore.registerWindow({
+        windowId: props.chunkId,
+        windowName: 'chunkView',
+    });
+});
 
 const currentChunk = computed(function () {
     return logStore.findChunkById(props.chunkId) || undefined;
@@ -85,9 +102,6 @@ const currentChunk = computed(function () {
 const messages = computed(function () {
     return currentChunk.value ? currentChunk.value.messages : [];
 });
-
-const messageEditorStore = useMessageEditorStore();
-const chunkEditorStore = useChunkEditorStore();
 
 function handleShiftClick(_event: MouseEvent, msgId: string, index: number) {
     // 防止因为按住 Shift 点击导致浏览器默认选中文本

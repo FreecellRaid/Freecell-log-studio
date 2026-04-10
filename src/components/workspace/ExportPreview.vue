@@ -1,7 +1,17 @@
 <template>
     <div
         class="view"
-        :class="{ 'preview-always-white': uiStore.exportPreviewAlwaysWhite }"
+        :data-focus-id="props.formatId"
+        :class="{
+            'preview-always-white': uiStore.exportPreviewAlwaysWhite,
+            'is-active': uiStore.activeFocus.id === props.formatId,
+        }"
+        @pointerdown="
+            uiStore.setFocus({
+                type: 'window',
+                id: props.formatId || 'exportPreview',
+            })
+        "
     >
         <header class="view-header">
             <div class="view-title">
@@ -12,6 +22,12 @@
                     项)
                 </span>
             </div>
+            <button
+                class="close-button"
+                @click="uiStore.unregisterWindow(props.formatId)"
+            >
+                <X class="ui-icon" />
+            </button>
         </header>
 
         <div class="message-list-container export-preview-content">
@@ -140,7 +156,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, onUnmounted } from 'vue';
 import { Eye } from '@lucide/vue';
 import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
@@ -155,6 +171,22 @@ const styleStore = useStyleStore();
 const exportStore = useExportStore();
 const uiStore = useUiStore();
 const activeFormat = computed(() => exportStore.activeFormat);
+// 接收从 MainWorkspace 传来的 ID
+const props = defineProps<{ formatId: string }>();
+const windowId = props.formatId;
+
+onMounted(() => {
+    uiStore.registerWindow({
+        windowId: props.formatId,
+        windowName: 'exportPreview',
+    });
+});
+
+// 销毁时注销焦点，方便回到上一个ChunkView
+onUnmounted(() => {
+    uiStore.unregisterWindow(windowId);
+});
+
 const rows = computed(() => {
     return flattenLogToRows(
         logStore.documents,
@@ -235,5 +267,9 @@ function getStyleForPlaceholder(
     --text-primary: #1a202c;
     --text-muted: #718096;
     --icon-color: #a0aec0;
+}
+
+.close-button {
+    margin-left: auto;
 }
 </style>

@@ -1,7 +1,7 @@
 <template>
     <div
         class="sidebar-left-container"
-        :class="{ 'is-collapsed': !uiStore.leftVisible }"
+        :class="{ 'is-collapsed': !uiStore.leftSidebarVisible }"
     >
         <nav class="activity-bar">
             <div class="nav-top">
@@ -9,11 +9,11 @@
                     class="nav-item"
                     :class="{
                         active:
-                            uiStore.activeLeftPanel === 'chunks' &&
-                            uiStore.leftVisible,
+                            uiStore.activeLeftPanelName === 'chunkList' &&
+                            uiStore.leftSidebarVisible,
                     }"
                     title="文件列表"
-                    @click="uiStore.setLeftPanel('chunks')"
+                    @click="uiStore.setLeftPanel('chunkList')"
                 >
                     <FolderOpen class="ui-icon" />
                 </div>
@@ -21,11 +21,11 @@
                     class="nav-item"
                     :class="{
                         active:
-                            uiStore.activeLeftPanel === 'characters' &&
-                            uiStore.leftVisible,
+                            uiStore.activeLeftPanelName === 'identity' &&
+                            uiStore.leftSidebarVisible,
                     }"
-                    title="角色列表"
-                    @click="uiStore.setLeftPanel('characters')"
+                    title="身份管理"
+                    @click="uiStore.setLeftPanel('identity')"
                 >
                     <UserRound class="ui-icon" />
                 </div>
@@ -33,11 +33,11 @@
                     class="nav-item"
                     :class="{
                         active:
-                            uiStore.activeLeftPanel === 'rules' &&
-                            uiStore.leftVisible,
+                            uiStore.activeLeftPanelName === 'ruleEditor' &&
+                            uiStore.leftSidebarVisible,
                     }"
                     title="染色规则"
-                    @click="uiStore.setLeftPanel('rules')"
+                    @click="uiStore.setLeftPanel('ruleEditor')"
                 >
                     <Palette class="ui-icon" />
                 </div>
@@ -45,8 +45,8 @@
                     class="nav-item"
                     :class="{
                         active:
-                            uiStore.activeLeftPanel === 'search' &&
-                            uiStore.leftVisible,
+                            uiStore.activeLeftPanelName === 'search' &&
+                            uiStore.leftSidebarVisible,
                     }"
                     title="搜索过滤"
                     @click="uiStore.setLeftPanel('search')"
@@ -57,11 +57,11 @@
                     class="nav-item"
                     :class="{
                         active:
-                            uiStore.activeLeftPanel === 'exportFormats' &&
-                            uiStore.leftVisible,
+                            uiStore.activeLeftPanelName === 'exportFormat' &&
+                            uiStore.leftSidebarVisible,
                     }"
                     title="导出模板"
-                    @click="uiStore.setLeftPanel('exportFormats')"
+                    @click="uiStore.setLeftPanel('exportFormat')"
                 >
                     <TextInitial class="ui-icon" />
                 </div>
@@ -166,37 +166,37 @@
         </nav>
 
         <aside
-            v-if="uiStore.leftVisible"
+            v-if="uiStore.leftSidebarVisible"
             class="side-panel"
             :style="{ width: uiStore.leftPanelWidth + 'px' }"
         >
             <div class="panel-content">
                 <div
-                    v-if="uiStore.activeLeftPanel === 'chunks'"
+                    v-if="uiStore.activeLeftPanelName === 'chunkList'"
                     class="panel-slot"
                 >
                     <ChunkListPanel />
                 </div>
                 <div
-                    v-else-if="uiStore.activeLeftPanel === 'characters'"
+                    v-else-if="uiStore.activeLeftPanelName === 'identity'"
                     class="panel-slot"
                 >
                     <IdentityPanel />
                 </div>
                 <div
-                    v-else-if="uiStore.activeLeftPanel === 'rules'"
+                    v-else-if="uiStore.activeLeftPanelName === 'ruleEditor'"
                     class="panel-slot"
                 >
                     <RuleEditorPanel />
                 </div>
                 <div
-                    v-else-if="uiStore.activeLeftPanel === 'search'"
+                    v-else-if="uiStore.activeLeftPanelName === 'search'"
                     class="panel-slot"
                 >
                     <SearchPanel />
                 </div>
                 <div
-                    v-else-if="uiStore.activeLeftPanel === 'exportFormats'"
+                    v-else-if="uiStore.activeLeftPanelName === 'exportFormat'"
                     class="panel-slot"
                 >
                     <ExportFormatPanel />
@@ -205,7 +205,7 @@
         </aside>
 
         <div
-            v-if="uiStore.leftVisible"
+            v-if="uiStore.leftSidebarVisible"
             class="resize-handle"
             @mousedown="startResize"
         ></div>

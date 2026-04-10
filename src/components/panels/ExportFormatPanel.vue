@@ -67,17 +67,30 @@
                                 @change="exportStore.saveToLocal()"
                                 placeholder="输入模板名称"
                             />
-                            <button
-                                class="action-icon"
-                                @click="uiStore.toggleExportPreview()"
-                                title="预览模板效果"
-                            >
-                                <Eye
-                                    v-if="uiStore.exportPreviewVisible"
-                                    class="ui-icon"
-                                />
-                                <EyeOff v-else class="ui-icon" />
-                            </button>
+                            <template>
+                                <div class="config-actions">
+                                    <button
+                                        class="icon-button"
+                                        :class="{
+                                            'is-active':
+                                                uiStore.activeFocus.id ===
+                                                fmt.formatId,
+                                        }"
+                                        @click.stop="
+                                            handleTogglePreview(fmt.formatId)
+                                        "
+                                    >
+                                        <EyeOff
+                                            v-if="
+                                                uiStore.activeFocus.id ===
+                                                fmt.formatId
+                                            "
+                                            class="ui-icon"
+                                        />
+                                        <Eye v-else />
+                                    </button>
+                                </div>
+                            </template>
                         </div>
                     </div>
 
@@ -163,6 +176,12 @@ import { useUiStore } from '@/stores/uiStore';
 const exportStore = useExportStore();
 const uiStore = useUiStore();
 const expandedId = ref<string | null>(exportStore.activeFormatId);
+
+function handleTogglePreview(formatId: string) {
+    // 更新业务数据：确保 exportStore 知道当前选中的是哪个模板
+    exportStore.activeFormatId = formatId;
+    uiStore.toggleExportPreview(formatId);
+}
 
 function toggleExpand(id: string) {
     expandedId.value = expandedId.value === id ? null : id;

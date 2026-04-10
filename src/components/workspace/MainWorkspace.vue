@@ -3,14 +3,13 @@
         <FileImporter v-if="isWorkspaceEmpty" />
 
         <template v-else>
-            <ExportPreview v-if="uiStore.exportPreviewVisible" />
-            <template v-else>
-                <ChunkView
-                    v-if="uiStore.activeChunkId"
-                    :chunk-id="uiStore.activeChunkId"
-                />
-                <DefaultView v-else />
-            </template>
+            <component
+                :is="viewComponent"
+                v-if="activeViewInfo"
+                :key="activeViewInfo.windowId"
+                v-bind="viewProps"
+            />
+            <DefaultView v-else />
         </template>
     </div>
 </template>
@@ -26,8 +25,36 @@ import DefaultView from '@/components/workspace/DefaultView.vue';
 
 const logStore = useLogStore();
 const uiStore = useUiStore();
-const isWorkspaceEmpty = computed(() => {
-    return logStore.documents.length === 0;
+
+const isWorkspaceEmpty = computed(() => logStore.documents.length === 0);
+const activeViewInfo = computed(() => uiStore.currentActiveView);
+
+// 根据 windowName 映射组件
+const viewComponent = computed(() => {
+    if (!activeViewInfo.value) return DefaultView;
+
+    const maps = {
+        chunkView: ChunkView,
+        ExportPreview: ExportPreview,
+        defaultView: DefaultView,
+    };
+    return (
+        maps[activeViewInfo.value.windowName as keyof typeof maps] ||
+        DefaultView
+    );
+});
+
+// 动态传递 Props
+const viewProps = computed(() => {
+    if (!activeViewInfo.value) return {};
+
+    if (activeViewInfo.value.windowName === 'chunkView') {
+        return { chunkId: activeViewInfo.value.windowId };
+    }
+    if (activeViewInfo.value.windowName === 'exportPreview') {
+        return { formatId: activeViewInfo.value.windowId };
+    }
+    return {};
 });
 </script>
 

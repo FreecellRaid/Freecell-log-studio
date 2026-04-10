@@ -1,5 +1,10 @@
 <template>
-    <div class="view">
+    <div
+        class="view"
+        data-focus-id="defaultView"
+        :class="{ 'is-active': uiStore.activeFocus.id === 'defaultView' }"
+        @pointerdown="uiStore.setFocus({ type: 'window', id: 'defaultView' })"
+    >
         <header class="view-header">
             <div class="view-title">
                 <LayoutDashboard class="ui-icon icon-view-title" />
@@ -35,6 +40,15 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { Dices, LayoutDashboard } from '@lucide/vue';
+import { useUiStore } from '@/stores/uiStore';
+
+const uiStore = useUiStore();
+onMounted(() => {
+    uiStore.registerWindow({
+        windowId: 'defaultView',
+        windowName: 'defaultView',
+    });
+});
 
 const kaomojis = [
     { text: '(*^▽^*) 今天也要愉快的跑团哦！' },
@@ -46,9 +60,7 @@ const kaomojis = [
     { text: 'ヽ(✿✿▽ﾟ)诺 结档撒花！' },
     { text: 'ヘ(_ _ヘ) san check 中...' },
 ];
-
 const currentKaomoji = ref({ text: '' });
-
 onMounted(() => {
     const randomIndex = Math.floor(Math.random() * kaomojis.length);
     currentKaomoji.value = kaomojis[randomIndex];
