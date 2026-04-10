@@ -111,7 +111,7 @@
                                     uiStore.activeChunkId === chunk.chunkId,
                             }"
                             draggable="true"
-                            @click="handleChunkItemClick(chunk.chunkId, $event)"
+                            @click="handleChunkItemClick(chunk.chunkId)"
                             @dragstart="
                                 handleChunkDragStart($event, chunk.chunkId)
                             "
@@ -262,14 +262,8 @@ function handleToggleExpand(doc: LogDocument) {
     logStore.updateDocument(doc.docId, { isExpanded: !doc.isExpanded });
 }
 
-function handleChunkItemClick(chunkId: string, event: MouseEvent) {
+function handleChunkItemClick(chunkId: string) {
     uiStore.setActiveChunk(chunkId);
-
-    if (event.metaKey || event.ctrlKey) {
-        filterTool.toggleChunkSelection(chunkId);
-        return;
-    }
-
     filterTool.setActiveChunkSelection(chunkId);
 }
 
@@ -482,8 +476,7 @@ function handleChunkDragEnd() {
 }
 
 .chunk-item.is-selected:not(.is-active) {
-    background-color: var(--hover-bg);
-    box-shadow: inset 2px 0 0 var(--active-accent);
+    background-color: var(--inactive-accent);
 }
 
 .chunk-name {
