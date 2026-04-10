@@ -1,5 +1,5 @@
 import { onMounted, onUnmounted } from 'vue';
-import { useUiStore } from '@/stores/uiStore';
+import { useUiStore, type FocusArea } from '@/stores/uiStore';
 
 export interface KeyboardShortcutHandlers {
     selectAll?: () => void;
@@ -8,82 +8,180 @@ export interface KeyboardShortcutHandlers {
     paste?: () => void;
     undo?: () => void;
     redo?: () => void;
+    save?: () => void;
+    toggleExportPreview?: () => void;
+    toggleHelp?: () => void;
+    closeHelp?: () => void;
 }
 
 export function useKeyboardShortcuts(handlers: KeyboardShortcutHandlers = {}) {
     const uiStore = useUiStore();
+
+    function isInputLikeElement(target: EventTarget | null) {
+        if (!(target instanceof HTMLElement)) {
+            return false;
+        }
+
+        const tagName = target.tagName.toLowerCase();
+        return (
+            tagName === 'input' ||
+            tagName === 'textarea' ||
+            tagName === 'select' ||
+            target.isContentEditable
+        );
+    }
+
+    function resolveFocusAreaFromTarget(target: EventTarget | null): FocusArea {
+        if (!(target instanceof HTMLElement)) {
+            return 'none';
+        }
+
+        if (isInputLikeElement(target)) {
+            return 'input';
+        }
+
+        const targetElement = target.closest('[data-focus-area]');
+        if (!targetElement) {
+            return 'none';
+        }
+
+        const area = targetElement.getAttribute('data-focus-area');
+        return (area as FocusArea) || 'none';
+    }
+
+    function updateFocusAreaFromTarget(target: EventTarget | null) {
+        const nextArea = resolveFocusAreaFromTarget(target);
+        if (nextArea !== 'none') {
+            uiStore.setFocusArea(nextArea);
+        }
+    }
+
+    function shouldHandleSelectionShortcut(area: FocusArea) {
+        return area === 'chunkView' || area === 'sidebarRight';
+    }
+
     const handleKeyDown = (event: KeyboardEvent) => {
         const isModKey = event.ctrlKey || event.metaKey;
         const key = event.key.toLowerCase();
+        const targetFocusArea = resolveFocusAreaFromTarget(event.target);
+        const effectiveFocusArea = uiStore.helpDocumentVisible
+            ? 'modal'
+            : targetFocusArea !== 'none'
+              ? targetFocusArea
+              : uiStore.focusArea;
 
-        // if (isModKey) {
-        //     console.log('快捷键:', `${event.metaKey ? 'Cmd' : 'Ctrl'}+${key}`);
-        // }
-
-        // Cmd/Ctrl + A -> 全选
-        if (isModKey && key === 'a') {
-            event.preventDefault();
-            handlers.selectAll?.();
+        if (uiStore.helpDocumentVisible) {
+            if (
+                event.key === 'Esc' ||
+                event.key === 'Escape' ||
+                (isModKey && key === 'k')
+            ) {
+                event.preventDefault();
+                handlers.closeHelp?.();
+            }
             return;
         }
 
-        // Esc -> 取消选择
+        if (effectiveFocusArea === 'input') {
+            return;
+        }
+
         if (event.key === 'Esc' || event.key === 'Escape') {
             event.preventDefault();
             handlers.clearSelection?.();
             return;
         }
 
-        // Cmd/Ctrl + C -> 复制
-        if (isModKey && key === 'c') {
+        if (isModKey && key === 'k') {
+            event.preventDefault();
+            handlers.toggleHelp?.();
+            return;
+        }
+
+        if (isModKey && key === 'b') {
+            event.preventDefault();
+            uiStore.toggleLeftSidebar();
+            return;
+        }
+
+        if (isModKey && key === 'i') {
+            event.preventDefault();
+            uiStore.toggleRightSidebar();
+            return;
+        }
+
+        if (isModKey && key === 'p') {
+            event.preventDefault();
+            handlers.toggleExportPreview?.();
+            return;
+        }
+
+        if (isModKey && key === 's') {
+            event.preventDefault();
+            handlers.save?.();
+            return;
+        }
+
+        if (
+            isModKey &&
+            key === 'a' &&
+            shouldHandleSelectionShortcut(effectiveFocusArea)
+        ) {
+            event.preventDefault();
+            handlers.selectAll?.();
+            return;
+        }
+
+        if (
+            isModKey &&
+            key === 'c' &&
+            shouldHandleSelectionShortcut(effectiveFocusArea)
+        ) {
             event.preventDefault();
             handlers.copy?.();
             return;
         }
 
-        // Cmd/Ctrl + V -> 粘贴
-        if (isModKey && key === 'v') {
+        if (
+            isModKey &&
+            key === 'v' &&
+            shouldHandleSelectionShortcut(effectiveFocusArea)
+        ) {
             event.preventDefault();
             handlers.paste?.();
             return;
         }
 
-        // Cmd/Ctrl + Z -> 撤销
         if (isModKey && !event.shiftKey && key === 'z') {
             event.preventDefault();
             handlers.undo?.();
             return;
         }
 
-        // Shift + Cmd/Ctrl + Z -> 重做
         if (isModKey && event.shiftKey && key === 'z') {
             event.preventDefault();
             handlers.redo?.();
             return;
         }
+    };
 
-        // Cmd/Ctrl + B -> 切换左侧边栏
-        if (isModKey && key === 'b') {
-            event.preventDefault();
-            // console.log('Cmd+B 被触发, leftVisible:', uiStore.leftVisible);
-            uiStore.toggleLeftSidebar();
-            // console.log('切换后 leftVisible:', uiStore.leftVisible);
-            return;
-        }
+    const handlePointerDown = (event: PointerEvent) => {
+        updateFocusAreaFromTarget(event.target);
+    };
 
-        // Cmd/Ctrl + I -> 切换右侧属性面板
-        if (isModKey && key === 'i') {
-            event.preventDefault();
-            uiStore.toggleRightSidebar();
-            return;
-        }
+    const handleFocusIn = (event: FocusEvent) => {
+        updateFocusAreaFromTarget(event.target);
     };
 
     onMounted(() => {
         window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('pointerdown', handlePointerDown, true);
+        window.addEventListener('focusin', handleFocusIn, true);
     });
 
     onUnmounted(() => {
         window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('pointerdown', handlePointerDown, true);
+        window.removeEventListener('focusin', handleFocusIn, true);
     });
 }

@@ -1,5 +1,5 @@
 <template>
-    <div class="panel">
+    <div class="panel" data-focus-area="sidebarRight">
         <header class="panel-header">
             <div class="title">
                 <h3>INSPECTOR</h3>

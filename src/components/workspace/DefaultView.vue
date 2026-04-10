@@ -1,5 +1,5 @@
 <template>
-    <div class="view">
+    <div class="view" data-focus-area="defaultView">
         <header class="view-header">
             <div class="view-title">
                 <LayoutDashboard class="ui-icon icon-view-title" />

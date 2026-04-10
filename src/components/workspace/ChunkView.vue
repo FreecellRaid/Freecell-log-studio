@@ -1,5 +1,5 @@
 <template>
-    <div class="view">
+    <div class="view" data-focus-area="chunkView">
         <header class="view-header">
             <div class="view-title">
                 <FileText class="ui-icon icon-view-title" />

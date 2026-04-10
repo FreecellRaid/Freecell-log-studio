@@ -19,6 +19,11 @@
         <footer class="status-bar">
             <StatusBar />
         </footer>
+
+        <HelpDocument
+            v-if="uiStore.helpDocumentVisible"
+            @close="uiStore.closeHelpDocument"
+        />
     </div>
 </template>
 
@@ -35,6 +40,8 @@ import SidebarLeft from '@/components/layout/SidebarLeft.vue';
 import MainWorkspace from '@/components/workspace/MainWorkspace.vue';
 import StatusBar from '@/components/layout/StatusBar.vue';
 import SidebarRight from '@/components/layout/SidebarRight.vue';
+import HelpDocument from '@/components/common/HelpDocument.vue';
+import { useProjectManager } from '@/composables/useProjectManager';
 
 const uiStore = useUiStore();
 const logStore = useLogStore();
@@ -42,6 +49,7 @@ const filterTool = useFilter();
 const clipboardStore = useClipboardStore();
 const messageEditorStore = useMessageEditorStore();
 const historyStore = useHistoryStore();
+const projectManager = useProjectManager();
 
 function handleSelectAll() {
     const activeChunkId = uiStore.activeChunkId;
@@ -106,6 +114,25 @@ function handleRedo() {
     historyStore.redo();
 }
 
+function handleSave() {
+    if (logStore.documents.length === 0) {
+        return;
+    }
+
+    const result = projectManager.saveCurrentProjectToLocal();
+    if (!result.success) {
+        alert('本地存储空间不足，保存失败。');
+    }
+}
+
+function handleToggleExportPreview() {
+    if (logStore.documents.length === 0) {
+        return;
+    }
+
+    uiStore.toggleExportPreview();
+}
+
 useKeyboardShortcuts({
     selectAll: handleSelectAll,
     clearSelection: handleClearSelection,
@@ -113,6 +140,10 @@ useKeyboardShortcuts({
     paste: handlePaste,
     undo: handleUndo,
     redo: handleRedo,
+    save: handleSave,
+    toggleExportPreview: handleToggleExportPreview,
+    toggleHelp: uiStore.toggleHelpDocument,
+    closeHelp: uiStore.closeHelpDocument,
 });
 </script>
 

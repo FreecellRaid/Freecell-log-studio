@@ -169,6 +169,13 @@
             v-if="uiStore.leftVisible"
             class="side-panel"
             :style="{ width: uiStore.leftPanelWidth + 'px' }"
+            :data-focus-area="
+                uiStore.activeLeftPanel === 'chunks'
+                    ? 'chunkList'
+                    : uiStore.activeLeftPanel === 'search'
+                      ? 'search'
+                      : 'otherPanel'
+            "
         >
             <div class="panel-content">
                 <div

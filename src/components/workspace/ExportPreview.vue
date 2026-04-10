@@ -1,6 +1,7 @@
 <template>
     <div
         class="view"
+        data-focus-area="exportPreview"
         :class="{ 'preview-always-white': uiStore.exportPreviewAlwaysWhite }"
     >
         <header class="view-header">

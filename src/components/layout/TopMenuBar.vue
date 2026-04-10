@@ -1,6 +1,11 @@
 <template>
     <header class="top-bar">
-        <div class="project-name">
+        <button
+            class="project-name project-entry"
+            type="button"
+            title="打开帮助文档"
+            @click="uiStore.openHelpDocument"
+        >
             <div class="icon-project">
                 <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
                     <defs>
@@ -23,7 +28,7 @@
                 </svg>
             </div>
             <div>跑团Log编辑器</div>
-        </div>
+        </button>
         <div class="global-actions">
             <button
                 class="icon icon-button-warning"
@@ -358,6 +363,19 @@ const vClickOutside = {
 .project-name {
     display: flex;
     align-items: center;
+}
+
+.project-entry {
+    border: none;
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    cursor: pointer;
+}
+
+.project-entry:hover,
+.project-entry:focus-visible {
+    color: var(--icon-color-strong);
 }
 
 .icon-project {

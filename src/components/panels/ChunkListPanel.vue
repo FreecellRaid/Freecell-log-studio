@@ -1,5 +1,5 @@
 <template>
-    <div class="panel">
+    <div class="panel" data-focus-area="chunkList">
         <div class="panel-header">
             <div class="header-title">
                 <input
