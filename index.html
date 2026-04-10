@@ -2,14 +2,45 @@
 <html lang="zh-CN">
     <head>
         <meta charset="UTF-8" />
-        <link rel="icon" type="image/svg+xml" href="/Freecell-log-studio/assets/favicon-DArUQb5P.svg" />
+        <link rel="icon" type="image/svg+xml" href="/Freecell-log-studio/favicon.svg" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Freecell Log Studio</title>
-      <script type="module" crossorigin src="/Freecell-log-studio/assets/index-CdVIhprE.js"></script>
-      <link rel="stylesheet" crossorigin href="/Freecell-log-studio/assets/index-Dwh70Lb7.css">
+
+        <style>
+            #mobile-mask {
+                display: none;
+                position: fixed;
+                width: 100%;
+                height: 100%;
+                background-color: #ffffff;
+                z-index: 9999;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+            }
+
+            @media (max-width: 480px) {
+                #mobile-mask {
+                    display: flex;
+                }
+                #app {
+                    display: none;
+                }
+            }
+            .tip-text {
+                font-size: 18px;
+                color: #333;
+                font-family: sans-serif;
+            }
+        </style>
+      <script type="module" crossorigin src="/Freecell-log-studio/assets/index-uYzdazK5.js"></script>
+      <link rel="stylesheet" crossorigin href="/Freecell-log-studio/assets/index-CgOadPLA.css">
     </head>
 
     <body>
+        <div id="mobile-mask">
+            <div class="tip-text">为了获得最佳体验，请使用电脑网页端访问</div>
+        </div>
         <div id="app"></div>
     </body>
 </html>
