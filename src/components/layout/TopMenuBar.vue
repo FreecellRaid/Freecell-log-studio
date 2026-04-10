@@ -27,7 +27,7 @@
                     />
                 </svg>
             </div>
-            <div>跑团Log编辑器</div>
+            <div class="project-name">跑团Log编辑器</div>
         </button>
         <div class="global-actions">
             <button
@@ -331,7 +331,7 @@ function handleClearAll() {
     logStore.clearData();
     styleStore.clearRules();
     clipboardStore.clearClipboard();
-    filterTool.clearSelection();
+    filterTool.clearAllSelections();
     historyStore.clearHistory();
     uiStore.setActiveChunk(null);
 }
@@ -361,6 +361,7 @@ const vClickOutside = {
 }
 
 .project-name {
+    font-size: 16px;
     display: flex;
     align-items: center;
 }

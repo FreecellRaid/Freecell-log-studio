@@ -103,11 +103,15 @@
                         <div
                             class="chunk-item"
                             :class="{
+                                'is-selected':
+                                    filterTool.chunkSelectionIds.value.has(
+                                        chunk.chunkId,
+                                    ),
                                 'is-active':
                                     uiStore.activeChunkId === chunk.chunkId,
                             }"
                             draggable="true"
-                            @click="uiStore.setActiveChunk(chunk.chunkId)"
+                            @click="handleChunkItemClick(chunk.chunkId, $event)"
                             @dragstart="
                                 handleChunkDragStart($event, chunk.chunkId)
                             "
@@ -199,6 +203,7 @@
 import { ChevronRight, ChevronsDown, Trash2 } from '@lucide/vue';
 import { nextTick, reactive, ref, watch } from 'vue';
 import { useChunkDragDrop } from '@/composables/useDragDrop';
+import { useFilter } from '@/composables/useFilter';
 import { useChunkEditorStore } from '@/stores/editorStore/chunkStore';
 import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
@@ -208,6 +213,7 @@ import type { Chunk, LogDocument } from '@/types/log';
 const logStore = useLogStore();
 const styleStore = useStyleStore();
 const uiStore = useUiStore();
+const filterTool = useFilter();
 const chunkEditorStore = useChunkEditorStore();
 const chunkDrag = useChunkDragDrop();
 
@@ -254,6 +260,17 @@ function resetProjectNameDraft() {
 
 function handleToggleExpand(doc: LogDocument) {
     logStore.updateDocument(doc.docId, { isExpanded: !doc.isExpanded });
+}
+
+function handleChunkItemClick(chunkId: string, event: MouseEvent) {
+    uiStore.setActiveChunk(chunkId);
+
+    if (event.metaKey || event.ctrlKey) {
+        filterTool.toggleChunkSelection(chunkId);
+        return;
+    }
+
+    filterTool.setActiveChunkSelection(chunkId);
 }
 
 function handleRemoveDoc(docId: string) {
@@ -462,6 +479,11 @@ function handleChunkDragEnd() {
     outline: 1px solid var(--active-accent);
     outline-offset: -1px;
     color: var(--active-accent);
+}
+
+.chunk-item.is-selected:not(.is-active) {
+    background-color: var(--hover-bg);
+    box-shadow: inset 2px 0 0 var(--active-accent);
 }
 
 .chunk-name {

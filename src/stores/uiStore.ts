@@ -60,7 +60,7 @@ function uiStore() {
     // 当前正在编辑的分块 ID
     const activeChunkId = ref<string | null>(null);
     const activeLeftPanel = ref('chunks');
-    
+
     const leftVisible = ref(true);
     const leftPanelWidth = ref(232);
     const rightVisible = ref(false);

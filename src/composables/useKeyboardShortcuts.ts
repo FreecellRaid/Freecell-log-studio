@@ -56,7 +56,22 @@ export function useKeyboardShortcuts(handlers: KeyboardShortcutHandlers = {}) {
         }
     }
 
-    function shouldHandleSelectionShortcut(area: FocusArea) {
+    function shouldHandleSelectAllShortcut(area: FocusArea) {
+        return (
+            area === 'chunkView' ||
+            area === 'sidebarRight' ||
+            area === 'search' ||
+            area === 'chunkList'
+        );
+    }
+
+    function shouldHandleCopyShortcut(area: FocusArea) {
+        return (
+            area === 'chunkView' || area === 'sidebarRight' || area === 'search'
+        );
+    }
+
+    function shouldHandlePasteShortcut(area: FocusArea) {
         return area === 'chunkView' || area === 'sidebarRight';
     }
 
@@ -125,7 +140,7 @@ export function useKeyboardShortcuts(handlers: KeyboardShortcutHandlers = {}) {
         if (
             isModKey &&
             key === 'a' &&
-            shouldHandleSelectionShortcut(effectiveFocusArea)
+            shouldHandleSelectAllShortcut(effectiveFocusArea)
         ) {
             event.preventDefault();
             handlers.selectAll?.();
@@ -135,7 +150,7 @@ export function useKeyboardShortcuts(handlers: KeyboardShortcutHandlers = {}) {
         if (
             isModKey &&
             key === 'c' &&
-            shouldHandleSelectionShortcut(effectiveFocusArea)
+            shouldHandleCopyShortcut(effectiveFocusArea)
         ) {
             event.preventDefault();
             handlers.copy?.();
@@ -145,7 +160,7 @@ export function useKeyboardShortcuts(handlers: KeyboardShortcutHandlers = {}) {
         if (
             isModKey &&
             key === 'v' &&
-            shouldHandleSelectionShortcut(effectiveFocusArea)
+            shouldHandlePasteShortcut(effectiveFocusArea)
         ) {
             event.preventDefault();
             handlers.paste?.();

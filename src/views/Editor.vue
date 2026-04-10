@@ -52,6 +52,18 @@ const historyStore = useHistoryStore();
 const projectManager = useProjectManager();
 
 function handleSelectAll() {
+    if (uiStore.focusArea === 'search') {
+        filterTool.selectAllSearchResults();
+        return;
+    }
+
+    if (uiStore.focusArea === 'chunkList') {
+        filterTool.setChunkSelection(
+            logStore.allChunks.map((chunk) => chunk.chunkId),
+        );
+        return;
+    }
+
     const activeChunkId = uiStore.activeChunkId;
     if (activeChunkId) {
         filterTool.selectAllInChunk(activeChunkId);
@@ -59,17 +71,34 @@ function handleSelectAll() {
 }
 
 function handleClearSelection() {
-    filterTool.clearSelection();
+    if (uiStore.focusArea === 'search') {
+        filterTool.clearSearchMessageSelection();
+        return;
+    }
+
+    if (uiStore.focusArea === 'chunkList') {
+        filterTool.clearChunkSelection();
+        return;
+    }
+
+    filterTool.clearMessageSelection();
 }
 
 function handleCopy() {
+    if (uiStore.focusArea === 'search') {
+        if (filterTool.selectedSearchMessages.value.length > 0) {
+            clipboardStore.copy(filterTool.selectedSearchMessages.value);
+        }
+        return;
+    }
+
     const activeChunkId = uiStore.activeChunkId;
     if (!activeChunkId) return;
     const chunk = logStore.findChunkById(activeChunkId);
     if (!chunk) return;
 
     const selected = chunk.messages.filter((m) =>
-        filterTool.selectedMessageIds.value.has(m.messageId),
+        filterTool.messageSelectionIds.value.has(m.messageId),
     );
     if (selected.length > 0) {
         clipboardStore.copy(selected);
@@ -87,7 +116,7 @@ function handlePaste() {
 
     const selectedIndices = chunk.messages
         .map((m, i) =>
-            filterTool.selectedMessageIds.value.has(m.messageId) ? i : -1,
+            filterTool.messageSelectionIds.value.has(m.messageId) ? i : -1,
         )
         .filter((i) => i !== -1);
 
@@ -98,12 +127,8 @@ function handlePaste() {
 
     messageEditorStore.insertMessages(activeChunkId, pasteItems, insertIndex);
 
-    filterTool.clearSelection();
-    pasteItems.forEach((m) =>
-        filterTool.selectedMessageIds.value.add(m.messageId),
-    );
-    filterTool.lastSelectedMessageId.value =
-        pasteItems[pasteItems.length - 1].messageId;
+    filterTool.clearMessageSelection();
+    pasteItems.forEach((m) => filterTool.addMessageSelection(m.messageId));
 }
 
 function handleUndo() {
