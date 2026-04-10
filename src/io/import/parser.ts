@@ -39,7 +39,7 @@ export function transformRowToMessage(
 
     return {
         messageId: generateId(),
-        chunkId: 'null',
+        chunkId: '',
         messageIndex: index,
         playerName: name,
         account,

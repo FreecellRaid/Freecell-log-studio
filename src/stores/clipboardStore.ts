@@ -13,7 +13,7 @@ export const useClipboardStore = defineStore('clipboard', () => {
             time: new Date(m.time.getTime()),
             // 复制时不保留 index,chunkId，由messageStore.addMessage调用的时候补上
             messageIndex: -1,
-            chunkId: 'null',
+            chunkId: '',
         }));
     }
 
