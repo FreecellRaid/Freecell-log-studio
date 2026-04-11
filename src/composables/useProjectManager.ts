@@ -45,8 +45,7 @@ export function useProjectManager() {
             clipboardStore.copiedMessages.length > 0 ||
             filterTool.hasSelection.value ||
             historyStore.undoStack.length > 0 ||
-            historyStore.redoStack.length > 0 ||
-            uiStore.activeChunkId !== null
+            historyStore.redoStack.length > 0
         );
     });
 
@@ -93,9 +92,7 @@ export function useProjectManager() {
         clipboardStore.clearClipboard();
         filterTool.clearSelection();
         historyStore.clearHistory();
-
-        const firstChunk = project.documents[0]?.chunks[0];
-        uiStore.setActiveChunk(firstChunk ? firstChunk.chunkId : null);
+        uiStore.focusStack = [];
 
         return true;
     }
