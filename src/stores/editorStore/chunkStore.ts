@@ -189,6 +189,20 @@ export const useChunkEditorStore = defineStore('chunkEditor', () => {
         refreshChunkMetadata(doc);
     }
 
+    // 插入新块
+    function insertChunks(targetDocId: string, chunks: Chunk[], insertIndex: number) {
+        const doc = logStore.findDocumentById(targetDocId);
+        if (!doc) return;
+
+        historyStore.captureSnapshot();
+        
+        // 限制边界，防止溢出
+        const clampedIndex = Math.max(0, Math.min(insertIndex, doc.chunks.length));
+        doc.chunks.splice(clampedIndex, 0, ...chunks);
+
+        refreshChunkMetadata(doc);
+    }
+
     return {
         updateChunk,
         renameDocument,
@@ -198,5 +212,6 @@ export const useChunkEditorStore = defineStore('chunkEditor', () => {
         mergeChunks,
         mergeWithNextChunk,
         splitChunk,
+        insertChunks,
     };
 });

@@ -89,6 +89,8 @@ function uiStore() {
     // 侧边栏显隐逻辑
     const leftSidebarVisible = ref(true);
     const rightSidebarVisible = ref(false);
+    // 帮助弹窗开关
+    const isHelpOpen = ref(false);
 
     // 聚焦到一个目标
     function setFocus(target: FocusTarget) {
@@ -219,8 +221,8 @@ function uiStore() {
             } as WindowInstance)
         );
     });
-    // 帮助弹窗
-    const isHelpOpen = ref(false);
+
+    // 打开帮助弹窗
     function openHelpDocument() {
         isHelpOpen.value = true;
         setFocus({ type: 'modal', id: 'modal' });

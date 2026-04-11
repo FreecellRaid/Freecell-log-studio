@@ -104,9 +104,9 @@
                             class="chunk-item"
                             :class="{
                                 // uiStore的焦点判断
-                                'is-active': uiStore.isWindowFocused(
+                                'is-active':
+                                    uiStore.currentActiveView.windowId ===
                                     chunk.chunkId,
-                                ),
                                 // useFilter的选中判断
                                 'is-selected':
                                     filterTool.selectedChunkIds.value.has(
@@ -330,20 +330,19 @@ function handleMerge(currentChunkId: string, nextChunkId: string) {
 }
 
 function handleChunkSelect(chunkId: string, event: MouseEvent) {
-    // 注册窗口
     uiStore.registerWindow({
         windowId: chunkId,
-        windowName: 'chunkView', // 明确指定为 chunkView 类型
+        windowName: 'chunkView',
     });
-    // 切换 UI 焦点（用于编辑器显示）
+    // 这里切换两次，用来保证显示正常再把焦点拉回panel
     uiStore.setFocus({ type: 'window', id: chunkId });
+    uiStore.setFocus({ type: 'window', id: 'chunkList' });
 
     // 如果没有按住 Ctrl/Meta/Shift，则视为普通单选，清空其他选中
     if (!event.ctrlKey && !event.metaKey && !event.shiftKey) {
         filterTool.clearSelection();
         filterTool.toggleChunkSelection(chunkId);
     } else {
-        // 多选模式下切换当前块的选中状态
         filterTool.toggleChunkSelection(chunkId);
     }
 }

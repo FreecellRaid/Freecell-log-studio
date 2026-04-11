@@ -89,6 +89,20 @@ export function useFilter(ownerId?: string) {
         chunkSelections.set(effectiveId.value, new Set(chunkIds));
     }
 
+    function selectAllChunks(targetDocId?: string) {
+        const id = effectiveId.value;
+        const targetIds: string[] = [];
+
+        logStore.documents.forEach(doc => {
+            if (!targetDocId || doc.docId === targetDocId) {
+                doc.chunks.forEach(chunk => {
+                    targetIds.push(chunk.chunkId);
+                });
+            }
+        });
+        chunkSelections.set(id, new Set(targetIds));
+    }
+
     function clearMessageSelection() {
         messageSelections.set(effectiveId.value, new Set());
         lastSelectedMessages.set(effectiveId.value, null);
@@ -173,6 +187,10 @@ export function useFilter(ownerId?: string) {
         return result;
     });
 
+    function setMessagesSelection(ids: string[]) {
+    messageSelections.set(effectiveId.value, new Set(ids));
+}
+
     return {
         effectiveId, // 暴露以供调试
         selectedMessageIds,
@@ -183,11 +201,13 @@ export function useFilter(ownerId?: string) {
         addMessageSelection,
         toggleChunkSelection,
         setChunkSelection,
+        selectAllChunks,
         clearMessageSelection,
         clearChunkSelection,
         clearSelection,
         selectMessagesByFilter,
         selectAllInChunk,
+        setMessagesSelection,
 
         hasSelection,
         selectedMessagesCount,
