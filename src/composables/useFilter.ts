@@ -93,9 +93,9 @@ export function useFilter(ownerId?: string) {
         const id = effectiveId.value;
         const targetIds: string[] = [];
 
-        logStore.documents.forEach(doc => {
+        logStore.documents.forEach((doc) => {
             if (!targetDocId || doc.docId === targetDocId) {
-                doc.chunks.forEach(chunk => {
+                doc.chunks.forEach((chunk) => {
                     targetIds.push(chunk.chunkId);
                 });
             }
@@ -188,8 +188,8 @@ export function useFilter(ownerId?: string) {
     });
 
     function setMessagesSelection(ids: string[]) {
-    messageSelections.set(effectiveId.value, new Set(ids));
-}
+        messageSelections.set(effectiveId.value, new Set(ids));
+    }
 
     return {
         effectiveId, // 暴露以供调试

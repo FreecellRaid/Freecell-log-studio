@@ -7,11 +7,11 @@ export function useKeyboardShortcuts() {
 
     const handleKeyDown = (event: KeyboardEvent) => {
         if (
-            event.target instanceof HTMLInputElement || 
+            event.target instanceof HTMLInputElement ||
             event.target instanceof HTMLTextAreaElement ||
             (event.target as HTMLElement).isContentEditable
         ) {
-            return; 
+            return;
         }
 
         const isModKey = event.ctrlKey || event.metaKey;

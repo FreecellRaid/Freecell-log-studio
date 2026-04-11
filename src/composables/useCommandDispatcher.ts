@@ -13,7 +13,6 @@ export type CommandType =
     | 'copy'
     | 'paste'
     | 'delete'
-
     | 'toggleLeft'
     | 'toggleRight'
     | 'openHelp'
@@ -37,7 +36,7 @@ export function useCommandDispatcher() {
         // P0 Modal 开启时拦截其他业务命令
         if (focus.type === 'modal') {
             if (command === 'cancel') return uiStore.closeHelpDocument();
-            return; 
+            return;
         }
 
         // P1 全局级命令
@@ -101,7 +100,7 @@ export function useCommandDispatcher() {
 
             messageEditor.insertMessages(chunkId, pasteData, insertIndex);
             filter.clearMessageSelection();
-            filter.setMessagesSelection(pasteData.map(m => m.messageId));
+            filter.setMessagesSelection(pasteData.map((m) => m.messageId));
         }
     }
 
@@ -111,10 +110,12 @@ export function useCommandDispatcher() {
         if (cmd === 'selectAll') chunkListFilter.selectAllChunks();
         if (cmd === 'cancel') chunkListFilter.clearChunkSelection();
         if (cmd === 'copy') {
-            const selectedIds = Array.from(chunkListFilter.selectedChunkIds.value);
+            const selectedIds = Array.from(
+                chunkListFilter.selectedChunkIds.value,
+            );
             if (selectedIds.length > 0) {
                 const chunks = selectedIds
-                    .map(id => logStore.findChunkById(id))
+                    .map((id) => logStore.findChunkById(id))
                     .filter((c): c is Chunk => !!c);
                 clipboard.copyChunks(chunks);
             }
@@ -156,7 +157,9 @@ export function useCommandDispatcher() {
 
             if (targetDocId) {
                 chunkEditor.insertChunks(targetDocId, pasteChunks, insertIndex);
-                chunkListFilter.setChunkSelection(pasteChunks.map(c => c.chunkId));
+                chunkListFilter.setChunkSelection(
+                    pasteChunks.map((c) => c.chunkId),
+                );
             }
         }
     }
