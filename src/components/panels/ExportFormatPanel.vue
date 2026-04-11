@@ -67,30 +67,23 @@
                                 @change="exportStore.saveToLocal()"
                                 placeholder="输入模板名称"
                             />
-                            <template>
-                                <div class="config-actions">
-                                    <button
-                                        class="icon-button"
-                                        :class="{
-                                            'is-active':
-                                                uiStore.activeFocus.id ===
-                                                fmt.formatId,
-                                        }"
-                                        @click.stop="
-                                            handleTogglePreview(fmt.formatId)
-                                        "
-                                    >
-                                        <EyeOff
-                                            v-if="
-                                                uiStore.activeFocus.id ===
-                                                fmt.formatId
-                                            "
-                                            class="ui-icon"
-                                        />
-                                        <Eye v-else />
-                                    </button>
-                                </div>
-                            </template>
+                            <button
+                                class="icon-button"
+                                :class="{
+                                    'is-active':
+                                        uiStore.activeFocus.id === fmt.formatId,
+                                }"
+                                @click.stop="handleTogglePreview(fmt.formatId)"
+                                title="预览模板效果"
+                            >
+                                <Eye
+                                    v-if="
+                                        uiStore.activeFocus.id !== fmt.formatId
+                                    "
+                                    class="ui-icon"
+                                />
+                                <EyeOff v-else class="ui-icon" />
+                            </button>
                         </div>
                     </div>
 
@@ -267,6 +260,12 @@ function handleDelete(id: string) {
     color: var(--active-accent);
     opacity: 1;
     /* 激活态图标始终显示 */
+}
+
+.input-group .icon-button {
+    opacity: 1;
+    pointer-events: auto;
+    margin-left: 0;
 }
 
 .icon-button-warning:hover {

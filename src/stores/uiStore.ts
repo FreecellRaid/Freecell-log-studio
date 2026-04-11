@@ -85,13 +85,13 @@ function uiStore() {
         );
     });
     const activeLeftPanelName = ref<WindowName>('chunkList');
-    // 侧边栏显隐逻辑 (对应你说的折叠功能)
+    // 侧边栏显隐逻辑
     const leftSidebarVisible = ref(true);
     const rightSidebarVisible = ref(false);
 
-    /** 聚焦到一个目标 */
+    // 聚焦到一个目标
     function setFocus(target: FocusTarget) {
-        // 先移除已有的相同目标（防止重复压栈）
+        // 先移除已有的相同目标
         const index = focusStack.value.findIndex(
             (t) => t.id === target.id && t.type === target.type,
         );
@@ -187,6 +187,7 @@ function uiStore() {
             windowId: formatId,
             windowName: 'exportPreview'
         });
+        setFocus({ type: 'window', id: formatId })
     }
 }
 

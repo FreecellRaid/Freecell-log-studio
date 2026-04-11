@@ -157,7 +157,7 @@ import type { MessageFilter } from '@/types/log';
 import { formatDate } from '@/utils/date';
 
 const logStore = useLogStore();
-const filterStore = useFilter();
+const filterStore = useFilter('search');
 
 // 状态控制
 const quickSearch = ref('');

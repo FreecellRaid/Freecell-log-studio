@@ -35,7 +35,7 @@ const viewComponent = computed(() => {
 
     const maps = {
         chunkView: ChunkView,
-        ExportPreview: ExportPreview,
+        exportPreview: ExportPreview,
         defaultView: DefaultView,
     };
     return (

@@ -80,7 +80,7 @@ import type { Message } from '@/types/log';
 
 const props = defineProps<{ chunkId: string }>();
 const logStore = useLogStore();
-const filterTool = useFilter();
+const filterTool = useFilter(props.chunkId);
 const dragDropTool = useMessageDragDrop();
 const dropIndicatorIndex = ref<number | null>(null);
 const uiStore = useUiStore();

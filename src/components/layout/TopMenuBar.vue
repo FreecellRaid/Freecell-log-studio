@@ -206,7 +206,8 @@ const hasWorkspaceState = computed(() => {
         filterTool.hasSelection.value ||
         historyStore.undoStack.length > 0 ||
         historyStore.redoStack.length > 0 ||
-        uiStore.activeChunkId !== null
+        !uiStore.currentActiveView.windowId ||
+        uiStore.currentActiveView.windowId === 'defaultView'
     );
 });
 
@@ -328,7 +329,7 @@ function handleClearAll() {
     clipboardStore.clearClipboard();
     filterTool.clearSelection();
     historyStore.clearHistory();
-    uiStore.setActiveChunk(null);
+    uiStore.setFocus({ type: 'window', id: 'default' });
 }
 
 /** 点击元素外部触发回调 (用于关闭下拉菜单) */

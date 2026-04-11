@@ -1,40 +1,110 @@
-import { ref, computed } from 'vue';
+import { reactive, computed } from 'vue';
 import type { Message, MessageFilter } from '@/types/log';
 import { matchesMessageFilter } from '@/editor/filter';
 import { useLogStore } from '@/stores/logStore';
+import { useUiStore } from '@/stores/uiStore';
 
-const selectedMessageIds = ref<Set<string>>(new Set());
-const selectedChunkIds = ref<Set<string>>(new Set());
-const lastSelectedMessageId = ref<string | null>(null);
+// 全局隔离的选区状态 key: windowId
+const messageSelections = reactive(new Map<string, Set<string>>());
+const chunkSelections = reactive(new Map<string, Set<string>>());
+const lastSelectedMessages = reactive(new Map<string, string | null>());
 
-export function useFilter() {
+export function useFilter(ownerId?: string) {
     const logStore = useLogStore();
-
-    function toggleMessageSelection(messageId: string) {
-        if (selectedMessageIds.value.has(messageId)) {
-            selectedMessageIds.value.delete(messageId);
-        } else {
-            selectedMessageIds.value.add(messageId);
+    const uiStore = useUiStore();
+    const effectiveId = computed(() => {
+        // 如果组件显式声明了 ownerId（如 SearchPanel, ChunkView），直接使用
+        if (ownerId) return ownerId;
+        // 否则，根据焦点栈向下回溯
+        const stack = uiStore.focusStack;
+        for (let i = stack.length - 1; i >= 0; i--) {
+            const target = stack[i];
+            if (target.type === 'window' && target.id !== 'inspector' && target.id !== 'exportFormat') {
+                return target.id;
+            }
         }
-        lastSelectedMessageId.value = messageId;
+        return 'defaultView';
+    });
+
+    // 暴露当前有效域的响应式集合
+    const selectedMessageIds = computed(() => {
+        return messageSelections.get(effectiveId.value) || new Set<string>();
+    });
+
+    const selectedChunkIds = computed(() => {
+        return chunkSelections.get(effectiveId.value) || new Set<string>();
+    });
+
+    const lastSelectedMessageId = computed({
+        get: () => lastSelectedMessages.get(effectiveId.value) || null,
+        set: (val) => lastSelectedMessages.set(effectiveId.value, val)
+    });
+
+    // 选区操作方法 (基于不可变数据模式触发更新)
+    function toggleMessageSelection(messageId: string) {
+        const id = effectiveId.value;
+        const currentSet = messageSelections.get(id) || new Set<string>();
+        // 克隆 Set，确保 Vue 的 computed 能完美捕捉到依赖变化
+        const newSet = new Set(currentSet);
+
+        if (newSet.has(messageId)) {
+            newSet.delete(messageId);
+        } else {
+            newSet.add(messageId);
+        }
+
+        messageSelections.set(id, newSet);
+        lastSelectedMessages.set(id, messageId);
+    }
+
+    function addMessageSelection(messageId: string) {
+        const id = effectiveId.value;
+        const currentSet = messageSelections.get(id) || new Set<string>();
+        if (!currentSet.has(messageId)) {
+            const newSet = new Set(currentSet);
+            newSet.add(messageId);
+            messageSelections.set(id, newSet);
+        }
     }
 
     function toggleChunkSelection(chunkId: string) {
-        if (selectedChunkIds.value.has(chunkId)) {
-            selectedChunkIds.value.delete(chunkId);
+        const id = effectiveId.value;
+        const currentSet = chunkSelections.get(id) || new Set<string>();
+        const newSet = new Set(currentSet);
+
+        if (newSet.has(chunkId)) {
+            newSet.delete(chunkId);
         } else {
-            selectedChunkIds.value.add(chunkId);
+            newSet.add(chunkId);
         }
+
+        chunkSelections.set(id, newSet);
+    }
+
+    function setChunkSelection(chunkIds: string[]) {
+        chunkSelections.set(effectiveId.value, new Set(chunkIds));
+    }
+
+    function clearMessageSelection() {
+        messageSelections.set(effectiveId.value, new Set());
+        lastSelectedMessages.set(effectiveId.value, null);
+    }
+
+    function clearChunkSelection() {
+        chunkSelections.set(effectiveId.value, new Set());
     }
 
     function clearSelection() {
-        selectedMessageIds.value.clear();
-        selectedChunkIds.value.clear();
-        lastSelectedMessageId.value = null;
+        clearMessageSelection();
+        clearChunkSelection();
     }
 
-    // 过滤器匹配
+    // 过滤器匹配 (应用于当前窗口的选区)
     function selectMessagesByFilter(filter: MessageFilter) {
+        const id = effectiveId.value;
+        const currentSet = messageSelections.get(id) || new Set<string>();
+        const newSet = new Set(currentSet);
+
         const docs = logStore.documents;
         for (let i = 0; i < docs.length; i++) {
             const chunks = docs[i].chunks;
@@ -43,46 +113,52 @@ export function useFilter() {
                 for (let k = 0; k < messages.length; k++) {
                     const msg = messages[k];
                     if (matchesMessageFilter(msg, filter)) {
-                        selectedMessageIds.value.add(msg.messageId);
+                        newSet.add(msg.messageId);
                     }
                 }
             }
         }
+        messageSelections.set(id, newSet);
     }
 
-    // 全选chunk
+    // 全选某个 chunk 内的消息
     function selectAllInChunk(chunkId: string) {
+        const id = effectiveId.value;
+        const currentSet = messageSelections.get(id) || new Set<string>();
+        const newSet = new Set(currentSet);
+
         const chunk = logStore.findChunkById(chunkId);
         if (!chunk) return;
 
         const messages = chunk.messages;
         for (let i = 0; i < messages.length; i++) {
-            selectedMessageIds.value.add(messages[i].messageId);
+            newSet.add(messages[i].messageId);
         }
+        messageSelections.set(id, newSet);
     }
 
-    const hasSelection = computed(function () {
-        return (
-            selectedMessageIds.value.size > 0 || selectedChunkIds.value.size > 0
-        );
+    // 派生状态计算
+    const hasSelection = computed(() => {
+        return selectedMessageIds.value.size > 0 || selectedChunkIds.value.size > 0;
     });
 
-    const selectedMessagesCount = computed(function () {
+    const selectedMessagesCount = computed(() => {
         return selectedMessageIds.value.size;
     });
 
-    // 获取当前所有被选中的消息对象列表 (用于批量编辑)
-    const selectedMessages = computed(function () {
+    const selectedMessages = computed(() => {
         const result: Message[] = [];
-        const docs = logStore.documents;
+        const ids = selectedMessageIds.value;
+        if (ids.size === 0) return result;
 
+        const docs = logStore.documents;
         for (let k = 0; k < docs.length; k++) {
             const chunks = docs[k].chunks;
             for (let i = 0; i < chunks.length; i++) {
                 const messages = chunks[i].messages;
                 for (let j = 0; j < messages.length; j++) {
                     const msg = messages[j];
-                    if (selectedMessageIds.value.has(msg.messageId)) {
+                    if (ids.has(msg.messageId)) {
                         result.push(msg);
                     }
                 }
@@ -92,12 +168,17 @@ export function useFilter() {
     });
 
     return {
+        effectiveId, // 暴露以供调试
         selectedMessageIds,
         selectedChunkIds,
         lastSelectedMessageId,
 
         toggleMessageSelection,
+        addMessageSelection,
         toggleChunkSelection,
+        setChunkSelection,
+        clearMessageSelection,
+        clearChunkSelection,
         clearSelection,
         selectMessagesByFilter,
         selectAllInChunk,

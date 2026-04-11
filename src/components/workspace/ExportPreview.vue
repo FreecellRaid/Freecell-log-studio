@@ -9,7 +9,7 @@
         @pointerdown="
             uiStore.setFocus({
                 type: 'window',
-                id: props.formatId || 'exportPreview',
+                id: props.formatId,
             })
         "
     >

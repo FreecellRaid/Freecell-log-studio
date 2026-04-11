@@ -103,11 +103,18 @@
                         <div
                             class="chunk-item"
                             :class="{
-                                'is-active':
-                                    uiStore.activeChunkId === chunk.chunkId,
+                                // uiStore的焦点判断
+                                'is-active': uiStore.isWindowFocused(
+                                    chunk.chunkId,
+                                ),
+                                // useFilter的选中判断
+                                'is-selected':
+                                    filterTool.selectedChunkIds.value.has(
+                                        chunk.chunkId,
+                                    ),
                             }"
                             draggable="true"
-                            @click="uiStore.setActiveChunk(chunk.chunkId)"
+                            @click="handleChunkSelect(chunk.chunkId, $event)"
                             @dragstart="
                                 handleChunkDragStart($event, chunk.chunkId)
                             "
@@ -204,12 +211,14 @@ import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
 import { useUiStore } from '@/stores/uiStore';
 import type { Chunk, LogDocument } from '@/types/log';
+import { useFilter } from '@/composables/useFilter';
 
 const logStore = useLogStore();
 const styleStore = useStyleStore();
 const uiStore = useUiStore();
 const chunkEditorStore = useChunkEditorStore();
 const chunkDrag = useChunkDragDrop();
+const filterTool = useFilter();
 
 const editingDocId = ref('');
 const editingChunkId = ref('');
@@ -320,11 +329,51 @@ function handleMerge(currentChunkId: string, nextChunkId: string) {
     chunkEditorStore.mergeChunks([currentChunkId, nextChunkId]);
 }
 
+function handleChunkSelect(chunkId: string, event: MouseEvent) {
+    // 注册窗口
+    uiStore.registerWindow({
+        windowId: chunkId,
+        windowName: 'chunkView', // 明确指定为 chunkView 类型
+    });
+    // 切换 UI 焦点（用于编辑器显示）
+    uiStore.setFocus({ type: 'window', id: chunkId });
+
+    // 如果没有按住 Ctrl/Meta/Shift，则视为普通单选，清空其他选中
+    if (!event.ctrlKey && !event.metaKey && !event.shiftKey) {
+        filterTool.clearSelection();
+        filterTool.toggleChunkSelection(chunkId);
+    } else {
+        // 多选模式下切换当前块的选中状态
+        filterTool.toggleChunkSelection(chunkId);
+    }
+}
+
 function handleDelete(chunkId: string) {
-    if (confirm('确定要删除这个场景及其所有消息吗？')) {
-        chunkEditorStore.deleteChunk(chunkId);
-        if (uiStore.activeChunkId === chunkId) {
-            uiStore.setActiveChunk('');
+    const { selectedChunkIds, clearSelection } = filterTool;
+
+    const targets = selectedChunkIds.value.has(chunkId)
+        ? Array.from(selectedChunkIds.value)
+        : [chunkId];
+
+    const isMultiple = targets.length > 1;
+    if (
+        confirm(
+            isMultiple
+                ? `确定要删除选中的 ${targets.length} 个场景及其所有消息吗？`
+                : '确定要删除这个场景，及其所有消息吗？',
+        )
+    ) {
+        targets.forEach((id) => {
+            chunkEditorStore.deleteChunk(id);
+
+            // UI 同步：从 uiStore 中彻底注销窗口
+            if (uiStore.isWindowOpen(id)) {
+                uiStore.unregisterWindow(id);
+            }
+        });
+
+        if (selectedChunkIds.value.has(chunkId)) {
+            clearSelection();
         }
     }
 }
@@ -462,6 +511,12 @@ function handleChunkDragEnd() {
     outline: 1px solid var(--active-accent);
     outline-offset: -1px;
     color: var(--active-accent);
+}
+
+/* 被选中但不是当前活跃编辑的块（淡色背景，预留给未来多选） */
+.chunk-item.is-selected:not(.is-active) {
+    background-color: var(--hover-bg);
+    opacity: 0.8;
 }
 
 .chunk-name {

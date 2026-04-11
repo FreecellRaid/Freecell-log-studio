@@ -87,8 +87,12 @@ const styleStore = useStyleStore();
 const filterTool = useFilter();
 
 const activeChunk = computed(function () {
-    if (!uiStore.activeChunkId) return null;
-    return logStore.findChunkById(uiStore.activeChunkId);
+    if (
+        !uiStore.currentActiveView.windowId ||
+        uiStore.currentActiveView.windowId === 'defaultView'
+    )
+        return null;
+    return logStore.findChunkById(uiStore.currentActiveView.windowId);
 });
 
 const activeChunkName = computed(function () {
