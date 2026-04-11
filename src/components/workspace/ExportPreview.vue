@@ -24,7 +24,7 @@
             </div>
             <button
                 class="close-button"
-                @click="uiStore.unregisterWindow(props.formatId)"
+                @click="uiStore.toggleExportPreview(props.formatId)"
             >
                 <X class="ui-icon" />
             </button>
@@ -157,7 +157,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue';
-import { Eye } from '@lucide/vue';
+import { Eye, X } from '@lucide/vue';
 import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
 import { useExportStore } from '@/stores/exportStore';
@@ -270,6 +270,8 @@ function getStyleForPlaceholder(
 }
 
 .close-button {
+    border: none;
+    background-color: var(--bg-workspace);
     margin-left: auto;
 }
 </style>
