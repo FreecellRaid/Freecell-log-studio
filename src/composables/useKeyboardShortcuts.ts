@@ -6,9 +6,12 @@ export function useKeyboardShortcuts() {
     const { dispatch } = useCommandDispatcher();
 
     const handleKeyDown = (event: KeyboardEvent) => {
-        // 如果正在输入，拦截除 Mod+Key 以外的单键命令
-        if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
-            if (!event.ctrlKey && !event.metaKey) return;
+        if (
+            event.target instanceof HTMLInputElement || 
+            event.target instanceof HTMLTextAreaElement ||
+            (event.target as HTMLElement).isContentEditable
+        ) {
+            return; 
         }
 
         const isModKey = event.ctrlKey || event.metaKey;
