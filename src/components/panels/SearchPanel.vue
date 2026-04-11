@@ -1,5 +1,5 @@
 <template>
-    <div class="panel">
+    <div class="panel" data-focus-area="search">
         <div class="panel-header">
             <div class="header-title">
                 <h3>搜索与筛选</h3>
@@ -127,11 +127,12 @@
                 :key="msg.messageId"
                 class="result-item"
                 :class="{
-                    'is-selected': filterStore.selectedMessageIds.value.has(
-                        msg.messageId,
-                    ),
+                    'is-selected':
+                        filterStore.searchMessageSelectionIds.value.has(
+                            msg.messageId,
+                        ),
                 }"
-                @click="filterStore.toggleMessageSelection(msg.messageId)"
+                @click="filterStore.toggleSearchMessageSelection(msg.messageId)"
             >
                 <div class="result-meta">
                     <span class="result-name">
@@ -149,7 +150,7 @@
 
 <script setup lang="ts">
 import { FunnelIcon, FunnelXIcon, RefreshCcw } from '@lucide/vue';
-import { ref, computed, reactive } from 'vue';
+import { ref, computed, reactive, watch } from 'vue';
 import { useLogStore } from '@/stores/logStore';
 import { useFilter } from '@/composables/useFilter';
 import { matchesMessageFilter } from '@/editor/filter';
@@ -213,18 +214,23 @@ const searchResults = computed(() => {
     );
 });
 
+watch(
+    searchResults,
+    (nextResults) => {
+        filterStore.setSearchResultIds(
+            nextResults.map((message) => message.messageId),
+        );
+    },
+    { immediate: true },
+);
+
 // 操作方法
 function handleSearch() {
     quickSearch.value = quickSearch.value.trim();
 }
 
 function selectAllMatches() {
-    const ids = searchResults.value.map((m) => m.messageId);
-    ids.forEach((id) => {
-        if (!filterStore.selectedMessageIds.value.has(id)) {
-            filterStore.toggleMessageSelection(id);
-        }
-    });
+    filterStore.selectAllSearchResults();
 }
 
 function clearAllFilters() {
@@ -235,6 +241,8 @@ function clearAllFilters() {
     filter.role = undefined;
     filter.isOoc = undefined;
     filter.isCommand = undefined;
+    filterStore.clearSearchMessageSelection();
+    filterStore.setSearchResultIds([]);
 }
 
 function normalizeStringFilter(value: MessageFilter['playerName']) {

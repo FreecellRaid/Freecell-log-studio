@@ -25,8 +25,8 @@ export function useMessageDragDrop() {
 
     function onDragStart(event: DragEvent, messageId: string, chunkId: string) {
         let idsToMove = [messageId];
-        if (filter.selectedMessageIds.value.has(messageId)) {
-            idsToMove = Array.from(filter.selectedMessageIds.value);
+        if (filter.messageSelectionIds.value.has(messageId)) {
+            idsToMove = Array.from(filter.messageSelectionIds.value);
         }
 
         globalDraggedMessage.value = {

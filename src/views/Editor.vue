@@ -20,6 +20,11 @@
         <footer class="status-bar">
             <StatusBar />
         </footer>
+
+        <HelpDocument
+            v-if="uiStore.helpDocumentVisible"
+            @close="uiStore.closeHelpDocument"
+        />
     </div>
 </template>
 
@@ -32,6 +37,8 @@ import SidebarLeft from '@/components/layout/SidebarLeft.vue';
 import MainWorkspace from '@/components/workspace/MainWorkspace.vue';
 import StatusBar from '@/components/layout/StatusBar.vue';
 import SidebarRight from '@/components/layout/SidebarRight.vue';
+import HelpDocument from '@/components/common/HelpDocument.vue';
+import { useProjectManager } from '@/composables/useProjectManager';
 
 const uiStore = useUiStore();
 useKeyboardShortcuts();

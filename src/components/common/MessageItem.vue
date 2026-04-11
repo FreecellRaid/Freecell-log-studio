@@ -105,7 +105,7 @@ const emit = defineEmits<{
 const styleStore = useStyleStore();
 
 const computedStyles = computed(function () {
-    return computeStyleForMessage(props.message, styleStore.activeRules);
+    return computeStyleForMessage(props.message, styleStore.enabledRules);
 });
 
 function handleToggleSelection() {

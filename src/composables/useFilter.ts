@@ -71,6 +71,22 @@ export function useFilter(ownerId?: string) {
         }
     }
 
+    function addMessageSelection(messageId: string) {
+        messageSelectionIds.value.add(messageId);
+        lastSelectedMessageId.value = messageId;
+    }
+
+    function setMessageSelection(messageIds: Iterable<string>) {
+        messageSelectionIds.value = new Set(messageIds);
+        lastSelectedMessageId.value =
+            Array.from(messageSelectionIds.value).at(-1) || null;
+    }
+
+    function clearMessageSelection() {
+        messageSelectionIds.value.clear();
+        lastSelectedMessageId.value = null;
+    }
+
     function toggleChunkSelection(chunkId: string) {
         const id = effectiveId.value;
         const currentSet = chunkSelections.get(id) || new Set<string>();
@@ -158,7 +174,9 @@ export function useFilter(ownerId?: string) {
     // 派生状态计算
     const hasSelection = computed(() => {
         return (
-            selectedMessageIds.value.size > 0 || selectedChunkIds.value.size > 0
+            messageSelectionIds.value.size > 0 ||
+            chunkSelectionIds.value.size > 0 ||
+            searchMessageSelectionIds.value.size > 0
         );
     });
 
@@ -184,6 +202,7 @@ export function useFilter(ownerId?: string) {
                 }
             }
         }
+
         return result;
     });
 
@@ -210,7 +229,11 @@ export function useFilter(ownerId?: string) {
         setMessagesSelection,
 
         hasSelection,
-        selectedMessagesCount,
+        messageSelectionCount,
+        chunkSelectionCount,
+        searchMessageSelectionCount,
         selectedMessages,
+        selectedChunks,
+        selectedSearchMessages,
     };
 }

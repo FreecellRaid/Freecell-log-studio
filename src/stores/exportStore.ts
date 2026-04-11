@@ -81,18 +81,20 @@ const PRESETS: ExportFormat[] = [
 export const useExportStore = defineStore('export', {
     state: () => {
         const storedFormats = localStorage.getItem('app_export_formats');
-        const storedActiveId = localStorage.getItem('app_export_active_id');
+        const storedCurrentId =
+            localStorage.getItem('app_export_current_id') ||
+            localStorage.getItem('app_export_active_id');
 
         return {
             formats: storedFormats ? JSON.parse(storedFormats) : [...PRESETS],
-            activeFormatId: storedActiveId || 'standard',
+            currentFormatId: storedCurrentId || 'standard',
         };
     },
     getters: {
-        activeFormat(state): ExportFormat {
+        currentFormat(state): ExportFormat {
             return (
                 state.formats.find(
-                    (f: ExportFormat) => f.formatId === state.activeFormatId,
+                    (f: ExportFormat) => f.formatId === state.currentFormatId,
                 ) || state.formats[0]
             );
         },
@@ -116,8 +118,8 @@ export const useExportStore = defineStore('export', {
             return newFmt;
         },
 
-        setActive(id: string) {
-            this.activeFormatId = id;
+        setCurrentFormat(id: string) {
+            this.currentFormatId = id;
             this.saveToLocal();
         },
         saveFormat(format: ExportFormat) {
@@ -136,8 +138,8 @@ export const useExportStore = defineStore('export', {
             this.formats = this.formats.filter(
                 (f: ExportFormat) => f.formatId !== id,
             );
-            if (this.activeFormatId === id) {
-                this.activeFormatId = 'standard';
+            if (this.currentFormatId === id) {
+                this.currentFormatId = 'standard';
             }
             this.saveToLocal();
         },
@@ -146,7 +148,7 @@ export const useExportStore = defineStore('export', {
                 'app_export_formats',
                 JSON.stringify(this.formats),
             );
-            localStorage.setItem('app_export_active_id', this.activeFormatId);
+            localStorage.setItem('app_export_current_id', this.currentFormatId);
         },
     },
 });

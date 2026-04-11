@@ -17,8 +17,8 @@
             <div class="view-title">
                 <Eye class="ui-icon icon-view-title" />
                 <h2>导出预览</h2>
-                <span class="msg-count" v-if="activeFormat">
-                    当前模板: {{ activeFormat.formatName }} ({{ rows.length }}
+                <span class="msg-count" v-if="currentFormat">
+                    当前模板: {{ currentFormat.formatName }} ({{ rows.length }}
                     项)
                 </span>
             </div>
@@ -44,7 +44,7 @@
                     <div
                         v-if="
                             row.type === 'documentSeparator' &&
-                            activeFormat.docSeparator
+                            currentFormat.docSeparator
                         "
                         class="separator-preview"
                     >
@@ -74,7 +74,7 @@
                     <div
                         v-else-if="
                             row.type === 'chunkSeparator' &&
-                            activeFormat.chunkSeparator
+                            currentFormat.chunkSeparator
                         "
                         class="separator-preview"
                     >
@@ -127,7 +127,7 @@
                                     getPlaceholderValue(
                                         token.value,
                                         row,
-                                        activeFormat,
+                                        currentFormat,
                                     )
                                 }}
                             </span>
@@ -191,22 +191,22 @@ const rows = computed(() => {
     return flattenLogToRows(
         logStore.documents,
         styleStore.viewSettings,
-        styleStore.activeRules,
+        styleStore.enabledRules,
     );
 });
 
 // 性能优化：将当前格式的模板字符串预解析为 Token 数组
 const messageTokens = computed(() =>
-    parseTemplate(activeFormat.value.messageTemplate),
+    parseTemplate(currentFormat.value.messageTemplate),
 );
 const messageSeparatorTokens = computed(() =>
-    parseTemplate(activeFormat.value.messageSeparator),
+    parseTemplate(currentFormat.value.messageSeparator),
 );
 const docSeparatorTokens = computed(() =>
-    parseTemplate(activeFormat.value.docSeparator || ''),
+    parseTemplate(currentFormat.value.docSeparator || ''),
 );
 const chunkSeparatorTokens = computed(() =>
-    parseTemplate(activeFormat.value.chunkSeparator || ''),
+    parseTemplate(currentFormat.value.chunkSeparator || ''),
 );
 
 function getStyleForPlaceholder(
@@ -229,6 +229,36 @@ function getStyleForPlaceholder(
 
     return css;
 }
+
+function syncFocusedFormatId() {
+    if (uiStore.focusArea === 'exportPreview') {
+        uiStore.setFocusedFormatId(currentFormat.value?.formatId || null);
+    }
+}
+
+onMounted(() => {
+    syncFocusedFormatId();
+});
+
+watch(
+    () => uiStore.focusArea,
+    () => {
+        syncFocusedFormatId();
+    },
+);
+
+watch(
+    () => currentFormat.value?.formatId,
+    () => {
+        syncFocusedFormatId();
+    },
+);
+
+onUnmounted(() => {
+    if (uiStore.focusedFormatId === currentFormat.value?.formatId) {
+        uiStore.setFocusedFormatId(null);
+    }
+});
 </script>
 
 <style scoped>

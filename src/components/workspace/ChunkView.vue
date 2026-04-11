@@ -36,7 +36,7 @@
                         :chunk-id="props.chunkId"
                         :index="index"
                         :is-selected="
-                            filterTool.selectedMessageIds.value.has(
+                            filterTool.messageSelectionIds.value.has(
                                 msg.messageId,
                             )
                         "
@@ -124,7 +124,7 @@ function handleShiftClick(_event: MouseEvent, msgId: string, index: number) {
 
         // 批量加入选中 Set 中
         for (let i = start; i <= end; i++) {
-            filterTool.selectedMessageIds.value.add(
+            filterTool.messageSelectionIds.value.add(
                 messages.value[i].messageId,
             );
         }
@@ -196,7 +196,7 @@ function handleActionInsert(msg: Message, index: number) {
 }
 
 function handleActionMerge(msg: Message, index: number) {
-    const selectedIds = filterTool.selectedMessageIds.value;
+    const selectedIds = filterTool.messageSelectionIds.value;
     if (selectedIds.has(msg.messageId) && selectedIds.size > 1) {
         // 多选状态：将选中的所有消息合并到当前被点击项
         messageEditorStore.mergeMessages(
@@ -225,7 +225,7 @@ function handleActionSplit(msgId: string) {
 }
 
 function handleActionDelete(msgId: string) {
-    const selectedIds = filterTool.selectedMessageIds.value;
+    const selectedIds = filterTool.messageSelectionIds.value;
     if (selectedIds.has(msgId)) {
         messageEditorStore.batchDeleteMessages(selectedIds);
         selectedIds.clear();

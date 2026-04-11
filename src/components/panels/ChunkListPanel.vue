@@ -1,5 +1,5 @@
 <template>
-    <div class="panel">
+    <div class="panel" data-focus-area="chunkList">
         <div class="panel-header">
             <div class="header-title">
                 <input
@@ -206,6 +206,7 @@
 import { ChevronRight, ChevronsDown, Trash2 } from '@lucide/vue';
 import { nextTick, reactive, ref, watch } from 'vue';
 import { useChunkDragDrop } from '@/composables/useDragDrop';
+import { useFilter } from '@/composables/useFilter';
 import { useChunkEditorStore } from '@/stores/editorStore/chunkStore';
 import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
@@ -216,6 +217,7 @@ import { useFilter } from '@/composables/useFilter';
 const logStore = useLogStore();
 const styleStore = useStyleStore();
 const uiStore = useUiStore();
+const filterTool = useFilter();
 const chunkEditorStore = useChunkEditorStore();
 const chunkDrag = useChunkDragDrop();
 const filterTool = useFilter();
@@ -263,6 +265,11 @@ function resetProjectNameDraft() {
 
 function handleToggleExpand(doc: LogDocument) {
     logStore.updateDocument(doc.docId, { isExpanded: !doc.isExpanded });
+}
+
+function handleChunkItemClick(chunkId: string) {
+    uiStore.setActiveChunk(chunkId);
+    filterTool.setActiveChunkSelection(chunkId);
 }
 
 function handleRemoveDoc(docId: string) {

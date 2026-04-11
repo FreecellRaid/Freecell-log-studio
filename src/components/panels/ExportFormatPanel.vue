@@ -48,9 +48,9 @@
                         class="icon-button"
                         :class="{
                             'is-active-btn':
-                                exportStore.activeFormatId === fmt.formatId,
+                                exportStore.currentFormatId === fmt.formatId,
                         }"
-                        @click.stop="exportStore.setActive(fmt.formatId)"
+                        @click.stop="exportStore.setCurrentFormat(fmt.formatId)"
                         title="设为默认"
                     >
                         <Check class="ui-icon" />
@@ -168,7 +168,7 @@ import { useUiStore } from '@/stores/uiStore';
 
 const exportStore = useExportStore();
 const uiStore = useUiStore();
-const expandedId = ref<string | null>(exportStore.activeFormatId);
+const expandedId = ref<string | null>(exportStore.currentFormatId);
 
 function handleTogglePreview(formatId: string) {
     // 更新业务数据：确保 exportStore 知道当前选中的是哪个模板

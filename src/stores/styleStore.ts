@@ -34,7 +34,7 @@ function ruleStore() {
             });
     });
 
-    const activeRules = computed(() => {
+    const enabledRules = computed(() => {
         return rules.value.filter((r) => {
             return r.isActive;
         });
@@ -216,7 +216,7 @@ function ruleStore() {
         rules,
         systemRules,
         customRules,
-        activeRules,
+        enabledRules,
         syncSystemRulesFromMessages,
         setColorMode,
         updateSystemRuleTarget,

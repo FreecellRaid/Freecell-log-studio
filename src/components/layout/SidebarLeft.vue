@@ -49,7 +49,10 @@
                             uiStore.leftSidebarVisible,
                     }"
                     title="搜索过滤"
-                    @click="uiStore.setLeftPanel('search')"
+                    @click="
+                        uiStore.setLeftPanel('search');
+                        uiStore.setFocusArea('search');
+                    "
                 >
                     <Search class="ui-icon" />
                 </div>
@@ -169,6 +172,13 @@
             v-if="uiStore.leftSidebarVisible"
             class="side-panel"
             :style="{ width: uiStore.leftPanelWidth + 'px' }"
+            :data-focus-area="
+                uiStore.activeLeftPanel === 'chunks'
+                    ? 'chunkList'
+                    : uiStore.activeLeftPanel === 'search'
+                      ? 'search'
+                      : 'otherPanel'
+            "
         >
             <div class="panel-content">
                 <div

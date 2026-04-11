@@ -91,7 +91,7 @@ export function useProjectManager() {
         styleStore.replaceRules(project.colorRules);
         styleStore.replaceViewSettings(project.viewSettings);
         clipboardStore.clearClipboard();
-        filterTool.clearSelection();
+        filterTool.clearAllSelections();
         historyStore.clearHistory();
 
         const firstChunk = project.documents[0]?.chunks[0];

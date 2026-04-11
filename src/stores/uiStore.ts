@@ -26,6 +26,18 @@ export type FocusTarget =
 export const PANEL_MIN_WIDTH = 150;
 export const PANEL_MAX_WIDTH = 600;
 
+export type FocusArea =
+    | 'none'
+    | 'input'
+    | 'modal'
+    | 'chunkList'
+    | 'search'
+    | 'otherPanel'
+    | 'chunkView'
+    | 'exportPreview'
+    | 'sidebarRight'
+    | 'defaultView';
+
 function uiStore() {
     const leftPanelWidth = ref(232);
     // 深色模式

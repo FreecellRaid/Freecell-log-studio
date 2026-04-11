@@ -136,7 +136,7 @@ const currentDocumentName = computed(function () {
 });
 
 const selectedCount = computed(function () {
-    return filterTool.selectedMessagesCount.value;
+    return filterTool.messageSelectionCount.value;
 });
 
 const selectedCustomRuleCount = computed(function () {
@@ -162,7 +162,7 @@ const selectedCustomRuleCount = computed(function () {
 });
 
 const currentSelectedIndex = computed<number | null>(function () {
-    if (filterTool.selectedMessageIds.value.size === 0) {
+    if (filterTool.messageSelectionIds.value.size === 0) {
         return null;
     }
 

@@ -1,5 +1,5 @@
 <template>
-    <div class="panel">
+    <div class="panel" data-focus-area="sidebarRight">
         <header class="panel-header">
             <div class="title">
                 <h3>INSPECTOR</h3>
@@ -20,7 +20,7 @@
                     v-for="message in chunk.messages"
                     :key="message.messageId"
                     v-show="
-                        filterTool.selectedMessageIds.value.has(
+                        filterTool.messageSelectionIds.value.has(
                             message.messageId,
                         )
                     "
@@ -197,7 +197,9 @@ const allChunks = computed(() => logStore.allChunks);
 // updateMessage 需要 chunkId 才能准确定位
 const selectedItems = computed(() => {
     return logStore.allMessages
-        .filter((msg) => filterTool.selectedMessageIds.value.has(msg.messageId))
+        .filter((msg) =>
+            filterTool.messageSelectionIds.value.has(msg.messageId),
+        )
         .map((msg) => ({
             message: { ...msg },
             chunkId: msg.chunkId,
@@ -205,7 +207,7 @@ const selectedItems = computed(() => {
 });
 
 const selectedMessageCount = computed(
-    () => filterTool.selectedMessageIds.value.size,
+    () => filterTool.messageSelectionIds.value.size,
 );
 
 function updateField(

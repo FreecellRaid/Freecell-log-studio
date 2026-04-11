@@ -217,7 +217,7 @@
                                 v-if="filterStore.hasSelection"
                                 class="inline-hint"
                             >
-                                已选 {{ filterStore.selectedMessagesCount }} 条
+                                已选 {{ filterStore.messageSelectionCount }} 条
                             </span>
                         </label>
                         <div class="form-row two-col">

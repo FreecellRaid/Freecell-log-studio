@@ -34,6 +34,20 @@ export function useKeyboardShortcuts() {
             event.preventDefault();
             dispatch(command);
         }
+
+        if (isModKey && event.shiftKey && key === 'z') {
+            event.preventDefault();
+            handlers.redo?.();
+            return;
+        }
+    };
+
+    const handlePointerDown = (event: PointerEvent) => {
+        updateFocusAreaFromTarget(event.target);
+    };
+
+    const handleFocusIn = (event: FocusEvent) => {
+        updateFocusAreaFromTarget(event.target);
     };
 
     onMounted(() => window.addEventListener('keydown', handleKeyDown));

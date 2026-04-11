@@ -27,8 +27,8 @@
                     />
                 </svg>
             </div>
-            <div>跑团Log编辑器</div>
-        </div>
+            <div class="project-name">跑团Log编辑器</div>
+        </button>
         <div class="global-actions">
             <button
                 class="icon icon-button-warning"
@@ -331,7 +331,7 @@ function handleClearAll() {
     logStore.clearData();
     styleStore.clearRules();
     clipboardStore.clearClipboard();
-    filterTool.clearSelection();
+    filterTool.clearAllSelections();
     historyStore.clearHistory();
     uiStore.setFocus({ type: 'window', id: 'default' });
 }
