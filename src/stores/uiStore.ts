@@ -31,6 +31,7 @@ function uiStore() {
     // 深色模式
     const isDarkMode = ref(false);
     const followSystem = ref(true);
+
     function detectSystemDark() {
         return (
             window.matchMedia &&
@@ -178,18 +179,18 @@ function uiStore() {
     }
 
     function toggleExportPreview(formatId: string) {
-    const isActive = activeFocus.value.id === formatId;
+        const isActive = activeFocus.value.id === formatId;
 
-    if (isActive) {
-        unregisterWindow(formatId);
-    } else {
-        registerWindow({
-            windowId: formatId,
-            windowName: 'exportPreview'
-        });
-        setFocus({ type: 'window', id: formatId })
+        if (isActive) {
+            unregisterWindow(formatId);
+        } else {
+            registerWindow({
+                windowId: formatId,
+                windowName: 'exportPreview',
+            });
+            setFocus({ type: 'window', id: formatId });
+        }
     }
-}
 
     // 获取当前活跃的 View 信息 (用于 MainWorkspace 渲染)
     const VIEW_WINDOW_NAMES: WindowName[] = [
@@ -218,6 +219,19 @@ function uiStore() {
             } as WindowInstance)
         );
     });
+    // 帮助弹窗
+    const isHelpOpen = ref(false);
+    function openHelpDocument() {
+        isHelpOpen.value = true;
+        setFocus({ type: 'modal', id: 'modal' });
+    }
+    function closeHelpDocument() {
+        isHelpOpen.value = false;
+        if (activeFocus.value.type === 'modal') {
+            focusStack.value.pop();
+        }
+    }
+
     const isWindowOpen = (windowId: string) => openWindows.value.has(windowId);
     const isWindowFocused = (windowId: string) =>
         activeFocus.value.id === windowId;
@@ -235,6 +249,7 @@ function uiStore() {
         isDarkMode,
         followSystem,
         showHidden,
+        isHelpOpen,
 
         setFocus,
         registerWindow,
@@ -251,7 +266,9 @@ function uiStore() {
         isWindowFocused,
         setActiveChunk,
         openExportPreview,
-        toggleExportPreview
+        toggleExportPreview,
+        openHelpDocument,
+        closeHelpDocument,
     };
 }
 

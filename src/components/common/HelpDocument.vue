@@ -2,34 +2,44 @@
     <div
         class="help-overlay"
         data-focus-area="modal"
-        @click.self="$emit('close')"
+        @pointerdown.self="uiStore.closeHelpDocument()"
     >
         <div class="help-dialog" role="dialog" aria-modal="true">
             <div class="help-header">
-                <h2>帮助文档</h2>
+                <div class="header-title">
+                    <HelpCircle class="ui-icon" />
+                    <h2>帮助文档</h2>
+                </div>
                 <button
                     class="close-button icon-interactive"
                     type="button"
-                    title="关闭帮助"
-                    @click="$emit('close')"
+                    title="关闭帮助 (Esc)"
+                    @click="uiStore.closeHelpDocument()"
                 >
-                    关闭
+                    <X class="ui-icon" />
                 </button>
             </div>
 
             <div class="help-content">
-                <p>这里是帮助文档弹窗的占位页。</p>
-                <p>后续可以补快捷键列表、导入导出说明、编辑操作说明等内容。</p>
-                <p>当前支持点击标题、点击图标、或按 `Cmd/Ctrl + K` 打开。</p>
+                <slot>
+                    <div class="placeholder-text">
+                        此处为帮助文档内容，支持快捷键列表、操作说明等。
+                    </div>
+                </slot>
+            </div>
+
+            <div class="help-footer">
+                <div class="shortcut-hint">按 Esc 键关闭</div>
             </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-defineEmits<{
-    (e: 'close'): void;
-}>();
+import { HelpCircle, X } from '@lucide/vue';
+import { useUiStore } from '@/stores/uiStore';
+
+const uiStore = useUiStore();
 </script>
 
 <style scoped>
@@ -40,7 +50,6 @@ defineEmits<{
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.4);
 }
 
 .help-dialog {
@@ -58,19 +67,19 @@ defineEmits<{
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 16px 18px;
+    padding: 8px 18px;
     border-bottom: 1px solid var(--border-color);
 }
 
 .help-header h2 {
     margin: 0;
-    font-size: 18px;
+    font-size: 16px;
 }
 
 .close-button {
     padding: 6px 10px;
-    border: 1px solid var(--border-color);
-    background: var(--bg-workspace);
+    border: none;
+    background-color: var(--bg-topbar);
     cursor: pointer;
 }
 
@@ -82,5 +91,12 @@ defineEmits<{
 
 .help-content p {
     margin: 0 0 12px;
+}
+
+.help-footer {
+    margin-top: 24px;
+    padding: 18px;
+    font-size: 12px;
+    color: var(--text-muted);
 }
 </style>

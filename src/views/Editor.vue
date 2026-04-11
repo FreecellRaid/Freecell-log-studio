@@ -1,6 +1,7 @@
 <template>
     <div class="ide-container">
         <TopMenuBar />
+        <HelpDocument v-if="uiStore.isHelpOpen" />
 
         <main class="middle-section">
             <aside class="sidebar-left">
@@ -30,6 +31,7 @@ import { useMessageEditorStore } from '@/stores/editorStore/messageStore';
 import { useHistoryStore } from '@/stores/historyStore';
 import { useFilter } from '@/composables/useFilter';
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
+import HelpDocument from '@/components/common/HelpDocument.vue';
 import TopMenuBar from '@/components/layout/TopMenuBar.vue';
 import SidebarLeft from '@/components/layout/SidebarLeft.vue';
 import MainWorkspace from '@/components/workspace/MainWorkspace.vue';

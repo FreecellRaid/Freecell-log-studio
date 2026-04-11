@@ -1,6 +1,11 @@
 <template>
     <header class="top-bar">
-        <div class="project-name">
+        <div
+            class="project-name project-entry"
+            type="button"
+            title="打开帮助文档"
+            @click="uiStore.openHelpDocument"
+        >
             <div class="icon-project">
                 <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
                     <defs>
@@ -176,7 +181,6 @@ const projectManager = useProjectManager();
 const showExportPanel = ref(false);
 const showStoredProjects = ref(false);
 const storedProjects = ref<ProjectFile[]>([]);
-
 function closeAllPanels() {
     showExportPanel.value = false;
     showStoredProjects.value = false;
@@ -357,8 +361,22 @@ const vClickOutside = {
 }
 
 .project-name {
+    font-size: 16px;
     display: flex;
     align-items: center;
+}
+
+.project-entry {
+    border: none;
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    cursor: pointer;
+}
+
+.project-entry:hover,
+.project-entry:focus-visible {
+    color: var(--icon-color-strong);
 }
 
 .icon-project {

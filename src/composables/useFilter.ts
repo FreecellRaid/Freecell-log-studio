@@ -19,7 +19,11 @@ export function useFilter(ownerId?: string) {
         const stack = uiStore.focusStack;
         for (let i = stack.length - 1; i >= 0; i--) {
             const target = stack[i];
-            if (target.type === 'window' && target.id !== 'inspector' && target.id !== 'exportFormat') {
+            if (
+                target.type === 'window' &&
+                target.id !== 'inspector' &&
+                target.id !== 'exportFormat'
+            ) {
                 return target.id;
             }
         }
@@ -37,7 +41,7 @@ export function useFilter(ownerId?: string) {
 
     const lastSelectedMessageId = computed({
         get: () => lastSelectedMessages.get(effectiveId.value) || null,
-        set: (val) => lastSelectedMessages.set(effectiveId.value, val)
+        set: (val) => lastSelectedMessages.set(effectiveId.value, val),
     });
 
     // 选区操作方法 (基于不可变数据模式触发更新)
@@ -139,7 +143,9 @@ export function useFilter(ownerId?: string) {
 
     // 派生状态计算
     const hasSelection = computed(() => {
-        return selectedMessageIds.value.size > 0 || selectedChunkIds.value.size > 0;
+        return (
+            selectedMessageIds.value.size > 0 || selectedChunkIds.value.size > 0
+        );
     });
 
     const selectedMessagesCount = computed(() => {
