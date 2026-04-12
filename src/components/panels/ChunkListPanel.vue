@@ -218,7 +218,7 @@ const styleStore = useStyleStore();
 const windowStore = useWindowStore();
 const chunkEditorStore = useChunkEditorStore();
 const chunkDrag = useChunkDragDrop();
-const filterTool = useFilter();
+const filterTool = useFilter('chunkList');
 
 const editingDocId = ref('');
 const editingChunkId = ref('');
