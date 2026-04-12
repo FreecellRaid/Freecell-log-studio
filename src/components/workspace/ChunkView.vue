@@ -2,8 +2,8 @@
     <div
         class="view"
         :data-focus-id="props.chunkId"
-        :class="{ 'is-active': uiStore.activeFocus.id === props.chunkId }"
-        @pointerdown="uiStore.setFocus({ type: 'window', id: props.chunkId })"
+        :class="{ 'is-active': windowStore.activeFocus === props.chunkId }"
+        @pointerdown="windowStore.setFocus(props.chunkId)"
     >
         <header class="view-header">
             <div class="view-title">
@@ -74,7 +74,7 @@ import { useMessageDragDrop } from '@/composables/useDragDrop';
 import MessageItem from '@/components/common/MessageItem.vue';
 import { useMessageEditorStore } from '@/stores/editorStore/messageStore';
 import { useChunkEditorStore } from '@/stores/editorStore/chunkStore';
-import { useUiStore } from '@/stores/uiStore';
+import { useWindowStore } from '@/stores/windowStore';
 import { generateId } from '@/utils/id';
 import type { Message } from '@/types/log';
 
@@ -83,15 +83,16 @@ const logStore = useLogStore();
 const filterTool = useFilter(props.chunkId);
 const dragDropTool = useMessageDragDrop();
 const dropIndicatorIndex = ref<number | null>(null);
-const uiStore = useUiStore();
+const windowStore = useWindowStore();
 const messageEditorStore = useMessageEditorStore();
 const chunkEditorStore = useChunkEditorStore();
 
 // 组件挂载时注册窗口
 onMounted(() => {
-    uiStore.registerWindow({
+    windowStore.registerWindow({
         windowId: props.chunkId,
         windowName: 'chunkView',
+        windowType: 'view',
     });
 });
 

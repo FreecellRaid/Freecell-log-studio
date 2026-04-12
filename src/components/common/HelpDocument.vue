@@ -2,7 +2,7 @@
     <div
         class="help-overlay"
         data-focus-area="modal"
-        @pointerdown.self="uiStore.closeHelpDocument()"
+        @pointerdown.self="windowStore.closeHelpDocument()"
     >
         <div class="help-dialog" role="dialog" aria-modal="true">
             <div class="help-header">
@@ -14,7 +14,7 @@
                     class="close-button icon-interactive"
                     type="button"
                     title="关闭帮助 (Esc)"
-                    @click="uiStore.closeHelpDocument()"
+                    @click="windowStore.closeHelpDocument()"
                 >
                     <X class="ui-icon" />
                 </button>
@@ -37,9 +37,9 @@
 
 <script setup lang="ts">
 import { HelpCircle, X } from '@lucide/vue';
-import { useUiStore } from '@/stores/uiStore';
+import { useWindowStore } from '@/stores/windowStore';
 
-const uiStore = useUiStore();
+const windowStore = useWindowStore();
 </script>
 
 <style scoped>

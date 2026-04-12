@@ -1,7 +1,7 @@
 <template>
     <div class="ide-container">
         <TopMenuBar />
-        <HelpDocument v-if="uiStore.isHelpOpen" />
+        <HelpDocument v-if="windowStore.isHelpOpen" />
 
         <main class="middle-section">
             <aside class="sidebar-left">
@@ -12,7 +12,7 @@
                 <MainWorkspace />
             </section>
 
-            <aside v-if="uiStore.rightSidebarVisible" class="sidebar-right">
+            <aside v-if="windowStore.rightSidebarVisible" class="sidebar-right">
                 <SidebarRight />
             </aside>
         </main>
@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { useUiStore } from '@/stores/uiStore';
+import { useWindowStore } from '@/stores/windowStore';
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
 import HelpDocument from '@/components/common/HelpDocument.vue';
 import TopMenuBar from '@/components/layout/TopMenuBar.vue';
@@ -33,7 +33,7 @@ import MainWorkspace from '@/components/workspace/MainWorkspace.vue';
 import StatusBar from '@/components/layout/StatusBar.vue';
 import SidebarRight from '@/components/layout/SidebarRight.vue';
 
-const uiStore = useUiStore();
+const windowStore = useWindowStore();
 useKeyboardShortcuts();
 </script>
 

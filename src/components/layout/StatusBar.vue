@@ -76,23 +76,23 @@ import {
 } from '@lucide/vue';
 import { computed } from 'vue';
 import { useLogStore } from '@/stores/logStore';
-import { useUiStore } from '@/stores/uiStore';
+import { useWindowStore } from '@/stores/windowStore';
 import { useStyleStore } from '@/stores/styleStore';
 import { useFilter } from '@/composables/useFilter';
 import { matchesMessageFilter } from '@/editor/filter';
 
 const logStore = useLogStore();
-const uiStore = useUiStore();
+const windowStore = useWindowStore();
 const styleStore = useStyleStore();
 const filterTool = useFilter();
 
 const activeChunk = computed(function () {
     if (
-        !uiStore.currentActiveView.windowId ||
-        uiStore.currentActiveView.windowId === 'defaultView'
+        !windowStore.currentActiveView.windowId ||
+        windowStore.currentActiveView.windowId === 'defaultView'
     )
         return null;
-    return logStore.findChunkById(uiStore.currentActiveView.windowId);
+    return logStore.findChunkById(windowStore.currentActiveView.windowId);
 });
 
 const activeChunkName = computed(function () {

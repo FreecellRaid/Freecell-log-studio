@@ -1,7 +1,7 @@
 <template>
     <div
         class="sidebar-left-container"
-        :class="{ 'is-collapsed': !uiStore.leftSidebarVisible }"
+        :class="{ 'is-collapsed': !windowStore.leftSidebarVisible }"
     >
         <nav class="activity-bar">
             <div class="nav-top">
@@ -9,11 +9,11 @@
                     class="nav-item"
                     :class="{
                         active:
-                            uiStore.activeLeftPanelName === 'chunkList' &&
-                            uiStore.leftSidebarVisible,
+                            windowStore.activeLeftPanelName === 'chunkList' &&
+                            windowStore.leftSidebarVisible,
                     }"
                     title="文件列表"
-                    @click="uiStore.setLeftPanel('chunkList')"
+                    @click="windowStore.setLeftPanel('chunkList')"
                 >
                     <FolderOpen class="ui-icon" />
                 </div>
@@ -21,11 +21,11 @@
                     class="nav-item"
                     :class="{
                         active:
-                            uiStore.activeLeftPanelName === 'identity' &&
-                            uiStore.leftSidebarVisible,
+                            windowStore.activeLeftPanelName === 'identity' &&
+                            windowStore.leftSidebarVisible,
                     }"
                     title="身份管理"
-                    @click="uiStore.setLeftPanel('identity')"
+                    @click="windowStore.setLeftPanel('identity')"
                 >
                     <UserRound class="ui-icon" />
                 </div>
@@ -33,11 +33,11 @@
                     class="nav-item"
                     :class="{
                         active:
-                            uiStore.activeLeftPanelName === 'ruleEditor' &&
-                            uiStore.leftSidebarVisible,
+                            windowStore.activeLeftPanelName === 'ruleEditor' &&
+                            windowStore.leftSidebarVisible,
                     }"
                     title="染色规则"
-                    @click="uiStore.setLeftPanel('ruleEditor')"
+                    @click="windowStore.setLeftPanel('ruleEditor')"
                 >
                     <Palette class="ui-icon" />
                 </div>
@@ -45,11 +45,11 @@
                     class="nav-item"
                     :class="{
                         active:
-                            uiStore.activeLeftPanelName === 'search' &&
-                            uiStore.leftSidebarVisible,
+                            windowStore.activeLeftPanelName === 'search' &&
+                            windowStore.leftSidebarVisible,
                     }"
                     title="搜索过滤"
-                    @click="uiStore.setLeftPanel('search')"
+                    @click="windowStore.setLeftPanel('search')"
                 >
                     <Search class="ui-icon" />
                 </div>
@@ -57,11 +57,12 @@
                     class="nav-item"
                     :class="{
                         active:
-                            uiStore.activeLeftPanelName === 'exportFormat' &&
-                            uiStore.leftSidebarVisible,
+                            windowStore.activeLeftPanelName ===
+                                'exportFormat' &&
+                            windowStore.leftSidebarVisible,
                     }"
                     title="导出模板"
-                    @click="uiStore.setLeftPanel('exportFormat')"
+                    @click="windowStore.setLeftPanel('exportFormat')"
                 >
                     <TextInitial class="ui-icon" />
                 </div>
@@ -166,37 +167,39 @@
         </nav>
 
         <aside
-            v-if="uiStore.leftSidebarVisible"
+            v-if="windowStore.leftSidebarVisible"
             class="side-panel"
             :style="{ width: uiStore.leftPanelWidth + 'px' }"
         >
             <div class="panel-content">
                 <div
-                    v-if="uiStore.activeLeftPanelName === 'chunkList'"
+                    v-if="windowStore.activeLeftPanelName === 'chunkList'"
                     class="panel-slot"
                 >
                     <ChunkListPanel />
                 </div>
                 <div
-                    v-else-if="uiStore.activeLeftPanelName === 'identity'"
+                    v-else-if="windowStore.activeLeftPanelName === 'identity'"
                     class="panel-slot"
                 >
                     <IdentityPanel />
                 </div>
                 <div
-                    v-else-if="uiStore.activeLeftPanelName === 'ruleEditor'"
+                    v-else-if="windowStore.activeLeftPanelName === 'ruleEditor'"
                     class="panel-slot"
                 >
                     <RuleEditorPanel />
                 </div>
                 <div
-                    v-else-if="uiStore.activeLeftPanelName === 'search'"
+                    v-else-if="windowStore.activeLeftPanelName === 'search'"
                     class="panel-slot"
                 >
                     <SearchPanel />
                 </div>
                 <div
-                    v-else-if="uiStore.activeLeftPanelName === 'exportFormat'"
+                    v-else-if="
+                        windowStore.activeLeftPanelName === 'exportFormat'
+                    "
                     class="panel-slot"
                 >
                     <ExportFormatPanel />
@@ -205,7 +208,7 @@
         </aside>
 
         <div
-            v-if="uiStore.leftSidebarVisible"
+            v-if="windowStore.leftSidebarVisible"
             class="resize-handle"
             @mousedown="startResize"
         ></div>
@@ -226,6 +229,7 @@ import {
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useStyleStore } from '@/stores/styleStore';
 import { useUiStore, PANEL_MIN_WIDTH, PANEL_MAX_WIDTH } from '@/stores/uiStore';
+import { useWindowStore } from '@/stores/windowStore';
 import ChunkListPanel from '@/components/panels/ChunkListPanel.vue';
 import IdentityPanel from '@/components/panels/IdentityPanel.vue';
 import RuleEditorPanel from '@/components/panels/RuleEditorPanel.vue';
@@ -233,6 +237,7 @@ import ExportFormatPanel from '@/components/panels/ExportFormatPanel.vue';
 import SearchPanel from '@/components/panels/SearchPanel.vue';
 
 const uiStore = useUiStore();
+const windowStore = useWindowStore();
 const styleStore = useStyleStore();
 const showSettings = ref(false);
 const closeSettings = () => {

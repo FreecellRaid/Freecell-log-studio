@@ -4,7 +4,7 @@
             class="project-name project-entry"
             type="button"
             title="打开帮助文档"
-            @click="uiStore.openHelpDocument"
+            @click="windowStore.openHelpDocument"
         >
             <div class="icon-project">
                 <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
@@ -157,7 +157,7 @@ import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
 import { useClipboardStore } from '@/stores/clipboardStore';
 import { useHistoryStore } from '@/stores/historyStore';
-import { useUiStore } from '@/stores/uiStore';
+import { useWindowStore } from '@/stores/windowStore';
 import { useFilter } from '@/composables/useFilter';
 import { useFileImport } from '@/composables/useImporter';
 import { useProjectManager } from '@/composables/useProjectManager';
@@ -171,7 +171,7 @@ const logStore = useLogStore();
 const styleStore = useStyleStore();
 const clipboardStore = useClipboardStore();
 const historyStore = useHistoryStore();
-const uiStore = useUiStore();
+const windowStore = useWindowStore();
 
 const filterTool = useFilter();
 const { importAndApply } = useFileImport();
@@ -210,8 +210,8 @@ const hasWorkspaceState = computed(() => {
         filterTool.hasSelection.value ||
         historyStore.undoStack.length > 0 ||
         historyStore.redoStack.length > 0 ||
-        !uiStore.currentActiveView.windowId ||
-        uiStore.currentActiveView.windowId === 'defaultView'
+        !windowStore.currentActiveView.windowId ||
+        windowStore.currentActiveView.windowId === 'defaultView'
     );
 });
 
@@ -333,7 +333,7 @@ function handleClearAll() {
     clipboardStore.clearClipboard();
     filterTool.clearSelection();
     historyStore.clearHistory();
-    uiStore.setFocus({ type: 'window', id: 'default' });
+    windowStore.setFocus('default');
 }
 
 /** 点击元素外部触发回调 (用于关闭下拉菜单) */

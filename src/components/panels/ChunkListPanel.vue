@@ -103,9 +103,9 @@
                         <div
                             class="chunk-item"
                             :class="{
-                                // uiStore的焦点判断
+                                // windowStore的焦点判断
                                 'is-active':
-                                    uiStore.currentActiveView.windowId ===
+                                    windowStore.currentActiveView.windowId ===
                                     chunk.chunkId,
                                 // useFilter的选中判断
                                 'is-selected':
@@ -209,16 +209,16 @@ import { useChunkDragDrop } from '@/composables/useDragDrop';
 import { useChunkEditorStore } from '@/stores/editorStore/chunkStore';
 import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
-import { useUiStore } from '@/stores/uiStore';
+import { useWindowStore } from '@/stores/windowStore';
 import type { Chunk, LogDocument } from '@/types/log';
 import { useFilter } from '@/composables/useFilter';
 
 const logStore = useLogStore();
 const styleStore = useStyleStore();
-const uiStore = useUiStore();
+const windowStore = useWindowStore();
 const chunkEditorStore = useChunkEditorStore();
 const chunkDrag = useChunkDragDrop();
-const filterTool = useFilter();
+const filterTool = useFilter('chunkList');
 
 const editingDocId = ref('');
 const editingChunkId = ref('');
@@ -330,13 +330,14 @@ function handleMerge(currentChunkId: string, nextChunkId: string) {
 }
 
 function handleChunkSelect(chunkId: string, event: MouseEvent) {
-    uiStore.registerWindow({
+    windowStore.registerWindow({
         windowId: chunkId,
         windowName: 'chunkView',
+        windowType: 'view',
     });
     // 这里切换两次，用来保证显示正常再把焦点拉回panel
-    uiStore.setFocus({ type: 'window', id: chunkId });
-    uiStore.setFocus({ type: 'window', id: 'chunkList' });
+    windowStore.setFocus(chunkId);
+    windowStore.setFocus('chunkList');
 
     // 如果没有按住 Ctrl/Meta/Shift，则视为普通单选，清空其他选中
     if (!event.ctrlKey && !event.metaKey && !event.shiftKey) {
@@ -365,9 +366,9 @@ function handleDelete(chunkId: string) {
         targets.forEach((id) => {
             chunkEditorStore.deleteChunk(id);
 
-            // UI 同步：从 uiStore 中彻底注销窗口
-            if (uiStore.isWindowOpen(id)) {
-                uiStore.unregisterWindow(id);
+            // UI 同步：从 windowStore 中彻底注销窗口
+            if (windowStore.isWindowOpen(id)) {
+                windowStore.unregisterWindow(id);
             }
         });
 
