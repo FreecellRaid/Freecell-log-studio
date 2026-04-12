@@ -2,7 +2,7 @@ import { reactive, computed } from 'vue';
 import type { Message, MessageFilter } from '@/types/log';
 import { matchesMessageFilter } from '@/editor/filter';
 import { useLogStore } from '@/stores/logStore';
-import { useUiStore } from '@/stores/uiStore';
+import { useWindowStore } from '@/stores/windowStore';
 
 // 全局隔离的选区状态 key: windowId
 const messageSelections = reactive(new Map<string, Set<string>>());
@@ -11,20 +11,20 @@ const lastSelectedMessages = reactive(new Map<string, string | null>());
 
 export function useFilter(ownerId?: string) {
     const logStore = useLogStore();
-    const uiStore = useUiStore();
+    const windowStore = useWindowStore();
     const effectiveId = computed(() => {
-        // 如果组件显式声明了 ownerId（如 SearchPanel, ChunkView），直接使用
+        // 如果组件显式声明了 ownerId，直接使用
         if (ownerId) return ownerId;
         // 否则，根据焦点栈向下回溯
-        const stack = uiStore.focusStack;
+        const stack = windowStore.focusStack;
         for (let i = stack.length - 1; i >= 0; i--) {
             const target = stack[i];
             if (
-                target.type === 'window' &&
-                target.id !== 'inspector' &&
-                target.id !== 'exportFormat'
+                target !== 'help' &&
+                target !== 'inspector' &&
+                target !== 'exportFormat'
             ) {
-                return target.id;
+                return target;
             }
         }
         return 'defaultView';

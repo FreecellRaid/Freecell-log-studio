@@ -71,14 +71,15 @@
                                 class="icon-button"
                                 :class="{
                                     'is-active':
-                                        uiStore.activeFocus.id === fmt.formatId,
+                                        windowStore.activeFocus ===
+                                        fmt.formatId,
                                 }"
                                 @click.stop="handleTogglePreview(fmt.formatId)"
                                 title="预览模板效果"
                             >
                                 <Eye
                                     v-if="
-                                        uiStore.activeFocus.id !== fmt.formatId
+                                        windowStore.activeFocus !== fmt.formatId
                                     "
                                     class="ui-icon"
                                 />
@@ -160,16 +161,16 @@
 import { ref } from 'vue';
 import { Plus, ChevronRight, Trash2, Check, Eye, EyeOff } from '@lucide/vue';
 import { useExportStore } from '@/stores/exportStore';
-import { useUiStore } from '@/stores/uiStore';
+import { useWindowStore } from '@/stores/windowStore';
 
 const exportStore = useExportStore();
-const uiStore = useUiStore();
+const windowStore = useWindowStore();
 const expandedId = ref<string | null>(exportStore.activeFormatId);
 
 function handleTogglePreview(formatId: string) {
     // 更新业务数据：确保 exportStore 知道当前选中的是哪个模板
     exportStore.activeFormatId = formatId;
-    uiStore.toggleExportPreview(formatId);
+    windowStore.toggleExportPreview(formatId);
 }
 
 function toggleExpand(id: string) {

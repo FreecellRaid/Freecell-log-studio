@@ -3,7 +3,7 @@ import { useClipboardStore } from '@/stores/clipboardStore';
 import { useHistoryStore } from '@/stores/historyStore';
 import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
-import { useUiStore } from '@/stores/uiStore';
+import { useWindowStore } from '@/stores/windowStore';
 import type { ProjectFile } from '@/types/project';
 import { useFilter } from './useFilter';
 import {
@@ -35,7 +35,7 @@ export function useProjectManager() {
     const styleStore = useStyleStore();
     const clipboardStore = useClipboardStore();
     const historyStore = useHistoryStore();
-    const uiStore = useUiStore();
+    const windowStore = useWindowStore();
     const filterTool = useFilter();
 
     const hasWorkspaceState = computed(() => {
@@ -92,7 +92,7 @@ export function useProjectManager() {
         clipboardStore.clearClipboard();
         filterTool.clearSelection();
         historyStore.clearHistory();
-        uiStore.focusStack = [];
+        windowStore.focusStack = [];
 
         return true;
     }

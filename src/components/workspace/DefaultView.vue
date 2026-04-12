@@ -2,8 +2,8 @@
     <div
         class="view"
         data-focus-id="defaultView"
-        :class="{ 'is-active': uiStore.activeFocus.id === 'defaultView' }"
-        @pointerdown="uiStore.setFocus({ type: 'window', id: 'defaultView' })"
+        :class="{ 'is-active': windowStore.activeFocus === 'defaultView' }"
+        @pointerdown="windowStore.setFocus('defaultView')"
     >
         <header class="view-header">
             <div class="view-title">
@@ -40,13 +40,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { Dices, LayoutDashboard } from '@lucide/vue';
-import { useUiStore } from '@/stores/uiStore';
+import { useWindowStore } from '@/stores/windowStore';
 
-const uiStore = useUiStore();
+const windowStore = useWindowStore();
 onMounted(() => {
-    uiStore.registerWindow({
+    windowStore.registerWindow({
         windowId: 'defaultView',
         windowName: 'defaultView',
+        windowType: 'view',
     });
 });
 

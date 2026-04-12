@@ -1,4 +1,4 @@
-import { useUiStore } from '@/stores/uiStore';
+import { useWindowStore } from '@/stores/windowStore';
 import { useFilter } from '@/composables/useFilter';
 import { useHistoryStore } from '@/stores/historyStore';
 import { useClipboardStore } from '@/stores/clipboardStore';
@@ -25,7 +25,7 @@ export type CommandType =
     | 'export';
 
 export function useCommandDispatcher() {
-    const uiStore = useUiStore();
+    const windowStore = useWindowStore();
     const filter = useFilter();
     const history = useHistoryStore();
     const clipboard = useClipboardStore();
@@ -36,20 +36,21 @@ export function useCommandDispatcher() {
     const exportStore = useExportStore();
 
     const dispatch = (command: CommandType) => {
-        const focus = uiStore.activeFocus;
-        const viewName = uiStore.currentActiveView.windowName;
+        const focus = windowStore.activeFocus;
+        const windowType = windowStore.currentActiveWindow.windowType;
+        const windowName = windowStore.currentActiveWindow.windowName;
 
         // P0 Modal 开启时拦截其他业务命令
-        if (focus.type === 'modal') {
-            if (command === 'cancel') return uiStore.closeHelpDocument();
+        if (windowType === 'modal') {
+            if (command === 'cancel') return windowStore.closeHelpDocument();
             return;
         }
 
         // P1 全局级命令
         const globalActions: Partial<Record<CommandType, () => void>> = {
-            toggleLeft: () => uiStore.toggleLeftSidebar(),
-            toggleRight: () => uiStore.toggleRightSidebar(),
-            openHelp: () => uiStore.openHelpDocument(),
+            toggleLeft: () => windowStore.toggleLeftSidebar(),
+            toggleRight: () => windowStore.toggleRightSidebar(),
+            openHelp: () => windowStore.openHelpDocument(),
             undo: () => history.undo(),
             redo: () => history.redo(),
             save: () => {
@@ -58,7 +59,7 @@ export function useCommandDispatcher() {
             export: () => {
                 const formatId = exportStore.activeFormat?.formatId;
                 if (formatId) {
-                    uiStore.toggleExportPreview(formatId);
+                    windowStore.toggleExportPreview(formatId);
                 }
             },
         };
@@ -69,9 +70,9 @@ export function useCommandDispatcher() {
         }
 
         // P2 基于 windowName 的分发
-        switch (viewName) {
+        switch (windowName) {
             case 'chunkView':
-                handleChunkViewCommands(command, focus.id);
+                handleChunkViewCommands(command, focus);
                 break;
             case 'chunkList':
                 handleChunkListCommands(command);

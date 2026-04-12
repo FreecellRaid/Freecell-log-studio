@@ -17,17 +17,16 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useLogStore } from '@/stores/logStore';
-import { useUiStore } from '@/stores/uiStore';
+import { useWindowStore } from '@/stores/windowStore';
 import FileImporter from '@/components/common/FileImporter.vue';
 import ChunkView from './ChunkView.vue';
 import ExportPreview from './ExportPreview.vue';
 import DefaultView from '@/components/workspace/DefaultView.vue';
 
 const logStore = useLogStore();
-const uiStore = useUiStore();
-
+const windowStore = useWindowStore();
 const isWorkspaceEmpty = computed(() => logStore.documents.length === 0);
-const activeViewInfo = computed(() => uiStore.currentActiveView);
+const activeViewInfo = computed(() => windowStore.currentActiveView);
 
 // 根据 windowName 映射组件
 const viewComponent = computed(() => {

@@ -4,7 +4,7 @@
         :data-focus-id="props.formatId"
         :class="{
             'preview-always-white': uiStore.exportPreviewAlwaysWhite,
-            'is-active': uiStore.activeFocus.id === props.formatId,
+            'is-active': windowStore.activeFocus === props.formatId,
         }"
         @pointerdown="
             uiStore.setFocus({
@@ -24,7 +24,7 @@
             </div>
             <button
                 class="close-button"
-                @click="uiStore.toggleExportPreview(props.formatId)"
+                @click="windowStore.toggleExportPreview(props.formatId)"
             >
                 <X class="ui-icon" />
             </button>
@@ -162,6 +162,7 @@ import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
 import { useExportStore } from '@/stores/exportStore';
 import { useUiStore } from '@/stores/uiStore';
+import { useWindowStore } from '@/stores/windowStore';
 import { flattenLogToRows } from '@/io/export/flattener';
 import { parseTemplate, getPlaceholderValue } from '@/io/export/templateParser';
 import type { ExportRow } from '@/types/export';
@@ -170,21 +171,23 @@ const logStore = useLogStore();
 const styleStore = useStyleStore();
 const exportStore = useExportStore();
 const uiStore = useUiStore();
+const windowStore = useWindowStore();
 const activeFormat = computed(() => exportStore.activeFormat);
 // 接收从 MainWorkspace 传来的 ID
 const props = defineProps<{ formatId: string }>();
 const windowId = props.formatId;
 
 onMounted(() => {
-    uiStore.registerWindow({
+    windowStore.registerWindow({
         windowId: props.formatId,
         windowName: 'exportPreview',
+        windowType: 'view',
     });
 });
 
 // 销毁时注销焦点，方便回到上一个ChunkView
 onUnmounted(() => {
-    uiStore.unregisterWindow(windowId);
+    windowStore.unregisterWindow(windowId);
 });
 
 const rows = computed(() => {
