@@ -12,6 +12,8 @@ export type WindowName =
     | 'defaultView'
     | 'exportPreview';
 
+export type windowType = 'panle' | 'view' | 'modal';
+
 export interface WindowInstance {
     windowId: string;
     windowName: WindowName;
@@ -19,7 +21,6 @@ export interface WindowInstance {
 
 export type FocusTarget =
     | { type: 'window'; id: string }
-    | { type: 'input'; id: 'input' }
     | { type: 'modal'; id: 'modal' };
 
 // 侧边栏面板布局常量
