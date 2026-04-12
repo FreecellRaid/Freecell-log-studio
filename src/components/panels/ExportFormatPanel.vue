@@ -93,7 +93,6 @@
                             <input
                                 v-model="fmt.fileExtension"
                                 type="text"
-                                placeholder=".txt"
                                 @change="exportStore.saveToLocal()"
                             />
                         </div>
@@ -102,7 +101,6 @@
                             <input
                                 v-model="fmt.messageSeparator"
                                 type="text"
-                                placeholder="\n\n"
                                 @change="exportStore.saveToLocal()"
                             />
                         </div>
@@ -130,7 +128,6 @@
                         <div class="form-group">
                             <label>玩家名格式</label>
                             <input
-                                v-pre
                                 v-model="fmt.playerNameFormat"
                                 type="text"
                                 @change="exportStore.saveToLocal()"
@@ -139,7 +136,6 @@
                         <div class="form-group">
                             <label>帐号格式</label>
                             <input
-                                v-pre
                                 v-model="fmt.playerAccountFormat"
                                 type="text"
                                 @change="exportStore.saveToLocal()"
