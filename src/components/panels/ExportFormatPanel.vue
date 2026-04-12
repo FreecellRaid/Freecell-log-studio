@@ -136,7 +136,7 @@
                         <div class="form-group">
                             <label>帐号格式</label>
                             <input
-                                v-model="fmt.playerAccountFormat"
+                                v-model="fmt.accountFormat"
                                 type="text"
                                 @change="exportStore.saveToLocal()"
                             />
