@@ -5,6 +5,8 @@ import { useClipboardStore } from '@/stores/clipboardStore';
 import { useMessageEditorStore } from '@/stores/editorStore/messageStore';
 import { useChunkEditorStore } from '@/stores/editorStore/chunkStore';
 import { useLogStore } from '@/stores/logStore';
+import { useExportStore } from '@/stores/exportStore';
+import { useProjectManager } from '@/composables/useProjectManager';
 import type { Chunk } from '@/types/log';
 
 export type CommandType =
@@ -18,7 +20,9 @@ export type CommandType =
     | 'openHelp'
     | 'undo'
     | 'redo'
-    | 'save';
+    | 'save'
+    | 'import'
+    | 'export';
 
 export function useCommandDispatcher() {
     const uiStore = useUiStore();
@@ -28,6 +32,8 @@ export function useCommandDispatcher() {
     const messageEditor = useMessageEditorStore();
     const chunkEditor = useChunkEditorStore();
     const logStore = useLogStore();
+    const projectManager = useProjectManager();
+    const exportStore = useExportStore();
 
     const dispatch = (command: CommandType) => {
         const focus = uiStore.activeFocus;
@@ -46,6 +52,15 @@ export function useCommandDispatcher() {
             openHelp: () => uiStore.openHelpDocument(),
             undo: () => history.undo(),
             redo: () => history.redo(),
+            save: () => {
+                projectManager.saveCurrentProjectToLocal();
+            },
+            export: () => {
+                const formatId = exportStore.activeFormat?.formatId;
+                if (formatId) {
+                    uiStore.toggleExportPreview(formatId);
+                }
+            },
         };
 
         if (globalActions[command]) {

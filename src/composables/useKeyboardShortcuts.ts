@@ -29,6 +29,8 @@ export function useKeyboardShortcuts() {
         else if (isModKey && key === 'b') command = 'toggleLeft';
         else if (isModKey && key === 'i') command = 'toggleRight';
         else if (isModKey && key === 'k') command = 'openHelp';
+        else if (isModKey && key === 's') command = 'save';
+        else if (isModKey && key === 'p') command = 'export';
 
         if (command) {
             event.preventDefault();
