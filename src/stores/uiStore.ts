@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref} from 'vue';
+import { ref } from 'vue';
 
 // 侧边栏面板布局常量
 export const PANEL_MIN_WIDTH = 150;

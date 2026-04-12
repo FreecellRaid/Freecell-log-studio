@@ -6,12 +6,7 @@
             'preview-always-white': uiStore.exportPreviewAlwaysWhite,
             'is-active': windowStore.activeFocus === props.formatId,
         }"
-        @pointerdown="
-            uiStore.setFocus({
-                type: 'window',
-                id: props.formatId,
-            })
-        "
+        @pointerdown="windowStore.setFocus(props.formatId)"
     >
         <header class="view-header">
             <div class="view-title">
