@@ -15,17 +15,14 @@ export function useFilter(ownerId?: string) {
     const effectiveId = computed(() => {
         // 如果组件显式声明了 ownerId，直接使用
         if (ownerId) return ownerId;
-        // 否则，根据焦点栈向下回溯
+        // 否则根据focusStack回溯
         const stack = windowStore.focusStack;
         for (let i = stack.length - 1; i >= 0; i--) {
-            const target = stack[i];
-            if (
-                target !== 'help' &&
-                target !== 'inspector' &&
-                target !== 'exportFormat'
-            ) {
-                return target;
-            }
+            const windowId = stack[i];
+            const win = windowStore.openWindows.get(windowId);
+            if (!win) continue;
+            if (win.windowType === 'modal') continue;
+            return windowId;
         }
         return 'defaultView';
     });

@@ -234,4 +234,4 @@ function windowStore() {
     };
 }
 
-export const useWindowStore = defineStore('ui', windowStore);
+export const useWindowStore = defineStore('window', windowStore);
