@@ -209,9 +209,7 @@ const hasWorkspaceState = computed(() => {
         clipboardStore.copiedMessages.length > 0 ||
         filterTool.hasSelection.value ||
         historyStore.undoStack.length > 0 ||
-        historyStore.redoStack.length > 0 ||
-        !windowStore.currentActiveView.windowId ||
-        windowStore.currentActiveView.windowId === 'defaultView'
+        historyStore.redoStack.length > 0
     );
 });
 

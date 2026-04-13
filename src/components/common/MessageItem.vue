@@ -168,10 +168,6 @@ const isHidden = computed(() => {
     background-color: var(--selection-bg);
 }
 
-.message-item.is-hidden {
-    opacity: 0.5;
-}
-
 .message-header {
     display: flex;
     align-items: center;

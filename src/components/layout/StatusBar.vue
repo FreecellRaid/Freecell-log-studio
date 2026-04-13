@@ -122,7 +122,7 @@ const activeChunkVisibleMsgs = computed(function () {
             count++;
         }
     }
-    console.log('activeChunkVisibleMsgs:', count);
+    // console.log('activeChunkVisibleMsgs:', count);
     return count;
 });
 

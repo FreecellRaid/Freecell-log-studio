@@ -7,7 +7,7 @@ export function isRoleType(value: unknown): value is RoleType {
         value === 'ob' ||
         value === 'bot' ||
         value === 'npc' ||
-        value === 'unkown'
+        value === 'unknown'
     );
 }
 
