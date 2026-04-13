@@ -58,6 +58,60 @@ export function useFilter(ownerId?: string) {
         lastSelectedMessages.set(id, messageId);
     }
 
+    function handleMessageClickSelection(
+        event: MouseEvent,
+        messageId: string,
+        index: number,
+        currentContextMessages: { messageId: string }[]
+    ) {
+        if (event.shiftKey) {
+            window.getSelection()?.removeAllRanges(); // 防止范围选择时意外选中文本
+        }
+
+        const id = effectiveId.value;
+        const currentSet = messageSelections.get(id) || new Set<string>();
+        const newSet = new Set(currentSet); // 保持不可变数据模式以触发 Vue 响应式
+
+        const isMulti = event.ctrlKey || event.metaKey;
+        const isRange = event.shiftKey;
+
+        if (isRange) {
+            const lastId = lastSelectedMessages.get(id);
+            if (!lastId) {
+                newSet.clear();
+                newSet.add(messageId);
+                lastSelectedMessages.set(id, messageId);
+            } else {
+                const lastIndex = currentContextMessages.findIndex(m => m.messageId === lastId);
+                if (lastIndex !== -1) {
+                    const start = Math.min(lastIndex, index);
+                    const end = Math.max(lastIndex, index);
+                    if (!isMulti) newSet.clear();
+                    for (let i = start; i <= end; i++) {
+                        newSet.add(currentContextMessages[i].messageId);
+                    }
+                } else {
+                    newSet.clear();
+                    newSet.add(messageId);
+                    lastSelectedMessages.set(id, messageId);
+                }
+            }
+        } else if (isMulti) {
+            if (newSet.has(messageId)) {
+                newSet.delete(messageId);
+            } else {
+                newSet.add(messageId);
+            }
+            lastSelectedMessages.set(id, messageId);
+        } else {
+            newSet.clear();
+            newSet.add(messageId);
+            lastSelectedMessages.set(id, messageId);
+        }
+
+        messageSelections.set(id, newSet);
+    }
+
     function addMessageSelection(messageId: string) {
         const id = effectiveId.value;
         const currentSet = messageSelections.get(id) || new Set<string>();
@@ -195,6 +249,7 @@ export function useFilter(ownerId?: string) {
         lastSelectedMessageId,
 
         toggleMessageSelection,
+        handleMessageClickSelection,
         addMessageSelection,
         toggleChunkSelection,
         setChunkSelection,

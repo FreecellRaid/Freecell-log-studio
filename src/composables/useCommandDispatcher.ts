@@ -10,6 +10,7 @@ import { useProjectManager } from '@/composables/useProjectManager';
 import type { Chunk } from '@/types/log';
 
 export type CommandType =
+    |'messageSelect'
     | 'selectAll'
     | 'cancel'
     | 'copy'
@@ -35,7 +36,7 @@ export function useCommandDispatcher() {
     const projectManager = useProjectManager();
     const exportStore = useExportStore();
 
-    const dispatch = (command: CommandType) => {
+    const dispatch = (command: CommandType, payload?: any) => {
         const focus = windowStore.activeFocus;
         const windowType = windowStore.currentActiveWindow.windowType;
         const windowName = windowStore.currentActiveWindow.windowName;
@@ -72,7 +73,7 @@ export function useCommandDispatcher() {
         // P2 基于 windowName 的分发
         switch (windowName) {
             case 'chunkView':
-                handleChunkViewCommands(command, focus);
+                handleChunkViewCommands(command, focus, payload);
                 break;
             case 'chunkList':
                 handleChunkListCommands(command);
@@ -83,7 +84,12 @@ export function useCommandDispatcher() {
         }
     };
 
-    function handleChunkViewCommands(cmd: string, chunkId: string) {
+    function handleChunkViewCommands(cmd: string, chunkId: string,payload?: any) {
+        if (cmd === 'messageSelect' && payload) {
+            const { event, msgId, index, messages } = payload;
+            filter.handleMessageClickSelection(event, msgId, index, messages);
+            return;
+        }
         if (cmd === 'selectAll') filter.selectAllInChunk(chunkId);
         if (cmd === 'cancel') filter.clearMessageSelection();
         if (cmd === 'copy') {

@@ -40,14 +40,11 @@
                                 msg.messageId,
                             )
                         "
-                        @toggleSelection="filterTool.toggleMessageSelection"
+                        @select="handleMessageSelect"
                         @dragstart="handleMessageDragStart"
                         @dragover="handleMessageDragOver($event, index)"
                         @drop="handleMessageDrop"
                         @dragend="handleDragEnd"
-                        @click.shift.capture.stop="
-                            handleShiftClick($event, msg.messageId, index)
-                        "
                         @action-insert="handleActionInsert(msg, index)"
                         @action-merge="handleActionMerge(msg, index)"
                         @action-split="handleActionSplit(msg.messageId)"
@@ -74,6 +71,7 @@ import { useMessageDragDrop } from '@/composables/useDragDrop';
 import MessageItem from '@/components/common/MessageItem.vue';
 import { useMessageEditorStore } from '@/stores/editorStore/messageStore';
 import { useChunkEditorStore } from '@/stores/editorStore/chunkStore';
+import { useCommandDispatcher } from '@/composables/useCommandDispatcher';
 import { useWindowStore } from '@/stores/windowStore';
 import { generateId } from '@/utils/id';
 import type { Message } from '@/types/log';
@@ -86,6 +84,7 @@ const dropIndicatorIndex = ref<number | null>(null);
 const windowStore = useWindowStore();
 const messageEditorStore = useMessageEditorStore();
 const chunkEditorStore = useChunkEditorStore();
+const { dispatch } = useCommandDispatcher();
 
 // 组件挂载时注册窗口
 onMounted(() => {
@@ -104,36 +103,13 @@ const messages = computed(function () {
     return currentChunk.value ? currentChunk.value.messages : [];
 });
 
-function handleShiftClick(_event: MouseEvent, msgId: string, index: number) {
-    // 防止因为按住 Shift 点击导致浏览器默认选中文本
-    window.getSelection()?.removeAllRanges();
-    const lastId = filterTool.lastSelectedMessageId.value;
-
-    // 如果之前没有选中过任何消息，则降级为普通的单选
-    if (!lastId) {
-        filterTool.toggleMessageSelection(msgId);
-        return;
-    }
-
-    const lastIndex = messages.value.findIndex(function (m) {
-        return m.messageId === lastId;
+function handleMessageSelect(event: MouseEvent, msgId: string, index: number) {
+    dispatch('messageSelect', {
+        event,
+        msgId,
+        index,
+        messages: messages.value,
     });
-
-    if (lastIndex !== -1) {
-        const start = Math.min(lastIndex, index);
-        const end = Math.max(lastIndex, index);
-
-        // 批量加入选中 Set 中
-        for (let i = start; i <= end; i++) {
-            filterTool.selectedMessageIds.value.add(
-                messages.value[i].messageId,
-            );
-        }
-        filterTool.lastSelectedMessageId.value = msgId;
-    } else {
-        // 如果上一次点击的消息已经被移动、删除或在其他分块中，重新开始计算起点
-        filterTool.toggleMessageSelection(msgId);
-    }
 }
 
 function handleMessageDragStart(

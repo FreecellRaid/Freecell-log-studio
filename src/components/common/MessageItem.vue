@@ -7,7 +7,7 @@
             'is-hidden-active': isHidden,
         }"
         draggable="true"
-        @click.exact="handleToggleSelection"
+        @click="handleClick"
         @dragstart="handleDragStart"
         @dragenter.prevent
         @dragover.prevent="handleDragOver"
@@ -85,7 +85,7 @@ const props = defineProps<{
 
 // 向上事件传递
 const emit = defineEmits<{
-    (e: 'toggleSelection', messageId: string): void;
+    (e: 'select', event: MouseEvent, messageId: string, index: number): void;
     (
         e: 'dragstart',
         event: DragEvent,
@@ -108,8 +108,8 @@ const computedStyles = computed(function () {
     return computeStyleForMessage(props.message, styleStore.activeRules);
 });
 
-function handleToggleSelection() {
-    emit('toggleSelection', props.message.messageId);
+function handleClick(event: MouseEvent) {
+    emit('select', event, props.message.messageId, props.index);
 }
 
 function handleDragStart(event: DragEvent) {
