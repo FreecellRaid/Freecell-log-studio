@@ -45,7 +45,7 @@ export function useFilter(ownerId?: string) {
     function toggleMessageSelection(messageId: string) {
         const id = effectiveId.value;
         const currentSet = messageSelections.get(id) || new Set<string>();
-        // 克隆 Set，确保 Vue 的 computed 能完美捕捉到依赖变化
+        // 克隆 Set，确保 Vue 的 computed 能捕捉到依赖变化
         const newSet = new Set(currentSet);
 
         if (newSet.has(messageId)) {
@@ -62,7 +62,7 @@ export function useFilter(ownerId?: string) {
         event: MouseEvent,
         messageId: string,
         index: number,
-        currentContextMessages: { messageId: string }[]
+        currentContextMessages: { messageId: string }[],
     ) {
         if (event.shiftKey) {
             window.getSelection()?.removeAllRanges(); // 防止范围选择时意外选中文本
@@ -70,8 +70,7 @@ export function useFilter(ownerId?: string) {
 
         const id = effectiveId.value;
         const currentSet = messageSelections.get(id) || new Set<string>();
-        const newSet = new Set(currentSet); // 保持不可变数据模式以触发 Vue 响应式
-
+        const newSet = new Set(currentSet);
         const isMulti = event.ctrlKey || event.metaKey;
         const isRange = event.shiftKey;
 
@@ -82,7 +81,9 @@ export function useFilter(ownerId?: string) {
                 newSet.add(messageId);
                 lastSelectedMessages.set(id, messageId);
             } else {
-                const lastIndex = currentContextMessages.findIndex(m => m.messageId === lastId);
+                const lastIndex = currentContextMessages.findIndex(
+                    (m) => m.messageId === lastId,
+                );
                 if (lastIndex !== -1) {
                     const start = Math.min(lastIndex, index);
                     const end = Math.max(lastIndex, index);

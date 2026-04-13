@@ -10,7 +10,7 @@ import { useProjectManager } from '@/composables/useProjectManager';
 import type { Chunk } from '@/types/log';
 
 export type CommandType =
-    |'messageSelect'
+    | 'messageSelect'
     | 'selectAll'
     | 'cancel'
     | 'copy'
@@ -84,7 +84,11 @@ export function useCommandDispatcher() {
         }
     };
 
-    function handleChunkViewCommands(cmd: string, chunkId: string,payload?: any) {
+    function handleChunkViewCommands(
+        cmd: string,
+        chunkId: string,
+        payload?: any,
+    ) {
         if (cmd === 'messageSelect' && payload) {
             const { event, msgId, index, messages } = payload;
             filter.handleMessageClickSelection(event, msgId, index, messages);
