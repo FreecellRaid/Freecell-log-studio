@@ -20,17 +20,17 @@
                 <div
                     class="col-resize-handle"
                     @mousedown="startColResize(0, $event)"
-                />
+                ></div>
                 <span class="header-cell">发言</span>
                 <div
                     class="col-resize-handle"
                     @mousedown="startColResize(1, $event)"
-                />
+                ></div>
                 <span class="header-cell">身份</span>
                 <div
                     class="col-resize-handle"
                     @mousedown="startColResize(2, $event)"
-                />
+                ></div>
                 <span class="header-cell">染色</span>
             </div>
 
@@ -53,11 +53,11 @@
                         <span class="text">{{ item.id }}</span>
                     </div>
                 </div>
-                <div class="col-divider" />
+                <div class="col-divider"></div>
                 <div class="col-count">
                     <span class="count">{{ item.msgCount }}</span>
                 </div>
-                <div class="col-divider" />
+                <div class="col-divider"></div>
 
                 <div class="col-role">
                     <select
@@ -76,7 +76,7 @@
                         <option value="unknown">未知</option>
                     </select>
                 </div>
-                <div class="col-divider" />
+                <div class="col-divider"></div>
 
                 <div class="col-color">
                     <div
