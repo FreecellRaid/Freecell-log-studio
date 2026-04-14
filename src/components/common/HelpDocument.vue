@@ -28,8 +28,8 @@
                     </div>
                     <ul class="tip-list">
                         <li>
-                            <strong>悬停消息</strong>
-                            - 显示操作按钮
+                            <strong>双击消息</strong>
+                            - 进入编辑
                         </li>
                         <li>
                             <strong>拖拽消息</strong>
