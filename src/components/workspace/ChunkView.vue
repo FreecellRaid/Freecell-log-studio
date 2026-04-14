@@ -50,6 +50,10 @@
                         @action-merge="handleActionMerge(msg)"
                         @action-split="handleActionSplit(msg.messageId)"
                         @action-delete="handleActionDelete(msg.messageId)"
+                        @update-content="
+                            (newContent) =>
+                                handleUpdateContent(msg.messageId, newContent)
+                        "
                     />
                 </div>
             </template>
@@ -74,7 +78,6 @@ import { useMessageEditorStore } from '@/stores/editorStore/messageStore';
 import { useChunkEditorStore } from '@/stores/editorStore/chunkStore';
 import { useCommandDispatcher } from '@/composables/useCommandDispatcher';
 import { useWindowStore } from '@/stores/windowStore';
-import { generateId } from '@/utils/id';
 import type { Message } from '@/types/log';
 
 const props = defineProps<{ chunkId: string }>();
@@ -112,6 +115,12 @@ function handleMessageSelect(event: MouseEvent, msgId: string, index: number) {
         msgId,
         index,
         messages: messages.value,
+    });
+}
+
+function handleUpdateContent(messageId: string, newContent: string) {
+    messageEditorStore.updateMessage(props.chunkId, messageId, {
+        content: newContent,
     });
 }
 
@@ -159,26 +168,12 @@ function handleContainerDrop(event: DragEvent) {
 }
 
 function handleActionInsert(msg: Message, index: number) {
-    const newMessage: Message = {
-        messageId: generateId(),
-        chunkId: props.chunkId,
-        messageIndex: index + 1,
-        playerName: msg.playerName,
-        account: msg.account,
-        time: new Date(),
-        content: '',
-        isOoc: false,
-        isCommand: false,
-        role: msg.role,
-        note: '',
-    };
-    messageEditorStore.addMessage(props.chunkId, newMessage, index + 1);
+    messageEditorStore.insertNewMessageAfter(props.chunkId, msg, index);
 }
 
 function handleActionMerge(msg: Message) {
     const selectedIds = filterTool.selectedMessageIds.value;
     if (selectedIds.has(msg.messageId) && selectedIds.size > 1) {
-        // 多选状态合并
         messageEditorStore.mergeMessages(
             props.chunkId,
             Array.from(selectedIds),

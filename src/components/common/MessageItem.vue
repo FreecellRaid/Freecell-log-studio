@@ -62,14 +62,30 @@
             </span>
         </div>
 
-        <div class="message-content" :style="computedStyles.contentStyle">
-            {{ message.content }}
+        <div
+            class="message-content"
+            :style="computedStyles.contentStyle"
+            @dblclick="startEditing"
+        >
+            <template v-if="isEditing">
+                <textarea
+                    ref="editInput"
+                    v-model="editContent"
+                    class="content-editor"
+                    @blur="saveEdit"
+                    @keydown.enter.ctrl="saveEdit"
+                    @keydown.esc="cancelEdit"
+                ></textarea>
+            </template>
+            <template v-else>
+                {{ message.content }}
+            </template>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, nextTick } from 'vue';
 import type { Message } from '@/types/log';
 import { useUiStore } from '@/stores/uiStore';
 import { useStyleStore } from '@/stores/styleStore';
@@ -102,6 +118,7 @@ const emit = defineEmits<{
     (e: 'actionMerge'): void;
     (e: 'actionSplit'): void;
     (e: 'actionDelete'): void;
+    (e: 'updateContent', content: string): void;
 }>();
 
 const styleStore = useStyleStore();
@@ -145,6 +162,30 @@ const isHidden = computed(() => {
         (hideCommand && props.message.isCommand)
     );
 });
+
+const isEditing = ref(false);
+const editContent = ref('');
+const editInput = ref<HTMLTextAreaElement | null>(null);
+
+function startEditing() {
+    editContent.value = props.message.content;
+    isEditing.value = true;
+    nextTick(() => {
+        editInput.value?.focus();
+    });
+}
+
+function saveEdit() {
+    if (!isEditing.value) return;
+    if (editContent.value !== props.message.content) {
+        emit('updateContent', editContent.value);
+    }
+    isEditing.value = false;
+}
+
+function cancelEdit() {
+    isEditing.value = false;
+}
 </script>
 
 <style scoped>
@@ -244,5 +285,20 @@ const isHidden = computed(() => {
 .action-button .ui-icon {
     width: 14px;
     height: 14px;
+}
+
+.content-editor {
+    width: 100%;
+    min-height: 3em;
+    padding: 4px 8px;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    border: 1px solid var(--active-accent);
+    border-radius: 4px;
+    background: var(--bg-input);
+    color: var(--text-main);
+    resize: vertical;
+    outline: none;
 }
 </style>

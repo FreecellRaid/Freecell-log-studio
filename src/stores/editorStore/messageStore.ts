@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { useLogStore } from '@/stores/logStore';
 import { useHistoryStore } from '@/stores/historyStore';
 import type { Message, Chunk } from '@/types/log';
+import { generateId } from '@/utils/id';
 
 export const useMessageEditorStore = defineStore('messageEditor', () => {
     const logStore = useLogStore();
@@ -44,6 +45,29 @@ export const useMessageEditorStore = defineStore('messageEditor', () => {
         );
         chunk.messages.splice(clampedIndex, 0, ...messages);
         refreshMessageMetadata(chunk);
+    }
+
+    function insertNewMessageAfter(
+        chunkId: string,
+        msg: Message,
+        index: number,
+    ) {
+        const newMessage: Message = {
+            messageId: generateId(),
+            chunkId: chunkId,
+            messageIndex: index + 1,
+            playerName: msg.playerName,
+            account: msg.account,
+            time: new Date(),
+            content: '',
+            isOoc: false,
+            isCommand: false,
+            role: msg.role,
+            note: '',
+        };
+
+        // 调用现有的通用插入逻辑
+        insertMessages(chunkId, [newMessage], index + 1);
     }
 
     function deleteMessage(chunkId: string, messageId: string) {
@@ -285,6 +309,7 @@ export const useMessageEditorStore = defineStore('messageEditor', () => {
     return {
         addMessage,
         insertMessages,
+        insertNewMessageAfter,
         deleteMessage,
         updateMessage,
         moveMessages,
