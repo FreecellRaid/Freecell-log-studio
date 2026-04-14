@@ -76,20 +76,6 @@ export function useFilter(ownerId?: string) {
         );
     }
 
-    function toggleMessageSelection(messageId: string) {
-        const current = selectedMessageIds.value;
-        if (current.has(messageId)) {
-            selectionStore.deselect(effectiveId.value, 'message', messageId);
-        } else {
-            selectionStore.select(
-                effectiveId.value,
-                'message',
-                messageId,
-                true,
-            );
-        }
-    }
-
     function setMessagesSelection(ids: string[]) {
         selectionStore.select(effectiveId.value, 'message', ids, false);
     }
@@ -110,15 +96,6 @@ export function useFilter(ownerId?: string) {
             allChunks,
             (c) => c.chunkId,
         );
-    }
-
-    function toggleChunkSelection(chunkId: string) {
-        const current = selectedChunkIds.value;
-        if (current.has(chunkId)) {
-            selectionStore.deselect(effectiveId.value, 'chunk', chunkId);
-        } else {
-            selectionStore.select(effectiveId.value, 'chunk', chunkId, true);
-        }
     }
 
     function setChunkSelection(chunkIds: string[]) {
@@ -167,12 +144,10 @@ export function useFilter(ownerId?: string) {
         selectedMessages,
 
         handleMessageClickSelection,
-        toggleMessageSelection,
         setMessagesSelection,
         clearMessageSelection,
 
         handleChunkClickSelection,
-        toggleChunkSelection,
         setChunkSelection,
         selectAllChunks,
         clearChunkSelection,
