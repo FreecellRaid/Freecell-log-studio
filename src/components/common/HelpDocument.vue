@@ -36,7 +36,7 @@
                             - 移动消息
                         </li>
                         <li>
-                            <strong>Ctrl/Cmd + 点击</strong>
+                            <strong>Ctrl + 点击</strong>
                             - 多选消息
                         </li>
                         <li>
@@ -163,7 +163,15 @@
             </div>
 
             <div class="help-footer">
-                <div class="shortcut-hint">按 Esc 键关闭</div>
+                <a
+                    href="https://github.com/FreecellRaid/Freecell-log-studio"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="github-link"
+                >
+                    <CodeXml class="ui-icon" />
+                    <span>GitHub 项目主页</span>
+                </a>
             </div>
         </div>
     </div>
@@ -179,6 +187,7 @@ import {
     Palette,
     TextInitial,
     UserRound,
+    CodeXml,
 } from '@lucide/vue';
 import { useWindowStore } from '@/stores/windowStore';
 
@@ -217,7 +226,7 @@ const shortcuts = [
 }
 
 .help-dialog {
-    width: min(560px, calc(100vw - 32px));
+    width: min(520px, calc(100vw - 32px));
     max-height: min(80vh, 520px);
     display: flex;
     flex-direction: column;
@@ -339,13 +348,28 @@ kbd {
 }
 
 .help-footer {
+    display: flex;
     padding: 8px 20px;
     font-size: 12px;
     color: var(--text-muted);
-    text-align: right;
 }
 
-.shortcut-hint {
-    font-size: 11px;
+.github-link {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.github-link:hover {
+    color: var(--active-accent);
+}
+
+.github-link .ui-icon {
+    width: 14px;
+    height: 14px;
 }
 </style>

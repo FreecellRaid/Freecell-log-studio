@@ -28,11 +28,11 @@
             <div class="shortcuts-hint">
                 <div class="shortcut-item">
                     <span>切换侧边栏</span>
-                    <span>Cmd + B</span>
+                    <span>Ctrl + B</span>
                 </div>
                 <div class="shortcut-item">
                     <span>打开帮助文档</span>
-                    <span>Cmd + K</span>
+                    <span>Ctrl + K</span>
                 </div>
             </div>
         </div>

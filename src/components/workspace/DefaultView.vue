@@ -24,7 +24,7 @@
 
                 <div class="foot-hint">
                     <div class="foot-hint-item">
-                        <span>Cmd + K 查看快捷键列表</span>
+                        <span>Ctrl + K 查看帮助文档</span>
                     </div>
                     <div class="foot-hint-item">
                         当前没有处于活跃状态的场景。
