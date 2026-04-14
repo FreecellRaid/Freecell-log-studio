@@ -31,8 +31,8 @@
                     <span>Cmd + B</span>
                 </div>
                 <div class="shortcut-item">
-                    <span>打开属性检查器</span>
-                    <span>Cmd + I</span>
+                    <span>打开帮助文档</span>
+                    <span>Cmd + K</span>
                 </div>
             </div>
         </div>
