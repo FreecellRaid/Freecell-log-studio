@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 
-export type WindowName =
+type WindowName =
     | 'chunkList'
     | 'identity'
     | 'search'
@@ -13,15 +13,14 @@ export type WindowName =
     | 'exportPreview'
     | 'help';
 
-export type WindowType = 'panel' | 'view' | 'modal';
+type WindowType = 'panel' | 'view' | 'modal';
 
-export interface WindowInstance {
+interface WindowInstance {
     windowId: string;
     windowName: WindowName;
     windowType: WindowType;
 }
-
-export type FocusTarget = string;
+type FocusTarget = string;
 
 function windowStore() {
     const openWindows = ref<Map<string, WindowInstance>>(new Map());
