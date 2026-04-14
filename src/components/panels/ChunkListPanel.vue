@@ -1,5 +1,5 @@
 <template>
-    <div class="panel">
+    <div class="panel" @pointerdown="windowStore.setFocus('chunkList')">
         <div class="panel-header">
             <div class="header-title">
                 <input
@@ -103,11 +103,15 @@
                         <div
                             class="chunk-item"
                             :class="{
-                                // windowStore的焦点判断
+                                // 对自身的焦点判断
                                 'is-active':
+                                    windowStore.currentActiveWindow.windowId ===
+                                    'chunkList',
+                                // 对view的焦点判断
+                                'is-active-chunk':
                                     windowStore.currentActiveView.windowId ===
                                     chunk.chunkId,
-                                // useFilter的选中判断
+                                // 选中判断
                                 'is-selected':
                                     filterTool.selectedChunkIds.value.has(
                                         chunk.chunkId,
@@ -503,20 +507,27 @@ function handleChunkDragEnd() {
 }
 
 .chunk-item:hover {
-    background-color: var(--hover-bg);
-}
-
-.chunk-item.is-active {
-    background-color: var(--selection-bg);
     outline: 1px solid var(--active-accent);
     outline-offset: -1px;
+}
+
+.chunk-item.is-active.is-selected {
+    background-color: var(--selection-bg);
     color: var(--active-accent);
 }
 
-/* 被选中但不是当前活跃编辑的块（淡色背景，预留给未来多选） */
 .chunk-item.is-selected:not(.is-active) {
-    background-color: var(--hover-bg);
-    opacity: 0.8;
+    background-color: var(--inactive-selection-bg);
+}
+
+.chunk-item.is-active-chunk {
+    outline: 1px solid var(--active-accent);
+    outline-offset: -1px;
+}
+
+.chunk-item.is-active-chunk:not(.is-active) {
+    outline: 1px solid var(--border-color);
+    outline-offset: -1px;
 }
 
 .chunk-name {

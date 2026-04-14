@@ -40,6 +40,7 @@
                                 msg.messageId,
                             )
                         "
+                        :is-active="isViewFocused"
                         @select="handleMessageSelect"
                         @dragstart="handleMessageDragStart"
                         @dragover="handleMessageDragOver($event, index)"
@@ -94,6 +95,8 @@ onMounted(() => {
         windowType: 'view',
     });
 });
+
+const isViewFocused = computed(() => windowStore.activeFocus === props.chunkId);
 
 const currentChunk = computed(function () {
     return logStore.findChunkById(props.chunkId) || undefined;
@@ -175,17 +178,16 @@ function handleActionInsert(msg: Message, index: number) {
 function handleActionMerge(msg: Message, index: number) {
     const selectedIds = filterTool.selectedMessageIds.value;
     if (selectedIds.has(msg.messageId) && selectedIds.size > 1) {
-        // 多选状态：将选中的所有消息合并到当前被点击项
+        // 多选状态合并
         messageEditorStore.mergeMessages(
             props.chunkId,
             Array.from(selectedIds),
             msg.messageId,
         );
-        selectedIds.clear(); // 合并后清空多选状态
+        filterTool.clearMessageSelection();
     } else {
-        // 单选状态/未处于多选中：与 index+1 往下合并
+        // 常规向下合并
         if (index < messages.value.length - 1) {
-            // 已经是最后一条则不合并
             const nextMsgId = messages.value[index + 1].messageId;
             messageEditorStore.mergeMessages(
                 props.chunkId,
@@ -205,7 +207,7 @@ function handleActionDelete(msgId: string) {
     const selectedIds = filterTool.selectedMessageIds.value;
     if (selectedIds.has(msgId)) {
         messageEditorStore.batchDeleteMessages(selectedIds);
-        selectedIds.clear();
+        filterTool.clearMessageSelection();
     } else {
         messageEditorStore.deleteMessage(props.chunkId, msgId);
     }

@@ -1,5 +1,5 @@
 <template>
-    <div class="panel">
+    <div class="panel" @pointerdown="windowStore.setFocus('ruleEditor')">
         <div class="panel-header">
             <div class="header-title">
                 <h3>自定义染色规则</h3>
@@ -260,10 +260,12 @@ import { useFilter } from '@/composables/useFilter';
 import type { ColorRule } from '@/types/config';
 import type { MessageFilter } from '@/types/log';
 import { matchesMessageFilter } from '@/editor/filter';
+import { useWindowStore } from '@/stores/windowStore';
 
 const styleStore = useStyleStore();
 const logStore = useLogStore();
 const filterStore = useFilter();
+const windowStore = useWindowStore();
 const expandedRules = ref<Set<string>>(new Set());
 
 function toggleExpand(ruleId: string) {

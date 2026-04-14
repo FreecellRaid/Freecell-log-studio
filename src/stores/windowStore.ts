@@ -1,7 +1,9 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
+import { useSelectionStore } from '@/stores/selectionStore';
+// TODO: 以后要改一下这里的逻辑，防止可能的循环依赖
 
-export type WindowName =
+type WindowName =
     | 'chunkList'
     | 'identity'
     | 'search'
@@ -13,17 +15,17 @@ export type WindowName =
     | 'exportPreview'
     | 'help';
 
-export type WindowType = 'panel' | 'view' | 'modal';
+type WindowType = 'panel' | 'view' | 'modal';
 
-export interface WindowInstance {
+interface WindowInstance {
     windowId: string;
     windowName: WindowName;
     windowType: WindowType;
 }
-
-export type FocusTarget = string;
+type FocusTarget = string;
 
 function windowStore() {
+    const selectionStore = useSelectionStore();
     const openWindows = ref<Map<string, WindowInstance>>(new Map());
     const focusStack = ref<FocusTarget[]>([]);
     const activeFocus = computed(() => {
@@ -61,6 +63,7 @@ function windowStore() {
     function unregisterWindow(windowId: string) {
         openWindows.value.delete(windowId);
         const index = focusStack.value.findIndex((t) => t === windowId);
+        selectionStore.clearSelection(windowId);
         if (index !== -1) {
             focusStack.value.splice(index, 1);
         }
@@ -68,9 +71,13 @@ function windowStore() {
 
     // 切换左侧面板内容
     function setLeftPanel(name: WindowName) {
+        if (activeLeftPanelName.value && activeLeftPanelName.value !== name) {
+            unregisterWindow(activeLeftPanelName.value);
+        }
+
         activeLeftPanelName.value = name;
         leftSidebarVisible.value = true;
-        // 侧边栏切换视为一次焦点注册
+
         registerWindow({
             windowId: name,
             windowName: name,
@@ -81,15 +88,15 @@ function windowStore() {
     // 折叠/展开左侧边栏
     function toggleLeftSidebar() {
         leftSidebarVisible.value = !leftSidebarVisible.value;
+
         if (leftSidebarVisible.value) {
-            // 展开时，恢复该面板的焦点
-            setFocus(activeLeftPanelName.value);
+            registerWindow({
+                windowId: activeLeftPanelName.value,
+                windowName: activeLeftPanelName.value,
+                windowType: 'panel',
+            });
         } else {
-            // 折叠时，从焦点栈移除该面板
-            const index = focusStack.value.findIndex(
-                (t) => t === activeLeftPanelName.value,
-            );
-            if (index !== -1) focusStack.value.splice(index, 1);
+            unregisterWindow(activeLeftPanelName.value);
         }
     }
 
@@ -109,9 +116,16 @@ function windowStore() {
 
     // 切换到场景编辑视图
     function setActiveChunk(chunkId: string) {
+        // 注销当前所有类型为 'view' 的 chunkView，防止selection残留
+        openWindows.value.forEach((win) => {
+            if (win.windowName === 'chunkView' && win.windowId !== chunkId) {
+                unregisterWindow(win.windowId);
+            }
+        });
+
         if (chunkId) {
             registerWindow({
-                windowId: chunkId, // 使用 chunkId 作为 ID
+                windowId: chunkId,
                 windowName: 'chunkView',
                 windowType: 'view',
             });

@@ -1,5 +1,5 @@
 <template>
-    <div class="panel">
+    <div class="panel" @pointerdown="windowStore.setFocus('search')">
         <div class="panel-header">
             <div class="header-title">
                 <h3>搜索与筛选</h3>
@@ -108,7 +108,7 @@
                 找到 {{ searchResults.length }} 条结果
             </span>
             <button
-                class="btn-primary btn-sm"
+                class="btn-primary"
                 :disabled="searchResults.length === 0"
                 @click="selectAllMatches"
             >
@@ -130,8 +130,10 @@
                     'is-selected': filterStore.selectedMessageIds.value.has(
                         msg.messageId,
                     ),
+                    'is-active':
+                        windowStore.currentActiveWindow.windowId === 'search',
                 }"
-                @click="filterStore.toggleMessageSelection(msg.messageId)"
+                @click="handleItemClick($event, msg.messageId)"
             >
                 <div class="result-meta">
                     <span class="result-name">
@@ -149,15 +151,19 @@
 
 <script setup lang="ts">
 import { FunnelIcon, FunnelXIcon, RefreshCcw } from '@lucide/vue';
-import { ref, computed, reactive } from 'vue';
+import { ref, computed, reactive, onMounted, onUnmounted } from 'vue';
 import { useLogStore } from '@/stores/logStore';
 import { useFilter } from '@/composables/useFilter';
 import { matchesMessageFilter } from '@/editor/filter';
 import type { MessageFilter } from '@/types/log';
 import { formatDate } from '@/utils/date';
+import { useCommandDispatcher } from '@/composables/useCommandDispatcher';
+import { useWindowStore } from '@/stores/windowStore';
 
 const logStore = useLogStore();
+const windowStore = useWindowStore();
 const filterStore = useFilter('search');
+const { dispatch } = useCommandDispatcher();
 
 // 状态控制
 const quickSearch = ref('');
@@ -218,14 +224,33 @@ function handleSearch() {
     quickSearch.value = quickSearch.value.trim();
 }
 
-function selectAllMatches() {
-    const ids = searchResults.value.map((m) => m.messageId);
-    ids.forEach((id) => {
-        if (!filterStore.selectedMessageIds.value.has(id)) {
-            filterStore.toggleMessageSelection(id);
-        }
+function handleItemClick(event: MouseEvent, msgId: string) {
+    windowStore.setFocus('search');
+
+    dispatch('messageSelect', {
+        event,
+        msgId,
+        messages: searchResults.value, // 将当前计算出的搜索结果快照传给调度器
     });
 }
+
+function selectAllMatches() {
+    dispatch('selectAll', {
+        messages: searchResults.value,
+    });
+}
+
+const handleKeyDown = (e: KeyboardEvent) => {
+    if (windowStore.activeFocus !== 'search') return;
+
+    if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+        e.preventDefault();
+        selectAllMatches();
+    }
+};
+
+onMounted(() => window.addEventListener('keydown', handleKeyDown));
+onUnmounted(() => window.removeEventListener('keydown', handleKeyDown));
 
 function clearAllFilters() {
     quickSearch.value = '';
@@ -351,14 +376,24 @@ const truncate = (str: string, len: number) => {
 
 .search-summary {
     flex-shrink: 0;
-    padding: 8px 12px;
+    padding: 4px 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
 }
 
+.btn-primary {
+    font-size: 12px;
+    color: var(--text-muted);
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+.btn-primary:hover {
+    background-color: var(--hover-bg);
+}
 .count-text {
     font-size: 12px;
     color: var(--text-secondary);
@@ -374,17 +409,20 @@ const truncate = (str: string, len: number) => {
 .result-item {
     padding: 10px 10px 10px 8px;
     cursor: pointer;
-    border-bottom: 1px solid var(--border-color);
 }
 
 .result-item:hover {
     background: var(--bg-secondary);
+    outline-offset: -1px;
+    outline: 1px solid var(--active-accent);
 }
 
-.result-item.is-selected {
+.result-item.is-selected.is-active {
     background: var(--selection-bg);
-    outline: 1px solid var(--active-accent);
-    outline-offset: -1px;
+}
+
+.result-item.is-selected:not(.is-active) {
+    background: var(--inactive-selection-bg);
 }
 
 .result-meta {
