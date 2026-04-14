@@ -23,7 +23,13 @@ export type CommandType =
     | 'redo'
     | 'save'
     | 'import'
-    | 'export';
+    | 'export'
+    | 'selectPrevious'
+    | 'selectNext'
+    | 'toggleOoc'
+    | 'toggleCommand'
+    | 'merge'
+    | 'selectNextSamePlayer';
 
 export function useCommandDispatcher() {
     const windowStore = useWindowStore();
@@ -234,6 +240,17 @@ export function useCommandDispatcher() {
             if (searchFilter.selectedMessages.value.length > 0) {
                 clipboard.copyMessages(searchFilter.selectedMessages.value);
             }
+        }
+        if (cmd === 'toggleOoc') {
+            const selectedIds = filter.selectedMessageIds.value;
+            messageEditor.toggleOoc(selectedIds);
+            return;
+        }
+
+        if (cmd === 'toggleCommand') {
+            const selectedIds = filter.selectedMessageIds.value;
+            messageEditor.toggleCommand(selectedIds);
+            return;
         }
     }
 

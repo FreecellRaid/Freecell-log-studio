@@ -56,7 +56,10 @@ function SelectionStore() {
         const state = getState(windowId, type);
         const idList = Array.isArray(ids) ? ids : [ids];
 
-        // 重新实例化 Set 确保 Vue 能捕捉到依赖变化
+        /**
+         * 选中一个或多个 ID
+         * @param isMulti - true: 添加到现有选区；false: 替换现有选区
+         */
         const newIds = isMulti ? new Set(state.ids) : new Set<string>();
 
         idList.forEach((id) => newIds.add(id));
@@ -64,7 +67,6 @@ function SelectionStore() {
 
         if (idList.length > 0) {
             state.lastSelectedId = idList[idList.length - 1];
-            // 如果是单选，更新锚点
             if (!isMulti) {
                 state.anchorId = state.lastSelectedId;
             }

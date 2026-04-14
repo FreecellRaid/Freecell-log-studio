@@ -237,6 +237,38 @@ export const useMessageEditorStore = defineStore('messageEditor', () => {
         refreshMessageMetadata(chunk);
     }
 
+    // 批量切换场外
+    function toggleOoc(targetIds: Set<string>) {
+        if (targetIds.size === 0) return;
+
+        historyStore.captureSnapshot();
+        for (const doc of logStore.documents) {
+            for (const chunk of doc.chunks) {
+                for (const msg of chunk.messages) {
+                    if (targetIds.has(msg.messageId)) {
+                        msg.isOoc = !msg.isOoc;
+                    }
+                }
+            }
+        }
+    }
+
+    // 批量切换 Command 状态
+    function toggleCommand(targetIds: Set<string>) {
+        if (targetIds.size === 0) return;
+
+        historyStore.captureSnapshot();
+        for (const doc of logStore.documents) {
+            for (const chunk of doc.chunks) {
+                for (const msg of chunk.messages) {
+                    if (targetIds.has(msg.messageId)) {
+                        msg.isCommand = !msg.isCommand;
+                    }
+                }
+            }
+        }
+    }
+
     return {
         addMessage,
         insertMessages,
@@ -247,5 +279,7 @@ export const useMessageEditorStore = defineStore('messageEditor', () => {
         batchDeleteMessages,
         batchUpdateMessages,
         mergeMessages,
+        toggleOoc,
+        toggleCommand,
     };
 });

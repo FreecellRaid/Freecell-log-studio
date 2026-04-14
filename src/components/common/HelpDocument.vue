@@ -190,6 +190,8 @@ const shortcuts = [
     { key: 'Ctrl + C', desc: '复制' },
     { key: 'Ctrl + V', desc: '粘贴' },
     { key: 'Ctrl + Z', desc: '撤销' },
+    { key: 'Ctrl + /', desc: '切换场内外' },
+    { key: 'Ctrl + \\', desc: '切换指令' },
     { key: 'Ctrl + backspace', desc: '删除' },
     { key: 'Ctrl + Shift + Z', desc: '重做' },
     { key: 'Ctrl + S', desc: '保存' },
