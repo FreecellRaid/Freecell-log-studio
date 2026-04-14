@@ -396,7 +396,7 @@ watch(
 .settings-popover {
     position: absolute;
     left: 48px;
-    bottom: 16px;
+    bottom: -1px;
     width: 200px;
     background-color: var(--bg-sidebar);
     border: 1px solid var(--border-color);
