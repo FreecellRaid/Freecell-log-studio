@@ -237,6 +237,19 @@ export const useMessageEditorStore = defineStore('messageEditor', () => {
         refreshMessageMetadata(chunk);
     }
 
+    function mergeWithNextMessage(chunkId: string, messageId: string) {
+        const chunk = logStore.findChunkById(chunkId);
+        if (!chunk) return;
+
+        const index = chunk.messages.findIndex(
+            (m) => m.messageId === messageId,
+        );
+        if (index === -1 || index >= chunk.messages.length - 1) return;
+
+        const nextMessage = chunk.messages[index + 1];
+        mergeMessages(chunkId, [messageId, nextMessage.messageId], messageId);
+    }
+
     // 批量切换场外
     function toggleOoc(targetIds: Set<string>) {
         if (targetIds.size === 0) return;
@@ -279,6 +292,7 @@ export const useMessageEditorStore = defineStore('messageEditor', () => {
         batchDeleteMessages,
         batchUpdateMessages,
         mergeMessages,
+        mergeWithNextMessage,
         toggleOoc,
         toggleCommand,
     };

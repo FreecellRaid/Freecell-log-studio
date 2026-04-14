@@ -6,6 +6,7 @@ import { useMessageEditorStore } from '@/stores/editorStore/messageStore';
 import { useChunkEditorStore } from '@/stores/editorStore/chunkStore';
 import { useLogStore } from '@/stores/logStore';
 import { useExportStore } from '@/stores/exportStore';
+import { useSelectionStore } from '@/stores/selectionStore';
 import { useProjectManager } from '@/composables/useProjectManager';
 import type { Chunk } from '@/types/log';
 
@@ -39,6 +40,7 @@ export function useCommandDispatcher() {
     const messageEditor = useMessageEditorStore();
     const chunkEditor = useChunkEditorStore();
     const logStore = useLogStore();
+    const selectionStore = useSelectionStore();
     const projectManager = useProjectManager();
     const exportStore = useExportStore();
 
@@ -91,6 +93,8 @@ export function useCommandDispatcher() {
         chunkId: string,
         payload?: any,
     ) {
+        const chunk = logStore.findChunkById(chunkId);
+        const messages = chunk?.messages || [];
         if (cmd === 'select' && payload) {
             const { event, msgId, messages } = payload;
             filter.handleMessageClickSelection(event, msgId, messages);
@@ -148,10 +152,53 @@ export function useCommandDispatcher() {
             const selectedIds = filter.selectedMessageIds.value;
             if (selectedIds.size > 0) messageEditor.toggleCommand(selectedIds);
         }
+        if (cmd === 'merge') {
+            const selectedIds = filter.selectedMessageIds.value;
+            if (selectedIds.size > 1) {
+                messageEditor.mergeMessages(
+                    chunkId,
+                    Array.from(selectedIds),
+                    Array.from(selectedIds)[0],
+                );
+                filter.clearMessageSelection();
+            } else {
+                messageEditor.mergeWithNextMessage(
+                    chunkId,
+                    Array.from(selectedIds)[0],
+                );
+            }
+        }
+        if (cmd === 'selectNext') {
+            selectionStore.selectNext(
+                chunkId,
+                'message',
+                messages,
+                (m) => m.messageId,
+            );
+        }
+
+        if (cmd === 'selectPrevious') {
+            selectionStore.selectPrevious(
+                chunkId,
+                'message',
+                messages,
+                (m) => m.messageId,
+            );
+        }
+        if (cmd === 'selectNextSamePlayer') {
+            selectionStore.selectNextByProperty(
+                chunkId,
+                'message',
+                messages,
+                'playerName',
+                (m) => m.messageId,
+            );
+        }
     }
 
     function handleChunkListCommands(cmd: string) {
         const chunkListFilter = useFilter('chunkList');
+        const allChunks = logStore.allChunks;
         if (cmd === 'selectAll') {
             chunkListFilter.selectAllChunks();
         }
@@ -215,6 +262,34 @@ export function useCommandDispatcher() {
                     pasteChunks.map((c) => c.chunkId),
                 );
             }
+        }
+        if (cmd === 'merge') {
+            const selectedIds = Array.from(
+                chunkListFilter.selectedChunkIds.value,
+            );
+            if (selectedIds.length > 1) {
+                chunkEditor.mergeChunks(selectedIds);
+                chunkListFilter.clearChunkSelection();
+                chunkListFilter.setChunkSelection([selectedIds[0]]);
+            } else if (selectedIds.length === 1) {
+                chunkEditor.mergeWithNextChunk(selectedIds[0]);
+            }
+        }
+        if (cmd === 'selectNext') {
+            selectionStore.selectNext(
+                'chunkList',
+                'chunk',
+                allChunks,
+                (c) => c.chunkId,
+            );
+        }
+        if (cmd === 'selectPrevious') {
+            selectionStore.selectPrevious(
+                'chunkList',
+                'chunk',
+                allChunks,
+                (c) => c.chunkId,
+            );
         }
     }
 

@@ -47,7 +47,7 @@
                         @drop="handleMessageDrop"
                         @dragend="handleDragEnd"
                         @action-insert="handleActionInsert(msg, index)"
-                        @action-merge="handleActionMerge(msg, index)"
+                        @action-merge="handleActionMerge(msg)"
                         @action-split="handleActionSplit(msg.messageId)"
                         @action-delete="handleActionDelete(msg.messageId)"
                     />
@@ -175,7 +175,7 @@ function handleActionInsert(msg: Message, index: number) {
     messageEditorStore.addMessage(props.chunkId, newMessage, index + 1);
 }
 
-function handleActionMerge(msg: Message, index: number) {
+function handleActionMerge(msg: Message) {
     const selectedIds = filterTool.selectedMessageIds.value;
     if (selectedIds.has(msg.messageId) && selectedIds.size > 1) {
         // 多选状态合并
@@ -186,20 +186,11 @@ function handleActionMerge(msg: Message, index: number) {
         );
         filterTool.clearMessageSelection();
     } else {
-        // 常规向下合并
-        if (index < messages.value.length - 1) {
-            const nextMsgId = messages.value[index + 1].messageId;
-            messageEditorStore.mergeMessages(
-                props.chunkId,
-                [msg.messageId, nextMsgId],
-                msg.messageId,
-            );
-        }
+        messageEditorStore.mergeWithNextMessage(props.chunkId, msg.messageId);
     }
 }
 
 function handleActionSplit(msgId: string) {
-    // 从此处切分为新分块
     chunkEditorStore.splitChunk(props.chunkId, msgId);
 }
 

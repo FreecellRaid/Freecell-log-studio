@@ -149,10 +149,72 @@ function SelectionStore() {
         );
         if (currentIndex === -1 || currentIndex === items.length - 1) return;
 
-        // 向下选中下一个元素
         const nextItem = items[currentIndex + 1];
         if (nextItem) {
             const nextId = idGetter(nextItem);
+            const newIds = new Set(state.ids);
+            newIds.add(nextId);
+            state.ids = newIds;
+            state.lastSelectedId = nextId;
+        }
+    }
+
+    function selectPrevious(
+        windowId: string,
+        type: SelectionType,
+        items: any[],
+        idGetter: (item: any) => string = (i: any) => i.id,
+    ) {
+        const state = getState(windowId, type);
+        if (!state.lastSelectedId || items.length === 0) return;
+
+        const currentIndex = items.findIndex(
+            (item) => idGetter(item) === state.lastSelectedId,
+        );
+        if (currentIndex <= 0) return;
+
+        const prevItem = items[currentIndex - 1];
+        if (prevItem) {
+            const prevId = idGetter(prevItem);
+            const newIds = new Set(state.ids);
+            newIds.add(prevId);
+            state.ids = newIds;
+            state.lastSelectedId = prevId;
+        }
+    }
+
+    /**
+     * 根据属性选中下一个匹配项
+     * @param windowId 窗口ID
+     * @param type 类型
+     * @param items 原始数据列表
+     * @param propertyName 匹配的属性键名
+     * @param idGetter 获取ID的方法
+     */
+    function selectNextByProperty<T>(
+        windowId: string,
+        type: SelectionType,
+        items: T[],
+        propertyName: keyof T,
+        idGetter: (item: T) => string,
+    ) {
+        const state = getState(windowId, type);
+        const lastId = state.lastSelectedId;
+        if (!lastId || items.length === 0) return;
+
+        const currentIndex = items.findIndex((i) => idGetter(i) === lastId);
+        if (currentIndex === -1) return;
+
+        const currentItem = items[currentIndex];
+        const targetValue = currentItem[propertyName];
+
+        // 从当前索引之后开始查找第一个匹配属性值的项
+        const nextMatch = items.slice(currentIndex + 1).find((item) => {
+            return item[propertyName] === targetValue;
+        });
+
+        if (nextMatch) {
+            const nextId = idGetter(nextMatch);
             const newIds = new Set(state.ids);
             newIds.add(nextId);
             state.ids = newIds;
@@ -246,6 +308,8 @@ function SelectionStore() {
         getSelectedIds,
         getSelectedItems,
         selectNext,
+        selectPrevious,
+        selectNextByProperty,
         selectAll,
         handleEventSelection,
     };

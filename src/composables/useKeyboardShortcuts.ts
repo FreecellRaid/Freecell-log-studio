@@ -34,8 +34,8 @@ export function useKeyboardShortcuts() {
         else if (isModKey && key === 'p') command = 'export';
         else if (isModKey && (key === 'delete' || key === 'backspace'))
             command = 'delete';
-        else if (key === 'arrowup') command = 'selectPrevious';
-        else if (key === 'arrowdown') command = 'selectNext';
+        else if (isModKey && key === 'arrowup') command = 'selectPrevious';
+        else if (isModKey && key === 'arrowdown') command = 'selectNext';
         else if (isModKey && key === '/') command = 'toggleOoc';
         else if (isModKey && key === '\\') command = 'toggleCommand';
         else if (isModKey && key === 'e') command = 'merge';
