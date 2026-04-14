@@ -75,7 +75,7 @@ export function useCommandDispatcher() {
                 handleChunkListCommands(command);
                 break;
             case 'search':
-                handleSearchCommands(command);
+                handleSearchCommands(command, payload);
                 break;
         }
     };
@@ -186,13 +186,33 @@ export function useCommandDispatcher() {
         }
     }
 
-    function handleSearchCommands(cmd: CommandType) {
+    function handleSearchCommands(cmd: CommandType, payload?: any) {
         const searchFilter = useFilter('search');
-        if (cmd === 'cancel') searchFilter.clearMessageSelection();
-        if (cmd === 'copy') {
-            if (searchFilter.selectedMessages.value.length > 0) {
-                clipboard.copyMessages(searchFilter.selectedMessages.value);
-            }
+
+        switch (cmd) {
+            case 'messageSelect':
+                if (payload?.msgId && payload?.messages) {
+                    searchFilter.handleMessageClickSelection(
+                        payload.event,
+                        payload.msgId,
+                        payload.messages,
+                    );
+                }
+                break;
+            case 'selectAll':
+                if (payload?.messages) {
+                    const ids = payload.messages.map((m: any) => m.messageId);
+                    searchFilter.setMessagesSelection(ids);
+                }
+                break;
+            case 'cancel':
+                searchFilter.clearMessageSelection();
+                break;
+            case 'copy':
+                if (searchFilter.selectedMessages.value.length > 0) {
+                    clipboard.copyMessages(searchFilter.selectedMessages.value);
+                }
+                break;
         }
     }
 
