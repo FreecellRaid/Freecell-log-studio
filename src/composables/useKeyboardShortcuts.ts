@@ -25,6 +25,7 @@ export function useKeyboardShortcuts() {
         else if (isModKey && key === 'c') command = 'copy';
         else if (isModKey && key === 'v') command = 'paste';
         else if (isModKey && !shift && key === 'z') command = 'undo';
+        else if (isModKey && key === 'y') command = 'redo';
         else if (isModKey && shift && key === 'z') command = 'redo';
         else if (isModKey && key === 'b') command = 'toggleLeft';
         else if (isModKey && key === 'i') command = 'toggleRight';
