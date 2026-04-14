@@ -185,17 +185,18 @@ import { useWindowStore } from '@/stores/windowStore';
 const windowStore = useWindowStore();
 
 const shortcuts = [
-    { key: 'Ctrl/Cmd + A', desc: '全选' },
+    { key: 'Ctrl + A', desc: '全选' },
     { key: 'Esc', desc: '取消选择' },
-    { key: 'Ctrl/Cmd + C', desc: '复制' },
-    { key: 'Ctrl/Cmd + V', desc: '粘贴' },
-    { key: 'Ctrl/Cmd + Z', desc: '撤销' },
-    { key: 'Ctrl/Cmd + Shift + Z', desc: '重做' },
-    { key: 'Ctrl/Cmd + S', desc: '保存' },
-    { key: 'Ctrl/Cmd + P', desc: '导出预览' },
-    { key: 'Ctrl/Cmd + B', desc: '切换左侧边栏' },
-    { key: 'Ctrl/Cmd + I', desc: '切换右侧边栏' },
-    { key: 'Ctrl/Cmd + K', desc: '打开帮助文档' },
+    { key: 'Ctrl + C', desc: '复制' },
+    { key: 'Ctrl + V', desc: '粘贴' },
+    { key: 'Ctrl + Z', desc: '撤销' },
+    { key: 'Ctrl + backspace', desc: '删除' },
+    { key: 'Ctrl + Shift + Z', desc: '重做' },
+    { key: 'Ctrl + S', desc: '保存' },
+    { key: 'Ctrl + P', desc: '导出预览' },
+    { key: 'Ctrl + B', desc: '切换左侧边栏' },
+    { key: 'Ctrl + I', desc: '切换右侧边栏' },
+    { key: 'Ctrl + K', desc: '打开帮助文档' },
 ];
 </script>
 

@@ -334,21 +334,16 @@ function handleMerge(currentChunkId: string, nextChunkId: string) {
 }
 
 function handleChunkSelect(chunkId: string, event: MouseEvent) {
-    windowStore.registerWindow({
-        windowId: chunkId,
-        windowName: 'chunkView',
-        windowType: 'view',
-    });
-    // 这里切换两次，用来保证显示正常再把焦点拉回panel
-    windowStore.setFocus(chunkId);
-    windowStore.setFocus('chunkList');
+    filterTool.handleChunkClickSelection(event, chunkId);
 
-    // 如果没有按住 Ctrl/Meta/Shift，则视为普通单选，清空其他选中
     if (!event.ctrlKey && !event.metaKey && !event.shiftKey) {
-        filterTool.clearSelection();
-        filterTool.toggleChunkSelection(chunkId);
-    } else {
-        filterTool.toggleChunkSelection(chunkId);
+        windowStore.registerWindow({
+            windowId: chunkId,
+            windowName: 'chunkView',
+            windowType: 'view',
+        });
+
+        windowStore.setFocus('chunkList');
     }
 }
 
@@ -369,8 +364,6 @@ function handleDelete(chunkId: string) {
     ) {
         targets.forEach((id) => {
             chunkEditorStore.deleteChunk(id);
-
-            // UI 同步：从 windowStore 中彻底注销窗口
             if (windowStore.isWindowOpen(id)) {
                 windowStore.unregisterWindow(id);
             }

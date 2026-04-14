@@ -31,6 +31,8 @@ export function useKeyboardShortcuts() {
         else if (isModKey && key === 'k') command = 'openHelp';
         else if (isModKey && key === 's') command = 'save';
         else if (isModKey && key === 'p') command = 'export';
+        else if (isModKey && (key === 'delete' || key === 'backspace'))
+            command = 'delete';
 
         if (command) {
             event.preventDefault();

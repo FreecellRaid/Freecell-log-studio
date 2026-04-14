@@ -273,6 +273,10 @@ function startResize(e: MouseEvent) {
 
 onMounted(() => {
     window.addEventListener('click', closeSettings);
+    // 初始化左侧边栏面板注册
+    if (windowStore.leftSidebarVisible && windowStore.activeLeftPanelName) {
+        windowStore.setLeftPanel(windowStore.activeLeftPanelName);
+    }
 });
 onUnmounted(() => {
     window.removeEventListener('click', closeSettings);

@@ -96,6 +96,13 @@ export function useCommandDispatcher() {
         if (cmd === 'cancel') {
             filter.clearMessageSelection();
         }
+        if (cmd === 'delete') {
+            const selectedIds = filter.selectedMessageIds.value;
+            if (selectedIds.size > 0) {
+                messageEditor.batchDeleteMessages(selectedIds);
+                filter.clearMessageSelection();
+            }
+        }
         if (cmd === 'copy') {
             const selected = filter.selectedMessages.value;
             if (selected.length > 0) clipboard.copyMessages(selected);
@@ -135,6 +142,17 @@ export function useCommandDispatcher() {
         }
         if (cmd === 'cancel') {
             chunkListFilter.clearChunkSelection();
+        }
+        if (cmd === 'delete') {
+            const selectedIds = Array.from(
+                chunkListFilter.selectedChunkIds.value,
+            );
+            if (selectedIds.length > 0) {
+                selectedIds.forEach((chunkId) => {
+                    chunkEditor.deleteChunk(chunkId);
+                });
+                chunkListFilter.clearChunkSelection();
+            }
         }
         if (cmd === 'copy') {
             const selectedIds = Array.from(
@@ -187,7 +205,6 @@ export function useCommandDispatcher() {
 
     function handleSearchCommands(cmd: CommandType, payload?: any) {
         const searchFilter = useFilter('search');
-
         if (cmd === 'select') {
             if (payload?.msgId && payload?.messages) {
                 searchFilter.handleMessageClickSelection(
@@ -205,6 +222,13 @@ export function useCommandDispatcher() {
         }
         if (cmd === 'cancel') {
             searchFilter.clearMessageSelection();
+        }
+        if (cmd === 'delete') {
+            const selectedIds = searchFilter.selectedMessageIds.value;
+            if (selectedIds.size > 0) {
+                messageEditor.batchDeleteMessages(selectedIds);
+                searchFilter.clearMessageSelection();
+            }
         }
         if (cmd === 'copy') {
             if (searchFilter.selectedMessages.value.length > 0) {

@@ -99,6 +99,19 @@ export function useFilter(ownerId?: string) {
     }
 
     // Chunk 相关操作
+    function handleChunkClickSelection(event: MouseEvent, chunkId: string) {
+        const allChunks = logStore.documents.flatMap((doc) => doc.chunks);
+
+        selectionStore.handleEventSelection(
+            effectiveId.value,
+            'chunk',
+            event,
+            chunkId,
+            allChunks,
+            (c) => c.chunkId,
+        );
+    }
+
     function toggleChunkSelection(chunkId: string) {
         const current = selectedChunkIds.value;
         if (current.has(chunkId)) {
@@ -158,6 +171,7 @@ export function useFilter(ownerId?: string) {
         setMessagesSelection,
         clearMessageSelection,
 
+        handleChunkClickSelection,
         toggleChunkSelection,
         setChunkSelection,
         selectAllChunks,
