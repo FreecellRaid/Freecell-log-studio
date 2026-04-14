@@ -227,7 +227,7 @@ function handleSearch() {
 function handleItemClick(event: MouseEvent, msgId: string) {
     windowStore.setFocus('search');
 
-    dispatch('messageSelect', {
+    dispatch('select', {
         event,
         msgId,
         messages: searchResults.value, // 将当前计算出的搜索结果快照传给调度器

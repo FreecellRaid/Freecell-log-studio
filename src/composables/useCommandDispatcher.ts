@@ -10,7 +10,7 @@ import { useProjectManager } from '@/composables/useProjectManager';
 import type { Chunk } from '@/types/log';
 
 export type CommandType =
-    | 'messageSelect'
+    | 'select'
     | 'selectAll'
     | 'cancel'
     | 'copy'
@@ -85,18 +85,21 @@ export function useCommandDispatcher() {
         chunkId: string,
         payload?: any,
     ) {
-        if (cmd === 'messageSelect' && payload) {
+        if (cmd === 'select' && payload) {
             const { event, msgId, messages } = payload;
             filter.handleMessageClickSelection(event, msgId, messages);
             return;
         }
-        if (cmd === 'selectAll') filter.selectAllInChunk(chunkId);
-        if (cmd === 'cancel') filter.clearMessageSelection();
+        if (cmd === 'selectAll') {
+            filter.selectAllInChunk(chunkId);
+        }
+        if (cmd === 'cancel') {
+            filter.clearMessageSelection();
+        }
         if (cmd === 'copy') {
             const selected = filter.selectedMessages.value;
             if (selected.length > 0) clipboard.copyMessages(selected);
         }
-
         if (cmd === 'paste') {
             if (clipboard.dataType !== 'messages') return;
             const pasteData = clipboard.getPasteMessages();
@@ -119,7 +122,6 @@ export function useCommandDispatcher() {
                     insertIndex = maxIdxInChunk + 1;
                 }
             }
-
             messageEditor.insertMessages(chunkId, pasteData, insertIndex);
             filter.clearMessageSelection();
             filter.setMessagesSelection(pasteData.map((m) => m.messageId));
@@ -128,9 +130,12 @@ export function useCommandDispatcher() {
 
     function handleChunkListCommands(cmd: string) {
         const chunkListFilter = useFilter('chunkList');
-
-        if (cmd === 'selectAll') chunkListFilter.selectAllChunks();
-        if (cmd === 'cancel') chunkListFilter.clearChunkSelection();
+        if (cmd === 'selectAll') {
+            chunkListFilter.selectAllChunks();
+        }
+        if (cmd === 'cancel') {
+            chunkListFilter.clearChunkSelection();
+        }
         if (cmd === 'copy') {
             const selectedIds = Array.from(
                 chunkListFilter.selectedChunkIds.value,
@@ -142,17 +147,13 @@ export function useCommandDispatcher() {
                 clipboard.copyChunks(chunks);
             }
         }
-
         if (cmd === 'paste') {
             if (clipboard.dataType !== 'chunks') return;
             const pasteChunks = clipboard.getPasteChunks();
             if (pasteChunks.length === 0) return;
-
             let targetDocId = '';
             let insertIndex = 0;
-
             const selectedIds = chunkListFilter.selectedChunkIds.value;
-
             if (selectedIds.size > 0) {
                 let foundMaxIdx = -1;
                 for (const doc of logStore.documents) {
@@ -167,7 +168,6 @@ export function useCommandDispatcher() {
                     insertIndex = foundMaxIdx + 1;
                 }
             }
-
             if (!targetDocId) {
                 const docs = logStore.documents;
                 if (docs.length > 0) {
@@ -176,7 +176,6 @@ export function useCommandDispatcher() {
                     insertIndex = lastDoc.chunks.length;
                 }
             }
-
             if (targetDocId) {
                 chunkEditor.insertChunks(targetDocId, pasteChunks, insertIndex);
                 chunkListFilter.setChunkSelection(
@@ -189,30 +188,28 @@ export function useCommandDispatcher() {
     function handleSearchCommands(cmd: CommandType, payload?: any) {
         const searchFilter = useFilter('search');
 
-        switch (cmd) {
-            case 'messageSelect':
-                if (payload?.msgId && payload?.messages) {
-                    searchFilter.handleMessageClickSelection(
-                        payload.event,
-                        payload.msgId,
-                        payload.messages,
-                    );
-                }
-                break;
-            case 'selectAll':
-                if (payload?.messages) {
-                    const ids = payload.messages.map((m: any) => m.messageId);
-                    searchFilter.setMessagesSelection(ids);
-                }
-                break;
-            case 'cancel':
-                searchFilter.clearMessageSelection();
-                break;
-            case 'copy':
-                if (searchFilter.selectedMessages.value.length > 0) {
-                    clipboard.copyMessages(searchFilter.selectedMessages.value);
-                }
-                break;
+        if (cmd === 'select') {
+            if (payload?.msgId && payload?.messages) {
+                searchFilter.handleMessageClickSelection(
+                    payload.event,
+                    payload.msgId,
+                    payload.messages,
+                );
+            }
+        }
+        if (cmd === 'selectAll') {
+            if (payload?.messages) {
+                const ids = payload.messages.map((m: any) => m.messageId);
+                searchFilter.setMessagesSelection(ids);
+            }
+        }
+        if (cmd === 'cancel') {
+            searchFilter.clearMessageSelection();
+        }
+        if (cmd === 'copy') {
+            if (searchFilter.selectedMessages.value.length > 0) {
+                clipboard.copyMessages(searchFilter.selectedMessages.value);
+            }
         }
     }
 

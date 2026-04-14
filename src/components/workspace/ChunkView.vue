@@ -107,7 +107,7 @@ const messages = computed(function () {
 });
 
 function handleMessageSelect(event: MouseEvent, msgId: string, index: number) {
-    dispatch('messageSelect', {
+    dispatch('select', {
         event,
         msgId,
         index,
