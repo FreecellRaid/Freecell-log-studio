@@ -139,6 +139,15 @@ export function useCommandDispatcher() {
             filter.clearMessageSelection();
             filter.setMessagesSelection(pasteData.map((m) => m.messageId));
         }
+        if (cmd === 'toggleOoc') {
+            const selectedIds = filter.selectedMessageIds.value;
+            if (selectedIds.size > 0) messageEditor.toggleOoc(selectedIds);
+        }
+
+        if (cmd === 'toggleCommand') {
+            const selectedIds = filter.selectedMessageIds.value;
+            if (selectedIds.size > 0) messageEditor.toggleCommand(selectedIds);
+        }
     }
 
     function handleChunkListCommands(cmd: string) {
@@ -242,13 +251,13 @@ export function useCommandDispatcher() {
             }
         }
         if (cmd === 'toggleOoc') {
-            const selectedIds = filter.selectedMessageIds.value;
+            const selectedIds = searchFilter.selectedMessageIds.value;
             messageEditor.toggleOoc(selectedIds);
             return;
         }
 
         if (cmd === 'toggleCommand') {
-            const selectedIds = filter.selectedMessageIds.value;
+            const selectedIds = searchFilter.selectedMessageIds.value;
             messageEditor.toggleCommand(selectedIds);
             return;
         }
