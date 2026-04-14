@@ -19,6 +19,7 @@
     --active-accent: #007acc;
     --inactive-accent: #c9cbcc;
     --selection-bg: #e6f7ff;
+    --inactive-selection-bg:#e8e8e8;
     --color-warning: #ff4d4f;
 
     /* 其他状态 */
@@ -43,6 +44,7 @@
     --active-accent: #2fa5f4;
     --inactive-accent: #575859;
     --selection-bg: #264f78;
+    --inactive-selection-bg: #444444;
     --color-warning: #ff4d4f;
 
     --icon-color: #a3a3a3;

@@ -517,8 +517,7 @@ function handleChunkDragEnd() {
 }
 
 .chunk-item.is-selected:not(.is-active) {
-    background-color: var(--hover-bg);
-    opacity: 0.8;
+    background-color: var(--inactive-selection-bg);
 }
 
 .chunk-item.is-active-chunk {

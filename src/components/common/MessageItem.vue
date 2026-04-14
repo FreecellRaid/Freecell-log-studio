@@ -4,6 +4,7 @@
         class="message-item"
         :class="{
             'is-selected': isSelected,
+            'is-active': isActive,
             'is-hidden-active': isHidden,
         }"
         draggable="true"
@@ -80,7 +81,8 @@ const props = defineProps<{
     message: Message;
     chunkId: string;
     index: number;
-    isSelected: boolean; // 改由父容器传入，彻底解决选择状态隔离问题
+    isSelected: boolean;
+    isActive: boolean;
 }>();
 
 // 向上事件传递
@@ -164,8 +166,12 @@ const isHidden = computed(() => {
     border-color: var(--active-accent);
 }
 
-.message-item.is-selected {
+.message-item.is-selected.is-active {
     background-color: var(--selection-bg);
+}
+
+.message-item.is-selected:not(.is-active) {
+    background-color: var(--inactive-selection-bg);
 }
 
 .message-header {

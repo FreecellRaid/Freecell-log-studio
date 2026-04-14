@@ -108,7 +108,7 @@
                 找到 {{ searchResults.length }} 条结果
             </span>
             <button
-                class="btn-primary btn-sm"
+                class="btn-primary"
                 :disabled="searchResults.length === 0"
                 @click="selectAllMatches"
             >
@@ -130,6 +130,8 @@
                     'is-selected': filterStore.selectedMessageIds.value.has(
                         msg.messageId,
                     ),
+                    'is-active':
+                        windowStore.currentActiveWindow.windowId === 'search',
                 }"
                 @click="handleItemClick($event, msg.messageId)"
             >
@@ -374,14 +376,24 @@ const truncate = (str: string, len: number) => {
 
 .search-summary {
     flex-shrink: 0;
-    padding: 8px 12px;
+    padding: 4px 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
 }
 
+.btn-primary {
+    font-size: 12px;
+    color: var(--text-muted);
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+.btn-primary:hover {
+    background-color: var(--hover-bg);
+}
 .count-text {
     font-size: 12px;
     color: var(--text-secondary);
@@ -405,8 +417,12 @@ const truncate = (str: string, len: number) => {
     outline: 1px solid var(--active-accent);
 }
 
-.result-item.is-selected {
+.result-item.is-selected.is-active {
     background: var(--selection-bg);
+}
+
+.result-item.is-selected:not(.is-active) {
+    background: var(--inactive-selection-bg);
 }
 
 .result-meta {

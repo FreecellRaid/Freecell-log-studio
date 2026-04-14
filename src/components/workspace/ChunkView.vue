@@ -40,6 +40,7 @@
                                 msg.messageId,
                             )
                         "
+                        :is-active="isViewFocused"
                         @select="handleMessageSelect"
                         @dragstart="handleMessageDragStart"
                         @dragover="handleMessageDragOver($event, index)"
@@ -94,6 +95,8 @@ onMounted(() => {
         windowType: 'view',
     });
 });
+
+const isViewFocused = computed(() => windowStore.activeFocus === props.chunkId);
 
 const currentChunk = computed(function () {
     return logStore.findChunkById(props.chunkId) || undefined;
