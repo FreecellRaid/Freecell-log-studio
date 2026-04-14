@@ -1,5 +1,5 @@
 <template>
-    <div class="panel">
+    <div class="panel" @pointerdown="windowStore.setFocus('exportFormat')">
         <div class="panel-header">
             <div class="header-title">
                 <h3>导出模板</h3>

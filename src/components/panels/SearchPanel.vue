@@ -1,5 +1,5 @@
 <template>
-    <div class="panel">
+    <div class="panel" @pointerdown="windowStore.setFocus('search')">
         <div class="panel-header">
             <div class="header-title">
                 <h3>搜索与筛选</h3>

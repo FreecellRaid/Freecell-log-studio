@@ -1,5 +1,5 @@
 <template>
-    <div class="panel">
+    <div class="panel" @pointerdown="windowStore.setFocus('identity')">
         <div class="panel-header">
             <div class="header-title">
                 <h3>{{ isPlayerMode ? '角色管理' : '账号管理' }}</h3>
@@ -115,6 +115,7 @@ import { useHistoryStore } from '@/stores/historyStore';
 import { useMessageEditorStore } from '@/stores/editorStore/messageStore';
 import type { RoleType } from '@/types/log';
 import type { ColorMode, ColorRule } from '@/types/config';
+import { useWindowStore } from '@/stores/windowStore';
 import {
     buildIdentityStats,
     collectMessageIdsByIdentity,
@@ -133,6 +134,7 @@ const logStore = useLogStore();
 const uiStore = useUiStore();
 const historyStore = useHistoryStore();
 const messageEditorStore = useMessageEditorStore();
+const windowStore = useWindowStore();
 const localDisplayMode = ref<ColorMode>(styleStore.viewSettings.colorMode); // 局部显示模式
 const editingId = ref<string | null>(null); // 当前正在编辑的 ID
 const editBuffer = ref(''); // 编辑缓冲区
