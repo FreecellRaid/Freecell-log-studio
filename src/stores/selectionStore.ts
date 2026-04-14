@@ -18,6 +18,13 @@ function SelectionStore() {
     }
 
     function getState(windowId: string, type: SelectionType): SelectionState {
+        if (windowId === 'defaultView') {
+            return {
+                selectionType: type,
+                ids: new Set(),
+            };
+        }
+
         const key = _getKey(windowId, type);
         if (!selections.value.has(key)) {
             return createState(windowId, type);
@@ -83,21 +90,27 @@ function SelectionStore() {
     }
 
     function clearSelection(windowId: string, type?: SelectionType) {
+        if (windowId === 'defaultView') return;
+
+        const newMap = new Map(selections.value);
+        let hasChanges = false;
+
         if (type) {
-            const state = getState(windowId, type);
-            state.ids = new Set();
-            state.lastSelectedId = undefined;
-            state.anchorId = undefined;
+            const key = _getKey(windowId, type);
+            // 使用 delete 彻底移除键值对，防止内存泄露
+            if (newMap.has(key)) {
+                newMap.delete(key);
+                hasChanges = true;
+            }
         } else {
-            // 如果不传 type，则清除该 windowId 下所有类型的选区
-            const newMap = new Map(selections.value);
-            for (const [key, state] of newMap.entries()) {
+            for (const key of newMap.keys()) {
                 if (key.startsWith(`${windowId}::`)) {
-                    state.ids = new Set();
-                    state.lastSelectedId = undefined;
-                    state.anchorId = undefined;
+                    newMap.delete(key);
+                    hasChanges = true;
                 }
             }
+        }
+        if (hasChanges) {
             selections.value = newMap;
         }
     }

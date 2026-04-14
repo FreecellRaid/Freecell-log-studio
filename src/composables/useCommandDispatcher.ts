@@ -38,8 +38,8 @@ export function useCommandDispatcher() {
 
     const dispatch = (command: CommandType, payload?: any) => {
         const focus = windowStore.activeFocus;
-        const windowType = windowStore.currentActiveWindow.windowType;
-        const windowName = windowStore.currentActiveWindow.windowName;
+        const activeWin = windowStore.currentActiveWindow;
+        const { windowType, windowName } = activeWin;
 
         // P0 Modal 开启时拦截其他业务命令
         if (windowType === 'modal') {
@@ -54,14 +54,10 @@ export function useCommandDispatcher() {
             openHelp: () => windowStore.openHelpDocument(),
             undo: () => history.undo(),
             redo: () => history.redo(),
-            save: () => {
-                projectManager.saveCurrentProjectToLocal();
-            },
+            save: () => projectManager.saveCurrentProjectToLocal(),
             export: () => {
                 const formatId = exportStore.activeFormat?.formatId;
-                if (formatId) {
-                    windowStore.toggleExportPreview(formatId);
-                }
+                if (formatId) windowStore.toggleExportPreview(formatId);
             },
         };
 
@@ -90,8 +86,8 @@ export function useCommandDispatcher() {
         payload?: any,
     ) {
         if (cmd === 'messageSelect' && payload) {
-            const { event, msgId, index, messages } = payload;
-            filter.handleMessageClickSelection(event, msgId, index, messages);
+            const { event, msgId, messages } = payload;
+            filter.handleMessageClickSelection(event, msgId, messages);
             return;
         }
         if (cmd === 'selectAll') filter.selectAllInChunk(chunkId);
