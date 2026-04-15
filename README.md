@@ -13,7 +13,7 @@ UI 风格参考 VSCode。
 
 ![preview-1](./docs/preview-1.png)
 ![preview-2](./docs/preview-2.png)
-![preview-3](./docs/preview-2.png)
+![preview-3](./docs/preview-3.png)
 
 ---
 
