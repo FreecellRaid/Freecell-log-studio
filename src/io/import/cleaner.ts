@@ -10,7 +10,8 @@ export function cleanContent(rawContent: string): string {
             // 删除 HTML 标签
             .replace('<!--', '')
             .replace('-->', '')
-            .replace(/<[^>]+>/g, '')
+            // .replace(/<[^>]+>/g, '')
+            // 在找到更好的办法之前，暂时先不过滤了，以免误伤骰娘的回复
 
             // 删除行首的 #
             .replace(/^#/gm, '')
