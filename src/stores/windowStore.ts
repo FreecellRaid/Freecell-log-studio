@@ -28,6 +28,7 @@ interface WindowInstance {
     windowId: string;
     windowName: WindowName;
     windowType: WindowType;
+    originalId?: string; // 原始业务 ID，分屏时用于获取真正的 chunkId/formatId
 }
 type FocusTarget = string;
 
@@ -54,6 +55,20 @@ function windowStore() {
     ]);
     const splitSizes = ref<[number, number]>([50, 50]);
 
+    function createWindowInstance(
+        windowId: string,
+        windowName: WindowName,
+        windowType: WindowType,
+        originalId?: string,
+    ): WindowInstance {
+        return {
+            windowId,
+            windowName,
+            windowType,
+            originalId: originalId ?? windowId,
+        };
+    }
+
     // 聚焦到一个目标
     function setFocus(target: FocusTarget) {
         // 先移除已有的相同目标
@@ -72,6 +87,9 @@ function windowStore() {
     // 注册并打开一个窗口
     function registerWindow(win: WindowInstance) {
         if (!openWindows.value.has(win.windowId)) {
+            if (!win.originalId) {
+                win.originalId = win.windowId;
+            }
             openWindows.value.set(win.windowId, win);
         }
         setFocus(win.windowId);
@@ -95,12 +113,7 @@ function windowStore() {
 
         activeLeftPanelName.value = name;
         leftSidebarVisible.value = true;
-
-        registerWindow({
-            windowId: name,
-            windowName: name,
-            windowType: 'panel',
-        });
+        registerWindow(createWindowInstance(name, name, 'panel'));
     }
 
     // 折叠/展开左侧边栏
@@ -108,11 +121,13 @@ function windowStore() {
         leftSidebarVisible.value = !leftSidebarVisible.value;
 
         if (leftSidebarVisible.value) {
-            registerWindow({
-                windowId: activeLeftPanelName.value,
-                windowName: activeLeftPanelName.value,
-                windowType: 'panel',
-            });
+            registerWindow(
+                createWindowInstance(
+                    activeLeftPanelName.value,
+                    activeLeftPanelName.value,
+                    'panel',
+                ),
+            );
         } else {
             unregisterWindow(activeLeftPanelName.value);
         }
@@ -122,11 +137,9 @@ function windowStore() {
     function toggleRightSidebar() {
         rightSidebarVisible.value = !rightSidebarVisible.value;
         if (rightSidebarVisible.value) {
-            registerWindow({
-                windowId: 'inspector',
-                windowName: 'inspector',
-                windowType: 'panel',
-            });
+            registerWindow(
+                createWindowInstance('inspector', 'inspector', 'panel'),
+            );
         } else {
             unregisterWindow('inspector');
         }
@@ -142,11 +155,7 @@ function windowStore() {
         });
 
         if (chunkId) {
-            registerWindow({
-                windowId: chunkId,
-                windowName: 'chunkView',
-                windowType: 'view',
-            });
+            registerWindow(createWindowInstance(chunkId, 'chunkView', 'view'));
         } else {
             setFocus('defaultView');
         }
@@ -154,11 +163,7 @@ function windowStore() {
 
     // 切换导出预览
     function openExportPreview(formatId: string) {
-        registerWindow({
-            windowId: formatId, // 使用formatId 作为 ID
-            windowName: 'exportPreview',
-            windowType: 'view',
-        });
+        registerWindow(createWindowInstance(formatId, 'exportPreview', 'view'));
     }
 
     function toggleExportPreview(formatId: string) {
@@ -166,46 +171,31 @@ function windowStore() {
         if (isActive) {
             unregisterWindow(formatId);
         } else {
-            registerWindow({
-                windowId: formatId,
-                windowName: 'exportPreview',
-                windowType: 'view',
-            });
+            registerWindow(
+                createWindowInstance(formatId, 'exportPreview', 'view'),
+            );
             setFocus(formatId);
         }
     }
 
-    const currentActiveWindow = computed(() => {
+    const currentActiveWindow = computed((): WindowInstance => {
         const focusId = activeFocus.value;
 
         if (focusId === 'defaultView') {
-            return {
-                windowId: 'defaultView',
-                windowName: 'defaultView',
-                windowType: 'view',
-            } as WindowInstance;
+            return createWindowInstance('defaultView', 'defaultView', 'view');
         }
 
         if (focusId === 'modal') {
-            return {
-                windowId: 'help',
-                windowName: 'help',
-                windowType: 'modal',
-            } as WindowInstance;
+            return createWindowInstance('help', 'help', 'modal');
         }
         const win = openWindows.value.get(focusId);
 
         return (
-            win ||
-            ({
-                windowId: 'defaultView',
-                windowName: 'defaultView',
-                windowType: 'view',
-            } as WindowInstance)
+            win ?? createWindowInstance('defaultView', 'defaultView', 'view')
         );
     });
 
-    const currentActiveView = computed(() => {
+    const currentActiveView = computed((): WindowInstance => {
         for (let i = focusStack.value.length - 1; i >= 0; i--) {
             const target = focusStack.value[i];
             const win = openWindows.value.get(target);
@@ -213,15 +203,24 @@ function windowStore() {
                 return win;
             }
         }
+        const defaultWin = openWindows.value.get('defaultView');
         return (
-            openWindows.value.get('defaultView') ||
-            ({
-                windowId: 'defaultView',
-                windowName: 'defaultView',
-                windowType: 'view',
-            } as WindowInstance)
+            defaultWin ??
+            createWindowInstance('defaultView', 'defaultView', 'view')
         );
     });
+
+    function isInSplitMode(): boolean {
+        return splitMode.value === 'double';
+    }
+
+    function getActivePanePosition(): 'left' | 'right' | null {
+        if (splitMode.value !== 'double') return null;
+        const activeId = activeFocus.value;
+        if (splitPanes.value[0]?.windowId === activeId) return 'left';
+        if (splitPanes.value[1]?.windowId === activeId) return 'right';
+        return null;
+    }
 
     // 打开帮助弹窗
     function openHelpDocument() {
@@ -239,7 +238,6 @@ function windowStore() {
     const isWindowFocused = (windowId: string) =>
         activeFocus.value === windowId;
 
-    // windowStore.ts
     function enterSplitMode(
         rightViewType: 'chunkView' | 'exportPreview',
         rightViewId: string,
@@ -251,11 +249,12 @@ function windowStore() {
         const currentView = currentActiveView.value;
         if (currentView.windowName === 'defaultView') return false;
 
-        // 构建左侧 pane
+        const leftOriginalId = currentView.originalId ?? currentView.windowId;
+
         const leftPane: SplitPaneState = {
             viewType: currentView.windowName as 'chunkView' | 'exportPreview',
-            viewId: currentView.windowId,
-            windowId: generateSplitWindowId('left', currentView.windowId),
+            viewId: leftOriginalId,
+            windowId: generateSplitWindowId('left', leftOriginalId),
         };
 
         // 构建右侧 pane
@@ -267,16 +266,23 @@ function windowStore() {
 
         // 注销左侧原始窗口，注册带前缀的新窗口
         unregisterWindow(currentView.windowId);
-        registerWindow({
-            windowId: leftPane.windowId,
-            windowName: leftPane.viewType,
-            windowType: 'view',
-        });
-        registerWindow({
-            windowId: rightPane.windowId,
-            windowName: rightViewType,
-            windowType: 'view',
-        });
+        registerWindow(
+            createWindowInstance(
+                leftPane.windowId,
+                leftPane.viewType,
+                'view',
+                leftOriginalId,
+            ),
+        );
+        registerWindow(
+            createWindowInstance(
+                rightPane.windowId,
+                rightViewType,
+                'view',
+                rightViewId,
+            ),
+        );
+
         splitPanes.value = [leftPane, rightPane];
         splitMode.value = 'double';
 
@@ -301,11 +307,14 @@ function windowStore() {
 
         // 恢复活跃 pane 的原始窗口（不带前缀）
         if (activePane.viewType !== 'defaultView') {
-            registerWindow({
-                windowId: activePane.viewId,
-                windowName: activePane.viewType,
-                windowType: 'view',
-            });
+            registerWindow(
+                createWindowInstance(
+                    activePane.viewId,
+                    activePane.viewType,
+                    'view',
+                    activePane.viewId,
+                ),
+            );
         }
         splitPanes.value = [
             {
@@ -333,11 +342,9 @@ function windowStore() {
         const newWindowId = generateSplitWindowId(position, viewId);
 
         unregisterWindow(pane.windowId);
-        registerWindow({
-            windowId: newWindowId,
-            windowName: viewType,
-            windowType: 'view',
-        });
+        registerWindow(
+            createWindowInstance(newWindowId, viewType, 'view', viewId),
+        );
 
         splitPanes.value[paneIndex] = {
             viewType,
@@ -399,6 +406,8 @@ function windowStore() {
         closePane,
         getPaneViewId,
         splitWithPreview,
+        isInSplitMode,
+        getActivePanePosition,
     };
 }
 

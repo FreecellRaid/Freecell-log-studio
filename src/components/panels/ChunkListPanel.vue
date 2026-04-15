@@ -109,7 +109,7 @@
                                     'chunkList',
                                 // 对view的焦点判断
                                 'is-active-chunk':
-                                    windowStore.currentActiveView.windowId ===
+                                    windowStore.currentActiveView.originalId ===
                                     chunk.chunkId,
                                 // 选中判断
                                 'is-selected':

@@ -88,11 +88,11 @@ const filterTool = useFilter();
 
 const activeChunk = computed(function () {
     if (
-        !windowStore.currentActiveView.windowId ||
-        windowStore.currentActiveView.windowId === 'defaultView'
+        !windowStore.currentActiveView.originalId ||
+        windowStore.currentActiveView.originalId === 'defaultView'
     )
         return null;
-    return logStore.findChunkById(windowStore.currentActiveView.windowId);
+    return logStore.findChunkById(windowStore.currentActiveView.originalId);
 });
 
 const activeChunkName = computed(function () {
