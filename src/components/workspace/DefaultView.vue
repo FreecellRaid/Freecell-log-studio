@@ -8,7 +8,7 @@
         <header class="view-header">
             <div class="view-title">
                 <LayoutDashboard class="ui-icon icon-view-title" />
-                <h2>工作台</h2>
+                <h2 class="text-view-title">工作台</h2>
             </div>
         </header>
 

@@ -12,15 +12,21 @@ export function useFilter(ownerId?: string) {
     const selectionStore = useSelectionStore();
 
     const effectiveId = computed(() => {
-        if (ownerId) return ownerId;
-        const stack = windowStore.focusStack;
-        for (let i = stack.length - 1; i >= 0; i--) {
-            const windowId = stack[i];
-            const win = windowStore.openWindows.get(windowId);
-            if (!win || win.windowType === 'modal') continue;
-            return windowId;
+        let targetId = ownerId;
+        if (!targetId) {
+            const stack = windowStore.focusStack;
+            for (let i = stack.length - 1; i >= 0; i--) {
+                const windowId = stack[i];
+                const win = windowStore.openWindows.get(windowId);
+                if (!win || win.windowType === 'modal') continue;
+                targetId = windowId;
+                break;
+            }
         }
-        return 'defaultView';
+
+        if (!targetId) return 'defaultView';
+        const win = windowStore.openWindows.get(targetId);
+        return win?.originalId || targetId;
     });
     const selectedMessageIds = computed(() =>
         selectionStore.getSelectedIds(effectiveId.value, 'message'),

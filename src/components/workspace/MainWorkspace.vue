@@ -215,7 +215,6 @@ function startResize(e: MouseEvent) {
 .split-resize-handle {
     width: 4px;
     height: 100%;
-    background-color: var(--border-color);
     cursor: col-resize;
     flex-shrink: 0;
     transition: background-color 0.15s;

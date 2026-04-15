@@ -8,8 +8,29 @@
         <header class="view-header">
             <div class="view-title">
                 <FileText class="ui-icon icon-view-title" />
-                <h2>{{ currentChunk?.chunkName || '未知场景' }}</h2>
+                <h2 class="text-view-title">
+                    {{ currentChunk?.chunkName || '未知场景' }}
+                </h2>
                 <span class="msg-count">({{ messages.length }} 条消息)</span>
+            </div>
+            <div class="view-actions">
+                <button
+                    v-if="windowStore.splitMode === 'single'"
+                    class="view-action-btn"
+                    title="向右分屏"
+                    @click.stop="handleSplit"
+                >
+                    <SquareSplitHorizontal class="ui-icon" />
+                </button>
+
+                <button
+                    v-if="windowStore.splitMode === 'double' || canClose"
+                    class="view-action-btn"
+                    title="关闭"
+                    @click.stop="handleClose"
+                >
+                    <X class="ui-icon" />
+                </button>
             </div>
         </header>
 
@@ -68,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { FileText } from '@lucide/vue';
+import { FileText, X, SquareSplitHorizontal } from '@lucide/vue';
 import { computed, ref, onMounted } from 'vue';
 import { useLogStore } from '@/stores/logStore';
 import { useFilter } from '@/composables/useFilter';
@@ -94,14 +115,47 @@ const messageEditorStore = useMessageEditorStore();
 const chunkEditorStore = useChunkEditorStore();
 const { dispatch } = useCommandDispatcher();
 
-// 组件挂载时注册窗口
+const canClose = computed(() => {
+    return (
+        windowStore.splitMode === 'single' &&
+        effectiveWindowId.value !== 'defaultView' &&
+        windowStore.openWindows.size > 1
+    );
+});
+
 onMounted(() => {
+    // 注册窗口时，显式传入 originalId
+    // 将 split 窗口映射回原始 chunkId，从而共享选区
     windowStore.registerWindow({
         windowId: effectiveWindowId.value,
         windowName: 'chunkView',
         windowType: 'view',
+        originalId: props.chunkId,
     });
 });
+
+function handleSplit() {
+    windowStore.enterSplitMode('chunkView', props.chunkId);
+}
+
+function handleClose() {
+    if (windowStore.splitMode === 'double') {
+        windowStore.closePane();
+    } else {
+        windowStore.unregisterWindow(effectiveWindowId.value);
+        // 如果还有其他打开的视图，聚焦到第一个可用的
+        const otherView = Array.from(windowStore.openWindows.values()).find(
+            (win) =>
+                win.windowType === 'view' &&
+                win.windowId !== effectiveWindowId.value,
+        );
+        if (otherView) {
+            windowStore.setFocus(otherView.windowId);
+        } else {
+            windowStore.setFocus('defaultView');
+        }
+    }
+}
 
 const isViewFocused = computed(() => windowStore.activeFocus === props.chunkId);
 

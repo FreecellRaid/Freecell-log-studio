@@ -13,7 +13,7 @@
                             windowStore.leftSidebarVisible,
                     }"
                     title="文件列表"
-                    @click="windowStore.setLeftPanel('chunkList')"
+                    @click="handleNavClick('chunkList')"
                 >
                     <FolderOpen class="ui-icon" />
                 </div>
@@ -25,7 +25,7 @@
                             windowStore.leftSidebarVisible,
                     }"
                     title="身份管理"
-                    @click="windowStore.setLeftPanel('identity')"
+                    @click="handleNavClick('identity')"
                 >
                     <UserRound class="ui-icon" />
                 </div>
@@ -37,7 +37,7 @@
                             windowStore.leftSidebarVisible,
                     }"
                     title="染色规则"
-                    @click="windowStore.setLeftPanel('ruleEditor')"
+                    @click="handleNavClick('ruleEditor')"
                 >
                     <Palette class="ui-icon" />
                 </div>
@@ -49,7 +49,7 @@
                             windowStore.leftSidebarVisible,
                     }"
                     title="搜索过滤"
-                    @click="windowStore.setLeftPanel('search')"
+                    @click="handleNavClick('search')"
                 >
                     <Search class="ui-icon" />
                 </div>
@@ -62,7 +62,7 @@
                             windowStore.leftSidebarVisible,
                     }"
                     title="导出模板"
-                    @click="windowStore.setLeftPanel('exportFormat')"
+                    @click="handleNavClick('exportFormat')"
                 >
                     <TextInitial class="ui-icon" />
                 </div>
@@ -296,6 +296,17 @@ watch(
     },
     { immediate: true }, // 立即执行一次以确保初始状态正确
 );
+
+function handleNavClick(panelName: typeof windowStore.activeLeftPanelName) {
+    if (
+        windowStore.leftSidebarVisible &&
+        windowStore.activeLeftPanelName === panelName
+    ) {
+        windowStore.toggleLeftSidebar();
+    } else {
+        windowStore.setLeftPanel(panelName);
+    }
+}
 </script>
 
 <style scoped>

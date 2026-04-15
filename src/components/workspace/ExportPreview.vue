@@ -11,18 +11,31 @@
         <header class="view-header">
             <div class="view-title">
                 <Eye class="ui-icon icon-view-title" />
-                <h2>导出预览</h2>
+                <h2 class="text-view-title">导出预览</h2>
                 <span class="msg-count" v-if="activeFormat">
                     当前模板: {{ activeFormat.formatName }} ({{ rows.length }}
                     项)
                 </span>
             </div>
-            <button
-                class="close-button"
-                @click="windowStore.toggleExportPreview(props.formatId)"
-            >
-                <X class="ui-icon" />
-            </button>
+            <div class="view-actions">
+                <button
+                    v-if="windowStore.splitMode === 'single'"
+                    class="view-action-btn"
+                    title="向右分屏"
+                    @click.stop="handleSplit"
+                >
+                    <SquareSplitHorizontal class="ui-icon" />
+                </button>
+
+                <button
+                    v-if="windowStore.splitMode === 'double' || canClose"
+                    class="view-action-btn"
+                    title="关闭"
+                    @click.stop="handleClose"
+                >
+                    <X class="ui-icon" />
+                </button>
+            </div>
         </header>
 
         <div class="message-list-container export-preview-content">
@@ -152,7 +165,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue';
-import { Eye, X } from '@lucide/vue';
+import { Eye, X, SquareSplitHorizontal } from '@lucide/vue';
 import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
 import { useExportStore } from '@/stores/exportStore';
@@ -182,11 +195,40 @@ onMounted(() => {
     });
 });
 
-// 销毁时注销焦点，方便回到上一个ChunkView
 onUnmounted(() => {
     windowStore.unregisterWindow(effectiveWindowId.value);
 });
 
+const canClose = computed(() => {
+    return (
+        windowStore.splitMode === 'single' &&
+        effectiveWindowId.value !== 'defaultView' &&
+        windowStore.openWindows.size > 1
+    );
+});
+
+function handleSplit() {
+    windowStore.enterSplitMode('exportPreview', props.formatId);
+}
+
+function handleClose() {
+    if (windowStore.splitMode === 'double') {
+        windowStore.closePane();
+    } else {
+        windowStore.unregisterWindow(effectiveWindowId.value);
+
+        const otherView = Array.from(windowStore.openWindows.values()).find(
+            (win) =>
+                win.windowType === 'view' &&
+                win.windowId !== effectiveWindowId.value,
+        );
+        if (otherView) {
+            windowStore.setFocus(otherView.windowId);
+        } else {
+            windowStore.setFocus('defaultView');
+        }
+    }
+}
 const rows = computed(() => {
     return flattenLogToRows(
         logStore.documents,

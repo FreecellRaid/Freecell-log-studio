@@ -97,9 +97,20 @@ function windowStore() {
 
     // 关闭并注销一个窗口
     function unregisterWindow(windowId: string) {
+        const winToClose = openWindows.value.get(windowId);
+        // 获取将要关闭窗口的 originalId
+        const targetOriginalId = winToClose?.originalId || windowId;
         openWindows.value.delete(windowId);
         const index = focusStack.value.findIndex((t) => t === windowId);
-        selectionStore.clearSelection(windowId);
+        const isOriginalIdStillInUse = Array.from(
+            openWindows.value.values(),
+        ).some((w) => w.originalId === targetOriginalId);
+
+        // 只有当所有同源窗口都被关闭时，才清空 selectionStore 中的状态
+        if (!isOriginalIdStillInUse) {
+            selectionStore.clearSelection(targetOriginalId);
+        }
+
         if (index !== -1) {
             focusStack.value.splice(index, 1);
         }
@@ -149,7 +160,7 @@ function windowStore() {
     function setActiveChunk(chunkId: string) {
         // 注销当前所有类型为 'view' 的 chunkView，防止selection残留
         openWindows.value.forEach((win) => {
-            if (win.windowName === 'chunkView' && win.windowId !== chunkId) {
+            if (win.windowName === 'chunkView' && win.originalId !== chunkId) {
                 unregisterWindow(win.windowId);
             }
         });
@@ -179,19 +190,17 @@ function windowStore() {
     }
 
     const currentActiveWindow = computed((): WindowInstance => {
-        const focusId = activeFocus.value;
-
-        if (focusId === 'defaultView') {
-            return createWindowInstance('defaultView', 'defaultView', 'view');
+        for (let i = focusStack.value.length - 1; i >= 0; i--) {
+            const target = focusStack.value[i];
+            const win = openWindows.value.get(target);
+            if (win) {
+                return win;
+            }
         }
-
-        if (focusId === 'modal') {
-            return createWindowInstance('help', 'help', 'modal');
-        }
-        const win = openWindows.value.get(focusId);
-
+        const defaultWin = openWindows.value.get('defaultView');
         return (
-            win ?? createWindowInstance('defaultView', 'defaultView', 'view')
+            defaultWin ??
+            createWindowInstance('defaultView', 'defaultView', 'view')
         );
     });
 

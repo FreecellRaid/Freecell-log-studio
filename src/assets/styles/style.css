@@ -231,8 +231,8 @@ body,
     flex-direction: column;
     height: 100%;
     background-color: var(--bg-workspace);
+    border-right: 1px solid var(--border-color);
 }
-
 .view-header {
     height: 40px;
     min-height: 40px;
@@ -251,10 +251,14 @@ body,
     gap: 8px;
 }
 
-.view-title h2 {
+.text-view-title {
     font-size: 16px;
     margin: 0;
     color: var(--text-primary);
+}
+
+.text-view-title.is-active {
+    color: var(--active-accent);
 }
 
 .view-title .icon-view-title {
@@ -275,6 +279,37 @@ body,
     font-size: 13px;
     line-height: 1.6;
     padding: 40px 20px;
+}
+
+.view-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+}
+
+.view-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: var(--icon-color);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.view-action-btn:hover {
+    background-color: var(--hover-bg);
+    color: var(--icon-color-strong);
+}
+
+.view-action-btn .ui-icon {
+    width: 16px;
+    height: 16px;
 }
 
 /* 滚动条，不知道为什么无论怎么写就是去不掉这个圆角 */
