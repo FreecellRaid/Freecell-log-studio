@@ -337,12 +337,23 @@ function handleChunkSelect(chunkId: string, event: MouseEvent) {
     filterTool.handleChunkClickSelection(event, chunkId);
 
     if (!event.ctrlKey && !event.metaKey && !event.shiftKey) {
-        windowStore.registerWindow({
-            windowId: chunkId,
-            windowName: 'chunkView',
-            windowType: 'view',
-        });
+        if (windowStore.isInSplitMode()) {
+            const activeViewId = windowStore.currentActiveView.windowId;
+            const splitPanes = windowStore.splitPanes;
 
+            // 判断最后活跃的视图是左侧还是右侧，并在对应的 pane 中打开新的 Chunk
+            if (splitPanes[0]?.windowId === activeViewId) {
+                windowStore.setPaneView(0, 'chunkView', chunkId);
+            } else if (splitPanes[1]?.windowId === activeViewId) {
+                windowStore.setPaneView(1, 'chunkView', chunkId);
+            } else {
+                // 兜底逻辑：如果找不到对应关系，默认在左侧打开
+                windowStore.setPaneView(0, 'chunkView', chunkId);
+            }
+        } else {
+            // 单窗口模式，直接使用 setActiveChunk 切换视图
+            windowStore.setActiveChunk(chunkId);
+        }
         windowStore.setFocus('chunkList');
     }
 }

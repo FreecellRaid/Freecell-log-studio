@@ -65,7 +65,7 @@ export function useCommandDispatcher() {
             save: () => projectManager.saveCurrentProjectToLocal(),
             export: () => {
                 const formatId = exportStore.activeFormat?.formatId;
-                if (formatId) windowStore.toggleExportPreview(formatId);
+                if (formatId) windowStore.openExportPreview(formatId);
             },
         };
 

@@ -77,13 +77,7 @@
                                 @click.stop="handleTogglePreview(fmt.formatId)"
                                 title="预览模板效果"
                             >
-                                <Eye
-                                    v-if="
-                                        windowStore.activeFocus !== fmt.formatId
-                                    "
-                                    class="ui-icon"
-                                />
-                                <EyeOff v-else class="ui-icon" />
+                                <Eye class="ui-icon" />
                             </button>
                         </div>
                     </div>
@@ -159,7 +153,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Plus, ChevronRight, Trash2, Check, Eye, EyeOff } from '@lucide/vue';
+import { Plus, ChevronRight, Trash2, Check, Eye } from '@lucide/vue';
 import { useExportStore } from '@/stores/exportStore';
 import { useWindowStore } from '@/stores/windowStore';
 
@@ -170,7 +164,7 @@ const expandedId = ref<string | null>(exportStore.activeFormatId);
 function handleTogglePreview(formatId: string) {
     // 更新业务数据：确保 exportStore 知道当前选中的是哪个模板
     exportStore.activeFormatId = formatId;
-    windowStore.toggleExportPreview(formatId);
+    windowStore.openExportPreview(formatId);
 }
 
 function toggleExpand(id: string) {

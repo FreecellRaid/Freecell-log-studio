@@ -257,7 +257,7 @@ body,
     color: var(--text-primary);
 }
 
-.text-view-title.is-active {
+.view.is-active .text-view-title {
     color: var(--active-accent);
 }
 

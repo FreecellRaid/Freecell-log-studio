@@ -174,7 +174,51 @@ function windowStore() {
 
     // 切换导出预览
     function openExportPreview(formatId: string) {
-        registerWindow(createWindowInstance(formatId, 'exportPreview', 'view'));
+        const currentView = currentActiveView.value;
+
+        // 如果当前是空白默认页，直接原地替换
+        if (currentView.windowName === 'defaultView') {
+            registerWindow({
+                windowId: formatId,
+                windowName: 'exportPreview',
+                windowType: 'view',
+                originalId: formatId,
+            });
+            setFocus(formatId);
+            return;
+        }
+
+        // 如果当前活跃窗口本身就是预览窗口，直接在当前位置切换模板
+        if (currentView.windowName === 'exportPreview') {
+            if (splitMode.value === 'double') {
+                const activePos = getActivePanePosition();
+                setPaneView(
+                    activePos === 'left' ? 0 : 1,
+                    'exportPreview',
+                    formatId,
+                );
+            } else {
+                // 单屏模式下的预览切换
+                unregisterWindow(currentView.windowId);
+                registerWindow({
+                    windowId: formatId,
+                    windowName: 'exportPreview',
+                    windowType: 'view',
+                    originalId: formatId,
+                });
+                setFocus(formatId);
+            }
+            return;
+        }
+        if (splitMode.value === 'double') {
+            // 已在双屏：找到不活跃的那一侧并替换
+            const activePos = getActivePanePosition();
+            const targetPaneIndex = activePos === 'left' ? 1 : 0; // 选相反的那一侧
+            setPaneView(targetPaneIndex, 'exportPreview', formatId);
+        } else {
+            // 单屏模式：直接开启分屏预览
+            enterSplitMode('exportPreview', formatId);
+        }
     }
 
     function toggleExportPreview(formatId: string) {
@@ -368,19 +412,6 @@ function windowStore() {
         exitSplitMode();
     }
 
-    // 获取指定 pane 的原始 viewId
-    function getPaneViewId(paneIndex: 0 | 1): string | null {
-        if (splitMode.value !== 'double') return null;
-        return splitPanes.value[paneIndex]?.viewId ?? null;
-    }
-
-    // 分屏预览
-    function splitWithPreview(formatId: string) {
-        const currentView = currentActiveView.value;
-        if (currentView.windowName === 'defaultView') return false;
-        return enterSplitMode('exportPreview', formatId);
-    }
-
     return {
         openWindows,
         focusStack,
@@ -413,10 +444,7 @@ function windowStore() {
         exitSplitMode,
         setPaneView,
         closePane,
-        getPaneViewId,
-        splitWithPreview,
         isInSplitMode,
-        getActivePanePosition,
     };
 }
 
