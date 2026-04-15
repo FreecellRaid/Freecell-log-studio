@@ -1,7 +1,7 @@
 <template>
     <div
         class="view"
-        :data-focus-id="props.formatId"
+        :data-focus-id="effectiveWindowId"
         :class="{
             'preview-always-white': uiStore.exportPreviewAlwaysWhite,
             'is-active': windowStore.activeFocus === props.formatId,
@@ -168,13 +168,15 @@ const exportStore = useExportStore();
 const uiStore = useUiStore();
 const windowStore = useWindowStore();
 const activeFormat = computed(() => exportStore.activeFormat);
-// 接收从 MainWorkspace 传来的 ID
-const props = defineProps<{ formatId: string }>();
-const windowId = props.formatId;
+const props = defineProps<{
+    formatId: string;
+    windowId?: string;
+}>();
+const effectiveWindowId = computed(() => props.windowId ?? props.formatId);
 
 onMounted(() => {
     windowStore.registerWindow({
-        windowId: props.formatId,
+        windowId: effectiveWindowId.value,
         windowName: 'exportPreview',
         windowType: 'view',
     });
@@ -182,7 +184,7 @@ onMounted(() => {
 
 // 销毁时注销焦点，方便回到上一个ChunkView
 onUnmounted(() => {
-    windowStore.unregisterWindow(windowId);
+    windowStore.unregisterWindow(effectiveWindowId.value);
 });
 
 const rows = computed(() => {

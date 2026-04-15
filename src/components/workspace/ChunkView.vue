@@ -1,7 +1,7 @@
 <template>
     <div
         class="view"
-        :data-focus-id="props.chunkId"
+        :data-focus-id="effectiveWindowId"
         :class="{ 'is-active': windowStore.activeFocus === props.chunkId }"
         @pointerdown="windowStore.setFocus(props.chunkId)"
     >
@@ -80,11 +80,15 @@ import { useCommandDispatcher } from '@/composables/useCommandDispatcher';
 import { useWindowStore } from '@/stores/windowStore';
 import type { Message } from '@/types/log';
 
-const props = defineProps<{ chunkId: string }>();
-const logStore = useLogStore();
-const filterTool = useFilter(props.chunkId);
+const props = defineProps<{
+    chunkId: string;
+    windowId?: string;
+}>();
+const effectiveWindowId = computed(() => props.windowId ?? props.chunkId);
+const filterTool = useFilter(effectiveWindowId.value);
 const dragDropTool = useMessageDragDrop();
 const dropIndicatorIndex = ref<number | null>(null);
+const logStore = useLogStore();
 const windowStore = useWindowStore();
 const messageEditorStore = useMessageEditorStore();
 const chunkEditorStore = useChunkEditorStore();
@@ -93,7 +97,7 @@ const { dispatch } = useCommandDispatcher();
 // 组件挂载时注册窗口
 onMounted(() => {
     windowStore.registerWindow({
-        windowId: props.chunkId,
+        windowId: effectiveWindowId.value,
         windowName: 'chunkView',
         windowType: 'view',
     });

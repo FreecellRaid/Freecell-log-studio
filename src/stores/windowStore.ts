@@ -1,6 +1,13 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { useSelectionStore } from '@/stores/selectionStore';
+import type {
+    SplitMode,
+    SplitDirection,
+    SplitPaneState,
+    PanePosition,
+} from '@/types/layout';
+import { generateSplitWindowId } from '@/types/layout';
 // TODO: 以后要改一下这里的逻辑，防止可能的循环依赖
 
 type WindowName =
@@ -35,6 +42,17 @@ function windowStore() {
     const leftSidebarVisible = ref(true);
     const rightSidebarVisible = ref(false);
     const isHelpOpen = ref(false);
+    const splitMode = ref<SplitMode>('single');
+    const splitDirection = ref<SplitDirection>('horizontal');
+    const splitPanes = ref<[SplitPaneState, SplitPaneState | null]>([
+        {
+            viewType: 'defaultView',
+            viewId: 'defaultView',
+            windowId: 'defaultView',
+        },
+        null,
+    ]);
+    const splitSizes = ref<[number, number]>([50, 50]);
 
     // 聚焦到一个目标
     function setFocus(target: FocusTarget) {
@@ -221,6 +239,132 @@ function windowStore() {
     const isWindowFocused = (windowId: string) =>
         activeFocus.value === windowId;
 
+    // windowStore.ts
+    function enterSplitMode(
+        rightViewType: 'chunkView' | 'exportPreview',
+        rightViewId: string,
+    ) {
+        if (splitMode.value === 'double') {
+            exitSplitMode();
+        }
+
+        const currentView = currentActiveView.value;
+        if (currentView.windowName === 'defaultView') return false;
+
+        // 构建左侧 pane
+        const leftPane: SplitPaneState = {
+            viewType: currentView.windowName as 'chunkView' | 'exportPreview',
+            viewId: currentView.windowId,
+            windowId: generateSplitWindowId('left', currentView.windowId),
+        };
+
+        // 构建右侧 pane
+        const rightPane: SplitPaneState = {
+            viewType: rightViewType,
+            viewId: rightViewId,
+            windowId: generateSplitWindowId('right', rightViewId),
+        };
+
+        // 注销左侧原始窗口，注册带前缀的新窗口
+        unregisterWindow(currentView.windowId);
+        registerWindow({
+            windowId: leftPane.windowId,
+            windowName: leftPane.viewType,
+            windowType: 'view',
+        });
+        registerWindow({
+            windowId: rightPane.windowId,
+            windowName: rightViewType,
+            windowType: 'view',
+        });
+        splitPanes.value = [leftPane, rightPane];
+        splitMode.value = 'double';
+
+        return true;
+    }
+
+    // 退出分屏模式，回到单视图
+    function exitSplitMode() {
+        if (splitMode.value !== 'double') return;
+
+        const [leftPane, rightPane] = splitPanes.value;
+        if (!rightPane) return;
+
+        // 确定哪个 pane 是当前活跃的（通过焦点栈判断）
+        const activePaneWindowId = activeFocus.value;
+        const activePane =
+            [leftPane, rightPane].find(
+                (p) => p.windowId === activePaneWindowId,
+            ) || leftPane;
+        unregisterWindow(leftPane.windowId);
+        unregisterWindow(rightPane.windowId);
+
+        // 恢复活跃 pane 的原始窗口（不带前缀）
+        if (activePane.viewType !== 'defaultView') {
+            registerWindow({
+                windowId: activePane.viewId,
+                windowName: activePane.viewType,
+                windowType: 'view',
+            });
+        }
+        splitPanes.value = [
+            {
+                viewType: 'defaultView',
+                viewId: 'defaultView',
+                windowId: 'defaultView',
+            },
+            null,
+        ];
+        splitMode.value = 'single';
+    }
+
+    // 切换指定 pane 显示的视图
+    function setPaneView(
+        paneIndex: 0 | 1,
+        viewType: 'chunkView' | 'exportPreview',
+        viewId: string,
+    ) {
+        if (splitMode.value !== 'double') return;
+
+        const pane = splitPanes.value[paneIndex];
+        if (!pane) return;
+
+        const position: PanePosition = paneIndex === 0 ? 'left' : 'right';
+        const newWindowId = generateSplitWindowId(position, viewId);
+
+        unregisterWindow(pane.windowId);
+        registerWindow({
+            windowId: newWindowId,
+            windowName: viewType,
+            windowType: 'view',
+        });
+
+        splitPanes.value[paneIndex] = {
+            viewType,
+            viewId,
+            windowId: newWindowId,
+        };
+    }
+
+    // 关闭指定 pane
+    function closePane() {
+        if (splitMode.value !== 'double') return;
+        exitSplitMode();
+    }
+
+    // 获取指定 pane 的原始 viewId
+    function getPaneViewId(paneIndex: 0 | 1): string | null {
+        if (splitMode.value !== 'double') return null;
+        return splitPanes.value[paneIndex]?.viewId ?? null;
+    }
+
+    // 分屏预览
+    function splitWithPreview(formatId: string) {
+        const currentView = currentActiveView.value;
+        if (currentView.windowName === 'defaultView') return false;
+        return enterSplitMode('exportPreview', formatId);
+    }
+
     return {
         openWindows,
         focusStack,
@@ -231,6 +375,10 @@ function windowStore() {
         currentActiveWindow,
         currentActiveView,
         isHelpOpen,
+        splitMode,
+        splitDirection,
+        splitPanes,
+        splitSizes,
 
         setFocus,
         registerWindow,
@@ -245,6 +393,12 @@ function windowStore() {
         toggleExportPreview,
         openHelpDocument,
         closeHelpDocument,
+        enterSplitMode,
+        exitSplitMode,
+        setPaneView,
+        closePane,
+        getPaneViewId,
+        splitWithPreview,
     };
 }
 
