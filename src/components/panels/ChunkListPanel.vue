@@ -529,11 +529,6 @@ function handleChunkDragEnd() {
     outline-offset: -1px;
 }
 
-.chunk-item.is-active-chunk:not(.is-active) {
-    outline: 1px solid var(--border-color);
-    outline-offset: -1px;
-}
-
 .chunk-name {
     flex: 1;
     font-size: 13px;
