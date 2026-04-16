@@ -236,8 +236,77 @@ export const CcfoliaImportAdapter: ImportAdapter = {
     },
 };
 
+// 菠萝格式
+// [YYYY-MM-DD HH:mm:ss] <playerName|account>  content
+const PINEAPPLE_LOG_REGEX = /^\[([^\]]+)\]\s+<([^>|]+)\|([^>]+)>\s*(.*)$/;
+
+export const PineappleImportAdapter: ImportAdapter = {
+    id: 'pineapple-adapter',
+    name: '菠萝日志格式',
+
+    test: (sampleLines: string[]) => {
+        let score = 0;
+        for (const line of sampleLines) {
+            if (/^\[[^\]]+\]\s+<[^>|]+\|[^>]+>/.test(line)) {
+                score += 10;
+            }
+        }
+        return score;
+    },
+
+    parse: (text: string) => {
+        const lines = text.split('\n');
+        const rows: ImportRow[] = [];
+
+        let currentName: string | null = null;
+        let currentAccount: string | null = null;
+        let currentTimeStr: string | null = null;
+        let contentBuffer: string[] = [];
+
+        const flushBuffer = () => {
+            if (currentName !== null && contentBuffer.length > 0) {
+                const rawContent = contentBuffer.join('\n');
+                rows.push({
+                    playerName: currentName,
+                    account: currentAccount || '',
+                    time: currentTimeStr
+                        ? parseLogDate(currentTimeStr)
+                        : undefined,
+                    content: cleanContent(rawContent),
+                });
+            }
+            contentBuffer = [];
+        };
+
+        for (const line of lines) {
+            const match = line.match(PINEAPPLE_LOG_REGEX);
+
+            if (match) {
+                flushBuffer();
+
+                currentTimeStr = match[1].trim();
+                currentName = match[2].trim();
+                currentAccount = match[3].trim();
+                const contentText = match[4];
+
+                if (contentText) {
+                    contentBuffer.push(contentText);
+                }
+            } else {
+                if (currentName !== null && line.trim().length > 0) {
+                    contentBuffer.push(line);
+                }
+            }
+        }
+        flushBuffer();
+
+        return rows;
+    },
+};
+
 const ALL_ADAPTERS: ImportAdapter[] = [
     StandardImportAdapter,
     PaintedLogAdapter,
     CcfoliaImportAdapter,
+    PineappleImportAdapter,
 ];
