@@ -72,6 +72,7 @@
                                 <option value="gm">主持人</option>
                                 <option value="npc">NPC</option>
                                 <option value="ob">观众</option>
+                                <option value="bot">骰子</option>
                                 <option value="unknown">其他</option>
                             </select>
                         </div>
