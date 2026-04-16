@@ -14,7 +14,14 @@ export function transformRowToMessage(
     row: ImportRow,
     index: number,
     importTime: Date,
-): Message {
+    roleConfig: RoleKeywordConfig = defaultRoleConfig,
+): Message | null {
+    // 删掉清洗之后剩下的空消息
+    const content = row.content || '';
+    if (content.trim().length === 0) {
+        return null;
+    }
+
     let name = row.playerName?.trim() || '';
     let account = row.account?.trim() || '';
     let note = row.note?.trim() || '';
@@ -29,7 +36,6 @@ export function transformRowToMessage(
         account = `${name}_ID`;
     }
 
-    const content = row.content;
     const firstLine = content.split('\n')[0] || '';
 
     // OOC 与 指令判定
@@ -47,7 +53,7 @@ export function transformRowToMessage(
         content,
         isOoc,
         isCommand,
-        role: inferRole(name),
+        role: inferRole(name, roleConfig),
         note,
     };
 }
@@ -129,9 +135,10 @@ export function buildLogDocument(
 ): LogDocument {
     const docId = generateId();
     const importTime = new Date();
-    const messages = rows.map((r, i) =>
-        transformRowToMessage(r, i, importTime),
-    );
+    const messages = rows
+        .map((r, i) => transformRowToMessage(r, i, importTime))
+        .filter((m): m is Message => m !== null);
+
     const chunks = chunkMessages(messages, docId, splitKeyword);
 
     return {
@@ -144,14 +151,25 @@ export function buildLogDocument(
 }
 
 //----辅助函数----
+interface RoleKeywordConfig {
+    gm: string[];
+    bot: string[];
+    ob: string[];
+    npc: string[];
+}
+const defaultRoleConfig: RoleKeywordConfig = {
+    gm: ['gm', 'kp', 'dm', 'st', 'dh', '主持人', '守密人'],
+    bot: ['bot', '骰娘', '骰子'],
+    ob: ['ob', '观众'],
+    npc: ['npc'],
+};
 
-//TODO: 占位，自动角色判断规则后面再补
-function inferRole(name: string): RoleType {
+function inferRole(name: string, config: RoleKeywordConfig): RoleType {
     const lower = name.toLowerCase();
-    if (lower.includes('gm')) return 'gm';
-    if (lower.includes('bot')) return 'bot';
-    if (lower.includes('ob')) return 'ob';
-    if (lower.includes('npc')) return 'npc';
+    if (config.gm.some((k) => lower.includes(k.toLowerCase()))) return 'gm';
+    if (config.bot.some((k) => lower.includes(k.toLowerCase()))) return 'bot';
+    if (config.ob.some((k) => lower.includes(k.toLowerCase()))) return 'ob';
+    if (config.npc.some((k) => lower.includes(k.toLowerCase()))) return 'npc';
     return 'pl';
 }
 

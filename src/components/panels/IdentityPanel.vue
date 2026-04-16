@@ -73,7 +73,7 @@
                         <option value="gm">主持人</option>
                         <option value="bot">骰子</option>
                         <option value="ob">观众</option>
-                        <option value="unknown">未知</option>
+                        <option value="unknown">其他</option>
                     </select>
                 </div>
                 <div class="col-divider"></div>
