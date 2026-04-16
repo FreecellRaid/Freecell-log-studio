@@ -7,11 +7,13 @@ export function cleanContent(rawContent: string): string {
             // 删除CQ 码
             .replace(/\[CQ:[^\]]+\]/g, '')
 
-            // 删除 HTML 标签
+            // 删除常见 HTML tag
             .replace('<!--', '')
             .replace('-->', '')
-            // .replace(/<[^>]+>/g, '')
-            // 在找到更好的办法之前，暂时先不过滤了，以免误伤骰娘的回复
+            .replace(
+                /<\/?(img|span|div|p|a|b|i|u|strong|style|script)\b[^>]*>/gi,
+                '',
+            )
 
             // 删除行首的 #
             .replace(/^#/gm, '')
