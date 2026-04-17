@@ -157,7 +157,7 @@ function handleClose() {
 }
 
 const isViewFocused = computed(
-    () => windowStore.activeFocus === currentChunkId.value,
+    () => windowStore.activeFocus === effectiveWindowId.value,
 );
 
 const currentChunk = computed(function () {
