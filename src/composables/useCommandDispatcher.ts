@@ -48,9 +48,8 @@ export function useCommandDispatcher() {
     const searchStore = useSearchStore();
 
     const dispatch = (command: CommandType, payload?: any) => {
-        const focus = windowStore.activeFocus;
         const activeWin = windowStore.currentActiveWindow;
-        const { windowType, windowName } = activeWin;
+        const { windowType, windowName, originalId } = activeWin;
 
         // P0 Modal 开启时拦截其他业务命令
         if (windowType === 'modal') {
@@ -80,7 +79,7 @@ export function useCommandDispatcher() {
         // P2 基于 windowName 的分发
         switch (windowName) {
             case 'chunkView':
-                handleChunkViewCommands(command, focus, payload);
+                handleChunkViewCommands(command, originalId, payload);
                 break;
             case 'chunkList':
                 handleChunkListCommands(command);
