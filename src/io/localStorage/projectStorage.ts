@@ -93,3 +93,17 @@ export function saveProjectToLocalStorage(
         }
     }
 }
+
+export function deleteProjectFromLocalStorage(projectId: string): boolean {
+    const existingProjects = loadStoredProjects();
+    const nextProjects = existingProjects.filter(
+        (project) => project.projectId !== projectId,
+    );
+
+    if (nextProjects.length === existingProjects.length) {
+        return false;
+    }
+
+    writeProjects(nextProjects);
+    return true;
+}

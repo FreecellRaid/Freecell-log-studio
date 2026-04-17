@@ -31,7 +31,7 @@
         </div>
         <div class="global-actions">
             <button
-                class="icon icon-button-warning"
+                class="icon-interactive icon-button-warning"
                 type="button"
                 title="清空全部数据"
                 @click="handleClearAll"
@@ -41,7 +41,7 @@
             </button>
 
             <button
-                class="icon"
+                class="icon-interactive"
                 type="button"
                 title="保存到本地"
                 @click="handleSaveProject"
@@ -52,7 +52,7 @@
 
             <div class="snapshot-container" v-click-outside="closeAllPanels">
                 <button
-                    class="icon"
+                    class="icon-interactive"
                     type="button"
                     title="恢复本地快照"
                     @click.stop="toggleStoredProjects"
@@ -64,11 +64,12 @@
                     <div class="stored-projects-toolbar">
                         <span>本地工程</span>
                         <button
-                            class="action-button icon-interactive"
+                            class="icon-interactive"
                             type="button"
                             @click="refreshStoredProjects"
+                            title="刷新列表"
                         >
-                            刷新
+                            <RefreshCcw class="ui-icon" aria-hidden="true" />
                         </button>
                     </div>
                     <div
@@ -91,24 +92,42 @@
                                 {{ project.documents.length }} 文档
                             </div>
                         </div>
-                        <button
-                            class="stored-project-open icon-interactive"
-                            type="button"
-                            @click="handleOpenStoredProject(project.projectId)"
-                        >
-                            打开
-                        </button>
+                        <div class="stored-project-actions">
+                            <button
+                                class="icon-interactive"
+                                type="button"
+                                title="打开工程"
+                                @click="
+                                    handleOpenStoredProject(project.projectId)
+                                "
+                            >
+                                <FolderOpen
+                                    class="ui-icon"
+                                    aria-hidden="true"
+                                />
+                            </button>
+                            <button
+                                class="icon-interactive icon-button-warning"
+                                type="button"
+                                title="删除工程"
+                                @click="
+                                    handleDeleteStoredProject(project.projectId)
+                                "
+                            >
+                                <Trash2 class="ui-icon" aria-hidden="true" />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <button
-                class="icon"
+                class="icon-interactive"
                 type="button"
                 title="导入文档/工程"
                 @click="triggerImport"
             >
-                <Download class="ui-icon" aria-hidden="true" />
+                <Upload class="ui-icon" aria-hidden="true" />
             </button>
             <input
                 ref="fileInput"
@@ -121,12 +140,12 @@
 
             <div class="export-container" v-click-outside="closeAllPanels">
                 <button
-                    class="icon"
+                    class="icon-interactive"
                     type="button"
                     title="导出记录"
                     @click.stop="toggleExportPanel"
                 >
-                    <Upload class="ui-icon" aria-hidden="true" />
+                    <Download class="ui-icon" aria-hidden="true" />
                 </button>
                 <div v-if="showExportPanel" class="export-panel">
                     <div class="export-item" @click="handleExportText">
@@ -152,7 +171,14 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { Download, Trash2, Save, FolderOpen, Upload } from '@lucide/vue';
+import {
+    Download,
+    Trash2,
+    Save,
+    FolderOpen,
+    Upload,
+    RefreshCcw,
+} from '@lucide/vue';
 import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
 import { useClipboardStore } from '@/stores/clipboardStore';
@@ -318,6 +344,24 @@ function handleOpenStoredProject(projectId: string) {
     }
 }
 
+function handleDeleteStoredProject(projectId: string) {
+    if (!window.confirm('确定要删除这个工程文件吗？本操作不可撤销。')) {
+        return;
+    }
+
+    try {
+        const deleted = projectManager.deleteStoredProject(projectId);
+        if (!deleted) {
+            alert('未找到对应的本地工程。');
+            return;
+        }
+        refreshStoredProjects();
+    } catch (error) {
+        console.error(error);
+        alert(error instanceof Error ? error.message : '删除本地工程失败');
+    }
+}
+
 function formatStoredProjectTime(time: string) {
     return formatDate(new Date(time));
 }
@@ -413,26 +457,12 @@ const vClickOutside = {
     cursor: not-allowed;
 }
 
-.icon {
-    width: 28px;
-    height: 28px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    border-radius: 0;
-    background: transparent;
-    color: var(--icon-color);
-    cursor: pointer;
-    transition: color 0.15s ease;
-}
-
-.icon:hover:not(:disabled),
-.icon:focus-visible:not(:disabled) {
+.icon-interactive:hover:not(:disabled),
+.icon-interactive:focus-visible:not(:disabled) {
     color: var(--icon-color-strong);
 }
 
-.icon :deep(.ui-icon) {
+.icon-interactive :deep(.ui-icon) {
     width: 16px;
     height: 16px;
 }
@@ -442,7 +472,7 @@ const vClickOutside = {
     color: var(--color-warning);
 }
 
-.icon:disabled {
+.icon-interactive:disabled {
     opacity: 0.4;
     cursor: not-allowed;
 }
@@ -492,8 +522,8 @@ const vClickOutside = {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 8px;
-    font-size: 12px;
+    margin-bottom: 4px;
+    font-size: 13px;
     color: var(--text-muted);
 }
 
@@ -531,22 +561,10 @@ const vClickOutside = {
     color: var(--text-muted);
 }
 
-.stored-project-open {
+.stored-project-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     flex-shrink: 0;
-    padding: 5px 8px;
-    border: 1px solid var(--border-color);
-    background: var(--bg-secondary);
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
-}
-
-.action-button {
-    padding: 4px 8px;
-    border: 1px solid var(--border-color);
-    background: var(--bg-secondary);
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
 }
 </style>

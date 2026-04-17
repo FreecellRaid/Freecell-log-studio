@@ -11,6 +11,7 @@ import {
     sanitizeProjectFilename,
 } from '@/io/localStorage/project';
 import {
+    deleteProjectFromLocalStorage,
     loadStoredProjects,
     saveProjectToLocalStorage,
 } from '@/io/localStorage/projectStorage';
@@ -125,6 +126,10 @@ export function useProjectManager() {
         });
     }
 
+    function deleteStoredProject(projectId: string) {
+        return deleteProjectFromLocalStorage(projectId);
+    }
+
     return {
         hasWorkspaceState,
         createCurrentProjectFile,
@@ -133,5 +138,6 @@ export function useProjectManager() {
         exportCurrentProject,
         getStoredProjects,
         openStoredProject,
+        deleteStoredProject,
     };
 }
