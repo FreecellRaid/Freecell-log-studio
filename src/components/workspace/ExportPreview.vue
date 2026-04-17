@@ -180,27 +180,15 @@ const styleStore = useStyleStore();
 const exportStore = useExportStore();
 const uiStore = useUiStore();
 const windowStore = useWindowStore();
-const activeFormat = computed(() => exportStore.activeFormat);
 const props = defineProps<{
     windowId: string;
     originalId: string;
 }>();
 const effectiveWindowId = computed(() => props.windowId);
 const isActive = computed(() => windowStore.activeFocus === props.windowId);
-
-// view的生命周期统一交给windowStore处理，不在组件层调用
-// onMounted(() => {
-//     windowStore.registerWindow({
-//         windowId: effectiveWindowId.value,
-//         windowName: 'exportPreview',
-//         windowType: 'view',
-//         originalId: props.originalId,
-//     });
-// });
-
-// onUnmounted(() => {
-//     windowStore.unregisterWindow(effectiveWindowId.value);
-// });
+const activeFormat = computed(
+    () => exportStore.formatById(props.originalId) || exportStore.activeFormat,
+);
 
 const canClose = computed(() => {
     return (

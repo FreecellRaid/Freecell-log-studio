@@ -71,8 +71,7 @@
                                 class="icon-button"
                                 :class="{
                                     'is-active':
-                                        windowStore.activeFocus ===
-                                        fmt.formatId,
+                                        previewedFormatIds.has(fmt.formatId),
                                 }"
                                 @click.stop="handleTogglePreview(fmt.formatId)"
                                 title="预览模板效果"
@@ -152,17 +151,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Plus, ChevronRight, Trash2, Check, Eye } from '@lucide/vue';
-import { useExportStore } from '@/stores/exportStore';
+import { EXPORT_PRESET_IDS, useExportStore } from '@/stores/exportStore';
 import { useWindowStore } from '@/stores/windowStore';
 
 const exportStore = useExportStore();
 const windowStore = useWindowStore();
 const expandedId = ref<string | null>(exportStore.activeFormatId);
+const previewedFormatIds = computed(() => {
+    const ids = new Set<string>();
+
+    for (const win of windowStore.openWindows.values()) {
+        if (win.windowName === 'exportPreview') {
+            ids.add(win.originalId);
+        }
+    }
+
+    return ids;
+});
 
 function handleTogglePreview(formatId: string) {
-    exportStore.activeFormatId = formatId;
+    exportStore.setActive(formatId);
     windowStore.openExportPreview(formatId);
 }
 
@@ -171,7 +181,7 @@ function toggleExpand(id: string) {
 }
 
 function isPreset(id: string) {
-    return ['standard', 'magic'].includes(id);
+    return EXPORT_PRESET_IDS.includes(id as (typeof EXPORT_PRESET_IDS)[number]);
 }
 
 function handleCreateFormat() {

@@ -2,7 +2,16 @@ import { defineStore } from 'pinia';
 import type { ExportFormat } from '@/types/export';
 import { generateId } from '@/utils/id';
 
-const PRESETS: ExportFormat[] = [
+export const EXPORT_PRESET_IDS = [
+    'magic',
+    'standard',
+    'markdown',
+    'classicTrpgLog',
+    'hangingIndent',
+    'echoWorkshop',
+] as const;
+
+export const PRESETS: ExportFormat[] = [
     {
         formatId: 'magic',
         formatName: '神人格式',
@@ -96,6 +105,10 @@ export const useExportStore = defineStore('export', {
                 ) || state.formats[0]
             );
         },
+        formatById(state) {
+            return (id: string): ExportFormat | undefined =>
+                state.formats.find((f: ExportFormat) => f.formatId === id);
+        },
     },
     actions: {
         createFormat() {
@@ -132,7 +145,8 @@ export const useExportStore = defineStore('export', {
             this.saveToLocal();
         },
         deleteFormat(id: string) {
-            if (id === 'standard' || id === 'magic') return;
+            if (EXPORT_PRESET_IDS.includes(id as (typeof EXPORT_PRESET_IDS)[number]))
+                return;
             this.formats = this.formats.filter(
                 (f: ExportFormat) => f.formatId !== id,
             );
