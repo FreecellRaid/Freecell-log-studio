@@ -162,7 +162,6 @@ const windowStore = useWindowStore();
 const expandedId = ref<string | null>(exportStore.activeFormatId);
 
 function handleTogglePreview(formatId: string) {
-    // 更新业务数据：确保 exportStore 知道当前选中的是哪个模板
     exportStore.activeFormatId = formatId;
     windowStore.openExportPreview(formatId);
 }
@@ -172,7 +171,7 @@ function toggleExpand(id: string) {
 }
 
 function isPreset(id: string) {
-    return ['standard', 'minimal', 'markdown'].includes(id);
+    return ['standard', 'magic'].includes(id);
 }
 
 function handleCreateFormat() {
