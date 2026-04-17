@@ -395,6 +395,40 @@ const vClickOutside = {
 </script>
 
 <style scoped>
+.top-bar :deep(.ui-icon) {
+    width: 16px;
+    height: 16px;
+}
+
+.top-bar button {
+    font: inherit;
+}
+
+.global-actions > button,
+.snapshot-container > button,
+.export-container > button,
+.stored-projects-toolbar > button,
+.stored-project-actions > button {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
+.icon-interactive:hover:not(:disabled),
+.icon-interactive:focus-visible:not(:disabled) {
+    color: var(--icon-color-strong);
+}
+
+.icon-button-warning:hover:not(:disabled),
+.icon-button-warning:focus-visible:not(:disabled) {
+    color: var(--color-warning);
+}
+
+.icon-interactive:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
 .top-bar {
     display: flex;
     justify-content: space-between;
@@ -403,9 +437,9 @@ const vClickOutside = {
 }
 
 .project-name {
-    font-size: 16px;
     display: flex;
     align-items: center;
+    font-size: 16px;
 }
 
 .project-entry {
@@ -441,69 +475,30 @@ const vClickOutside = {
     position: relative;
 }
 
-.export-select {
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 4px;
-    font-size: 12px;
-    outline: none;
-    cursor: pointer;
-}
-
-.export-select:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-.icon-interactive:hover:not(:disabled),
-.icon-interactive:focus-visible:not(:disabled) {
-    color: var(--icon-color-strong);
-}
-
-.icon-interactive :deep(.ui-icon) {
-    width: 16px;
-    height: 16px;
-}
-
-.icon-button-warning:hover:not(:disabled),
-.icon-button-warning:focus-visible:not(:disabled) {
-    color: var(--color-warning);
-}
-
-.icon-interactive:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-.stored-projects-panel {
+.stored-projects-panel,
+.export-panel {
     position: absolute;
     top: 100%;
-    right: -70px;
-    width: 280px;
     margin-top: 8px;
-    padding: 10px 12px;
     background: var(--bg-topbar);
     border: 1px solid var(--border-light);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 100;
+}
+
+.stored-projects-panel {
+    right: -70px;
+    width: 280px;
     max-height: 400px;
     overflow-y: auto;
+    padding: 10px 12px;
     color: var(--text-primary);
 }
 
 .export-panel {
-    position: absolute;
-    top: 100%;
-    right: 0px;
+    right: 0;
     width: 160px;
-    margin-top: 8px;
     padding: 6px 0;
-    background: var(--bg-topbar);
-    border: 1px solid var(--border-light);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 100;
 }
 
 .export-item {

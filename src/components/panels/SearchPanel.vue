@@ -361,6 +361,7 @@ const truncate = (str: string, len: number) => {
 .btn-primary:hover {
     background-color: var(--hover-bg);
 }
+
 .count-text {
     font-size: 12px;
     color: var(--text-secondary);

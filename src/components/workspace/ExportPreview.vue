@@ -301,10 +301,4 @@ function getStyleForPlaceholder(
     --text-muted: #718096;
     --icon-color: #a0aec0;
 }
-
-.close-button {
-    border: none;
-    background-color: var(--bg-workspace);
-    margin-left: auto;
-}
 </style>
