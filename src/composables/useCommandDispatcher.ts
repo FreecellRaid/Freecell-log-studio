@@ -313,6 +313,7 @@ export function useCommandDispatcher() {
                 searchFilter.setMessagesSelection(ids);
             }
         }
+        // 这个等后面改好了 快捷键=>指令 再加上，现在enter有歧义
         if (cmd === 'jump') {
             const selectedIds = searchFilter.selectedMessageIds.value;
             const target =

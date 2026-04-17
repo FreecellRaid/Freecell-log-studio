@@ -183,7 +183,7 @@ watch(
 
         windowStore.clearPendingMessageReveal();
     },
-    { flush: 'post' },
+    { flush: 'post', immediate: true },
 );
 
 function handleMessageSelect(event: MouseEvent, msgId: string, index: number) {
