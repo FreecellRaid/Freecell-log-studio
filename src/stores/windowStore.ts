@@ -311,34 +311,28 @@ function windowStore() {
     }
 
     // 退出分屏模式，回到单视图
-    function exitSplitMode() {
+    function exitSplitMode(keepWindowId?: string) {
         if (splitMode.value !== 'double') return;
 
         const [leftPane, rightPane] = splitPanes.value;
         if (!rightPane) return;
 
-        // 确定哪个 pane 是当前活跃的（通过焦点栈判断）
-        const activePaneWindowId = activeFocus.value;
+        // 如果没指定保留哪个，则按焦点判断
+        const targetId = keepWindowId || activeFocus.value;
+
         const activePane =
-            [leftPane, rightPane].find(
-                (p) => p.windowId === activePaneWindowId,
-            ) || leftPane;
+            [leftPane, rightPane].find((p) => p.windowId === targetId) ||
+            leftPane;
+
+        // 先注销全部
         unregisterWindow(leftPane.windowId);
         unregisterWindow(rightPane.windowId);
 
-        // 恢复活跃 pane 的原始窗口（不带前缀）
+        // 只恢复需要保留的那一个
         if (activePane.windowName !== 'defaultView') {
             registerWindow(activePane);
         }
-        splitPanes.value = [
-            {
-                windowId: 'defaultView',
-                windowName: 'defaultView',
-                windowType: 'view',
-                originalId: 'defaultView',
-            },
-            null,
-        ];
+        splitPanes.value = [{ ...activePane }, null];
         splitMode.value = 'single';
     }
 
@@ -366,9 +360,12 @@ function windowStore() {
     }
 
     // 关闭指定 pane
-    function closePane() {
+    function closePane(closingWindowId: string) {
         if (splitMode.value !== 'double') return;
-        exitSplitMode();
+        const otherPane = splitPanes.value.find(
+            (p) => p && p.windowId !== closingWindowId,
+        );
+        exitSplitMode(otherPane?.windowId);
     }
 
     return {

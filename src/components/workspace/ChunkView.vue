@@ -90,7 +90,7 @@
 
 <script setup lang="ts">
 import { FileText, X, SquareSplitHorizontal } from '@lucide/vue';
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref } from 'vue';
 import { useLogStore } from '@/stores/logStore';
 import { useFilter } from '@/composables/useFilter';
 import { useMessageDragDrop } from '@/composables/useDragDrop';
@@ -124,14 +124,18 @@ const canClose = computed(() => {
     );
 });
 
-onMounted(() => {
-    windowStore.registerWindow({
-        windowId: effectiveWindowId.value,
-        windowName: 'chunkView',
-        windowType: 'view',
-        originalId: currentChunkId.value,
-    });
-});
+// view的生命周期统一交给windowStore处理，不在组件层调用
+// onMounted(() => {
+//     windowStore.registerWindow({
+//         windowId: effectiveWindowId.value,
+//         windowName: 'chunkView',
+//         windowType: 'view',
+//         originalId: currentChunkId.value,
+//     });
+// });
+// onUnmounted(() => {
+//     windowStore.unregisterWindow(effectiveWindowId.value);
+// });
 
 function handleSplit() {
     windowStore.enterSplitMode('chunkView', currentChunkId.value);
@@ -139,7 +143,7 @@ function handleSplit() {
 
 function handleClose() {
     if (windowStore.splitMode === 'double') {
-        windowStore.closePane();
+        windowStore.closePane(effectiveWindowId.value);
     } else {
         windowStore.unregisterWindow(effectiveWindowId.value);
         // 如果还有其他打开的视图，聚焦到第一个可用的

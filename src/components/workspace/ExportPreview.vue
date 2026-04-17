@@ -164,7 +164,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted } from 'vue';
+import { computed } from 'vue';
 import { Eye, X, SquareSplitHorizontal } from '@lucide/vue';
 import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
@@ -188,18 +188,19 @@ const props = defineProps<{
 const effectiveWindowId = computed(() => props.windowId);
 const isActive = computed(() => windowStore.activeFocus === props.windowId);
 
-onMounted(() => {
-    windowStore.registerWindow({
-        windowId: effectiveWindowId.value,
-        windowName: 'exportPreview',
-        windowType: 'view',
-        originalId: props.originalId,
-    });
-});
+// view的生命周期统一交给windowStore处理，不在组件层调用
+// onMounted(() => {
+//     windowStore.registerWindow({
+//         windowId: effectiveWindowId.value,
+//         windowName: 'exportPreview',
+//         windowType: 'view',
+//         originalId: props.originalId,
+//     });
+// });
 
-onUnmounted(() => {
-    windowStore.unregisterWindow(effectiveWindowId.value);
-});
+// onUnmounted(() => {
+//     windowStore.unregisterWindow(effectiveWindowId.value);
+// });
 
 const canClose = computed(() => {
     return (
@@ -215,7 +216,7 @@ function handleSplit() {
 
 function handleClose() {
     if (windowStore.splitMode === 'double') {
-        windowStore.closePane();
+        windowStore.closePane(effectiveWindowId.value);
     } else {
         windowStore.unregisterWindow(effectiveWindowId.value);
 
