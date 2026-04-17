@@ -2,8 +2,8 @@
     <div
         class="view"
         :data-focus-id="effectiveWindowId"
-        :class="{ 'is-active': windowStore.activeFocus === props.chunkId }"
-        @pointerdown="windowStore.setFocus(props.chunkId)"
+        :class="{ 'is-active': windowStore.activeFocus === effectiveWindowId }"
+        @pointerdown="windowStore.setFocus(effectiveWindowId)"
     >
         <header class="view-header">
             <div class="view-title">
@@ -54,7 +54,7 @@
                     ></div>
                     <MessageItem
                         :message="msg"
-                        :chunk-id="props.chunkId"
+                        :chunk-id="currentChunkId"
                         :index="index"
                         :is-selected="
                             filterTool.selectedMessageIds.value.has(
@@ -90,7 +90,7 @@
 
 <script setup lang="ts">
 import { FileText, X, SquareSplitHorizontal } from '@lucide/vue';
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref } from 'vue';
 import { useLogStore } from '@/stores/logStore';
 import { useFilter } from '@/composables/useFilter';
 import { useMessageDragDrop } from '@/composables/useDragDrop';
@@ -102,10 +102,11 @@ import { useWindowStore } from '@/stores/windowStore';
 import type { Message } from '@/types/log';
 
 const props = defineProps<{
-    chunkId: string;
-    windowId?: string;
+    windowId: string;
+    originalId: string;
 }>();
-const effectiveWindowId = computed(() => props.windowId ?? props.chunkId);
+const effectiveWindowId = computed(() => props.windowId);
+const currentChunkId = computed(() => props.originalId);
 const filterTool = useFilter(effectiveWindowId.value);
 const dragDropTool = useMessageDragDrop();
 const dropIndicatorIndex = ref<number | null>(null);
@@ -123,24 +124,26 @@ const canClose = computed(() => {
     );
 });
 
-onMounted(() => {
-    // 注册窗口时，显式传入 originalId
-    // 将 split 窗口映射回原始 chunkId，从而共享选区
-    windowStore.registerWindow({
-        windowId: effectiveWindowId.value,
-        windowName: 'chunkView',
-        windowType: 'view',
-        originalId: props.chunkId,
-    });
-});
+// view的生命周期统一交给windowStore处理，不在组件层调用
+// onMounted(() => {
+//     windowStore.registerWindow({
+//         windowId: effectiveWindowId.value,
+//         windowName: 'chunkView',
+//         windowType: 'view',
+//         originalId: currentChunkId.value,
+//     });
+// });
+// onUnmounted(() => {
+//     windowStore.unregisterWindow(effectiveWindowId.value);
+// });
 
 function handleSplit() {
-    windowStore.enterSplitMode('chunkView', props.chunkId);
+    windowStore.enterSplitMode('chunkView', currentChunkId.value);
 }
 
 function handleClose() {
     if (windowStore.splitMode === 'double') {
-        windowStore.closePane();
+        windowStore.closePane(effectiveWindowId.value);
     } else {
         windowStore.unregisterWindow(effectiveWindowId.value);
         // 如果还有其他打开的视图，聚焦到第一个可用的
@@ -157,10 +160,12 @@ function handleClose() {
     }
 }
 
-const isViewFocused = computed(() => windowStore.activeFocus === props.chunkId);
+const isViewFocused = computed(
+    () => windowStore.activeFocus === effectiveWindowId.value,
+);
 
 const currentChunk = computed(function () {
-    return logStore.findChunkById(props.chunkId) || undefined;
+    return logStore.findChunkById(currentChunkId.value) || undefined;
 });
 
 const messages = computed(function () {
@@ -177,7 +182,7 @@ function handleMessageSelect(event: MouseEvent, msgId: string, index: number) {
 }
 
 function handleUpdateContent(messageId: string, newContent: string) {
-    messageEditorStore.updateMessage(props.chunkId, messageId, {
+    messageEditorStore.updateMessage(currentChunkId.value, messageId, {
         content: newContent,
     });
 }
@@ -226,25 +231,28 @@ function handleContainerDrop(event: DragEvent) {
 }
 
 function handleActionInsert(msg: Message, index: number) {
-    messageEditorStore.insertNewMessageAfter(props.chunkId, msg, index);
+    messageEditorStore.insertNewMessageAfter(currentChunkId.value, msg, index);
 }
 
 function handleActionMerge(msg: Message) {
     const selectedIds = filterTool.selectedMessageIds.value;
     if (selectedIds.has(msg.messageId) && selectedIds.size > 1) {
         messageEditorStore.mergeMessages(
-            props.chunkId,
+            currentChunkId.value,
             Array.from(selectedIds),
             msg.messageId,
         );
         filterTool.clearMessageSelection();
     } else {
-        messageEditorStore.mergeWithNextMessage(props.chunkId, msg.messageId);
+        messageEditorStore.mergeWithNextMessage(
+            currentChunkId.value,
+            msg.messageId,
+        );
     }
 }
 
 function handleActionSplit(msgId: string) {
-    chunkEditorStore.splitChunk(props.chunkId, msgId);
+    chunkEditorStore.splitChunk(currentChunkId.value, msgId);
 }
 
 function handleActionDelete(msgId: string) {
@@ -253,7 +261,7 @@ function handleActionDelete(msgId: string) {
         messageEditorStore.batchDeleteMessages(selectedIds);
         filterTool.clearMessageSelection();
     } else {
-        messageEditorStore.deleteMessage(props.chunkId, msgId);
+        messageEditorStore.deleteMessage(currentChunkId.value, msgId);
     }
 }
 </script>
