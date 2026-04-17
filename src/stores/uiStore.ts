@@ -8,7 +8,7 @@ export const PANEL_MAX_WIDTH = 600;
 function uiStore() {
     const leftPanelWidth = ref(232);
     // 深色模式
-    const isDarkMode = ref(false);
+    const isDarkMode = ref(detectSystemDark());
     const followSystem = ref(true);
 
     function detectSystemDark() {

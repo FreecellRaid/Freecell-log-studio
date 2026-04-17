@@ -9,6 +9,7 @@ import { useScrollbarVisibility } from '@/composables/useScrollbarVisibility';
 import { onMounted } from 'vue';
 const uiStore = useUiStore();
 onMounted(() => {
+    uiStore.initTheme();
     useScrollbarVisibility();
 });
 </script>
