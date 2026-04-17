@@ -6,6 +6,9 @@ export function useKeyboardShortcuts() {
     const { dispatch } = useCommandDispatcher();
 
     const handleKeyDown = (event: KeyboardEvent) => {
+        const isModKey = event.ctrlKey || event.metaKey;
+        const key = event.key.toLowerCase();
+        const shift = event.shiftKey;
         if (
             event.target instanceof HTMLInputElement ||
             event.target instanceof HTMLTextAreaElement ||
@@ -13,10 +16,6 @@ export function useKeyboardShortcuts() {
         ) {
             return;
         }
-
-        const isModKey = event.ctrlKey || event.metaKey;
-        const key = event.key.toLowerCase();
-        const shift = event.shiftKey;
 
         let command: CommandType | null = null;
 

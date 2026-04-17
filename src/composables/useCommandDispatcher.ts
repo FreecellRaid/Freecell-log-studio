@@ -9,6 +9,7 @@ import { useExportStore } from '@/stores/exportStore';
 import { useSelectionStore } from '@/stores/selectionStore';
 import { useProjectManager } from '@/composables/useProjectManager';
 import type { Chunk } from '@/types/log';
+import { useSearchStore } from '@/stores/searchStore';
 
 export type CommandType =
     | 'select'
@@ -30,7 +31,8 @@ export type CommandType =
     | 'toggleOoc'
     | 'toggleCommand'
     | 'merge'
-    | 'selectNextSamePlayer';
+    | 'selectNextSamePlayer'
+    | 'jump';
 
 export function useCommandDispatcher() {
     const windowStore = useWindowStore();
@@ -43,6 +45,7 @@ export function useCommandDispatcher() {
     const selectionStore = useSelectionStore();
     const projectManager = useProjectManager();
     const exportStore = useExportStore();
+    const searchStore = useSearchStore();
 
     const dispatch = (command: CommandType, payload?: any) => {
         const focus = windowStore.activeFocus;
@@ -309,6 +312,43 @@ export function useCommandDispatcher() {
                 const ids = payload.messages.map((m: any) => m.messageId);
                 searchFilter.setMessagesSelection(ids);
             }
+        }
+        if (cmd === 'jump') {
+            const selectedIds = searchFilter.selectedMessageIds.value;
+            const target =
+                searchStore.searchResults.find((msg) =>
+                    selectedIds.has(msg.messageId),
+                ) || searchStore.searchResults[0];
+
+            if (!target) {
+                return;
+            }
+
+            const chunkId = target.chunkId;
+            selectionStore.select(
+                chunkId,
+                'message',
+                [target.messageId],
+                false,
+            );
+            windowStore.requestMessageReveal(chunkId, target.messageId);
+
+            if (windowStore.isInSplitMode()) {
+                const activeViewId = windowStore.currentActiveView.windowId;
+                const splitPanes = windowStore.splitPanes;
+
+                if (splitPanes[0]?.windowId === activeViewId) {
+                    windowStore.setPaneView(0, 'chunkView', chunkId);
+                } else if (splitPanes[1]?.windowId === activeViewId) {
+                    windowStore.setPaneView(1, 'chunkView', chunkId);
+                } else {
+                    windowStore.setPaneView(0, 'chunkView', chunkId);
+                }
+                return;
+            }
+
+            windowStore.setActiveChunk(chunkId);
+            return;
         }
         if (cmd === 'cancel') {
             searchFilter.clearMessageSelection();

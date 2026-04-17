@@ -2,6 +2,7 @@
     <div
         v-if="!(isHidden && !uiStore.showHidden)"
         class="message-item"
+        :data-message-id="message.messageId"
         :class="{
             'is-selected': isSelected,
             'is-active': isActive,

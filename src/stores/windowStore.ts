@@ -13,6 +13,10 @@ function windowStore() {
     const selectionStore = useSelectionStore();
     const openWindows = ref<Map<string, WindowInstance>>(new Map());
     const focusStack = ref<string[]>([]);
+    const pendingMessageReveal = ref<{
+        chunkId: string;
+        messageId: string;
+    } | null>(null);
     const activeFocus = computed(() => {
         return focusStack.value[focusStack.value.length - 1] || 'defaultView';
     });
@@ -359,6 +363,17 @@ function windowStore() {
         splitPanes.value[paneIndex] = newWindow;
     }
 
+    function requestMessageReveal(chunkId: string, messageId: string) {
+        pendingMessageReveal.value = {
+            chunkId,
+            messageId,
+        };
+    }
+
+    function clearPendingMessageReveal() {
+        pendingMessageReveal.value = null;
+    }
+
     // 关闭指定 pane
     function closePane(closingWindowId: string) {
         if (splitMode.value !== 'double') return;
@@ -382,6 +397,7 @@ function windowStore() {
         splitDirection,
         splitPanes,
         splitSizes,
+        pendingMessageReveal,
 
         setFocus,
         registerWindow,
@@ -401,6 +417,8 @@ function windowStore() {
         setPaneView,
         closePane,
         isInSplitMode,
+        requestMessageReveal,
+        clearPendingMessageReveal,
     };
 }
 

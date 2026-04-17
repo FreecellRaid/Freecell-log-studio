@@ -35,6 +35,7 @@
         </header>
 
         <div
+            ref="messageListContainer"
             class="message-list-container"
             @dragover.prevent="handleContainerDragOver"
             @drop.prevent="handleContainerDrop"
@@ -90,7 +91,7 @@
 
 <script setup lang="ts">
 import { FileText, X, SquareSplitHorizontal } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { useLogStore } from '@/stores/logStore';
 import { useFilter } from '@/composables/useFilter';
 import { useMessageDragDrop } from '@/composables/useDragDrop';
@@ -110,6 +111,7 @@ const currentChunkId = computed(() => props.originalId);
 const filterTool = useFilter(effectiveWindowId.value);
 const dragDropTool = useMessageDragDrop();
 const dropIndicatorIndex = ref<number | null>(null);
+const messageListContainer = ref<HTMLElement | null>(null);
 const logStore = useLogStore();
 const windowStore = useWindowStore();
 const messageEditorStore = useMessageEditorStore();
@@ -123,19 +125,6 @@ const canClose = computed(() => {
         windowStore.openWindows.size > 1
     );
 });
-
-// view的生命周期统一交给windowStore处理，不在组件层调用
-// onMounted(() => {
-//     windowStore.registerWindow({
-//         windowId: effectiveWindowId.value,
-//         windowName: 'chunkView',
-//         windowType: 'view',
-//         originalId: currentChunkId.value,
-//     });
-// });
-// onUnmounted(() => {
-//     windowStore.unregisterWindow(effectiveWindowId.value);
-// });
 
 function handleSplit() {
     windowStore.enterSplitMode('chunkView', currentChunkId.value);
@@ -171,6 +160,31 @@ const currentChunk = computed(function () {
 const messages = computed(function () {
     return currentChunk.value ? currentChunk.value.messages : [];
 });
+
+watch(
+    () => windowStore.pendingMessageReveal,
+    async (target) => {
+        if (!target || target.chunkId !== currentChunkId.value) {
+            return;
+        }
+
+        await nextTick();
+
+        const messageElement = messageListContainer.value?.querySelector(
+            `[data-message-id="${target.messageId}"]`,
+        );
+
+        if (messageElement instanceof HTMLElement) {
+            messageElement.scrollIntoView({
+                block: 'center',
+                behavior: 'smooth',
+            });
+        }
+
+        windowStore.clearPendingMessageReveal();
+    },
+    { flush: 'post' },
+);
 
 function handleMessageSelect(event: MouseEvent, msgId: string, index: number) {
     dispatch('select', {

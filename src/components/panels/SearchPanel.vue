@@ -6,7 +6,7 @@
             </div>
             <button
                 class="panel-header-action-button icon-interactive"
-                @click="clearAllFilters"
+                @click="searchStore.clearAllFilters"
                 title="清空筛选"
             >
                 <RefreshCcw class="ui-icon" />
@@ -16,31 +16,41 @@
         <div class="search-controls">
             <div class="search-input-wrapper">
                 <input
-                    v-model="quickSearch"
+                    v-model="searchStore.quickSearch"
                     type="text"
                     placeholder="搜索消息内容..."
                     class="main-search-input"
-                    @keydown.enter="handleSearch"
                 />
                 <button
                     class="expand-toggle icon-interactive"
-                    @click="isAdvancedExpanded = !isAdvancedExpanded"
+                    @click="
+                        searchStore.isAdvancedExpanded =
+                            !searchStore.isAdvancedExpanded
+                    "
                     :title="
-                        isAdvancedExpanded ? '收起高级筛选' : '展开高级筛选'
+                        searchStore.isAdvancedExpanded
+                            ? '收起高级筛选'
+                            : '展开高级筛选'
                     "
                 >
-                    <FunnelXIcon v-if="isAdvancedExpanded" class="ui-icon" />
+                    <FunnelXIcon
+                        v-if="searchStore.isAdvancedExpanded"
+                        class="ui-icon"
+                    />
                     <FunnelIcon v-else class="ui-icon" />
                 </button>
             </div>
 
             <transition name="slide">
-                <div v-if="isAdvancedExpanded" class="advanced-options">
+                <div
+                    v-if="searchStore.isAdvancedExpanded"
+                    class="advanced-options"
+                >
                     <div class="form-group">
                         <label>角色名</label>
                         <input
                             class="form-group-input"
-                            v-model="filter.playerName"
+                            v-model="searchStore.filter.playerName"
                             type="text"
                             placeholder="匹配角色..."
                         />
@@ -49,7 +59,7 @@
                         <label>账号</label>
                         <input
                             class="form-group-input"
-                            v-model="filter.account"
+                            v-model="searchStore.filter.account"
                             type="text"
                             placeholder="匹配账号..."
                         />
@@ -58,7 +68,7 @@
                         <label>备注</label>
                         <input
                             class="form-group-input"
-                            v-model="filter.note"
+                            v-model="searchStore.filter.note"
                             type="text"
                             placeholder="匹配备注..."
                         />
@@ -66,7 +76,7 @@
                     <div class="form-row">
                         <div class="form-group flex-1">
                             <label>身份</label>
-                            <select v-model="filter.role">
+                            <select v-model="searchStore.filter.role">
                                 <option :value="undefined">ALL</option>
                                 <option value="pl">玩家</option>
                                 <option value="gm">主持人</option>
@@ -103,28 +113,45 @@
 
         <div
             class="search-summary"
-            v-if="searchResults.length > 0 || hasActiveFilter"
+            v-if="
+                searchStore.searchResults.length > 0 ||
+                searchStore.hasActiveFilter
+            "
         >
             <span class="count-text">
-                找到 {{ searchResults.length }} 条结果
+                找到 {{ searchStore.searchResults.length }} 条结果
             </span>
-            <button
-                class="btn-primary"
-                :disabled="searchResults.length === 0"
-                @click="selectAllMatches"
-            >
-                全选
-            </button>
+            <div class="search-actions">
+                <button
+                    class="btn-primary"
+                    :disabled="!jumpTarget"
+                    @click="dispatch('jump')"
+                >
+                    跳转
+                </button>
+                <button
+                    class="btn-primary"
+                    :disabled="searchStore.searchResults.length === 0"
+                    @click="selectAllMatches"
+                >
+                    全选
+                </button>
+            </div>
         </div>
 
         <div class="results-container">
-            <div v-if="searchResults.length === 0" class="panel-empty-hint">
+            <div
+                v-if="searchStore.searchResults.length === 0"
+                class="panel-empty-hint"
+            >
                 {{
-                    hasActiveFilter ? '未找到匹配的消息' : '输入关键词开始搜索'
+                    searchStore.hasActiveFilter
+                        ? '未找到匹配的消息'
+                        : '输入关键词开始搜索'
                 }}
             </div>
             <div
-                v-for="msg in searchResults"
+                v-for="msg in searchStore.searchResults"
                 :key="msg.messageId"
                 class="result-item"
                 :class="{
@@ -152,78 +179,39 @@
 
 <script setup lang="ts">
 import { FunnelIcon, FunnelXIcon, RefreshCcw } from '@lucide/vue';
-import { ref, computed, reactive, onMounted, onUnmounted } from 'vue';
-import { useLogStore } from '@/stores/logStore';
+import { computed } from 'vue';
 import { useFilter } from '@/composables/useFilter';
-import { matchesMessageFilter } from '@/editor/filter';
-import type { MessageFilter } from '@/types/log';
+import type { Message } from '@/types/log';
 import { formatDate } from '@/utils/date';
 import { useCommandDispatcher } from '@/composables/useCommandDispatcher';
 import { useWindowStore } from '@/stores/windowStore';
+import { useSearchStore } from '@/stores/searchStore';
 
-const logStore = useLogStore();
 const windowStore = useWindowStore();
 const filterStore = useFilter('search');
+const searchStore = useSearchStore();
 const { dispatch } = useCommandDispatcher();
 
-// 状态控制
-const quickSearch = ref('');
-const isAdvancedExpanded = ref(false);
-const filter = reactive<MessageFilter>({
-    playerName: '',
-    account: '',
-    note: '',
-    time: undefined,
-    role: undefined,
-    isOoc: undefined,
-    isCommand: undefined,
-});
 const isOocFilterValue = computed<string>({
-    get: () => booleanFilterToString(filter.isOoc),
+    get: () => booleanFilterToString(searchStore.filter.isOoc),
     set: (value) => {
-        filter.isOoc = stringToBooleanFilter(value);
+        searchStore.filter.isOoc = stringToBooleanFilter(value);
     },
 });
 const isCommandFilterValue = computed<string>({
-    get: () => booleanFilterToString(filter.isCommand),
+    get: () => booleanFilterToString(searchStore.filter.isCommand),
     set: (value) => {
-        filter.isCommand = stringToBooleanFilter(value);
+        searchStore.filter.isCommand = stringToBooleanFilter(value);
     },
 });
-const normalizedFilter = computed<MessageFilter>(() => {
-    const activeFilter: MessageFilter = {};
-    const content = normalizeStringFilter(quickSearch.value);
-    const playerName = normalizeStringFilter(filter.playerName);
-    const account = normalizeStringFilter(filter.account);
-
-    if (content) activeFilter.content = content;
-    if (playerName) activeFilter.playerName = playerName;
-    if (account) activeFilter.account = account;
-    if (filter.role !== undefined) activeFilter.role = filter.role;
-    if (filter.isOoc !== undefined) activeFilter.isOoc = filter.isOoc;
-    if (filter.isCommand !== undefined)
-        activeFilter.isCommand = filter.isCommand;
-
-    return activeFilter;
-});
-
-// 是否存在任何过滤条件
-const hasActiveFilter = computed(
-    () => Object.keys(normalizedFilter.value).length > 0,
-);
-
-// 核心过滤逻辑：计算搜索结果
-const searchResults = computed(() => {
-    if (!hasActiveFilter.value) return [];
-    return logStore.allMessages.filter((msg) =>
-        matchesMessageFilter(msg, normalizedFilter.value),
+const jumpTarget = computed<Message | null>(() => {
+    const selectedIds = filterStore.selectedMessageIds.value;
+    const selectedTarget = searchStore.searchResults.find((msg) =>
+        selectedIds.has(msg.messageId),
     );
-});
 
-// 操作方法
-function handleSearch() {
-    quickSearch.value = quickSearch.value.trim();
-}
+    return selectedTarget || searchStore.searchResults[0] || null;
+});
 
 function handleItemClick(event: MouseEvent, msgId: string) {
     windowStore.setFocus('search');
@@ -231,42 +219,14 @@ function handleItemClick(event: MouseEvent, msgId: string) {
     dispatch('select', {
         event,
         msgId,
-        messages: searchResults.value, // 将当前计算出的搜索结果快照传给调度器
+        messages: searchStore.searchResults,
     });
 }
 
 function selectAllMatches() {
     dispatch('selectAll', {
-        messages: searchResults.value,
+        messages: searchStore.searchResults,
     });
-}
-
-const handleKeyDown = (e: KeyboardEvent) => {
-    if (windowStore.activeFocus !== 'search') return;
-
-    if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
-        e.preventDefault();
-        selectAllMatches();
-    }
-};
-
-onMounted(() => window.addEventListener('keydown', handleKeyDown));
-onUnmounted(() => window.removeEventListener('keydown', handleKeyDown));
-
-function clearAllFilters() {
-    quickSearch.value = '';
-    filter.playerName = '';
-    filter.account = '';
-    filter.note = '';
-    filter.role = undefined;
-    filter.isOoc = undefined;
-    filter.isCommand = undefined;
-}
-
-function normalizeStringFilter(value: MessageFilter['playerName']) {
-    if (typeof value !== 'string') return undefined;
-    const normalized = value.trim();
-    return normalized === '' ? undefined : normalized;
 }
 
 function booleanFilterToString(value: boolean | undefined) {
@@ -382,6 +342,12 @@ const truncate = (str: string, len: number) => {
     justify-content: space-between;
     align-items: center;
     background: var(--bg-secondary);
+}
+
+.search-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .btn-primary {
