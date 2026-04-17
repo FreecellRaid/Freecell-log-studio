@@ -48,6 +48,7 @@ onMounted(() => {
         windowId: 'defaultView',
         windowName: 'defaultView',
         windowType: 'view',
+        originalId: 'defaultView',
     });
 });
 

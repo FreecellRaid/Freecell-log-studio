@@ -3,10 +3,10 @@
         <FileImporter v-if="isWorkspaceEmpty" />
         <template v-else-if="windowStore.splitMode === 'single'">
             <component
-                :is="viewComponent"
-                v-if="activeViewInfo"
-                :key="activeViewInfo.windowId"
-                v-bind="getViewProps(activeViewInfo)"
+                :is="getViewComponent(currentActiveView.windowName)"
+                v-if="currentActiveView"
+                :key="currentActiveView.windowId"
+                v-bind="getComponentProps(currentActiveView)"
             />
             <DefaultView v-else />
         </template>
@@ -24,10 +24,10 @@
                     @pointerdown.capture="handlePaneClick(0)"
                 >
                     <component
-                        :is="getViewComponentByType(leftPane.viewType)"
+                        :is="getViewComponent(leftPane.windowName)"
                         v-if="leftPane"
                         :key="leftPane.windowId"
-                        v-bind="getPaneViewProps(leftPane)"
+                        v-bind="getComponentProps(leftPane)"
                     />
                 </div>
 
@@ -47,10 +47,10 @@
                     @pointerdown.capture="handlePaneClick(1)"
                 >
                     <component
-                        :is="getViewComponentByType(rightPane.viewType)"
+                        :is="getViewComponent(rightPane.windowName)"
                         v-if="rightPane"
                         :key="rightPane.windowId"
-                        v-bind="getPaneViewProps(rightPane)"
+                        v-bind="getComponentProps(rightPane)"
                     />
                 </div>
             </div>
@@ -62,7 +62,7 @@
 import { computed, ref } from 'vue';
 import { useLogStore } from '@/stores/logStore';
 import { useWindowStore } from '@/stores/windowStore';
-import type { SplitPaneState } from '@/types/layout';
+import type { WindowInstance, WindowName } from '@/types/layout';
 import FileImporter from '@/components/common/FileImporter.vue';
 import ChunkView from './ChunkView.vue';
 import ExportPreview from './ExportPreview.vue';
@@ -71,69 +71,41 @@ import DefaultView from './DefaultView.vue';
 const logStore = useLogStore();
 const windowStore = useWindowStore();
 const isWorkspaceEmpty = computed(() => logStore.documents.length === 0);
-const activeViewInfo = computed(() => windowStore.currentActiveView);
+const currentActiveView = computed(() => windowStore.currentActiveView);
 
-// 分屏 pane 数据
-const leftPane = computed<SplitPaneState>(() => windowStore.splitPanes[0]);
-const rightPane = computed<SplitPaneState | null>(
-    () => windowStore.splitPanes[1],
-);
+// 分屏数据映射
+const leftPane = computed(() => windowStore.splitPanes[0]);
+const rightPane = computed(() => windowStore.splitPanes[1]);
 
-// 分屏尺寸（百分比）
-const splitSizes = ref<[number, number]>([50, 50]);
+const splitSizes = ref<[number, number]>(windowStore.splitSizes);
 
-// 视图类型到组件的映射
-const viewComponentMap: Record<string, any> = {
+const viewComponentMap: Partial<Record<WindowName, any>> = {
     chunkView: ChunkView,
     exportPreview: ExportPreview,
     defaultView: DefaultView,
 };
 
-// 单视图模式：获取当前组件
-const viewComponent = computed(() => {
-    if (!activeViewInfo.value) return DefaultView;
-    return viewComponentMap[activeViewInfo.value.windowName] || DefaultView;
-});
-
-// 根据类型获取组件
-function getViewComponentByType(viewType: string) {
-    return viewComponentMap[viewType] || DefaultView;
+// 根据 WindowName 获取对应的 Vue 组件
+function getViewComponent(name: WindowName) {
+    return viewComponentMap[name] || DefaultView;
 }
 
-// 单视图模式：获取 props
-function getViewProps(viewInfo: { windowName: string; windowId: string }) {
-    if (viewInfo.windowName === 'chunkView') {
-        return { chunkId: viewInfo.windowId, windowId: viewInfo.windowId };
-    }
-    if (viewInfo.windowName === 'exportPreview') {
-        return { formatId: viewInfo.windowId, windowId: viewInfo.windowId };
-    }
-    return {};
+function getComponentProps(instance: WindowInstance) {
+    return {
+        windowId: instance.windowId,
+        originalId: instance.originalId,
+    };
 }
 
-// 分屏模式：获取 pane 的 props
-function getPaneViewProps(pane: SplitPaneState) {
-    if (pane.viewType === 'chunkView') {
-        return { chunkId: pane.viewId, windowId: pane.windowId };
-    }
-    if (pane.viewType === 'exportPreview') {
-        return { formatId: pane.viewId, windowId: pane.windowId };
-    }
-    return {};
-}
-
-// 获取 pane 的样式（宽度/高度）
 function getPaneStyle(index: 0 | 1): Record<string, string> {
     const isHorizontal = windowStore.splitDirection === 'horizontal';
     const size = splitSizes.value[index];
-    if (isHorizontal) {
-        return { width: `${size}%`, height: '100%' };
-    } else {
-        return { width: '100%', height: `${size}%` };
-    }
+
+    return isHorizontal
+        ? { width: `${size}%`, height: '100%' }
+        : { width: '100%', height: `${size}%` };
 }
 
-// 处理 pane 点击（确保焦点切换到该 pane 内的视图）
 function handlePaneClick(paneIndex: 0 | 1) {
     const pane = paneIndex === 0 ? leftPane.value : rightPane.value;
     if (pane) {
@@ -141,7 +113,6 @@ function handlePaneClick(paneIndex: 0 | 1) {
     }
 }
 
-// 拖拽调整分隔条
 function startResize(e: MouseEvent) {
     e.preventDefault();
     const isHorizontal = windowStore.splitDirection === 'horizontal';
@@ -159,13 +130,15 @@ function startResize(e: MouseEvent) {
         const delta = currentPos - startPos;
         const deltaPercent = (delta / containerSize) * 100;
 
-        let newLeftSize = Math.min(
+        // 限制最小/最大比例防止窗格消失 (20% - 80%)
+        const newLeftSize = Math.min(
             80,
             Math.max(20, startSizes[0] + deltaPercent),
         );
         const newRightSize = 100 - newLeftSize;
 
         splitSizes.value = [newLeftSize, newRightSize];
+        windowStore.splitSizes = [newLeftSize, newRightSize];
     }
 
     function onMouseUp() {
@@ -193,7 +166,6 @@ function startResize(e: MouseEvent) {
     flex-direction: column;
 }
 
-/* 分屏容器 */
 .split-container {
     display: flex;
     width: 100%;
@@ -211,13 +183,14 @@ function startResize(e: MouseEvent) {
     position: relative;
 }
 
-/* 分隔条 */
 .split-resize-handle {
     width: 4px;
     height: 100%;
     cursor: col-resize;
     flex-shrink: 0;
+    background-color: transparent;
     transition: background-color 0.15s;
+    z-index: 10;
 }
 
 .split-resize-handle:hover,

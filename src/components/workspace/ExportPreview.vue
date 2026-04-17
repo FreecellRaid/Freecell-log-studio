@@ -4,9 +4,9 @@
         :data-focus-id="effectiveWindowId"
         :class="{
             'preview-always-white': uiStore.exportPreviewAlwaysWhite,
-            'is-active': windowStore.activeFocus === props.formatId,
+            'is-active': isActive,
         }"
-        @pointerdown="windowStore.setFocus(props.formatId)"
+        @pointerdown="windowStore.setFocus(props.windowId)"
     >
         <header class="view-header">
             <div class="view-title">
@@ -182,16 +182,18 @@ const uiStore = useUiStore();
 const windowStore = useWindowStore();
 const activeFormat = computed(() => exportStore.activeFormat);
 const props = defineProps<{
-    formatId: string;
-    windowId?: string;
+    windowId: string;
+    originalId: string;
 }>();
-const effectiveWindowId = computed(() => props.windowId ?? props.formatId);
+const effectiveWindowId = computed(() => props.windowId);
+const isActive = computed(() => windowStore.activeFocus === props.windowId);
 
 onMounted(() => {
     windowStore.registerWindow({
         windowId: effectiveWindowId.value,
         windowName: 'exportPreview',
         windowType: 'view',
+        originalId: props.originalId,
     });
 });
 
@@ -208,7 +210,7 @@ const canClose = computed(() => {
 });
 
 function handleSplit() {
-    windowStore.enterSplitMode('exportPreview', props.formatId);
+    windowStore.enterSplitMode('exportPreview', props.originalId);
 }
 
 function handleClose() {
