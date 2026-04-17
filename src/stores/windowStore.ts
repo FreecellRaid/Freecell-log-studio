@@ -345,7 +345,7 @@ function windowStore() {
     // 切换指定 pane 显示的视图
     function setPaneView(
         paneIndex: 0 | 1,
-        WindowName: 'chunkView' | 'exportPreview',
+        windowName: 'chunkView' | 'exportPreview',
         originalId: string,
     ) {
         if (splitMode.value !== 'double') return;
@@ -356,7 +356,7 @@ function windowStore() {
         const newWindowId = generateId();
         const newWindow: WindowInstance = {
             windowId: newWindowId,
-            windowName: WindowName,
+            windowName: windowName,
             windowType: 'view',
             originalId: originalId,
         };
