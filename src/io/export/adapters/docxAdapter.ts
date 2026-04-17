@@ -3,8 +3,6 @@ import {
     Packer,
     Paragraph,
     TextRun,
-    HeadingLevel,
-    AlignmentType,
     Tab,
 } from 'docx';
 import { parseTemplate, getPlaceholderValue } from '../templateParser';
@@ -29,79 +27,146 @@ function applyStyle(style?: ExportStyle): any {
     };
 }
 
+function createEmptyParagraph() {
+    return new Paragraph({});
+}
+
+function getMessageTokenStyle(
+    key: string,
+    row: ExportRow,
+): ExportStyle | undefined {
+    if (key === 'name') {
+        return row.nameStyle;
+    }
+
+    if (key === 'content') {
+        return row.contentStyle;
+    }
+
+    return undefined;
+}
+
+function createRunsFromTokens(
+    tokens: TemplateToken[],
+    resolveToken: (token: TemplateToken) => {
+        text: string;
+        style?: ExportStyle;
+    },
+): Paragraph[] {
+    const paragraphs: Paragraph[] = [];
+    let currentRuns: TextRun[] = [];
+
+    const pushParagraph = () => {
+        paragraphs.push(
+            currentRuns.length > 0
+                ? new Paragraph({ children: currentRuns })
+                : createEmptyParagraph(),
+        );
+        currentRuns = [];
+    };
+
+    for (const token of tokens) {
+        if (token.type === 'newline') {
+            pushParagraph();
+            continue;
+        }
+
+        if (token.type === 'tab') {
+            currentRuns.push(new TextRun({ children: [new Tab()] }));
+            continue;
+        }
+
+        const { text, style } = resolveToken(token);
+        if (!text) {
+            continue;
+        }
+
+        currentRuns.push(
+            new TextRun({
+                text,
+                ...applyStyle(style),
+            }),
+        );
+    }
+
+    if (currentRuns.length > 0 || paragraphs.length === 0) {
+        pushParagraph();
+    }
+
+    return paragraphs;
+}
+
+function createSeparatorParagraphs(template: string, rowContent: string) {
+    const tokens = parseTemplate(template);
+
+    return createRunsFromTokens(tokens, (token) => {
+        if (token.type === 'placeholder') {
+            return {
+                text: token.value === 'name' ? rowContent : '',
+            };
+        }
+
+        return {
+            text: token.value,
+        };
+    });
+}
+
+function createMessageParagraphs(row: ExportRow, format: ExportFormat) {
+    const tokens = parseTemplate(format.messageTemplate);
+
+    return createRunsFromTokens(tokens, (token) => {
+        if (token.type === 'placeholder') {
+            return {
+                text: getPlaceholderValue(token.value, row, format),
+                style: getMessageTokenStyle(token.value, row),
+            };
+        }
+
+        return {
+            text: token.value,
+        };
+    });
+}
+
 export async function docxAdapter(
     rows: ExportRow[],
     format: ExportFormat,
 ): Promise<Blob> {
     const paragraphs: Paragraph[] = [];
 
-    // 预解析核心模板
-    const msgTokens = parseTemplate(format.messageTemplate);
-
     for (const row of rows) {
         if (row.type === 'documentSeparator') {
-            paragraphs.push(
-                new Paragraph({
-                    text: format.docSeparator.replace(
-                        '{{name}}',
+            if (format.docSeparator) {
+                paragraphs.push(
+                    ...createSeparatorParagraphs(
+                        format.docSeparator,
                         row.content || '',
                     ),
-                    heading: HeadingLevel.HEADING_1,
-                    alignment: AlignmentType.CENTER,
-                }),
-            );
-        } else if (row.type === 'message') {
-            let currentRuns: TextRun[] = [];
+                );
+            }
+            continue;
+        }
 
-            // 辅助函数：根据 Token 生成 TextRun 并压入数组
-            const processTokens = (tokens: TemplateToken[]) => {
-                for (const token of tokens) {
-                    switch (token.type) {
-                        case 'placeholder':
-                            const val = getPlaceholderValue(
-                                token.value,
-                                row,
-                                format,
-                            );
-                            if (val) {
-                                // 根据占位符类型分配样式
-                                const style =
-                                    token.value === 'content'
-                                        ? row.contentStyle
-                                        : row.nameStyle;
-                                currentRuns.push(
-                                    new TextRun({
-                                        text: val,
-                                        ...applyStyle(style),
-                                    }),
-                                );
-                            }
-                            break;
-                        case 'text':
-                            currentRuns.push(
-                                new TextRun({ text: token.value }),
-                            );
-                            break;
-                        case 'newline':
-                            // 遇到换行，结束当前段落并开启新段落
-                            paragraphs.push(
-                                new Paragraph({ children: currentRuns }),
-                            );
-                            currentRuns = [];
-                            break;
-                        case 'tab':
-                            currentRuns.push(
-                                new TextRun({ children: [new Tab()] }),
-                            );
-                            break;
-                    }
-                }
-            };
+        if (row.type === 'chunkSeparator') {
+            if (format.chunkSeparator) {
+                paragraphs.push(
+                    ...createSeparatorParagraphs(
+                        format.chunkSeparator,
+                        row.content || '',
+                    ),
+                );
+            }
+            continue;
+        }
 
-            processTokens(msgTokens);
+        if (row.type === 'message') {
+            paragraphs.push(...createMessageParagraphs(row, format));
 
-            if (currentRuns.length > 0) {
-                paragraphs.push(new Paragraph({ children: currentRuns }));
+            if (format.messageSeparator) {
+                paragraphs.push(
+                    ...createSeparatorParagraphs(format.messageSeparator, ''),
+                );
             }
         }
     }
