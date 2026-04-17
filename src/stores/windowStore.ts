@@ -64,7 +64,6 @@ function windowStore() {
     // 关闭并注销一个窗口
     function unregisterWindow(windowId: string) {
         const winToClose = openWindows.value.get(windowId);
-        // 获取将要关闭窗口的 originalId
         const targetOriginalId = winToClose?.originalId || windowId;
         openWindows.value.delete(windowId);
         const index = focusStack.value.findIndex((t) => t === windowId);
@@ -192,7 +191,7 @@ function windowStore() {
         if (splitMode.value === 'double') {
             // 已在双屏：找到不活跃的那一侧并替换
             const activePos = getActivePanePosition();
-            const targetPaneIndex = activePos === 'left' ? 1 : 0; // 选相反的那一侧
+            const targetPaneIndex = activePos === 'left' ? 1 : 0;
             setPaneView(targetPaneIndex, 'exportPreview', formatId);
         } else {
             // 单屏模式：直接开启分屏预览

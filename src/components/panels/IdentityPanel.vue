@@ -135,14 +135,12 @@ const uiStore = useUiStore();
 const historyStore = useHistoryStore();
 const messageEditorStore = useMessageEditorStore();
 const windowStore = useWindowStore();
-const localDisplayMode = ref<ColorMode>(styleStore.viewSettings.colorMode); // 局部显示模式
-const editingId = ref<string | null>(null); // 当前正在编辑的 ID
-const editBuffer = ref(''); // 编辑缓冲区
+const localDisplayMode = ref<ColorMode>(styleStore.viewSettings.colorMode);
+const editingId = ref<string | null>(null);
+const editBuffer = ref('');
 
-/** 是否为角色显示模式（基于局部状态） */
 const isPlayerMode = computed(() => localDisplayMode.value === 'playerName');
 
-/** 聚合生成的身份列表 */
 const identityList = computed<IdentityListItem[]>(() => {
     const mode = localDisplayMode.value;
     const messages = logStore.allMessages;
@@ -163,19 +161,17 @@ const identityList = computed<IdentityListItem[]>(() => {
     return result;
 });
 
-/** 切换本地显示模式 (不影响全局 Store) */
+// 切换本地显示模式 (不影响全局 Store)
 function toggleDisplayMode() {
     localDisplayMode.value =
         localDisplayMode.value === 'playerName' ? 'account' : 'playerName';
 }
 
-/** 开启编辑状态 */
 function startEdit(id: string) {
     editingId.value = id;
     editBuffer.value = id;
 }
 
-/** 执行改名并同步更新消息数据与染色规则 */
 function saveRename(oldVal: string) {
     const newVal = editBuffer.value.trim();
     if (!newVal || newVal === oldVal) {
@@ -187,7 +183,6 @@ function saveRename(oldVal: string) {
     const sourceIds = getMessageIdsForIdentity(oldVal);
     const existingTargetIds = getMessageIdsForIdentity(newVal);
 
-    // 确定合并后的角色身份
     const mergedRole =
         existingTargetIds.size > 0
             ? (getRoleForIdentity(newVal) ?? getRoleForIdentity(oldVal))

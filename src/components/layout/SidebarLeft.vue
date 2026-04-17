@@ -287,7 +287,6 @@ watch(
         styleStore.rules.forEach((rule) => {
             // 仅处理系统基础规则 (priority 为 0 的规则)
             if (rule.priority === 0) {
-                // 如果当前是角色名模式，则只有过滤条件为角色名的规则才激活，反之亦然
                 rule.isActive =
                     (newMode === 'playerName' && !!rule.filter.playerName) ||
                     (newMode === 'account' && !!rule.filter.account);
