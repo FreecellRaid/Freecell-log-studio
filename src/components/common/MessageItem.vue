@@ -236,6 +236,7 @@ function cancelEdit() {
 }
 
 .message-content {
+    min-height: 1em;
     line-height: 1.5;
     word-break: break-word;
     white-space: pre-wrap;
