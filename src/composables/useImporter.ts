@@ -30,6 +30,9 @@ export async function importFiles(
             console.log(`文件 ${name} 使用适配器: ${adapter.name}`);
         } catch (error) {
             console.error(`解析文件 ${name} 失败:`, error);
+            throw new Error(
+                `文件 "${name}" 解析失败: ${error instanceof Error ? error.message : '未知错误'}`,
+            );
         }
     }
     return documents;
