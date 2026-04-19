@@ -158,7 +158,7 @@
                         导出为 DOC
                     </div>
                     <div class="export-item" @click="handleExportDocx">
-                        导出为 Docx
+                        导出为 DOCX
                     </div>
                     <div class="export-item" @click="handleExportProject">
                         导出为工程文件
