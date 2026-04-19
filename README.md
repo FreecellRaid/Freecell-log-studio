@@ -50,10 +50,11 @@ UI 风格参考 VSCode。
 
 ## Tech Stack
 
-- **框架**：Vue 3（Composition API）
-- **构建工具**：Vite
+- **框架**：Vue 3
+- **状态管理**：Pinia
 - **语言**：TypeScript
 - **图标库**：Lucide Vue
+- **构建工具**：Vite
 
 ---
 
