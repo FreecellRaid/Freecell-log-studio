@@ -65,16 +65,16 @@
         <div
             class="message-content"
             :style="computedStyles.contentStyle"
-            @dblclick.stop="startEditing"
+            @dblclick.stop="$emit('startEdit', message)"
         >
             <template v-if="isEditing">
                 <textarea
                     ref="editInput"
-                    v-model="editContent"
+                    v-model="editContentLocal"
                     class="content-editor"
-                    @blur="saveEdit"
-                    @keydown.enter.ctrl="saveEdit"
-                    @keydown.esc="cancelEdit"
+                    @blur="$emit('saveEdit', message.messageId)"
+                    @keydown.enter.ctrl="$emit('saveEdit', message.messageId)"
+                    @keydown.esc="$emit('cancelEdit')"
                 ></textarea>
             </template>
             <div v-else>
@@ -85,22 +85,25 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, nextTick } from 'vue';
+import { computed, ref, nextTick, watch } from 'vue';
 import type { Message } from '@/types/log';
 import { useStyleStore } from '@/stores/styleStore';
 import { formatDate } from '@/utils/date';
 import { computeStyleForMessage } from '@/editor/styleEngine';
 import { Trash2, Plus, Scissors, ChevronsDown } from '@lucide/vue';
 
+// 加入虚拟滚动之后，把编辑状态放在messageItem里会导致状态丢失
+// 统一改成父组件传入
 const props = defineProps<{
     message: Message;
     chunkId: string;
     index: number;
     isSelected: boolean;
     isActive: boolean;
+    isEditing: boolean;
+    editingContent: string;
 }>();
 
-// 向上事件传递
 const emit = defineEmits<{
     (e: 'select', event: MouseEvent, messageId: string, index: number): void;
     (
@@ -117,7 +120,10 @@ const emit = defineEmits<{
     (e: 'actionMerge'): void;
     (e: 'actionSplit'): void;
     (e: 'actionDelete'): void;
+    (e: 'startEdit', message: Message): void;
     (e: 'updateContent', content: string): void;
+    (e: 'saveEdit', messageId: string): void;
+    (e: 'cancelEdit'): void;
 }>();
 
 const styleStore = useStyleStore();
@@ -161,35 +167,29 @@ const isHidden = computed(() => {
     );
 });
 
-const isEditing = ref(false);
-const editContent = ref('');
+const editContentLocal = computed({
+    get: () => props.editingContent,
+    set: (val) => emit('updateContent', val),
+});
 const editInput = ref<HTMLTextAreaElement | null>(null);
-
-function startEditing() {
-    editContent.value = props.message.content;
-    isEditing.value = true;
-    nextTick(() => {
-        if (editInput.value) {
-            editInput.value.focus();
-            editInput.value.setSelectionRange(
-                editContent.value.length,
-                editContent.value.length,
-            );
+watch(
+    () => props.isEditing,
+    async (newVal) => {
+        if (newVal) {
+            await nextTick();
+            setTimeout(() => {
+                if (editInput.value) {
+                    editInput.value.focus();
+                    editInput.value.setSelectionRange(
+                        props.editingContent.length,
+                        props.editingContent.length,
+                    );
+                }
+            }, 50);
+            // 这里增加延迟，确保虚拟滚动完全稳定，避免textarea闪现
         }
-    });
-}
-
-function saveEdit() {
-    if (!isEditing.value) return;
-    if (editContent.value !== props.message.content) {
-        emit('updateContent', editContent.value);
-    }
-    isEditing.value = false;
-}
-
-function cancelEdit() {
-    isEditing.value = false;
-}
+    },
+);
 </script>
 
 <style scoped>

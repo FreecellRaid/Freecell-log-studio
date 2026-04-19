@@ -52,7 +52,7 @@
                             :item="msg"
                             :key="msg.messageId"
                             :active="active"
-                            :size-dependencies="[msg.content]"
+                            :size-dependencies="[msg.content, editingMessageId]"
                             :data-index="index"
                             class="message-slot"
                         >
@@ -89,6 +89,7 @@
                                 @start-edit="handleStartEdit"
                                 @update-content="handleUpdateContent"
                                 @save-edit="handleSaveEdit"
+                                @cancel-edit="editingMessageId = null"
                             />
                         </DynamicScrollerItem>
                     </template>
@@ -243,7 +244,7 @@ function handleUpdateContent(val: string) {
 
 function handleSaveEdit(messageId: string) {
     const msg = messages.value.find((m) => m.messageId === messageId);
-    if (msg) {
+    if (msg && msg.content !== editingContent.value) {
         msg.content = editingContent.value;
     }
     editingMessageId.value = null;
@@ -333,7 +334,7 @@ function handleActionDelete(msgId: string) {
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* 让子元素 scroller 去处理 y 轴滚动 */
+    overflow: hidden;
     padding: 0px 0px;
     position: relative;
     background-color: var(--bg-workspace);
