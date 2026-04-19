@@ -50,6 +50,7 @@
                     <template #default="{ item: msg, index, active }">
                         <DynamicScrollerItem
                             :item="msg"
+                            :key="msg.messageId"
                             :active="active"
                             :size-dependencies="[msg.content]"
                             :data-index="index"
@@ -72,6 +73,8 @@
                                     )
                                 "
                                 :is-active="isViewFocused"
+                                :is-editing="editingMessageId === msg.messageId"
+                                :editing-content="editingContent"
                                 @select="handleMessageSelect"
                                 @dragstart="handleMessageDragStart"
                                 @dragover="handleMessageDragOver($event, index)"
@@ -83,13 +86,9 @@
                                 @action-delete="
                                     handleActionDelete(msg.messageId)
                                 "
-                                @update-content="
-                                    (newContent) =>
-                                        handleUpdateContent(
-                                            msg.messageId,
-                                            newContent,
-                                        )
-                                "
+                                @start-edit="handleStartEdit"
+                                @update-content="handleUpdateContent"
+                                @save-edit="handleSaveEdit"
                             />
                         </DynamicScrollerItem>
                     </template>
@@ -109,6 +108,8 @@
 import { FileText, X, SquareSplitHorizontal } from '@lucide/vue';
 import { computed, nextTick, ref, watch } from 'vue';
 import { useLogStore } from '@/stores/logStore';
+import { useUiStore } from '@/stores/uiStore';
+import { useStyleStore } from '@/stores/styleStore';
 import { useFilter } from '@/composables/useFilter';
 import { useMessageDragDrop } from '@/composables/useDragDrop';
 import MessageItem from '@/components/common/MessageItem.vue';
@@ -129,6 +130,8 @@ const currentChunkId = computed(() => props.originalId);
 const filterTool = useFilter(effectiveWindowId.value);
 const dragDropTool = useMessageDragDrop();
 const dropIndicatorIndex = ref<number | null>(null);
+const uiStore = useUiStore();
+const styleStore = useStyleStore();
 
 interface ScrollerInstance {
     scrollToItem: (index: number) => void;
@@ -136,9 +139,10 @@ interface ScrollerInstance {
 }
 
 const scrollerRef = ref<ScrollerInstance | null>(null);
-
 const logStore = useLogStore();
 const windowStore = useWindowStore();
+const editingMessageId = ref<string | null>(null);
+const editingContent = ref('');
 const messageEditorStore = useMessageEditorStore();
 const chunkEditorStore = useChunkEditorStore();
 const { dispatch } = useCommandDispatcher();
@@ -181,8 +185,19 @@ const currentChunk = computed(function () {
     return logStore.findChunkById(currentChunkId.value) || undefined;
 });
 
-const messages = computed(function () {
-    return currentChunk.value ? currentChunk.value.messages : [];
+const messages = computed(() => {
+    if (!currentChunk.value) return [];
+    const allMessages = currentChunk.value.messages;
+    if (uiStore.showHidden) {
+        return allMessages;
+    }
+    const { hideOoc, hideCommand } = styleStore.viewSettings;
+
+    return allMessages.filter((msg) => {
+        const isMsgOoc = hideOoc && msg.isOoc;
+        const isMsgCommand = hideCommand && msg.isCommand;
+        return !(isMsgOoc || isMsgCommand);
+    });
 });
 
 watch(
@@ -217,10 +232,21 @@ function handleMessageSelect(event: MouseEvent, msgId: string, index: number) {
     });
 }
 
-function handleUpdateContent(messageId: string, newContent: string) {
-    messageEditorStore.updateMessage(currentChunkId.value, messageId, {
-        content: newContent,
-    });
+function handleStartEdit(message: Message) {
+    editingMessageId.value = message.messageId;
+    editingContent.value = message.content;
+}
+
+function handleUpdateContent(val: string) {
+    editingContent.value = val;
+}
+
+function handleSaveEdit(messageId: string) {
+    const msg = messages.value.find((m) => m.messageId === messageId);
+    if (msg) {
+        msg.content = editingContent.value;
+    }
+    editingMessageId.value = null;
 }
 
 function handleMessageDragStart(

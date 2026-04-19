@@ -1,6 +1,5 @@
 <template>
     <div
-        v-if="!(isHidden && !uiStore.showHidden)"
         class="message-item"
         :data-message-id="message.messageId"
         :class="{
@@ -66,7 +65,7 @@
         <div
             class="message-content"
             :style="computedStyles.contentStyle"
-            @dblclick="startEditing"
+            @dblclick.stop="startEditing"
         >
             <template v-if="isEditing">
                 <textarea
@@ -78,9 +77,9 @@
                     @keydown.esc="cancelEdit"
                 ></textarea>
             </template>
-            <template v-else>
+            <div v-else>
                 {{ message.content }}
-            </template>
+            </div>
         </div>
     </div>
 </template>
@@ -88,7 +87,6 @@
 <script setup lang="ts">
 import { computed, ref, nextTick } from 'vue';
 import type { Message } from '@/types/log';
-import { useUiStore } from '@/stores/uiStore';
 import { useStyleStore } from '@/stores/styleStore';
 import { formatDate } from '@/utils/date';
 import { computeStyleForMessage } from '@/editor/styleEngine';
@@ -154,8 +152,7 @@ function handleDragEnd() {
     emit('dragend');
 }
 
-// 计算消息是否应该被隐藏
-const uiStore = useUiStore();
+// 计算消息是否应该被隐藏(纯粹样式判断)
 const isHidden = computed(() => {
     const { hideOoc, hideCommand } = styleStore.viewSettings;
     return (
@@ -172,7 +169,13 @@ function startEditing() {
     editContent.value = props.message.content;
     isEditing.value = true;
     nextTick(() => {
-        editInput.value?.focus();
+        if (editInput.value) {
+            editInput.value.focus();
+            editInput.value.setSelectionRange(
+                editContent.value.length,
+                editContent.value.length,
+            );
+        }
     });
 }
 
@@ -289,6 +292,16 @@ function cancelEdit() {
     height: 14px;
 }
 
+.content-text,
+.content-editor {
+    min-height: 1em;
+    line-height: 1.5;
+    padding: 4px 0;
+    font-family: inherit;
+    word-break: break-word;
+    white-space: pre-wrap;
+    box-sizing: border-box;
+}
 .content-editor {
     width: 100%;
     min-height: 3em;
