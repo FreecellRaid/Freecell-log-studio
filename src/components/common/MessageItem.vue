@@ -72,8 +72,8 @@
                     ref="editInput"
                     v-model="editContentLocal"
                     class="content-editor"
-                    @blur="$emit('saveEdit', message.messageId)"
                     @keydown.enter.ctrl="$emit('saveEdit', message.messageId)"
+                    @keydown.enter.meta="$emit('saveEdit', message.messageId)"
                     @keydown.esc="$emit('cancelEdit')"
                 ></textarea>
             </template>
