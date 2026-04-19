@@ -67,16 +67,17 @@
             :style="computedStyles.contentStyle"
             @dblclick.stop="$emit('startEdit', message)"
         >
-            <template v-if="isEditing">
+            <div class="textarea-wrapper" v-if="isEditing">
+                <div class="height-mirror">{{ editContentLocal }}&nbsp;</div>
                 <textarea
                     ref="editInput"
                     v-model="editContentLocal"
-                    class="content-editor"
+                    class="content-editor absolute-editor"
                     @keydown.enter.ctrl="$emit('saveEdit', message.messageId)"
                     @keydown.enter.meta="$emit('saveEdit', message.messageId)"
                     @keydown.esc="$emit('cancelEdit')"
                 ></textarea>
-            </template>
+            </div>
             <div v-else>
                 {{ message.content }}
             </div>
@@ -315,5 +316,30 @@ watch(
     color: var(--text-main);
     resize: vertical;
     outline: none;
+}
+
+.textarea-wrapper {
+    position: relative;
+    width: 100%;
+    min-height: 1em;
+}
+
+.height-mirror {
+    visibility: hidden;
+    white-space: pre-wrap;
+    word-break: break-word;
+    padding: 4px 8px;
+    border: 1px solid transparent;
+    min-height: 3em;
+}
+
+.absolute-editor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%; /* 继承 mirror 撑开的高度 */
+    resize: none;
+    overflow: hidden;
 }
 </style>
