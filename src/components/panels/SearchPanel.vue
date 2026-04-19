@@ -150,29 +150,50 @@
                         : '输入关键词开始搜索'
                 }}
             </div>
-            <div
-                v-for="msg in searchStore.searchResults"
-                :key="msg.messageId"
-                class="result-item"
-                :class="{
-                    'is-selected': filterStore.selectedMessageIds.value.has(
-                        msg.messageId,
-                    ),
-                    'is-active':
-                        windowStore.currentActiveWindow.windowId === 'search',
-                }"
-                @click="handleItemClick($event, msg.messageId)"
+
+            <DynamicScroller
+                v-else
+                ref="scrollerRef"
+                :items="searchStore.searchResults"
+                :min-item-size="62"
+                key-field="messageId"
+                class="scroller"
             >
-                <div class="result-meta">
-                    <span class="result-name">
-                        {{ msg.playerName || '未知角色' }}
-                    </span>
-                    <span class="result-time">{{ formatDate(msg.time) }}</span>
-                </div>
-                <div class="result-content">
-                    {{ truncate(msg.content, 60) }}
-                </div>
-            </div>
+                <template #default="{ item: msg, index, active }">
+                    <DynamicScrollerItem
+                        :item="msg"
+                        :active="active"
+                        :size-dependencies="[msg.content, msg.playerName]"
+                        :data-index="index"
+                    >
+                        <div
+                            class="result-item"
+                            :class="{
+                                'is-selected':
+                                    filterStore.selectedMessageIds.value.has(
+                                        msg.messageId,
+                                    ),
+                                'is-active':
+                                    windowStore.currentActiveWindow.windowId ===
+                                    'search',
+                            }"
+                            @click="handleItemClick($event, msg.messageId)"
+                        >
+                            <div class="result-meta">
+                                <span class="result-name">
+                                    {{ msg.playerName || '未知角色' }}
+                                </span>
+                                <span class="result-time">
+                                    {{ formatDate(msg.time) }}
+                                </span>
+                            </div>
+                            <div class="result-content">
+                                {{ truncate(msg.content, 60) }}
+                            </div>
+                        </div>
+                    </DynamicScrollerItem>
+                </template>
+            </DynamicScroller>
         </div>
     </div>
 </template>
@@ -186,6 +207,8 @@ import { formatDate } from '@/utils/date';
 import { useCommandDispatcher } from '@/composables/useCommandDispatcher';
 import { useWindowStore } from '@/stores/windowStore';
 import { useSearchStore } from '@/stores/searchStore';
+import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 
 const windowStore = useWindowStore();
 const filterStore = useFilter('search');
@@ -209,7 +232,6 @@ const jumpTarget = computed<Message | null>(() => {
     const selectedTarget = searchStore.searchResults.find((msg) =>
         selectedIds.has(msg.messageId),
     );
-
     return selectedTarget || searchStore.searchResults[0] || null;
 });
 
@@ -370,8 +392,14 @@ const truncate = (str: string, len: number) => {
 .results-container {
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.scroller {
+    flex: 1;
+    height: 100%;
 }
 
 .result-item {

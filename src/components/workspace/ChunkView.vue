@@ -35,49 +35,65 @@
         </header>
 
         <div
-            ref="messageListContainer"
             class="message-list-container"
             @dragover.prevent="handleContainerDragOver"
             @drop.prevent="handleContainerDrop"
         >
             <template v-if="messages.length > 0">
-                <div
-                    v-for="(msg, index) in messages"
-                    :key="msg.messageId"
-                    class="message-slot"
+                <DynamicScroller
+                    ref="scrollerRef"
+                    :items="messages"
+                    :min-item-size="60"
+                    key-field="messageId"
+                    class="scroller"
                 >
-                    <div
-                        v-if="
-                            dropIndicatorIndex === index &&
-                            dragDropTool.isDragging.value
-                        "
-                        class="drop-indicator"
-                    ></div>
-                    <MessageItem
-                        :message="msg"
-                        :chunk-id="currentChunkId"
-                        :index="index"
-                        :is-selected="
-                            filterTool.selectedMessageIds.value.has(
-                                msg.messageId,
-                            )
-                        "
-                        :is-active="isViewFocused"
-                        @select="handleMessageSelect"
-                        @dragstart="handleMessageDragStart"
-                        @dragover="handleMessageDragOver($event, index)"
-                        @drop="handleMessageDrop"
-                        @dragend="handleDragEnd"
-                        @action-insert="handleActionInsert(msg, index)"
-                        @action-merge="handleActionMerge(msg)"
-                        @action-split="handleActionSplit(msg.messageId)"
-                        @action-delete="handleActionDelete(msg.messageId)"
-                        @update-content="
-                            (newContent) =>
-                                handleUpdateContent(msg.messageId, newContent)
-                        "
-                    />
-                </div>
+                    <template #default="{ item: msg, index, active }">
+                        <DynamicScrollerItem
+                            :item="msg"
+                            :active="active"
+                            :size-dependencies="[msg.content]"
+                            :data-index="index"
+                            class="message-slot"
+                        >
+                            <div
+                                v-if="
+                                    dropIndicatorIndex === index &&
+                                    dragDropTool.isDragging.value
+                                "
+                                class="drop-indicator"
+                            ></div>
+                            <MessageItem
+                                :message="msg"
+                                :chunk-id="currentChunkId"
+                                :index="index"
+                                :is-selected="
+                                    filterTool.selectedMessageIds.value.has(
+                                        msg.messageId,
+                                    )
+                                "
+                                :is-active="isViewFocused"
+                                @select="handleMessageSelect"
+                                @dragstart="handleMessageDragStart"
+                                @dragover="handleMessageDragOver($event, index)"
+                                @drop="handleMessageDrop"
+                                @dragend="handleDragEnd"
+                                @action-insert="handleActionInsert(msg, index)"
+                                @action-merge="handleActionMerge(msg)"
+                                @action-split="handleActionSplit(msg.messageId)"
+                                @action-delete="
+                                    handleActionDelete(msg.messageId)
+                                "
+                                @update-content="
+                                    (newContent) =>
+                                        handleUpdateContent(
+                                            msg.messageId,
+                                            newContent,
+                                        )
+                                "
+                            />
+                        </DynamicScrollerItem>
+                    </template>
+                </DynamicScroller>
             </template>
 
             <div v-else class="view-empty-hint">
@@ -101,6 +117,8 @@ import { useChunkEditorStore } from '@/stores/editorStore/chunkStore';
 import { useCommandDispatcher } from '@/composables/useCommandDispatcher';
 import { useWindowStore } from '@/stores/windowStore';
 import type { Message } from '@/types/log';
+import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 
 const props = defineProps<{
     windowId: string;
@@ -111,7 +129,14 @@ const currentChunkId = computed(() => props.originalId);
 const filterTool = useFilter(effectiveWindowId.value);
 const dragDropTool = useMessageDragDrop();
 const dropIndicatorIndex = ref<number | null>(null);
-const messageListContainer = ref<HTMLElement | null>(null);
+
+interface ScrollerInstance {
+    scrollToItem: (index: number) => void;
+    scrollToBottom: () => void;
+}
+
+const scrollerRef = ref<ScrollerInstance | null>(null);
+
 const logStore = useLogStore();
 const windowStore = useWindowStore();
 const messageEditorStore = useMessageEditorStore();
@@ -135,7 +160,6 @@ function handleClose() {
         windowStore.closePane(effectiveWindowId.value);
     } else {
         windowStore.unregisterWindow(effectiveWindowId.value);
-        // 如果还有其他打开的视图，聚焦到第一个可用的
         const otherView = Array.from(windowStore.openWindows.values()).find(
             (win) =>
                 win.windowType === 'view' &&
@@ -170,15 +194,13 @@ watch(
 
         await nextTick();
 
-        const messageElement = messageListContainer.value?.querySelector(
-            `[data-message-id="${target.messageId}"]`,
-        );
-
-        if (messageElement instanceof HTMLElement) {
-            messageElement.scrollIntoView({
-                block: 'center',
-                behavior: 'smooth',
-            });
+        if (scrollerRef.value && messages.value.length > 0) {
+            const index = messages.value.findIndex(
+                (m) => m.messageId === target.messageId,
+            );
+            if (index !== -1) {
+                scrollerRef.value.scrollToItem(index);
+            }
         }
 
         windowStore.clearPendingMessageReveal();
@@ -283,10 +305,17 @@ function handleActionDelete(msgId: string) {
 <style scoped>
 .message-list-container {
     flex: 1;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* 让子元素 scroller 去处理 y 轴滚动 */
     padding: 0px 0px;
     position: relative;
     background-color: var(--bg-workspace);
+}
+
+.scroller {
+    flex: 1;
+    height: 100%;
 }
 
 .message-slot {

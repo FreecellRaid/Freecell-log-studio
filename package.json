@@ -14,7 +14,8 @@
         "@lucide/vue": "^1.7.0",
         "docx": "^9.6.1",
         "pinia": "^3.0.4",
-        "vue": "^3.5.30"
+        "vue": "^3.5.30",
+        "vue-virtual-scroller": "^2.0.1"
     },
     "devDependencies": {
         "@types/node": "^24.12.2",
