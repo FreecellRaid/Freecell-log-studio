@@ -196,9 +196,7 @@ watch(
 <style scoped>
 .message-item {
     padding: 10px 20px;
-    border: 1px solid transparent;
     background-color: var(--bg-workspace);
-    transition: all 0.2s ease;
     cursor: pointer;
     position: relative;
 }
@@ -209,7 +207,8 @@ watch(
 }
 
 .message-item:hover {
-    border-color: var(--active-accent);
+    outline: 1px solid var(--active-accent);
+    outline-offset: -1px;
 }
 
 .message-item.is-selected.is-active {
