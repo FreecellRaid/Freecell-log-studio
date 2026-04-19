@@ -248,11 +248,11 @@ function updateField(
 }
 
 .inspector-content {
-    /*为了给滚动条留空间，保证对齐*/
     margin-left: 10px;
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    scrollbar-gutter: stable;
     padding: 12px 0px;
 }
 
@@ -261,6 +261,7 @@ function updateField(
     border: 1px solid var(--border-color);
     margin-bottom: 16px;
     background-color: var(--bg-workspace);
+    box-sizing: border-box;
 }
 
 .card-header {
@@ -274,7 +275,7 @@ function updateField(
 .property-grid {
     padding: 10px;
     display: grid;
-    grid-template-columns: 115px 115px;
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
 }
 
