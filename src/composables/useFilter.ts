@@ -5,7 +5,7 @@ import { useLogStore } from '@/stores/logStore';
 import { useWindowStore } from '@/stores/windowStore';
 import { useSelectionStore } from '@/stores/selectionStore';
 
-// 这个文件是一个历史遗留问题，它只有10行是filter，剩下的都是选择管理器。
+// 这个文件名是一个历史遗留问题，它只有10行是filter，实际上是数据/选择/窗口的胶水层
 // 它和fiter.ts的关系类似于java与javascript的关系
 // 也许正确的名字应该叫 useActiveSelection.ts
 // 暂时不改这里的接口，后面再单独分离

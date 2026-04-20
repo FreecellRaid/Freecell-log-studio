@@ -27,7 +27,7 @@ function mapCssToExportStyle(css: CSSProperties): ExportStyle {
 
 /**
  * 核心转换函数：将嵌套的文档结构展平为线性的导出行
- * * @param documents 原始文档数组
+ * @param documents 原始文档数组
  * @param viewSettings 当前的视图过滤设置
  * @param activeRules 当前启用的染色规则
  */
