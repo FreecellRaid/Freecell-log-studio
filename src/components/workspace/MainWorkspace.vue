@@ -62,7 +62,7 @@
 import { computed, ref } from 'vue';
 import { useLogStore } from '@/stores/logStore';
 import { useWindowStore } from '@/stores/windowStore';
-import type { WindowInstance, WindowName } from '@/types/layout';
+import type { WindowInstance, WindowName } from '@/types/window';
 import FileImporter from '@/components/common/FileImporter.vue';
 import ChunkView from './ChunkView.vue';
 import ExportPreview from './ExportPreview.vue';

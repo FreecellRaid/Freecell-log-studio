@@ -6,7 +6,7 @@ import type {
     WindowInstance,
     SplitMode,
     SplitDirection,
-} from '@/types/layout';
+} from '@/types/window';
 import { generateId } from '@/utils/id';
 
 function windowStore() {

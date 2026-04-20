@@ -17,8 +17,7 @@ export function dispatchAdapter(text: string): ImportAdapter {
             bestAdapter = adapter;
         }
     }
-    // 如果所有 adapter 得分都小于 10
-    if (maxScore < 10) {
+    if (maxScore < 20) {
         throw new Error('无法识别该文件的格式，暂不支持导入。');
     }
 
