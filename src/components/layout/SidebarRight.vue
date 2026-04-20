@@ -20,7 +20,7 @@
                     v-for="message in chunk.messages"
                     :key="message.messageId"
                     v-show="
-                        filterTool.selectedMessageIds.value.has(
+                        activeContext.selectedMessageIds.value.has(
                             message.messageId,
                         )
                     "
@@ -184,12 +184,12 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useFilter } from '@/composables/useFilter';
+import { useActiveContext } from '@/composables/useActiveContext';
 import { useLogStore } from '@/stores/logStore';
 import { useMessageEditorStore } from '@/stores/editorStore/messageStore';
 import { formatDate } from '@/utils/date';
 
-const filterTool = useFilter();
+const activeContext = useActiveContext();
 const logStore = useLogStore();
 const messageEditorStore = useMessageEditorStore();
 const allChunks = computed(() => logStore.allChunks);
@@ -197,7 +197,9 @@ const allChunks = computed(() => logStore.allChunks);
 // updateMessage 需要 chunkId 才能准确定位
 const selectedItems = computed(() => {
     return logStore.allMessages
-        .filter((msg) => filterTool.selectedMessageIds.value.has(msg.messageId))
+        .filter((msg) =>
+            activeContext.selectedMessageIds.value.has(msg.messageId),
+        )
         .map((msg) => ({
             message: { ...msg },
             chunkId: msg.chunkId,
@@ -205,7 +207,7 @@ const selectedItems = computed(() => {
 });
 
 const selectedMessageCount = computed(
-    () => filterTool.selectedMessageIds.value.size,
+    () => activeContext.selectedMessageIds.value.size,
 );
 
 function updateField(

@@ -68,7 +68,7 @@
                                 :chunk-id="currentChunkId"
                                 :index="index"
                                 :is-selected="
-                                    filterTool.selectedMessageIds.value.has(
+                                    activeContext.selectedMessageIds.value.has(
                                         msg.messageId,
                                     )
                                 "
@@ -111,7 +111,7 @@ import { computed, nextTick, ref, watch } from 'vue';
 import { useLogStore } from '@/stores/logStore';
 import { useUiStore } from '@/stores/uiStore';
 import { useStyleStore } from '@/stores/styleStore';
-import { useFilter } from '@/composables/useFilter';
+import { useActiveContext } from '@/composables/useActiveContext';
 import { useMessageDragDrop } from '@/composables/useDragDrop';
 import MessageItem from '@/components/common/MessageItem.vue';
 import { useMessageEditorStore } from '@/stores/editorStore/messageStore';
@@ -128,7 +128,7 @@ const props = defineProps<{
 }>();
 const effectiveWindowId = computed(() => props.windowId);
 const currentChunkId = computed(() => props.originalId);
-const filterTool = useFilter(effectiveWindowId.value);
+const activeContext = useActiveContext(effectiveWindowId.value);
 const dragDropTool = useMessageDragDrop();
 const dropIndicatorIndex = ref<number | null>(null);
 const uiStore = useUiStore();
@@ -298,14 +298,14 @@ function handleActionInsert(msg: Message, index: number) {
 }
 
 function handleActionMerge(msg: Message) {
-    const selectedIds = filterTool.selectedMessageIds.value;
+    const selectedIds = activeContext.selectedMessageIds.value;
     if (selectedIds.has(msg.messageId) && selectedIds.size > 1) {
         messageEditorStore.mergeMessages(
             currentChunkId.value,
             Array.from(selectedIds),
             msg.messageId,
         );
-        filterTool.clearMessageSelection();
+        activeContext.clearMessageSelection();
     } else {
         messageEditorStore.mergeWithNextMessage(
             currentChunkId.value,
@@ -319,10 +319,10 @@ function handleActionSplit(msgId: string) {
 }
 
 function handleActionDelete(msgId: string) {
-    const selectedIds = filterTool.selectedMessageIds.value;
+    const selectedIds = activeContext.selectedMessageIds.value;
     if (selectedIds.has(msgId)) {
         messageEditorStore.batchDeleteMessages(selectedIds);
-        filterTool.clearMessageSelection();
+        activeContext.clearMessageSelection();
     } else {
         messageEditorStore.deleteMessage(currentChunkId.value, msgId);
     }

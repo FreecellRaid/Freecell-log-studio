@@ -184,7 +184,7 @@ import { useStyleStore } from '@/stores/styleStore';
 import { useClipboardStore } from '@/stores/clipboardStore';
 import { useHistoryStore } from '@/stores/historyStore';
 import { useWindowStore } from '@/stores/windowStore';
-import { useFilter } from '@/composables/useFilter';
+import { useActiveContext } from '@/composables/useActiveContext';
 import { useFileImport } from '@/composables/useImporter';
 import { useProjectManager } from '@/composables/useProjectManager';
 import { useExport } from '@/composables/useExporter';
@@ -199,7 +199,7 @@ const clipboardStore = useClipboardStore();
 const historyStore = useHistoryStore();
 const windowStore = useWindowStore();
 
-const filterTool = useFilter();
+const activeContext = useActiveContext();
 const { importAndApply } = useFileImport();
 const { exportAsText, exportAsHtml, exportAsDoc, exportAsDocx } = useExport();
 const projectManager = useProjectManager();
@@ -233,7 +233,7 @@ const hasWorkspaceState = computed(() => {
         logStore.documents.length > 0 ||
         styleStore.rules.length > 0 ||
         clipboardStore.copiedMessages.length > 0 ||
-        filterTool.hasSelection.value ||
+        activeContext.hasSelection.value ||
         historyStore.undoStack.length > 0 ||
         historyStore.redoStack.length > 0
     );
@@ -373,7 +373,7 @@ function handleClearAll() {
     logStore.clearData();
     styleStore.clearRules();
     clipboardStore.clearClipboard();
-    filterTool.clearSelection();
+    activeContext.clearSelection();
     historyStore.clearHistory();
     windowStore.setFocus('default');
 }

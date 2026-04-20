@@ -214,11 +214,11 @@
                         <label>
                             选区快捷绑定
                             <span
-                                v-if="activeSelection.hasSelection"
+                                v-if="activeContext.hasSelection"
                                 class="inline-hint"
                             >
                                 已选
-                                {{ activeSelection.selectedMessagesCount }} 条
+                                {{ activeContext.selectedMessagesCount }} 条
                             </span>
                         </label>
                         <div class="form-row two-col">
@@ -257,7 +257,7 @@ import { ChevronRight, Eye, EyeOff, Plus, Trash2 } from '@lucide/vue';
 import { ref, computed } from 'vue';
 import { useStyleStore } from '@/stores/styleStore';
 import { useLogStore } from '@/stores/logStore';
-import { useFilter } from '@/composables/useFilter';
+import { useActiveContext } from '@/composables/useActiveContext';
 import type { ColorRule } from '@/types/config';
 import type { MessageFilter } from '@/types/log';
 import { matchesMessageFilter } from '@/editor/filter';
@@ -270,7 +270,7 @@ const activeViewId = computed(() => {
     const view = windowStore.currentActiveView;
     return view.originalId || view.windowId;
 });
-const activeSelection = useFilter(activeViewId.value);
+const activeContext = useActiveContext(activeViewId.value);
 const expandedRules = ref<Set<string>>(new Set());
 
 function toggleExpand(ruleId: string) {
@@ -360,7 +360,7 @@ function getAffectedMessageCount(rule: ColorRule) {
 }
 
 function bindSelectedIds(rule: ColorRule) {
-    const selectedMsgs = activeSelection.selectedMessages.value;
+    const selectedMsgs = activeContext.selectedMessages.value;
     if (selectedMsgs.length === 0) return;
 
     const targetIds = selectedMsgs.map((m) => m.messageId);

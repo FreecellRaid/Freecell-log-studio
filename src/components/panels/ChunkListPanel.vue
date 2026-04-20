@@ -113,7 +113,7 @@
                                     chunk.chunkId,
                                 // 选中判断
                                 'is-selected':
-                                    filterTool.selectedChunkIds.value.has(
+                                    activeContext.selectedChunkIds.value.has(
                                         chunk.chunkId,
                                     ),
                             }"
@@ -215,14 +215,14 @@ import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
 import { useWindowStore } from '@/stores/windowStore';
 import type { Chunk, LogDocument } from '@/types/log';
-import { useFilter } from '@/composables/useFilter';
+import { useActiveContext } from '@/composables/useActiveContext';
 
 const logStore = useLogStore();
 const styleStore = useStyleStore();
 const windowStore = useWindowStore();
 const chunkEditorStore = useChunkEditorStore();
 const chunkDrag = useChunkDragDrop();
-const filterTool = useFilter('chunkList');
+const activeContext = useActiveContext('chunkList');
 
 const editingDocId = ref('');
 const editingChunkId = ref('');
@@ -334,7 +334,7 @@ function handleMerge(currentChunkId: string, nextChunkId: string) {
 }
 
 function handleChunkSelect(chunkId: string, event: MouseEvent) {
-    filterTool.handleChunkClickSelection(event, chunkId);
+    activeContext.handleChunkClickSelection(event, chunkId);
 
     if (!event.ctrlKey && !event.metaKey && !event.shiftKey) {
         if (windowStore.isInSplitMode()) {
@@ -359,7 +359,7 @@ function handleChunkSelect(chunkId: string, event: MouseEvent) {
 }
 
 function handleDelete(chunkId: string) {
-    const { selectedChunkIds, clearSelection } = filterTool;
+    const { selectedChunkIds, clearSelection } = activeContext;
 
     const targets = selectedChunkIds.value.has(chunkId)
         ? Array.from(selectedChunkIds.value)

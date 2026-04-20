@@ -170,7 +170,7 @@
                             class="result-item"
                             :class="{
                                 'is-selected':
-                                    filterStore.selectedMessageIds.value.has(
+                                    activeContext.selectedMessageIds.value.has(
                                         msg.messageId,
                                     ),
                                 'is-active':
@@ -201,7 +201,7 @@
 <script setup lang="ts">
 import { FunnelIcon, FunnelXIcon, RefreshCcw } from '@lucide/vue';
 import { computed } from 'vue';
-import { useFilter } from '@/composables/useFilter';
+import { useActiveContext } from '@/composables/useActiveContext';
 import type { Message } from '@/types/log';
 import { formatDate } from '@/utils/date';
 import { useCommandDispatcher } from '@/composables/useCommandDispatcher';
@@ -211,7 +211,7 @@ import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 
 const windowStore = useWindowStore();
-const filterStore = useFilter('search');
+const activeContext = useActiveContext('search');
 const searchStore = useSearchStore();
 const { dispatch } = useCommandDispatcher();
 
@@ -228,7 +228,7 @@ const isCommandFilterValue = computed<string>({
     },
 });
 const jumpTarget = computed<Message | null>(() => {
-    const selectedIds = filterStore.selectedMessageIds.value;
+    const selectedIds = activeContext.selectedMessageIds.value;
     const selectedTarget = searchStore.searchResults.find((msg) =>
         selectedIds.has(msg.messageId),
     );

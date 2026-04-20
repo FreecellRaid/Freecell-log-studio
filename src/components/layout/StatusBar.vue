@@ -78,13 +78,13 @@ import { computed } from 'vue';
 import { useLogStore } from '@/stores/logStore';
 import { useWindowStore } from '@/stores/windowStore';
 import { useStyleStore } from '@/stores/styleStore';
-import { useFilter } from '@/composables/useFilter';
+import { useActiveContext } from '@/composables/useActiveContext';
 import { matchesMessageFilter } from '@/editor/filter';
 
 const logStore = useLogStore();
 const windowStore = useWindowStore();
 const styleStore = useStyleStore();
-const filterTool = useFilter();
+const activeContext = useActiveContext();
 
 const activeChunk = computed(function () {
     if (
@@ -136,11 +136,11 @@ const currentDocumentName = computed(function () {
 });
 
 const selectedCount = computed(function () {
-    return filterTool.selectedMessagesCount.value;
+    return activeContext.selectedMessagesCount.value;
 });
 
 const selectedCustomRuleCount = computed(function () {
-    const selectedMessages = filterTool.selectedMessages.value;
+    const selectedMessages = activeContext.selectedMessages.value;
     const customRules = styleStore.customRules;
 
     if (selectedMessages.length === 0 || customRules.length === 0) {
@@ -162,12 +162,12 @@ const selectedCustomRuleCount = computed(function () {
 });
 
 const currentSelectedIndex = computed<number | null>(function () {
-    if (filterTool.selectedMessageIds.value.size === 0) {
+    if (activeContext.selectedMessageIds.value.size === 0) {
         return null;
     }
 
-    if (activeChunk.value && filterTool.lastSelectedMessageId.value) {
-        const targetId = filterTool.lastSelectedMessageId.value;
+    if (activeChunk.value && activeContext.lastSelectedMessageId.value) {
+        const targetId = activeContext.lastSelectedMessageId.value;
         const msg = activeChunk.value.messages.find(function (message) {
             return message.messageId === targetId;
         });

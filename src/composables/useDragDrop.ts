@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue';
 import { useChunkEditorStore } from '@/stores/editorStore/chunkStore';
 import { useMessageEditorStore } from '@/stores/editorStore/messageStore';
-import { useFilter } from './useFilter';
+import { useActiveContext } from './useActiveContext';
 
 //消息拖拽逻辑
 //变为全局状态，确保跨组件拖拽时状态一致
@@ -14,7 +14,7 @@ const globalDraggedChunk = ref<string | null>(null);
 
 export function useMessageDragDrop() {
     const messageEditorStore = useMessageEditorStore();
-    const filter = useFilter();
+    const activeContext = useActiveContext();
 
     function onDragOver(event: DragEvent) {
         event.preventDefault();
@@ -25,8 +25,8 @@ export function useMessageDragDrop() {
 
     function onDragStart(event: DragEvent, messageId: string, chunkId: string) {
         let idsToMove = [messageId];
-        if (filter.selectedMessageIds.value.has(messageId)) {
-            idsToMove = Array.from(filter.selectedMessageIds.value);
+        if (activeContext.selectedMessageIds.value.has(messageId)) {
+            idsToMove = Array.from(activeContext.selectedMessageIds.value);
         }
 
         globalDraggedMessage.value = {

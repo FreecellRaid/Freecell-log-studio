@@ -5,7 +5,7 @@ import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
 import { useWindowStore } from '@/stores/windowStore';
 import type { ProjectFile } from '@/types/project';
-import { useFilter } from './useFilter';
+import { useActiveContext } from './useActiveContext';
 import {
     buildProjectFile,
     sanitizeProjectFilename,
@@ -37,14 +37,14 @@ export function useProjectManager() {
     const clipboardStore = useClipboardStore();
     const historyStore = useHistoryStore();
     const windowStore = useWindowStore();
-    const filterTool = useFilter();
+    const activeContext = useActiveContext();
 
     const hasWorkspaceState = computed(() => {
         return (
             logStore.documents.length > 0 ||
             styleStore.rules.length > 0 ||
             clipboardStore.copiedMessages.length > 0 ||
-            filterTool.hasSelection.value ||
+            activeContext.hasSelection.value ||
             historyStore.undoStack.length > 0 ||
             historyStore.redoStack.length > 0
         );
@@ -91,7 +91,7 @@ export function useProjectManager() {
         styleStore.replaceRules(project.colorRules);
         styleStore.replaceViewSettings(project.viewSettings);
         clipboardStore.clearClipboard();
-        filterTool.clearSelection();
+        activeContext.clearSelection();
         historyStore.clearHistory();
         windowStore.focusStack = [];
 

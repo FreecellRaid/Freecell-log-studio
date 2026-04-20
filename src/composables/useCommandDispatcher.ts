@@ -1,5 +1,5 @@
 import { useWindowStore } from '@/stores/windowStore';
-import { useFilter } from '@/composables/useFilter';
+import { useActiveContext } from '@/composables/useActiveContext';
 import { useHistoryStore } from '@/stores/historyStore';
 import { useClipboardStore } from '@/stores/clipboardStore';
 import { useMessageEditorStore } from '@/stores/editorStore/messageStore';
@@ -36,7 +36,7 @@ export type CommandType =
 
 export function useCommandDispatcher() {
     const windowStore = useWindowStore();
-    const filter = useFilter();
+    const activeContext = useActiveContext();
     const history = useHistoryStore();
     const clipboard = useClipboardStore();
     const messageEditor = useMessageEditorStore();
@@ -99,24 +99,24 @@ export function useCommandDispatcher() {
         const messages = chunk?.messages || [];
         if (cmd === 'select' && payload) {
             const { event, msgId, messages } = payload;
-            filter.handleMessageClickSelection(event, msgId, messages);
+            activeContext.handleMessageClickSelection(event, msgId, messages);
             return;
         }
         if (cmd === 'selectAll') {
-            filter.selectAllInChunk(chunkId);
+            activeContext.selectAllInChunk(chunkId);
         }
         if (cmd === 'cancel') {
-            filter.clearMessageSelection();
+            activeContext.clearMessageSelection();
         }
         if (cmd === 'delete') {
-            const selectedIds = filter.selectedMessageIds.value;
+            const selectedIds = activeContext.selectedMessageIds.value;
             if (selectedIds.size > 0) {
                 messageEditor.batchDeleteMessages(selectedIds);
-                filter.clearMessageSelection();
+                activeContext.clearMessageSelection();
             }
         }
         if (cmd === 'copy') {
-            const selected = filter.selectedMessages.value;
+            const selected = activeContext.selectedMessages.value;
             if (selected.length > 0) clipboard.copyMessages(selected);
         }
         if (cmd === 'paste') {
@@ -127,7 +127,7 @@ export function useCommandDispatcher() {
             const chunk = logStore.findChunkById(chunkId);
             if (!chunk) return;
 
-            const selectedIds = filter.selectedMessageIds.value;
+            const selectedIds = activeContext.selectedMessageIds.value;
             let insertIndex = chunk.messages.length;
 
             if (selectedIds.size > 0) {
@@ -142,27 +142,29 @@ export function useCommandDispatcher() {
                 }
             }
             messageEditor.insertMessages(chunkId, pasteData, insertIndex);
-            filter.clearMessageSelection();
-            filter.setMessagesSelection(pasteData.map((m) => m.messageId));
+            activeContext.clearMessageSelection();
+            activeContext.setMessagesSelection(
+                pasteData.map((m) => m.messageId),
+            );
         }
         if (cmd === 'toggleOoc') {
-            const selectedIds = filter.selectedMessageIds.value;
+            const selectedIds = activeContext.selectedMessageIds.value;
             if (selectedIds.size > 0) messageEditor.toggleOoc(selectedIds);
         }
 
         if (cmd === 'toggleCommand') {
-            const selectedIds = filter.selectedMessageIds.value;
+            const selectedIds = activeContext.selectedMessageIds.value;
             if (selectedIds.size > 0) messageEditor.toggleCommand(selectedIds);
         }
         if (cmd === 'merge') {
-            const selectedIds = filter.selectedMessageIds.value;
+            const selectedIds = activeContext.selectedMessageIds.value;
             if (selectedIds.size > 1) {
                 messageEditor.mergeMessages(
                     chunkId,
                     Array.from(selectedIds),
                     Array.from(selectedIds)[0],
                 );
-                filter.clearMessageSelection();
+                activeContext.clearMessageSelection();
             } else {
                 messageEditor.mergeWithNextMessage(
                     chunkId,
@@ -199,7 +201,7 @@ export function useCommandDispatcher() {
     }
 
     function handleChunkListCommands(cmd: string) {
-        const chunkListFilter = useFilter('chunkList');
+        const chunkListFilter = useActiveContext('chunkList');
         const allChunks = logStore.allChunks;
         if (cmd === 'selectAll') {
             chunkListFilter.selectAllChunks();
@@ -296,7 +298,7 @@ export function useCommandDispatcher() {
     }
 
     function handleSearchCommands(cmd: CommandType, payload?: any) {
-        const searchFilter = useFilter('search');
+        const searchFilter = useActiveContext('search');
         if (cmd === 'select') {
             if (payload?.msgId && payload?.messages) {
                 searchFilter.handleMessageClickSelection(
