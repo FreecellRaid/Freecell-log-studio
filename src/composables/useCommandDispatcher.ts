@@ -2,8 +2,7 @@ import { useWindowStore } from '@/stores/windowStore';
 import { useActiveContext } from '@/composables/useActiveContext';
 import { useHistoryStore } from '@/stores/historyStore';
 import { useClipboardStore } from '@/stores/clipboardStore';
-import { useMessageEditorStore } from '@/stores/editorStore/messageStore';
-import { useChunkEditorStore } from '@/stores/editorStore/chunkStore';
+import { useLogEditorStore } from '@/stores/editorStore';
 import { useLogStore } from '@/stores/logStore';
 import { useExportStore } from '@/stores/exportStore';
 import { useSelectionStore } from '@/stores/selectionStore';
@@ -39,8 +38,7 @@ export function useCommandDispatcher() {
     const activeContext = useActiveContext();
     const history = useHistoryStore();
     const clipboard = useClipboardStore();
-    const messageEditor = useMessageEditorStore();
-    const chunkEditor = useChunkEditorStore();
+    const logEditor = useLogEditorStore();
     const logStore = useLogStore();
     const selectionStore = useSelectionStore();
     const projectManager = useProjectManager();
@@ -111,7 +109,7 @@ export function useCommandDispatcher() {
         if (cmd === 'delete') {
             const selectedIds = activeContext.selectedMessageIds.value;
             if (selectedIds.size > 0) {
-                messageEditor.batchDeleteMessages(selectedIds);
+                logEditor.batchDeleteMessages(selectedIds);
                 activeContext.clearMessageSelection();
             }
         }
@@ -141,7 +139,7 @@ export function useCommandDispatcher() {
                     insertIndex = maxIdxInChunk + 1;
                 }
             }
-            messageEditor.insertMessages(chunkId, pasteData, insertIndex);
+            logEditor.insertMessages(chunkId, pasteData, insertIndex);
             activeContext.clearMessageSelection();
             activeContext.setMessagesSelection(
                 pasteData.map((m) => m.messageId),
@@ -149,24 +147,24 @@ export function useCommandDispatcher() {
         }
         if (cmd === 'toggleOoc') {
             const selectedIds = activeContext.selectedMessageIds.value;
-            if (selectedIds.size > 0) messageEditor.toggleOoc(selectedIds);
+            if (selectedIds.size > 0) logEditor.toggleOoc(selectedIds);
         }
 
         if (cmd === 'toggleCommand') {
             const selectedIds = activeContext.selectedMessageIds.value;
-            if (selectedIds.size > 0) messageEditor.toggleCommand(selectedIds);
+            if (selectedIds.size > 0) logEditor.toggleCommand(selectedIds);
         }
         if (cmd === 'merge') {
             const selectedIds = activeContext.selectedMessageIds.value;
             if (selectedIds.size > 1) {
-                messageEditor.mergeMessages(
+                logEditor.mergeMessages(
                     chunkId,
                     Array.from(selectedIds),
                     Array.from(selectedIds)[0],
                 );
                 activeContext.clearMessageSelection();
             } else {
-                messageEditor.mergeWithNextMessage(
+                logEditor.mergeWithNextMessage(
                     chunkId,
                     Array.from(selectedIds)[0],
                 );
@@ -215,7 +213,7 @@ export function useCommandDispatcher() {
             );
             if (selectedIds.length > 0) {
                 selectedIds.forEach((chunkId) => {
-                    chunkEditor.deleteChunk(chunkId);
+                    logEditor.deleteChunk(chunkId);
                 });
                 chunkListFilter.clearChunkSelection();
             }
@@ -261,7 +259,7 @@ export function useCommandDispatcher() {
                 }
             }
             if (targetDocId) {
-                chunkEditor.insertChunks(targetDocId, pasteChunks, insertIndex);
+                logEditor.insertChunks(targetDocId, pasteChunks, insertIndex);
                 chunkListFilter.setChunkSelection(
                     pasteChunks.map((c) => c.chunkId),
                 );
@@ -272,11 +270,11 @@ export function useCommandDispatcher() {
                 chunkListFilter.selectedChunkIds.value,
             );
             if (selectedIds.length > 1) {
-                chunkEditor.mergeChunks(selectedIds);
+                logEditor.mergeChunks(selectedIds);
                 chunkListFilter.clearChunkSelection();
                 chunkListFilter.setChunkSelection([selectedIds[0]]);
             } else if (selectedIds.length === 1) {
-                chunkEditor.mergeWithNextChunk(selectedIds[0]);
+                logEditor.mergeWithNextChunk(selectedIds[0]);
             }
         }
         if (cmd === 'selectNext') {
@@ -350,7 +348,7 @@ export function useCommandDispatcher() {
         if (cmd === 'delete') {
             const selectedIds = searchFilter.selectedMessageIds.value;
             if (selectedIds.size > 0) {
-                messageEditor.batchDeleteMessages(selectedIds);
+                logEditor.batchDeleteMessages(selectedIds);
                 searchFilter.clearMessageSelection();
             }
         }
@@ -361,13 +359,13 @@ export function useCommandDispatcher() {
         }
         if (cmd === 'toggleOoc') {
             const selectedIds = searchFilter.selectedMessageIds.value;
-            messageEditor.toggleOoc(selectedIds);
+            logEditor.toggleOoc(selectedIds);
             return;
         }
 
         if (cmd === 'toggleCommand') {
             const selectedIds = searchFilter.selectedMessageIds.value;
-            messageEditor.toggleCommand(selectedIds);
+            logEditor.toggleCommand(selectedIds);
             return;
         }
     }

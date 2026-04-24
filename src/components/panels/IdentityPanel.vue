@@ -112,7 +112,7 @@ import { useStyleStore } from '@/stores/styleStore';
 import { useLogStore } from '@/stores/logStore';
 import { useUiStore, PANEL_MAX_WIDTH } from '@/stores/uiStore';
 import { useHistoryStore } from '@/stores/historyStore';
-import { useMessageEditorStore } from '@/stores/editorStore/messageStore';
+import { useLogEditorStore } from '@/stores/editorStore';
 import type { RoleType } from '@/types/log';
 import type { ColorMode, ColorRule } from '@/types/config';
 import { useWindowStore } from '@/stores/windowStore';
@@ -133,7 +133,7 @@ const styleStore = useStyleStore();
 const logStore = useLogStore();
 const uiStore = useUiStore();
 const historyStore = useHistoryStore();
-const messageEditorStore = useMessageEditorStore();
+const logEditorStore = useLogEditorStore();
 const windowStore = useWindowStore();
 const localDisplayMode = ref<ColorMode>(styleStore.viewSettings.colorMode);
 const editingId = ref<string | null>(null);
@@ -191,7 +191,7 @@ function saveRename(oldVal: string) {
     if (sourceIds.size > 0) {
         historyStore.captureSnapshot();
         historyStore.runWithoutCapture(() => {
-            messageEditorStore.batchUpdateMessages(
+            logEditorStore.batchUpdateMessages(
                 sourceIds,
                 buildRenameUpdate(mode, newVal),
             );
@@ -205,7 +205,7 @@ function saveRename(oldVal: string) {
                     ...sourceIds,
                     ...existingTargetIds,
                 ]);
-                messageEditorStore.batchUpdateMessages(mergedIds, {
+                logEditorStore.batchUpdateMessages(mergedIds, {
                     role: mergedRole,
                 });
             }
@@ -217,7 +217,7 @@ function saveRename(oldVal: string) {
 function updateRole(id: string, newRole: RoleType) {
     const targetIds = getMessageIdsForIdentity(id);
     if (targetIds.size > 0) {
-        messageEditorStore.batchUpdateMessages(targetIds, { role: newRole });
+        logEditorStore.batchUpdateMessages(targetIds, { role: newRole });
     }
 }
 

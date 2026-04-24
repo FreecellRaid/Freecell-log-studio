@@ -205,7 +205,7 @@
 import { ChevronRight, ChevronsDown, Trash2 } from '@lucide/vue';
 import { nextTick, reactive, ref, watch } from 'vue';
 import { useChunkDragDrop } from '@/composables/useDragDrop';
-import { useChunkEditorStore } from '@/stores/editorStore/chunkStore';
+import { useLogEditorStore } from '@/stores/editorStore';
 import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
 import { useWindowStore } from '@/stores/windowStore';
@@ -215,7 +215,7 @@ import { useActiveContext } from '@/composables/useActiveContext';
 const logStore = useLogStore();
 const styleStore = useStyleStore();
 const windowStore = useWindowStore();
-const chunkEditorStore = useChunkEditorStore();
+const logEditorStore = useLogEditorStore();
 const chunkDrag = useChunkDragDrop();
 const activeContext = useActiveContext('chunkList');
 
@@ -308,7 +308,7 @@ function submitDocumentRename(doc: LogDocument) {
         return;
     }
 
-    chunkEditorStore.renameDocument(doc.docId, nextName);
+    logEditorStore.renameDocument(doc.docId, nextName);
     cancelRename();
 }
 
@@ -321,13 +321,13 @@ function submitChunkRename(chunk: Chunk) {
         return;
     }
 
-    chunkEditorStore.updateChunk(chunk.chunkId, { chunkName: nextName });
+    logEditorStore.updateChunk(chunk.chunkId, { chunkName: nextName });
     cancelRename();
 }
 
 function handleMerge(currentChunkId: string, nextChunkId: string) {
     withScrollAnchor(() => {
-        chunkEditorStore.mergeChunks([currentChunkId, nextChunkId]);
+        logEditorStore.mergeChunks([currentChunkId, nextChunkId]);
     });
 }
 
@@ -362,7 +362,7 @@ function handleDelete(chunkId: string) {
         )
     ) {
         targets.forEach((id) => {
-            chunkEditorStore.deleteChunk(id);
+            logEditorStore.deleteChunk(id);
             if (windowStore.isWindowOpen(id)) {
                 windowStore.unregisterWindow(id);
             }

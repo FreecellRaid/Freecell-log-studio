@@ -186,12 +186,12 @@
 import { computed } from 'vue';
 import { useActiveContext } from '@/composables/useActiveContext';
 import { useLogStore } from '@/stores/logStore';
-import { useMessageEditorStore } from '@/stores/editorStore/messageStore';
+import { useLogEditorStore } from '@/stores/editorStore';
 import { formatDate } from '@/utils/date';
 
 const activeContext = useActiveContext();
 const logStore = useLogStore();
-const messageEditorStore = useMessageEditorStore();
+const logEditorStore = useLogEditorStore();
 const allChunks = computed(() => logStore.allChunks);
 
 // updateMessage 需要 chunkId 才能准确定位
@@ -231,7 +231,7 @@ function updateField(
         value = target.value;
     }
 
-    messageEditorStore.updateMessage(chunkId, messageId, {
+    logEditorStore.updateMessage(chunkId, messageId, {
         [field]: value,
     });
 }

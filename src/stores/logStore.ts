@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { LogDocument } from '@/types/log';
+import type { Chunk, LogDocument } from '@/types/log';
 import { useHistoryStore } from './historyStore';
 import { generateId } from '@/utils/id';
 import { deriveDefaultProjectName } from '@/io/localStorage/project';
@@ -13,19 +13,29 @@ export function newlogStore() {
     const projectTime = ref<string>('');
     const isProjectNameCustomized = ref<boolean>(false);
 
+    function normalizeMessages(chunk: Chunk) {
+        chunk.messages.forEach((message, messageIndex) => {
+            message.chunkId = chunk.chunkId;
+            message.messageIndex = messageIndex;
+        });
+    }
+
+    function normalizeChunk(chunk: Chunk, docId: string, chunkIndex: number) {
+        chunk.docId = docId;
+        chunk.chunkIndex = chunkIndex;
+        normalizeMessages(chunk);
+    }
+
+    function normalizeDocument(doc: LogDocument, docIndex: number = doc.docIndex) {
+        doc.docIndex = docIndex;
+        doc.chunks.forEach((chunk, chunkIndex) => {
+            normalizeChunk(chunk, doc.docId, chunkIndex);
+        });
+    }
+
     function normalizeDocuments(targetDocs: LogDocument[]) {
         targetDocs.forEach((doc, docIndex) => {
-            doc.docIndex = docIndex;
-
-            doc.chunks.forEach((chunk, chunkIndex) => {
-                chunk.docId = doc.docId;
-                chunk.chunkIndex = chunkIndex;
-
-                chunk.messages.forEach((message, messageIndex) => {
-                    message.chunkId = chunk.chunkId;
-                    message.messageIndex = messageIndex;
-                });
-            });
+            normalizeDocument(doc, docIndex);
         });
     }
 
@@ -187,6 +197,11 @@ export function newlogStore() {
 
         findDocumentById,
         findChunkById,
+
+        normalizeDocuments,
+        normalizeDocument,
+        normalizeChunk,
+        normalizeMessages,
     };
 }
 

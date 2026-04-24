@@ -118,8 +118,7 @@ import { useStyleStore } from '@/stores/styleStore';
 import { useActiveContext } from '@/composables/useActiveContext';
 import { useMessageDragDrop } from '@/composables/useDragDrop';
 import MessageItem from '@/components/common/MessageItem.vue';
-import { useMessageEditorStore } from '@/stores/editorStore/messageStore';
-import { useChunkEditorStore } from '@/stores/editorStore/chunkStore';
+import { useLogEditorStore } from '@/stores/editorStore';
 import { useCommandDispatcher } from '@/composables/useCommandDispatcher';
 import { useWindowStore } from '@/stores/windowStore';
 import type { Message } from '@/types/log';
@@ -149,8 +148,7 @@ const logStore = useLogStore();
 const windowStore = useWindowStore();
 const editingMessageId = ref<string | null>(null);
 const editingContent = ref('');
-const messageEditorStore = useMessageEditorStore();
-const chunkEditorStore = useChunkEditorStore();
+const logEditorStore = useLogEditorStore();
 const { dispatch } = useCommandDispatcher();
 
 interface ScrollAnchor {
@@ -258,7 +256,9 @@ function handleSaveEdit(messageId: string) {
     withScrollAnchor(() => {
         const msg = messages.value.find((m) => m.messageId === messageId);
         if (msg && msg.content !== editingContent.value) {
-            msg.content = editingContent.value;
+            logEditorStore.updateMessage(currentChunkId.value, messageId, {
+                content: editingContent.value,
+            });
         }
         editingMessageId.value = null;
     });
@@ -314,21 +314,21 @@ function handleContainerDrop(event: DragEvent) {
 }
 
 function handleActionInsert(msg: Message, index: number) {
-    messageEditorStore.insertNewMessageAfter(currentChunkId.value, msg, index);
+    logEditorStore.insertNewMessageAfter(currentChunkId.value, msg, index);
 }
 
 function handleActionMerge(msg: Message) {
     withScrollAnchor(() => {
         const selectedIds = activeContext.selectedMessageIds.value;
         if (selectedIds.has(msg.messageId) && selectedIds.size > 1) {
-            messageEditorStore.mergeMessages(
+            logEditorStore.mergeMessages(
                 currentChunkId.value,
                 Array.from(selectedIds),
                 msg.messageId,
             );
             activeContext.clearMessageSelection();
         } else {
-            messageEditorStore.mergeWithNextMessage(
+            logEditorStore.mergeWithNextMessage(
                 currentChunkId.value,
                 msg.messageId,
             );
@@ -337,16 +337,16 @@ function handleActionMerge(msg: Message) {
 }
 
 function handleActionSplit(msgId: string) {
-    chunkEditorStore.splitChunk(currentChunkId.value, msgId);
+    logEditorStore.splitChunk(currentChunkId.value, msgId);
 }
 
 function handleActionDelete(msgId: string) {
     const selectedIds = activeContext.selectedMessageIds.value;
     if (selectedIds.has(msgId)) {
-        messageEditorStore.batchDeleteMessages(selectedIds);
+        logEditorStore.batchDeleteMessages(selectedIds);
         activeContext.clearMessageSelection();
     } else {
-        messageEditorStore.deleteMessage(currentChunkId.value, msgId);
+        logEditorStore.deleteMessage(currentChunkId.value, msgId);
     }
 }
 

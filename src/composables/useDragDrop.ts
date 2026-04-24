@@ -1,6 +1,5 @@
 import { computed, ref } from 'vue';
-import { useChunkEditorStore } from '@/stores/editorStore/chunkStore';
-import { useMessageEditorStore } from '@/stores/editorStore/messageStore';
+import { useLogEditorStore } from '@/stores/editorStore';
 import { useActiveContext } from './useActiveContext';
 
 //消息拖拽逻辑
@@ -13,7 +12,7 @@ const globalDraggedMessage = ref<DraggedMessageInfo | null>(null);
 const globalDraggedChunk = ref<string | null>(null);
 
 export function useMessageDragDrop() {
-    const messageEditorStore = useMessageEditorStore();
+    const logEditorStore = useLogEditorStore();
     const activeContext = useActiveContext();
 
     function onDragOver(event: DragEvent) {
@@ -50,7 +49,7 @@ export function useMessageDragDrop() {
 
         const { messageIds, sourceChunkId } = globalDraggedMessage.value;
 
-        messageEditorStore.moveMessages(
+        logEditorStore.moveMessages(
             messageIds,
             sourceChunkId,
             targetChunkId,
@@ -75,7 +74,7 @@ export function useMessageDragDrop() {
 
 //块拖拽
 export function useChunkDragDrop() {
-    const chunkEditorStore = useChunkEditorStore();
+    const logEditorStore = useLogEditorStore();
 
     function onDragStart(event: DragEvent, chunkId: string) {
         globalDraggedChunk.value = chunkId;
@@ -98,7 +97,7 @@ export function useChunkDragDrop() {
         const chunkId = globalDraggedChunk.value;
         if (!chunkId) return;
 
-        chunkEditorStore.moveChunk(chunkId, targetDocId, targetIndex);
+        logEditorStore.moveChunk(chunkId, targetDocId, targetIndex);
         globalDraggedChunk.value = null;
     }
 
