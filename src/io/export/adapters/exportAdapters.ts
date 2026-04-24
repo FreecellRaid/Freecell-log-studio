@@ -1,7 +1,68 @@
 import type { ExportRow, ExportFormat, ExportStyle } from '@/types/export';
 import { parseTemplate, getPlaceholderValue } from '../templateParser';
+import type { TemplateToken } from '../templateParser';
 
 // ===== TEXT ADAPTER =====
+
+function getMessageTokenStyle(
+    key: string,
+    row: ExportRow,
+): ExportStyle | undefined {
+    if (key === 'name') {
+        return row.nameStyle;
+    }
+
+    if (key === 'content') {
+        return row.contentStyle;
+    }
+
+    return undefined;
+}
+
+function splitContentSegments(value: string): string[] {
+    return value.split('\n');
+}
+
+function renderMessageTokens(
+    tokens: TemplateToken[],
+    row: ExportRow,
+    format: ExportFormat,
+    renderText: (value: string) => string,
+    renderTab: () => string,
+    renderNewline: () => string,
+    renderPlaceholder: (
+        value: string,
+        key: string,
+        style?: ExportStyle,
+    ) => string,
+): string {
+    return tokens
+        .map((token) => {
+            switch (token.type) {
+                case 'placeholder': {
+                    const value = getPlaceholderValue(token.value, row, format);
+                    const style = getMessageTokenStyle(token.value, row);
+
+                    if (token.value === 'content') {
+                        return splitContentSegments(value)
+                            .map((segment) =>
+                                renderPlaceholder(segment, token.value, style),
+                            )
+                            .join(renderNewline());
+                    }
+
+                    return renderPlaceholder(value, token.value, style);
+                }
+                case 'newline':
+                    return renderNewline();
+                case 'tab':
+                    return renderTab();
+                default:
+                    return renderText(token.value);
+            }
+        })
+        .join('');
+}
 
 export function textAdapter(rows: ExportRow[], format: ExportFormat): string {
     const msgTokens = parseTemplate(format.messageTemplate);
@@ -15,24 +76,15 @@ export function textAdapter(rows: ExportRow[], format: ExportFormat): string {
                 return format.chunkSeparator.replace('{{name}}', row.content);
             }
             if (row.type === 'message') {
-                return msgTokens
-                    .map((token) => {
-                        switch (token.type) {
-                            case 'placeholder':
-                                return getPlaceholderValue(
-                                    token.value,
-                                    row,
-                                    format,
-                                );
-                            case 'newline':
-                                return '\n';
-                            case 'tab':
-                                return '\t';
-                            default:
-                                return token.value;
-                        }
-                    })
-                    .join('');
+                return renderMessageTokens(
+                    msgTokens,
+                    row,
+                    format,
+                    (value) => value,
+                    () => '\t',
+                    () => '\n',
+                    (value) => value,
+                );
             }
             return '';
         })
@@ -80,32 +132,21 @@ export function htmlAdapter(rows: ExportRow[], format: ExportFormat): string {
                 return `<div class="chunk"><h4>${text}</h4></div>`;
             }
             if (row.type === 'message') {
-                const htmlContent = msgTokens
-                    .map((token) => {
-                        switch (token.type) {
-                            case 'placeholder':
-                                const val = getPlaceholderValue(
-                                    token.value,
-                                    row,
-                                    format,
-                                );
-                                const style =
-                                    token.value === 'content'
-                                        ? row.contentStyle
-                                        : row.nameStyle;
-                                const css = styleToCss(style);
-                                return css
-                                    ? `<span style="${css}">${escapeHtml(val)}</span>`
-                                    : escapeHtml(val);
-                            case 'newline':
-                                return '<br/>';
-                            case 'tab':
-                                return '&emsp;&emsp;';
-                            default:
-                                return escapeHtml(token.value);
-                        }
-                    })
-                    .join('');
+                const htmlContent = renderMessageTokens(
+                    msgTokens,
+                    row,
+                    format,
+                    (value) => escapeHtml(value),
+                    () => '&emsp;&emsp;',
+                    () => '<br/>',
+                    (value, _key, style) => {
+                        const css = styleToCss(style);
+                        const escapedValue = escapeHtml(value);
+                        return css
+                            ? `<span style="${css}">${escapedValue}</span>`
+                            : escapedValue;
+                    },
+                );
                 return `<div class="msg">${htmlContent}</div>`;
             }
             return '';

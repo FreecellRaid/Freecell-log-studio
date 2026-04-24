@@ -7,6 +7,10 @@ export interface TemplateToken {
     value: string;
 }
 
+export function normalizeExportContentNewlines(content: string): string {
+    return content.replace(/\r\n?/g, '\n');
+}
+
 export function parseTemplate(template: string): TemplateToken[] {
     const tokens: TemplateToken[] = [];
 

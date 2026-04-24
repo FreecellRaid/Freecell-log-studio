@@ -2,6 +2,7 @@ import type { LogDocument, Message } from '@/types/log';
 import type { ViewSettings, ColorRule } from '@/types/config';
 import type { ExportRow, ExportStyle } from '@/types/export';
 import { computeStyleForMessage } from '@/editor/styleEngine';
+import { normalizeExportContentNewlines } from './templateParser';
 import { formatDate } from '@/utils/date';
 import type { CSSProperties } from 'vue';
 
@@ -62,7 +63,7 @@ export function flattenLogToRows(
                     playerName: msg.playerName,
                     account: Account,
                     time: Time,
-                    content: msg.content,
+                    content: normalizeExportContentNewlines(msg.content),
                     nameStyle: mapCssToExportStyle(computed.nameStyle),
                     contentStyle: mapCssToExportStyle(computed.contentStyle),
                 });

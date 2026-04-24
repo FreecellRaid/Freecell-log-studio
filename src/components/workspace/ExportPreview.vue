@@ -159,13 +159,26 @@
                                                 )
                                             "
                                         >
-                                            {{
-                                                getPlaceholderValue(
+                                            <template
+                                                v-for="(
+                                                    segment, segmentIdx
+                                                ) in getPlaceholderSegments(
                                                     token.value,
                                                     row,
-                                                    activeFormat,
-                                                )
-                                            }}
+                                                )"
+                                                :key="
+                                                    `placeholder-${tIdx}-${segmentIdx}`
+                                                "
+                                            >
+                                                <br
+                                                    v-if="
+                                                        token.value ===
+                                                            'content' &&
+                                                        segmentIdx > 0
+                                                    "
+                                                />
+                                                {{ segment }}
+                                            </template>
                                         </span>
                                     </span>
 
@@ -291,6 +304,11 @@ const chunkSeparatorTokens = computed(() =>
     parseTemplate(activeFormat.value.chunkSeparator || ''),
 );
 
+function getPlaceholderSegments(key: string, row: ExportRow): string[] {
+    const value = getPlaceholderValue(key, row, activeFormat.value);
+    return key === 'content' ? value.split('\n') : [value];
+}
+
 function getStyleForPlaceholder(
     key: string,
     row: ExportRow,
@@ -300,7 +318,7 @@ function getStyleForPlaceholder(
             ? row.nameStyle
             : key === 'content'
               ? row.contentStyle
-              : null;
+              : undefined;
 
     if (!exportStyle) return {};
 

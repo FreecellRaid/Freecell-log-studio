@@ -48,10 +48,7 @@ function getMessageTokenStyle(
 
 function createRunsFromTokens(
     tokens: TemplateToken[],
-    resolveToken: (token: TemplateToken) => {
-        text: string;
-        style?: ExportStyle;
-    },
+    resolveToken: (token: TemplateToken) => TextRun[],
 ): Paragraph[] {
     const paragraphs: Paragraph[] = [];
     let currentRuns: TextRun[] = [];
@@ -76,17 +73,12 @@ function createRunsFromTokens(
             continue;
         }
 
-        const { text, style } = resolveToken(token);
-        if (!text) {
+        const runs = resolveToken(token);
+        if (runs.length === 0) {
             continue;
         }
 
-        currentRuns.push(
-            new TextRun({
-                text,
-                ...applyStyle(style),
-            }),
-        );
+        currentRuns.push(...runs);
     }
 
     if (currentRuns.length > 0 || paragraphs.length === 0) {
@@ -101,14 +93,12 @@ function createSeparatorParagraphs(template: string, rowContent: string) {
 
     return createRunsFromTokens(tokens, (token) => {
         if (token.type === 'placeholder') {
-            return {
-                text: token.value === 'name' ? rowContent : '',
-            };
+            return token.value === 'name'
+                ? [new TextRun({ text: rowContent })]
+                : [];
         }
 
-        return {
-            text: token.value,
-        };
+        return token.value ? [new TextRun({ text: token.value })] : [];
     });
 }
 
@@ -117,15 +107,33 @@ function createMessageParagraphs(row: ExportRow, format: ExportFormat) {
 
     return createRunsFromTokens(tokens, (token) => {
         if (token.type === 'placeholder') {
-            return {
-                text: getPlaceholderValue(token.value, row, format),
-                style: getMessageTokenStyle(token.value, row),
-            };
+            const text = getPlaceholderValue(token.value, row, format);
+            const style = getMessageTokenStyle(token.value, row);
+
+            if (!text) {
+                return [];
+            }
+
+            if (token.value === 'content') {
+                return text.split('\n').map(
+                    (segment, index) =>
+                        new TextRun({
+                            text: segment,
+                            break: index === 0 ? undefined : 1,
+                            ...applyStyle(style),
+                        }),
+                );
+            }
+
+            return [
+                new TextRun({
+                    text,
+                    ...applyStyle(style),
+                }),
+            ];
         }
 
-        return {
-            text: token.value,
-        };
+        return token.value ? [new TextRun({ text: token.value })] : [];
     });
 }
 
