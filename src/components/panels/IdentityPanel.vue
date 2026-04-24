@@ -447,7 +447,6 @@ watch(
 .list-header {
     font-size: 11px;
     color: var(--text-muted);
-    border-bottom: 1px solid var(--border-light);
     text-align: center;
     position: sticky;
     top: 0;
@@ -463,7 +462,6 @@ watch(
 }
 
 .identity-item {
-    border-bottom: 1px dotted var(--border-light);
     transition: background-color 0.2s;
 }
 

@@ -207,8 +207,7 @@ watch(
 }
 
 .message-item:hover {
-    outline: 1px solid var(--active-accent);
-    outline-offset: -1px;
+    box-shadow: inset 0 0 0 1px var(--active-accent);
 }
 
 .message-item.is-selected.is-active {
@@ -249,17 +248,21 @@ watch(
     position: absolute;
     top: 8px;
     right: 12px;
-    display: none;
+    display: flex;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.1s;
     align-items: center;
     gap: 4px;
     padding: 2px 4px;
     border-radius: 4px;
-    border: 1px solid var(--border-light);
+    border: none;
     z-index: 10;
 }
 
 .message-item:hover .message-actions {
-    display: flex;
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .action-button {
@@ -278,7 +281,6 @@ watch(
 
 /* 悬停效果 */
 .action-button:hover {
-    background-color: var(--border-light);
     opacity: 1;
 }
 

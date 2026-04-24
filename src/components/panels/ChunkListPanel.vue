@@ -470,7 +470,7 @@ function handleChunkDragEnd() {
     cursor: pointer;
     user-select: none;
     font-weight: 600;
-    border-bottom: 1px solid var(--border-light);
+    border-bottom: none;
 }
 
 .doc-header:hover {
@@ -590,7 +590,7 @@ function handleChunkDragEnd() {
 }
 
 .action-button:hover {
-    background-color: var(--border-light);
+    background-color: none;
     opacity: 1;
 }
 

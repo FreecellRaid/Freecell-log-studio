@@ -481,7 +481,7 @@ const vClickOutside = {
     top: 100%;
     margin-top: 8px;
     background: var(--bg-topbar);
-    border: 1px solid var(--border-light);
+    border: none;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 100;
 }
@@ -534,7 +534,7 @@ const vClickOutside = {
     justify-content: space-between;
     gap: 8px;
     padding: 8px 0;
-    border-top: 1px solid var(--border-light);
+    border-top: none;
 }
 
 .stored-project-main {
