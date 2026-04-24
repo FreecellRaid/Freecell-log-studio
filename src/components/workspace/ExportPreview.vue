@@ -166,9 +166,7 @@
                                                     token.value,
                                                     row,
                                                 )"
-                                                :key="
-                                                    `placeholder-${tIdx}-${segmentIdx}`
-                                                "
+                                                :key="`placeholder-${tIdx}-${segmentIdx}`"
                                             >
                                                 <br
                                                     v-if="

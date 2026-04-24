@@ -26,7 +26,10 @@ export function newlogStore() {
         normalizeMessages(chunk);
     }
 
-    function normalizeDocument(doc: LogDocument, docIndex: number = doc.docIndex) {
+    function normalizeDocument(
+        doc: LogDocument,
+        docIndex: number = doc.docIndex,
+    ) {
         doc.docIndex = docIndex;
         doc.chunks.forEach((chunk, chunkIndex) => {
             normalizeChunk(chunk, doc.docId, chunkIndex);

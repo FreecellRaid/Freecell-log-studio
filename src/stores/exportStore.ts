@@ -145,7 +145,11 @@ export const useExportStore = defineStore('export', {
             this.saveToLocal();
         },
         deleteFormat(id: string) {
-            if (EXPORT_PRESET_IDS.includes(id as (typeof EXPORT_PRESET_IDS)[number]))
+            if (
+                EXPORT_PRESET_IDS.includes(
+                    id as (typeof EXPORT_PRESET_IDS)[number],
+                )
+            )
                 return;
             this.formats = this.formats.filter(
                 (f: ExportFormat) => f.formatId !== id,

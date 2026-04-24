@@ -70,8 +70,9 @@
                             <button
                                 class="icon-button"
                                 :class="{
-                                    'is-active':
-                                        previewedFormatIds.has(fmt.formatId),
+                                    'is-active': previewedFormatIds.has(
+                                        fmt.formatId,
+                                    ),
                                 }"
                                 @click.stop="handleTogglePreview(fmt.formatId)"
                                 title="预览模板效果"

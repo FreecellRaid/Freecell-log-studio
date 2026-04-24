@@ -1,10 +1,4 @@
-import {
-    Document,
-    Packer,
-    Paragraph,
-    TextRun,
-    Tab,
-} from 'docx';
+import { Document, Packer, Paragraph, TextRun, Tab } from 'docx';
 import { parseTemplate, getPlaceholderValue } from '../templateParser';
 import type { TemplateToken } from '../templateParser';
 import type { ExportRow, ExportFormat, ExportStyle } from '@/types/export';
