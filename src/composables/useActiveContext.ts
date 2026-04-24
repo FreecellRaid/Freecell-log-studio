@@ -53,15 +53,24 @@ export function useActiveContext(ownerId?: string) {
     const selectedMessages = computed(() => {
         const ids = selectedMessageIds.value;
         if (ids.size === 0) return [];
-        // 优化：从 logStore 中查找
+
         const result: Message[] = [];
-        for (const doc of logStore.documents) {
-            for (const chunk of doc.chunks) {
-                for (const msg of chunk.messages) {
-                    if (ids.has(msg.messageId)) result.push(msg);
-                }
+        ids.forEach((messageId) => {
+            const message = logStore.messagesById.get(messageId);
+            if (message) {
+                result.push(message);
             }
+        });
+
+        if (result.length <= 1) {
+            return result;
         }
+
+        result.sort(
+            (a, b) =>
+                (logStore.messageOrderById.get(a.messageId) ?? 0) -
+                (logStore.messageOrderById.get(b.messageId) ?? 0),
+        );
         return result;
     });
 

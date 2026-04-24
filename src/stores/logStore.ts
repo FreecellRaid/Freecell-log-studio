@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { Chunk, LogDocument } from '@/types/log';
+import type { Chunk, LogDocument, Message } from '@/types/log';
 import { useHistoryStore } from './historyStore';
 import { generateId } from '@/utils/id';
 import { deriveDefaultProjectName } from '@/io/localStorage/project';
@@ -54,6 +54,22 @@ export function newlogStore() {
         return documents.value.flatMap((doc) =>
             doc.chunks.flatMap((chunk) => chunk.messages),
         );
+    });
+
+    const messagesById = computed(() => {
+        const index = new Map<string, Message>();
+        allMessages.value.forEach((message) => {
+            index.set(message.messageId, message);
+        });
+        return index;
+    });
+
+    const messageOrderById = computed(() => {
+        const order = new Map<string, number>();
+        allMessages.value.forEach((message, index) => {
+            order.set(message.messageId, index);
+        });
+        return order;
     });
 
     const allChunks = computed(() => {
@@ -182,6 +198,8 @@ export function newlogStore() {
 
         totalMessages,
         allMessages,
+        messagesById,
+        messageOrderById,
         allChunks,
 
         appendDocuments,
