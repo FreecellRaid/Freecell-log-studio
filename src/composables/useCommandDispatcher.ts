@@ -336,16 +336,8 @@ export function useCommandDispatcher() {
             windowStore.requestMessageReveal(chunkId, target.messageId);
 
             if (windowStore.isInSplitMode()) {
-                const activeViewId = windowStore.currentActiveView.windowId;
-                const splitPanes = windowStore.splitPanes;
-
-                if (splitPanes[0]?.windowId === activeViewId) {
-                    windowStore.setPaneView(0, 'chunkView', chunkId);
-                } else if (splitPanes[1]?.windowId === activeViewId) {
-                    windowStore.setPaneView(1, 'chunkView', chunkId);
-                } else {
-                    windowStore.setPaneView(0, 'chunkView', chunkId);
-                }
+                const activePaneIndex = windowStore.getActivePaneIndex() ?? 0;
+                windowStore.setPaneView(activePaneIndex, 'chunkView', chunkId);
                 return;
             }
 

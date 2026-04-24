@@ -6,6 +6,7 @@ import type {
     WindowInstance,
     SplitMode,
     SplitDirection,
+    WorkspacePane,
 } from '@/types/window';
 import { generateId } from '@/utils/id';
 
@@ -168,9 +169,8 @@ function windowStore() {
         // 如果当前活跃窗口本身就是预览窗口，直接在当前位置切换模板
         if (currentView.windowName === 'exportPreview') {
             if (splitMode.value === 'double') {
-                const activePos = getActivePanePosition();
                 setPaneView(
-                    activePos === 'left' ? 0 : 1,
+                    getActivePaneIndex() ?? 0,
                     'exportPreview',
                     formatId,
                 );
@@ -190,8 +190,8 @@ function windowStore() {
         }
         if (splitMode.value === 'double') {
             // 已在双屏：找到不活跃的那一侧并替换
-            const activePos = getActivePanePosition();
-            const targetPaneIndex = activePos === 'left' ? 1 : 0;
+            const activePaneIndex = getActivePaneIndex() ?? 0;
+            const targetPaneIndex = activePaneIndex === 0 ? 1 : 0;
             setPaneView(targetPaneIndex, 'exportPreview', formatId);
         } else {
             // 单屏模式：直接开启分屏预览
@@ -253,16 +253,35 @@ function windowStore() {
         );
     });
 
+    const workspacePanes = computed((): WorkspacePane[] => {
+        if (splitMode.value === 'double') {
+            return ([0, 1] as const).map((paneIndex) => {
+                const instance = splitPanes.value[paneIndex];
+                return {
+                    paneIndex,
+                    instance,
+                    isActive: instance?.windowId === activeFocus.value,
+                };
+            });
+        }
+
+        const instance = currentActiveView.value;
+        return [
+            {
+                paneIndex: 0,
+                instance,
+                isActive: instance.windowId === activeFocus.value,
+            },
+        ];
+    });
+
     function isInSplitMode(): boolean {
         return splitMode.value === 'double';
     }
 
-    function getActivePanePosition(): 'left' | 'right' | null {
-        if (splitMode.value !== 'double') return null;
-        const activeId = activeFocus.value;
-        if (splitPanes.value[0]?.windowId === activeId) return 'left';
-        if (splitPanes.value[1]?.windowId === activeId) return 'right';
-        return null;
+    function getActivePaneIndex(): 0 | 1 | null {
+        const activePane = workspacePanes.value.find((pane) => pane.isActive);
+        return activePane?.paneIndex ?? null;
     }
 
     // 打开帮助弹窗
@@ -391,10 +410,10 @@ function windowStore() {
         rightSidebarVisible,
         currentActiveWindow,
         currentActiveView,
+        workspacePanes,
         isHelpOpen,
         splitMode,
         splitDirection,
-        splitPanes,
         splitSizes,
         pendingMessageReveal,
 
@@ -416,6 +435,7 @@ function windowStore() {
         setPaneView,
         closePane,
         isInSplitMode,
+        getActivePaneIndex,
         requestMessageReveal,
         clearPendingMessageReveal,
     };

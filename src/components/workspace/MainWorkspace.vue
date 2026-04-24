@@ -1,16 +1,6 @@
 <template>
     <div class="main-workspace">
         <FileImporter v-if="isWorkspaceEmpty" />
-        <template v-else-if="windowStore.splitMode === 'single'">
-            <component
-                :is="getViewComponent(currentActiveView.windowName)"
-                v-if="currentActiveView"
-                :key="currentActiveView.windowId"
-                v-bind="getComponentProps(currentActiveView)"
-            />
-            <DefaultView v-else />
-        </template>
-
         <template v-else>
             <div
                 class="split-container"
@@ -18,48 +8,38 @@
                     'split-vertical': windowStore.splitDirection === 'vertical',
                 }"
             >
-                <div
-                    class="split-pane"
-                    :style="getPaneStyle(0)"
-                    @pointerdown.capture="handlePaneClick(0)"
-                >
-                    <component
-                        :is="getViewComponent(leftPane.windowName)"
-                        v-if="leftPane"
-                        :key="leftPane.windowId"
-                        v-bind="getComponentProps(leftPane)"
-                    />
-                </div>
+                <template v-for="pane in workspacePanes" :key="pane.paneIndex">
+                    <div
+                        class="split-pane"
+                        :style="getPaneStyle(pane.paneIndex)"
+                        @pointerdown.capture="handlePaneClick(pane.paneIndex)"
+                    >
+                        <component
+                            :is="getViewComponent(pane.instance?.windowName)"
+                            v-if="pane.instance"
+                            :key="pane.instance.windowId"
+                            v-bind="getComponentProps(pane.instance)"
+                        />
+                        <DefaultView v-else />
+                    </div>
 
-                <div
-                    v-if="rightPane"
-                    class="split-resize-handle"
-                    :class="{
-                        'resize-vertical':
-                            windowStore.splitDirection === 'vertical',
-                    }"
-                    @mousedown="startResize"
-                ></div>
-
-                <div
-                    class="split-pane"
-                    :style="getPaneStyle(1)"
-                    @pointerdown.capture="handlePaneClick(1)"
-                >
-                    <component
-                        :is="getViewComponent(rightPane.windowName)"
-                        v-if="rightPane"
-                        :key="rightPane.windowId"
-                        v-bind="getComponentProps(rightPane)"
-                    />
-                </div>
+                    <div
+                        v-if="shouldRenderResizeHandle(pane.paneIndex)"
+                        class="split-resize-handle"
+                        :class="{
+                            'resize-vertical':
+                                windowStore.splitDirection === 'vertical',
+                        }"
+                        @mousedown="startResize"
+                    ></div>
+                </template>
             </div>
         </template>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { useLogStore } from '@/stores/logStore';
 import { useWindowStore } from '@/stores/windowStore';
 import type { WindowInstance, WindowName } from '@/types/window';
@@ -71,13 +51,7 @@ import DefaultView from './DefaultView.vue';
 const logStore = useLogStore();
 const windowStore = useWindowStore();
 const isWorkspaceEmpty = computed(() => logStore.documents.length === 0);
-const currentActiveView = computed(() => windowStore.currentActiveView);
-
-// 分屏数据映射
-const leftPane = computed(() => windowStore.splitPanes[0]);
-const rightPane = computed(() => windowStore.splitPanes[1]);
-
-const splitSizes = ref<[number, number]>(windowStore.splitSizes);
+const workspacePanes = computed(() => windowStore.workspacePanes);
 
 const viewComponentMap: Partial<Record<WindowName, any>> = {
     chunkView: ChunkView,
@@ -86,7 +60,8 @@ const viewComponentMap: Partial<Record<WindowName, any>> = {
 };
 
 // 根据 WindowName 获取对应的 Vue 组件
-function getViewComponent(name: WindowName) {
+function getViewComponent(name?: WindowName) {
+    if (!name) return DefaultView;
     return viewComponentMap[name] || DefaultView;
 }
 
@@ -99,7 +74,8 @@ function getComponentProps(instance: WindowInstance) {
 
 function getPaneStyle(index: 0 | 1): Record<string, string> {
     const isHorizontal = windowStore.splitDirection === 'horizontal';
-    const size = splitSizes.value[index];
+    const size =
+        workspacePanes.value.length === 1 ? 100 : windowStore.splitSizes[index];
 
     return isHorizontal
         ? { width: `${size}%`, height: '100%' }
@@ -107,10 +83,16 @@ function getPaneStyle(index: 0 | 1): Record<string, string> {
 }
 
 function handlePaneClick(paneIndex: 0 | 1) {
-    const pane = paneIndex === 0 ? leftPane.value : rightPane.value;
-    if (pane) {
-        windowStore.setFocus(pane.windowId);
+    const pane = workspacePanes.value.find(
+        (item) => item.paneIndex === paneIndex,
+    );
+    if (pane?.instance) {
+        windowStore.setFocus(pane.instance.windowId);
     }
+}
+
+function shouldRenderResizeHandle(paneIndex: 0 | 1) {
+    return paneIndex < workspacePanes.value.length - 1;
 }
 
 function startResize(e: MouseEvent) {
@@ -120,7 +102,7 @@ function startResize(e: MouseEvent) {
     if (!container) return;
 
     const startPos = isHorizontal ? e.clientX : e.clientY;
-    const startSizes = [...splitSizes.value];
+    const startSizes = [...windowStore.splitSizes];
     const containerSize = isHorizontal
         ? container.clientWidth
         : container.clientHeight;
@@ -136,8 +118,6 @@ function startResize(e: MouseEvent) {
             Math.max(20, startSizes[0] + deltaPercent),
         );
         const newRightSize = 100 - newLeftSize;
-
-        splitSizes.value = [newLeftSize, newRightSize];
         windowStore.splitSizes = [newLeftSize, newRightSize];
     }
 

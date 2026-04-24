@@ -26,10 +26,9 @@ export interface WindowInstance {
 
 export type SplitDirection = 'horizontal' | 'vertical';
 export type SplitMode = 'single' | 'double';
-// TODO: 未来会把这里的单/双窗口统一
-export interface SplitState {
-    mode: SplitMode;
-    direction: SplitDirection;
-    panes: [WindowInstance, WindowInstance | null];
-    sizes: [number, number];
+
+export interface WorkspacePane {
+    paneIndex: 0 | 1;
+    instance: WindowInstance | null;
+    isActive: boolean;
 }
