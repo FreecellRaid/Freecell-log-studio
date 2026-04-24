@@ -178,16 +178,13 @@ watch(
     async (newVal) => {
         if (newVal) {
             await nextTick();
-            setTimeout(() => {
-                if (editInput.value) {
-                    editInput.value.focus();
-                    editInput.value.setSelectionRange(
-                        props.editingContent.length,
-                        props.editingContent.length,
-                    );
-                }
-            }, 50);
-            // 这里增加延迟，确保虚拟滚动完全稳定，避免textarea闪现
+            if (editInput.value) {
+                editInput.value.focus({ preventScroll: true });
+                editInput.value.setSelectionRange(
+                    props.editingContent.length,
+                    props.editingContent.length,
+                );
+            }
         }
     },
 );

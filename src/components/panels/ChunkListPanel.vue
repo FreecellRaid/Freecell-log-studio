@@ -21,7 +21,7 @@
             </div>
         </div>
 
-        <div class="chunk-list-scroll">
+        <div ref="scrollContainerRef" class="chunk-list-scroll">
             <div
                 v-for="doc in logStore.documents"
                 :key="doc.docId"
@@ -82,15 +82,13 @@
 
                 <div v-if="doc.isExpanded" class="chunk-items-container">
                     <div
-                        v-if="
-                            dropIndicator.docId === doc.docId &&
-                            dropIndicator.index === 0 &&
-                            chunkDrag.isDragging.value
-                        "
-                        class="drop-indicator"
-                    ></div>
-                    <div
                         class="drop-zone"
+                        :class="{
+                            'is-active':
+                                dropIndicator.docId === doc.docId &&
+                                dropIndicator.index === 0 &&
+                                chunkDrag.isDragging.value,
+                        }"
                         @dragover="handleChunkDragOver($event, doc.docId, 0)"
                         @drop="handleChunkDrop($event, doc.docId, 0)"
                     ></div>
@@ -99,6 +97,12 @@
                         v-for="(chunk, chunkIndex) in doc.chunks"
                         :key="chunk.chunkId"
                         class="chunk-slot"
+                        :class="{
+                            'is-drop-target':
+                                dropIndicator.docId === doc.docId &&
+                                dropIndicator.index === chunkIndex + 1 &&
+                                chunkDrag.isDragging.value,
+                        }"
                     >
                         <div
                             class="chunk-item"
@@ -183,15 +187,6 @@
                                 </button>
                             </div>
                         </div>
-
-                        <div
-                            v-if="
-                                dropIndicator.docId === doc.docId &&
-                                dropIndicator.index === chunkIndex + 1 &&
-                                chunkDrag.isDragging.value
-                            "
-                            class="drop-indicator"
-                        ></div>
                     </div>
                 </div>
             </div>
@@ -231,6 +226,7 @@ const renameInputRef = ref<HTMLInputElement | null>(null);
 const projectNameDraft = ref('');
 const isEditingProjectName = ref(false);
 const projectNameInputRef = ref<HTMLInputElement | null>(null);
+const scrollContainerRef = ref<HTMLElement | null>(null);
 
 const dropIndicator = reactive<{ docId: string; index: number | null }>({
     docId: '',
@@ -330,7 +326,9 @@ function submitChunkRename(chunk: Chunk) {
 }
 
 function handleMerge(currentChunkId: string, nextChunkId: string) {
-    chunkEditorStore.mergeChunks([currentChunkId, nextChunkId]);
+    withScrollAnchor(() => {
+        chunkEditorStore.mergeChunks([currentChunkId, nextChunkId]);
+    });
 }
 
 function handleChunkSelect(chunkId: string, event: MouseEvent) {
@@ -424,6 +422,36 @@ function handleChunkDragEnd() {
     clearDropIndicator();
     chunkDrag.onDragEnd();
 }
+
+function captureScrollAnchor() {
+    const container = scrollContainerRef.value;
+    if (!container) return null;
+
+    return {
+        scrollTop: container.scrollTop,
+        scrollHeight: container.scrollHeight,
+    };
+}
+
+async function restoreScrollAnchor(
+    anchor: { scrollTop: number; scrollHeight: number } | null,
+) {
+    if (!anchor) return;
+
+    await nextTick();
+
+    const container = scrollContainerRef.value;
+    if (!container) return;
+
+    const heightDelta = container.scrollHeight - anchor.scrollHeight;
+    container.scrollTop = Math.max(0, anchor.scrollTop + heightDelta);
+}
+
+function withScrollAnchor(action: () => void) {
+    const anchor = captureScrollAnchor();
+    action();
+    void restoreScrollAnchor(anchor);
+}
 </script>
 
 <style scoped>
@@ -493,6 +521,7 @@ function handleChunkDragEnd() {
 
 .chunk-items-container {
     background-color: var(--bg-primary);
+    position: relative;
 }
 
 .chunk-item {
@@ -552,6 +581,7 @@ function handleChunkDragEnd() {
 
 .drop-zone {
     height: 4px;
+    position: relative;
     transition: background-color 0.2s;
 }
 
@@ -559,11 +589,15 @@ function handleChunkDragEnd() {
     background-color: var(--active-accent);
 }
 
-.drop-indicator {
-    height: 0;
+.drop-zone.is-active::after,
+.chunk-slot.is-drop-target::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 1px;
     border-top: 2px solid var(--active-accent);
-    margin: 2px 0 2px 0;
-    position: relative;
+    pointer-events: none;
     z-index: 1;
 }
 

@@ -52,17 +52,21 @@
                             :item="msg"
                             :key="msg.messageId"
                             :active="active"
-                            :size-dependencies="[msg.content, editingMessageId]"
+                            :size-dependencies="[
+                                msg.content,
+                                msg.messageId === editingMessageId,
+                                msg.messageId === editingMessageId
+                                    ? editingContent
+                                    : null,
+                            ]"
                             :data-index="index"
                             class="message-slot"
-                        >
-                            <div
-                                v-if="
+                            :class="{
+                                'is-drop-target':
                                     dropIndicatorIndex === index &&
-                                    dragDropTool.isDragging.value
-                                "
-                                class="drop-indicator"
-                            ></div>
+                                    dragDropTool.isDragging.value,
+                            }"
+                        >
                             <MessageItem
                                 :message="msg"
                                 :chunk-id="currentChunkId"
@@ -89,7 +93,7 @@
                                 @start-edit="handleStartEdit"
                                 @update-content="handleUpdateContent"
                                 @save-edit="handleSaveEdit"
-                                @cancel-edit="editingMessageId = null"
+                                @cancel-edit="handleCancelEdit"
                             />
                         </DynamicScrollerItem>
                     </template>
@@ -137,6 +141,7 @@ const styleStore = useStyleStore();
 interface ScrollerInstance {
     scrollToItem: (index: number) => void;
     scrollToBottom: () => void;
+    $el?: Element;
 }
 
 const scrollerRef = ref<ScrollerInstance | null>(null);
@@ -147,6 +152,11 @@ const editingContent = ref('');
 const messageEditorStore = useMessageEditorStore();
 const chunkEditorStore = useChunkEditorStore();
 const { dispatch } = useCommandDispatcher();
+
+interface ScrollAnchor {
+    scrollTop: number;
+    scrollHeight: number;
+}
 
 const canClose = computed(() => {
     return (
@@ -234,8 +244,10 @@ function handleMessageSelect(event: MouseEvent, msgId: string, index: number) {
 }
 
 function handleStartEdit(message: Message) {
-    editingMessageId.value = message.messageId;
-    editingContent.value = message.content;
+    withScrollAnchor(() => {
+        editingMessageId.value = message.messageId;
+        editingContent.value = message.content;
+    });
 }
 
 function handleUpdateContent(val: string) {
@@ -243,11 +255,19 @@ function handleUpdateContent(val: string) {
 }
 
 function handleSaveEdit(messageId: string) {
-    const msg = messages.value.find((m) => m.messageId === messageId);
-    if (msg && msg.content !== editingContent.value) {
-        msg.content = editingContent.value;
-    }
-    editingMessageId.value = null;
+    withScrollAnchor(() => {
+        const msg = messages.value.find((m) => m.messageId === messageId);
+        if (msg && msg.content !== editingContent.value) {
+            msg.content = editingContent.value;
+        }
+        editingMessageId.value = null;
+    });
+}
+
+function handleCancelEdit() {
+    withScrollAnchor(() => {
+        editingMessageId.value = null;
+    });
 }
 
 function handleMessageDragStart(
@@ -298,20 +318,22 @@ function handleActionInsert(msg: Message, index: number) {
 }
 
 function handleActionMerge(msg: Message) {
-    const selectedIds = activeContext.selectedMessageIds.value;
-    if (selectedIds.has(msg.messageId) && selectedIds.size > 1) {
-        messageEditorStore.mergeMessages(
-            currentChunkId.value,
-            Array.from(selectedIds),
-            msg.messageId,
-        );
-        activeContext.clearMessageSelection();
-    } else {
-        messageEditorStore.mergeWithNextMessage(
-            currentChunkId.value,
-            msg.messageId,
-        );
-    }
+    withScrollAnchor(() => {
+        const selectedIds = activeContext.selectedMessageIds.value;
+        if (selectedIds.has(msg.messageId) && selectedIds.size > 1) {
+            messageEditorStore.mergeMessages(
+                currentChunkId.value,
+                Array.from(selectedIds),
+                msg.messageId,
+            );
+            activeContext.clearMessageSelection();
+        } else {
+            messageEditorStore.mergeWithNextMessage(
+                currentChunkId.value,
+                msg.messageId,
+            );
+        }
+    });
 }
 
 function handleActionSplit(msgId: string) {
@@ -326,6 +348,39 @@ function handleActionDelete(msgId: string) {
     } else {
         messageEditorStore.deleteMessage(currentChunkId.value, msgId);
     }
+}
+
+function getScrollerElement() {
+    const root = scrollerRef.value?.$el;
+    return root instanceof HTMLElement ? root : null;
+}
+
+function captureScrollAnchor(): ScrollAnchor | null {
+    const scrollerEl = getScrollerElement();
+    if (!scrollerEl) return null;
+
+    return {
+        scrollTop: scrollerEl.scrollTop,
+        scrollHeight: scrollerEl.scrollHeight,
+    };
+}
+
+async function restoreScrollAnchor(anchor: ScrollAnchor | null) {
+    if (!anchor) return;
+
+    await nextTick();
+
+    const scrollerEl = getScrollerElement();
+    if (!scrollerEl) return;
+
+    const heightDelta = scrollerEl.scrollHeight - anchor.scrollHeight;
+    scrollerEl.scrollTop = Math.max(0, anchor.scrollTop + heightDelta);
+}
+
+function withScrollAnchor(action: () => void) {
+    const anchor = captureScrollAnchor();
+    action();
+    void restoreScrollAnchor(anchor);
 }
 </script>
 
@@ -349,10 +404,14 @@ function handleActionDelete(msgId: string) {
     position: relative;
 }
 
-.drop-indicator {
-    position: relative;
-    height: 0;
+.message-slot.is-drop-target::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
     border-top: 2px solid var(--active-accent);
+    pointer-events: none;
     z-index: 1;
 }
 </style>
