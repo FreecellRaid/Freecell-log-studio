@@ -335,7 +335,7 @@ function handleChunkSelect(chunkId: string, event: MouseEvent) {
     activeContext.handleChunkClickSelection(event, chunkId);
 
     if (!event.ctrlKey && !event.metaKey && !event.shiftKey) {
-        if (windowStore.isInSplitMode()) {
+        if (windowStore.hasSplitView) {
             const activePaneIndex = windowStore.getActivePaneIndex() ?? 0;
             windowStore.setPaneView(activePaneIndex, 'chunkView', chunkId);
         } else {

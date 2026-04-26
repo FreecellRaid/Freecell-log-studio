@@ -15,7 +15,7 @@
             </div>
             <div class="view-actions">
                 <button
-                    v-if="windowStore.splitMode === 'single'"
+                    v-if="!windowStore.hasSplitView"
                     class="view-action-btn"
                     title="向右分屏"
                     @click.stop="handleSplit"
@@ -24,7 +24,7 @@
                 </button>
 
                 <button
-                    v-if="windowStore.splitMode === 'double' || canClose"
+                    v-if="windowStore.hasSplitView || canClose"
                     class="view-action-btn"
                     title="关闭"
                     @click.stop="handleClose"
@@ -158,18 +158,18 @@ interface ScrollAnchor {
 
 const canClose = computed(() => {
     return (
-        windowStore.splitMode === 'single' &&
+        !windowStore.hasSplitView &&
         effectiveWindowId.value !== 'defaultView' &&
         windowStore.openWindows.size > 1
     );
 });
 
 function handleSplit() {
-    windowStore.enterSplitMode('chunkView', currentChunkId.value);
+    windowStore.openSplitView('chunkView', currentChunkId.value);
 }
 
 function handleClose() {
-    if (windowStore.splitMode === 'double') {
+    if (windowStore.hasSplitView) {
         windowStore.closePane(effectiveWindowId.value);
     } else {
         windowStore.unregisterWindow(effectiveWindowId.value);

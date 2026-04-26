@@ -333,7 +333,7 @@ export function useCommandDispatcher() {
             );
             windowStore.requestMessageReveal(chunkId, target.messageId);
 
-            if (windowStore.isInSplitMode()) {
+            if (windowStore.hasSplitView) {
                 const activePaneIndex = windowStore.getActivePaneIndex() ?? 0;
                 windowStore.setPaneView(activePaneIndex, 'chunkView', chunkId);
                 return;

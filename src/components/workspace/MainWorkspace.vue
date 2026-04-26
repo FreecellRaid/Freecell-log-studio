@@ -3,14 +3,15 @@
         <FileImporter v-if="isWorkspaceEmpty" />
         <template v-else>
             <div
-                class="split-container"
+                class="pane-layout"
                 :class="{
-                    'split-vertical': windowStore.splitDirection === 'vertical',
+                    'pane-layout-vertical':
+                        windowStore.paneDirection === 'vertical',
                 }"
             >
                 <template v-for="pane in workspacePanes" :key="pane.paneIndex">
                     <div
-                        class="split-pane"
+                        class="workspace-pane"
                         :style="getPaneStyle(pane.paneIndex)"
                         @pointerdown.capture="handlePaneClick(pane.paneIndex)"
                     >
@@ -25,10 +26,10 @@
 
                     <div
                         v-if="shouldRenderResizeHandle(pane.paneIndex)"
-                        class="split-resize-handle"
+                        class="pane-resize-handle"
                         :class="{
-                            'resize-vertical':
-                                windowStore.splitDirection === 'vertical',
+                            'pane-resize-handle-vertical':
+                                windowStore.paneDirection === 'vertical',
                         }"
                         @mousedown="startResize"
                     ></div>
@@ -73,9 +74,9 @@ function getComponentProps(instance: WindowInstance) {
 }
 
 function getPaneStyle(index: 0 | 1): Record<string, string> {
-    const isHorizontal = windowStore.splitDirection === 'horizontal';
+    const isHorizontal = windowStore.paneDirection === 'horizontal';
     const size =
-        workspacePanes.value.length === 1 ? 100 : windowStore.splitSizes[index];
+        workspacePanes.value.length === 1 ? 100 : windowStore.paneSizes[index];
 
     return isHorizontal
         ? { width: `${size}%`, height: '100%' }
@@ -97,12 +98,12 @@ function shouldRenderResizeHandle(paneIndex: 0 | 1) {
 
 function startResize(e: MouseEvent) {
     e.preventDefault();
-    const isHorizontal = windowStore.splitDirection === 'horizontal';
+    const isHorizontal = windowStore.paneDirection === 'horizontal';
     const container = (e.target as HTMLElement).parentElement;
     if (!container) return;
 
     const startPos = isHorizontal ? e.clientX : e.clientY;
-    const startSizes = [...windowStore.splitSizes];
+    const startSizes = [...windowStore.paneSizes];
     const containerSize = isHorizontal
         ? container.clientWidth
         : container.clientHeight;
@@ -118,7 +119,7 @@ function startResize(e: MouseEvent) {
             Math.max(20, startSizes[0] + deltaPercent),
         );
         const newRightSize = 100 - newLeftSize;
-        windowStore.splitSizes = [newLeftSize, newRightSize];
+        windowStore.paneSizes = [newLeftSize, newRightSize];
     }
 
     function onMouseUp() {
@@ -146,24 +147,24 @@ function startResize(e: MouseEvent) {
     flex-direction: column;
 }
 
-.split-container {
+.pane-layout {
     display: flex;
     width: 100%;
     height: 100%;
 }
 
-.split-container.split-vertical {
+.pane-layout.pane-layout-vertical {
     flex-direction: column;
 }
 
-.split-pane {
+.workspace-pane {
     min-width: 0;
     min-height: 0;
     overflow: hidden;
     position: relative;
 }
 
-.split-resize-handle {
+.pane-resize-handle {
     width: 4px;
     height: 100%;
     cursor: col-resize;
@@ -173,12 +174,12 @@ function startResize(e: MouseEvent) {
     z-index: 10;
 }
 
-.split-resize-handle:hover,
-.split-resize-handle:active {
+.pane-resize-handle:hover,
+.pane-resize-handle:active {
     background-color: var(--active-accent);
 }
 
-.split-container.split-vertical .split-resize-handle {
+.pane-layout.pane-layout-vertical .pane-resize-handle {
     width: 100%;
     height: 4px;
     cursor: row-resize;

@@ -24,8 +24,7 @@ export interface WindowInstance {
     // 实际上是窗口的行为策略(behaviorMode),决定窗口的物理属性（是否可分屏、如何响应焦点、如何注销）
 }
 
-export type SplitDirection = 'horizontal' | 'vertical';
-export type SplitMode = 'single' | 'double';
+export type PaneDirection = 'horizontal' | 'vertical';
 
 export interface WorkspacePane {
     paneIndex: 0 | 1;

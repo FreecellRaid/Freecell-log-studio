@@ -4,8 +4,7 @@ import { useSelectionStore } from '@/stores/selectionStore';
 import type {
     WindowName,
     WindowInstance,
-    SplitMode,
-    SplitDirection,
+    PaneDirection,
     WorkspacePane,
 } from '@/types/window';
 import { generateId } from '@/utils/id';
@@ -26,7 +25,7 @@ function windowStore() {
     const rightSidebarVisible = ref(false);
     const isHelpOpen = ref(false);
 
-    const splitPanes = ref<[WindowInstance, WindowInstance | null]>([
+    const workspaceViewPanes = ref<[WindowInstance, WindowInstance | null]>([
         {
             windowId: 'defaultView',
             windowName: 'defaultView',
@@ -35,9 +34,8 @@ function windowStore() {
         },
         null,
     ]);
-    const splitMode = ref<SplitMode>('single');
-    const splitSizes = ref<[number, number]>([50, 50]);
-    const splitDirection = ref<SplitDirection>('horizontal');
+    const paneSizes = ref<[number, number]>([50, 50]);
+    const paneDirection = ref<PaneDirection>('horizontal');
 
     // 聚焦到一个目标
     function setFocus(target: string) {
@@ -168,7 +166,7 @@ function windowStore() {
 
         // 如果当前活跃窗口本身就是预览窗口，直接在当前位置切换模板
         if (currentView.windowName === 'exportPreview') {
-            if (splitMode.value === 'double') {
+            if (hasSplitView.value) {
                 setPaneView(
                     getActivePaneIndex() ?? 0,
                     'exportPreview',
@@ -188,14 +186,14 @@ function windowStore() {
             }
             return;
         }
-        if (splitMode.value === 'double') {
+        if (hasSplitView.value) {
             // 已在双屏：找到不活跃的那一侧并替换
             const activePaneIndex = getActivePaneIndex() ?? 0;
             const targetPaneIndex = activePaneIndex === 0 ? 1 : 0;
             setPaneView(targetPaneIndex, 'exportPreview', formatId);
         } else {
             // 单屏模式：直接开启分屏预览
-            enterSplitMode('exportPreview', formatId);
+            openSplitView('exportPreview', formatId);
         }
     }
 
@@ -254,9 +252,9 @@ function windowStore() {
     });
 
     const workspacePanes = computed((): WorkspacePane[] => {
-        if (splitMode.value === 'double') {
+        if (hasSplitView.value) {
             return ([0, 1] as const).map((paneIndex) => {
-                const instance = splitPanes.value[paneIndex];
+                const instance = workspaceViewPanes.value[paneIndex];
                 return {
                     paneIndex,
                     instance,
@@ -275,9 +273,7 @@ function windowStore() {
         ];
     });
 
-    function isInSplitMode(): boolean {
-        return splitMode.value === 'double';
-    }
+    const hasSplitView = computed(() => workspaceViewPanes.value[1] !== null);
 
     function getActivePaneIndex(): 0 | 1 | null {
         const activePane = workspacePanes.value.find((pane) => pane.isActive);
@@ -300,12 +296,12 @@ function windowStore() {
     const isWindowFocused = (windowId: string) =>
         activeFocus.value === windowId;
 
-    function enterSplitMode(
+    function openSplitView(
         rightWindowName: 'chunkView' | 'exportPreview',
         rightOriginalId: string,
     ) {
-        if (splitMode.value === 'double') {
-            exitSplitMode();
+        if (hasSplitView.value) {
+            closeSplitView();
         }
 
         const currentView = currentActiveView.value;
@@ -327,16 +323,15 @@ function windowStore() {
         };
         registerWindow(rightPane);
 
-        splitPanes.value = [leftPane, rightPane];
-        splitMode.value = 'double';
+        workspaceViewPanes.value = [leftPane, rightPane];
         return true;
     }
 
     // 退出分屏模式，回到单视图
-    function exitSplitMode(keepWindowId?: string) {
-        if (splitMode.value !== 'double') return;
+    function closeSplitView(keepWindowId?: string) {
+        if (!hasSplitView.value) return;
 
-        const [leftPane, rightPane] = splitPanes.value;
+        const [leftPane, rightPane] = workspaceViewPanes.value;
         if (!rightPane) return;
 
         // 如果没指定保留哪个，则按焦点判断
@@ -354,8 +349,7 @@ function windowStore() {
         if (activePane.windowName !== 'defaultView') {
             registerWindow(activePane);
         }
-        splitPanes.value = [{ ...activePane }, null];
-        splitMode.value = 'single';
+        workspaceViewPanes.value = [{ ...activePane }, null];
     }
 
     // 切换指定 pane 显示的视图
@@ -364,8 +358,8 @@ function windowStore() {
         windowName: 'chunkView' | 'exportPreview',
         originalId: string,
     ) {
-        if (splitMode.value !== 'double') return;
-        const pane = splitPanes.value[paneIndex];
+        if (!hasSplitView.value) return;
+        const pane = workspaceViewPanes.value[paneIndex];
         if (!pane) return;
 
         unregisterWindow(pane.windowId);
@@ -378,7 +372,7 @@ function windowStore() {
         };
 
         registerWindow(newWindow);
-        splitPanes.value[paneIndex] = newWindow;
+        workspaceViewPanes.value[paneIndex] = newWindow;
     }
 
     function requestMessageReveal(chunkId: string, messageId: string) {
@@ -394,11 +388,11 @@ function windowStore() {
 
     // 关闭指定 pane
     function closePane(closingWindowId: string) {
-        if (splitMode.value !== 'double') return;
-        const otherPane = splitPanes.value.find(
+        if (!hasSplitView.value) return;
+        const otherPane = workspaceViewPanes.value.find(
             (p) => p && p.windowId !== closingWindowId,
         );
-        exitSplitMode(otherPane?.windowId);
+        closeSplitView(otherPane?.windowId);
     }
 
     return {
@@ -412,9 +406,9 @@ function windowStore() {
         currentActiveView,
         workspacePanes,
         isHelpOpen,
-        splitMode,
-        splitDirection,
-        splitSizes,
+        hasSplitView,
+        paneDirection,
+        paneSizes,
         pendingMessageReveal,
 
         setFocus,
@@ -430,11 +424,10 @@ function windowStore() {
         toggleExportPreview,
         openHelpDocument,
         closeHelpDocument,
-        enterSplitMode,
-        exitSplitMode,
+        openSplitView,
+        closeSplitView,
         setPaneView,
         closePane,
-        isInSplitMode,
         getActivePaneIndex,
         requestMessageReveal,
         clearPendingMessageReveal,

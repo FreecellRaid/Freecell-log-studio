@@ -19,7 +19,7 @@
             </div>
             <div class="view-actions">
                 <button
-                    v-if="windowStore.splitMode === 'single'"
+                    v-if="!windowStore.hasSplitView"
                     class="view-action-btn"
                     title="向右分屏"
                     @click.stop="handleSplit"
@@ -28,7 +28,7 @@
                 </button>
 
                 <button
-                    v-if="windowStore.splitMode === 'double' || canClose"
+                    v-if="windowStore.hasSplitView || canClose"
                     class="view-action-btn"
                     title="关闭"
                     @click.stop="handleClose"
@@ -244,7 +244,7 @@ const activeFormat = computed(
 
 const canClose = computed(() => {
     return (
-        windowStore.splitMode === 'single' &&
+        !windowStore.hasSplitView &&
         effectiveWindowId.value !== 'defaultView' &&
         windowStore.openWindows.size > 1
     );
@@ -267,11 +267,11 @@ const rowsWithId = computed(() => {
 const rows = computed(() => rowsWithId.value);
 
 function handleSplit() {
-    windowStore.enterSplitMode('exportPreview', props.originalId);
+    windowStore.openSplitView('exportPreview', props.originalId);
 }
 
 function handleClose() {
-    if (windowStore.splitMode === 'double') {
+    if (windowStore.hasSplitView) {
         windowStore.closePane(effectiveWindowId.value);
     } else {
         windowStore.unregisterWindow(effectiveWindowId.value);
