@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { ColorRule, ColorMode, ViewSettings } from '@/types/config';
+import type { ColorRule, ColorMode, ViewSettings } from '@/types/style';
 import type { Message } from '@/types/log';
 import { generateId } from '@/utils/id';
 import { collectIdentityValues } from '@/editor/identity';

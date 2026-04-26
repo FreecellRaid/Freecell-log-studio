@@ -1,4 +1,4 @@
-import type { ColorRule } from '@/types/config';
+import type { ColorRule } from '@/types/style';
 import type { Message } from '@/types/log';
 import { matchesMessageFilter } from './filter';
 import type { CSSProperties } from 'vue';

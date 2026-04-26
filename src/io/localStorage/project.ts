@@ -1,4 +1,4 @@
-import type { ColorRule, ViewSettings } from '@/types/config';
+import type { ColorRule, ViewSettings } from '@/types/style';
 import type { LogDocument, MessageFilter } from '@/types/log';
 import { isRoleType } from '@/types/log';
 import type { ProjectFile } from '@/types/project';

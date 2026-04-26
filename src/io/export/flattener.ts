@@ -1,5 +1,5 @@
 import type { LogDocument, Message } from '@/types/log';
-import type { ViewSettings, ColorRule } from '@/types/config';
+import type { ViewSettings, ColorRule } from '@/types/style';
 import type { ExportRow, ExportStyle } from '@/types/export';
 import { computeStyleForMessage } from '@/editor/styleEngine';
 import { normalizeExportContentNewlines } from './templateParser';

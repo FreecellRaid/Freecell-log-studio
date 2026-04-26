@@ -114,7 +114,7 @@ import { useUiStore, PANEL_MAX_WIDTH } from '@/stores/uiStore';
 import { useHistoryStore } from '@/stores/historyStore';
 import { useLogEditorStore } from '@/stores/editorStore';
 import type { RoleType } from '@/types/log';
-import type { ColorMode, ColorRule } from '@/types/config';
+import type { ColorMode, ColorRule } from '@/types/style';
 import { useWindowStore } from '@/stores/windowStore';
 import {
     buildIdentityStats,

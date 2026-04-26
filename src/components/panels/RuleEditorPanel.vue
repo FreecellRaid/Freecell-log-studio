@@ -258,7 +258,7 @@ import { ref, computed } from 'vue';
 import { useStyleStore } from '@/stores/styleStore';
 import { useLogStore } from '@/stores/logStore';
 import { useActiveContext } from '@/composables/useActiveContext';
-import type { ColorRule } from '@/types/config';
+import type { ColorRule } from '@/types/style';
 import type { MessageFilter } from '@/types/log';
 import { matchesMessageFilter } from '@/editor/filter';
 import { useWindowStore } from '@/stores/windowStore';

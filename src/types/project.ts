@@ -1,4 +1,4 @@
-import type { ViewSettings, ColorRule } from './config';
+import type { ViewSettings, ColorRule } from './style';
 import type { LogDocument } from './log';
 
 export interface ProjectFile {

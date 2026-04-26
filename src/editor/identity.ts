@@ -1,4 +1,4 @@
-import type { ColorMode } from '@/types/config';
+import type { ColorMode } from '@/types/style';
 import type { Message, RoleType } from '@/types/log';
 
 export interface IdentityStat {

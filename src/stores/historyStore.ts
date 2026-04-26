@@ -3,7 +3,7 @@ import { computed, ref } from 'vue';
 import { useLogStore } from './logStore';
 import { useStyleStore } from './styleStore';
 import type { LogDocument, MessageFilter } from '@/types/log';
-import type { ColorRule } from '@/types/config';
+import type { ColorRule } from '@/types/style';
 
 interface HistorySnapshot {
     documents: LogDocument[];
