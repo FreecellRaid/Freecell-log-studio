@@ -14,7 +14,7 @@ export const useHistoryStore = defineStore('history', () => {
     const logStore = useLogStore();
     const styleStore = useStyleStore();
 
-    const maxSteps = 5;
+    const maxSteps = 20;
     const undoStack = ref<HistorySnapshot[]>([]);
     const redoStack = ref<HistorySnapshot[]>([]);
     const isRestoring = ref(false);
