@@ -147,6 +147,7 @@ npm run build
 | `Ctrl + B`         | 切换左侧边栏   |
 | `Ctrl + I`         | 切换右侧边栏   |
 | `Ctrl + K`         | 打开帮助文档   |
+| `Enter`            | 跳转到搜索结果 |
 
 ---
 

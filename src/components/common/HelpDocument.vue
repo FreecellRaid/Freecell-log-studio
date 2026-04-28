@@ -206,6 +206,7 @@ const shortcuts = [
     { key: 'Ctrl + /', desc: '切换场内外' },
     { key: 'Ctrl + \\', desc: '切换指令' },
     { key: 'Ctrl + backspace', desc: '删除' },
+    { key: 'Enter', desc: '跳转到搜索结果' },
     { key: 'Ctrl + S', desc: '保存' },
     { key: 'Ctrl + P', desc: '导出预览' },
     { key: 'Ctrl + B', desc: '切换左侧边栏' },

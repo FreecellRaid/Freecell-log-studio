@@ -187,7 +187,7 @@ export const PaintedLogAdapter: ImportAdapter = {
 // Ccfolia 格式
 // <p style="color: metaRow ;">
 // <span> [note] </span>
-// <span> palyerName </span> :
+// <span> playerName </span> :
 // <span> content </span>
 // </p>
 const CCFOLIA_ENTRY_REGEX =
