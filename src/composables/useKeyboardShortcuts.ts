@@ -27,12 +27,13 @@ export function useKeyboardShortcuts() {
         else if (isModKey && key === 'y') command = 'redo';
         else if (isModKey && shift && key === 'z') command = 'redo';
         else if (isModKey && key === 'b') command = 'toggleLeft';
-        else if (isModKey && key === 'i') command = 'toggleRight';
+        // 这里是为了避免打不开 dev tools
+        else if (isModKey && !shift && key === 'i') command = 'toggleRight';
         else if (isModKey && key === 'k') command = 'openHelp';
         else if (isModKey && key === 's') command = 'save';
         else if (isModKey && key === 'p') command = 'export';
-        else if (isModKey && (key === 'delete' || key === 'backspace'))
-            command = 'delete';
+        else if (isModKey && key === 'backspace') command = 'delete';
+        else if (isModKey && key === 'delete') command = 'delete';
         else if (isModKey && key === 'arrowup') command = 'selectPrevious';
         else if (isModKey && key === 'arrowdown') command = 'selectNext';
         else if (isModKey && key === '/') command = 'toggleOoc';
