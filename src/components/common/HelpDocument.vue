@@ -29,7 +29,7 @@
                     <ul class="tip-list">
                         <li>
                             <strong>双击消息</strong>
-                            - 进入编辑，ctrl+enter保存编辑
+                            - 进入编辑，enter保存编辑
                         </li>
                         <li>
                             <strong>拖拽消息</strong>
