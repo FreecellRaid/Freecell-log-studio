@@ -73,8 +73,7 @@
                     ref="editInput"
                     v-model="editContentLocal"
                     class="content-editor absolute-editor"
-                    @keydown.enter.ctrl="$emit('saveEdit', message.messageId)"
-                    @keydown.enter.meta="$emit('saveEdit', message.messageId)"
+                    @keydown.enter="handleEditEnter"
                     @keydown.esc="$emit('cancelEdit')"
                 ></textarea>
             </div>
@@ -173,6 +172,14 @@ const editContentLocal = computed({
     set: (val) => emit('updateContent', val),
 });
 const editInput = ref<HTMLTextAreaElement | null>(null);
+function handleEditEnter(event: KeyboardEvent) {
+    if (event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) {
+        return;
+    }
+    event.preventDefault();
+    emit('saveEdit', props.message.messageId);
+}
+
 watch(
     () => props.isEditing,
     async (newVal) => {
