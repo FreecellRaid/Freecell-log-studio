@@ -1,7 +1,7 @@
 <template>
     <div class="panel">
         <header class="panel-header">
-            <div class="title">
+            <div class="header-title">
                 <h3>INSPECTOR</h3>
             </div>
             <div class="count" v-if="selectedItems.length > 0">
@@ -10,9 +10,12 @@
         </header>
 
         <div class="inspector-content">
-            <div v-if="selectedMessageCount === 0" class="empty-state">
-                <p>未选中消息</p>
-                <p class="sub">在编辑器中点击消息以查看详情</p>
+            <div v-if="selectedMessageCount === 0" class="panel-empty-hint">
+                <div>
+                    未选中消息
+                    <br />
+                    在编辑器中点击消息以查看详情
+                </div>
             </div>
 
             <div v-for="chunk in allChunks" :key="chunk.chunkId">
@@ -238,30 +241,17 @@ function updateField(
 </script>
 
 <style scoped>
-.panel-header {
-    height: 35px;
-    padding: 0 12px;
-}
-
-.panel-header .title {
-    font-size: 16px;
-    font-weight: bold;
-    color: var(--text-muted);
-}
-
 .inspector-content {
-    margin-left: 10px;
     flex: 1;
     min-height: 0;
     overflow-y: auto;
     scrollbar-gutter: stable;
-    padding: 12px 0px;
 }
 
 /* 消息详情卡片 */
 .message-detail-card {
     border: 1px solid var(--border-color);
-    margin-bottom: 16px;
+    margin: 0px 10px 10px 10px;
     background-color: var(--bg-workspace);
     box-sizing: border-box;
 }
@@ -338,16 +328,5 @@ function updateField(
     gap: 6px;
     font-size: 12px;
     cursor: pointer;
-}
-
-.empty-state {
-    text-align: center;
-    margin-top: 60px;
-    color: var(--text-muted);
-}
-
-.empty-state .sub {
-    font-size: 12px;
-    margin-top: 8px;
 }
 </style>

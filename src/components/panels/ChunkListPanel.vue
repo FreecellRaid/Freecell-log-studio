@@ -179,7 +179,7 @@
                                     <ChevronsDown class="ui-icon" />
                                 </button>
                                 <button
-                                    class="action-button action-button-warning icon-interactive is-warning"
+                                    class="action-button action-button-warning"
                                     title="删除分块"
                                     @click.stop="handleDelete(chunk.chunkId)"
                                 >

@@ -330,26 +330,6 @@ function handleDelete(id: string) {
     align-items: center;
 }
 
-.form-group .action-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: none;
-    padding: 4px;
-    cursor: pointer;
-    color: var(--icon-color);
-}
-
-.form-group .action-icon:hover {
-    color: var(--active-accent);
-}
-
-.form-group .action-icon .ui-icon {
-    width: 18px;
-    height: 18px;
-}
-
 .input-group input {
     flex: 1;
 }

@@ -110,32 +110,43 @@
 </template>
 
 <script setup lang="ts">
-import { FileText, X, SquareSplitHorizontal } from '@lucide/vue';
+import { FileText, SquareSplitHorizontal, X } from '@lucide/vue';
 import { computed, nextTick, ref, watch } from 'vue';
-import { useLogStore } from '@/stores/logStore';
-import { useUiStore } from '@/stores/uiStore';
-import { useStyleStore } from '@/stores/styleStore';
-import { useActiveContext } from '@/composables/useActiveContext';
-import { useMessageDragDrop } from '@/composables/useDragDrop';
-import MessageItem from '@/components/common/MessageItem.vue';
-import { useLogEditorStore } from '@/stores/editorStore';
-import { useCommandDispatcher } from '@/composables/useCommandDispatcher';
-import { useWindowStore } from '@/stores/windowStore';
-import type { Message } from '@/types/log';
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
+
+import MessageItem from '@/components/common/MessageItem.vue';
+import { useActiveContext } from '@/composables/useActiveContext';
+import { useCommandDispatcher } from '@/composables/useCommandDispatcher';
+import { useMessageDragDrop } from '@/composables/useDragDrop';
+import { useLogEditorStore } from '@/stores/editorStore';
+import { useLogStore } from '@/stores/logStore';
+import { useStyleStore } from '@/stores/styleStore';
+import { useUiStore } from '@/stores/uiStore';
+import { useWindowStore } from '@/stores/windowStore';
+import type { Message } from '@/types/log';
 
 const props = defineProps<{
     windowId: string;
     originalId: string;
 }>();
+
 const effectiveWindowId = computed(() => props.windowId);
 const currentChunkId = computed(() => props.originalId);
-const activeContext = useActiveContext(effectiveWindowId.value);
-const dragDropTool = useMessageDragDrop();
-const dropIndicatorIndex = ref<number | null>(null);
+
+const logStore = useLogStore();
 const uiStore = useUiStore();
 const styleStore = useStyleStore();
+const windowStore = useWindowStore();
+const logEditorStore = useLogEditorStore();
+const activeContext = useActiveContext(effectiveWindowId.value);
+const dragDropTool = useMessageDragDrop();
+const { dispatch } = useCommandDispatcher();
+
+const scrollerRef = ref<ScrollerInstance | null>(null);
+const dropIndicatorIndex = ref<number | null>(null);
+const editingMessageId = ref<string | null>(null);
+const editingContent = ref('');
 
 interface ScrollerInstance {
     scrollToItem: (index: number) => void;
@@ -143,71 +154,42 @@ interface ScrollerInstance {
     $el?: Element;
 }
 
-const scrollerRef = ref<ScrollerInstance | null>(null);
-const logStore = useLogStore();
-const windowStore = useWindowStore();
-const editingMessageId = ref<string | null>(null);
-const editingContent = ref('');
-const logEditorStore = useLogEditorStore();
-const { dispatch } = useCommandDispatcher();
-
 interface ScrollAnchor {
     scrollTop: number;
     scrollHeight: number;
 }
 
-const canClose = computed(() => {
-    return (
-        !windowStore.hasSplitView &&
-        effectiveWindowId.value !== 'defaultView' &&
-        windowStore.openWindows.size > 1
-    );
-});
-
-function handleSplit() {
-    windowStore.openSplitView('chunkView', currentChunkId.value);
-}
-
-function handleClose() {
-    if (windowStore.hasSplitView) {
-        windowStore.closePane(effectiveWindowId.value);
-    } else {
-        windowStore.unregisterWindow(effectiveWindowId.value);
-        const otherView = Array.from(windowStore.openWindows.values()).find(
-            (win) =>
-                win.windowType === 'view' &&
-                win.windowId !== effectiveWindowId.value,
-        );
-        if (otherView) {
-            windowStore.setFocus(otherView.windowId);
-        } else {
-            windowStore.setFocus('defaultView');
-        }
-    }
-}
-
-const isViewFocused = computed(
-    () => windowStore.activeFocus === effectiveWindowId.value,
+const currentChunk = computed(() =>
+    logStore.findChunkById(currentChunkId.value),
 );
 
-const currentChunk = computed(function () {
-    return logStore.findChunkById(currentChunkId.value) || undefined;
-});
-
 const messages = computed(() => {
-    if (!currentChunk.value) return [];
-    const allMessages = currentChunk.value.messages;
-    if (uiStore.showHidden) {
-        return allMessages;
+    if (!currentChunk.value) {
+        return [];
     }
-    const { hideOoc, hideCommand } = styleStore.viewSettings;
 
-    return allMessages.filter((msg) => {
+    if (uiStore.showHidden) {
+        return currentChunk.value.messages;
+    }
+
+    const { hideOoc, hideCommand } = styleStore.viewSettings;
+    return currentChunk.value.messages.filter((msg) => {
         const isMsgOoc = hideOoc && msg.isOoc;
         const isMsgCommand = hideCommand && msg.isCommand;
         return !(isMsgOoc || isMsgCommand);
     });
 });
+
+const isViewFocused = computed(
+    () => windowStore.activeFocus === effectiveWindowId.value,
+);
+
+const canClose = computed(
+    () =>
+        !windowStore.hasSplitView &&
+        effectiveWindowId.value !== 'defaultView' &&
+        windowStore.openWindows.size > 1,
+);
 
 watch(
     () => windowStore.pendingMessageReveal,
@@ -218,19 +200,47 @@ watch(
 
         await nextTick();
 
-        if (scrollerRef.value && messages.value.length > 0) {
-            const index = messages.value.findIndex(
-                (m) => m.messageId === target.messageId,
-            );
-            if (index !== -1) {
-                scrollerRef.value.scrollToItem(index);
-            }
+        if (!scrollerRef.value || messages.value.length === 0) {
+            return;
+        }
+
+        const index = messages.value.findIndex(
+            (message) => message.messageId === target.messageId,
+        );
+
+        if (index !== -1) {
+            scrollerRef.value.scrollToItem(index);
         }
 
         windowStore.clearPendingMessageReveal();
     },
     { flush: 'post', immediate: true },
 );
+
+function handleSplit() {
+    windowStore.openSplitView('chunkView', currentChunkId.value);
+}
+
+function handleClose() {
+    if (windowStore.hasSplitView) {
+        windowStore.closePane(effectiveWindowId.value);
+        return;
+    }
+
+    windowStore.unregisterWindow(effectiveWindowId.value);
+
+    const otherView = Array.from(windowStore.openWindows.values()).find(
+        (win) =>
+            win.windowType === 'view' &&
+            win.windowId !== effectiveWindowId.value,
+    );
+
+    if (otherView) {
+        windowStore.setFocus(otherView.windowId);
+        return;
+    }
+    windowStore.setFocus('defaultView');
+}
 
 function handleMessageSelect(event: MouseEvent, msgId: string, index: number) {
     dispatch('select', {
@@ -248,14 +258,16 @@ function handleStartEdit(message: Message) {
     });
 }
 
-function handleUpdateContent(val: string) {
-    editingContent.value = val;
+function handleUpdateContent(value: string) {
+    editingContent.value = value;
 }
 
 function handleSaveEdit(messageId: string) {
     withScrollAnchor(() => {
-        const msg = messages.value.find((m) => m.messageId === messageId);
-        if (msg && msg.content !== editingContent.value) {
+        const message = messages.value.find(
+            (item) => item.messageId === messageId,
+        );
+        if (message && message.content !== editingContent.value) {
             logEditorStore.updateMessage(currentChunkId.value, messageId, {
                 content: editingContent.value,
             });
@@ -303,51 +315,53 @@ function handleContainerDragOver(event: DragEvent) {
     dragDropTool.onDragOver(event);
 }
 
-// 拖拽逻辑兜底
 function handleContainerDrop(event: DragEvent) {
     const target = event.target as HTMLElement;
     if (target.closest('.message-item')) {
         return;
     }
-    // 放到空白区域时取消本次拖拽，不改变原有顺序
+
     handleDragEnd();
 }
 
-function handleActionInsert(msg: Message, index: number) {
-    logEditorStore.insertNewMessageAfter(currentChunkId.value, msg, index);
+function handleActionInsert(message: Message, index: number) {
+    logEditorStore.insertNewMessageAfter(currentChunkId.value, message, index);
 }
 
-function handleActionMerge(msg: Message) {
+function handleActionMerge(message: Message) {
     withScrollAnchor(() => {
         const selectedIds = activeContext.selectedMessageIds.value;
-        if (selectedIds.has(msg.messageId) && selectedIds.size > 1) {
+        if (selectedIds.has(message.messageId) && selectedIds.size > 1) {
             logEditorStore.mergeMessages(
                 currentChunkId.value,
                 Array.from(selectedIds),
-                msg.messageId,
+                message.messageId,
             );
             activeContext.clearMessageSelection();
-        } else {
-            logEditorStore.mergeWithNextMessage(
-                currentChunkId.value,
-                msg.messageId,
-            );
+            return;
         }
+
+        logEditorStore.mergeWithNextMessage(
+            currentChunkId.value,
+            message.messageId,
+        );
     });
 }
 
-function handleActionSplit(msgId: string) {
-    logEditorStore.splitChunk(currentChunkId.value, msgId);
+function handleActionSplit(messageId: string) {
+    logEditorStore.splitChunk(currentChunkId.value, messageId);
 }
 
-function handleActionDelete(msgId: string) {
+function handleActionDelete(messageId: string) {
     const selectedIds = activeContext.selectedMessageIds.value;
-    if (selectedIds.has(msgId)) {
+
+    if (selectedIds.has(messageId)) {
         logEditorStore.batchDeleteMessages(selectedIds);
         activeContext.clearMessageSelection();
-    } else {
-        logEditorStore.deleteMessage(currentChunkId.value, msgId);
+        return;
     }
+
+    logEditorStore.deleteMessage(currentChunkId.value, messageId);
 }
 
 function getScrollerElement() {
@@ -357,7 +371,9 @@ function getScrollerElement() {
 
 function captureScrollAnchor(): ScrollAnchor | null {
     const scrollerEl = getScrollerElement();
-    if (!scrollerEl) return null;
+    if (!scrollerEl) {
+        return null;
+    }
 
     return {
         scrollTop: scrollerEl.scrollTop,
@@ -366,12 +382,16 @@ function captureScrollAnchor(): ScrollAnchor | null {
 }
 
 async function restoreScrollAnchor(anchor: ScrollAnchor | null) {
-    if (!anchor) return;
+    if (!anchor) {
+        return;
+    }
 
     await nextTick();
 
     const scrollerEl = getScrollerElement();
-    if (!scrollerEl) return;
+    if (!scrollerEl) {
+        return;
+    }
 
     const heightDelta = scrollerEl.scrollHeight - anchor.scrollHeight;
     scrollerEl.scrollTop = Math.max(0, anchor.scrollTop + heightDelta);

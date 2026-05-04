@@ -36,13 +36,3 @@ import SidebarRight from '@/components/layout/SidebarRight.vue';
 const windowStore = useWindowStore();
 useKeyboardShortcuts();
 </script>
-
-<style scoped>
-.ide-container {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100vh;
-    overflow: hidden;
-}
-</style>

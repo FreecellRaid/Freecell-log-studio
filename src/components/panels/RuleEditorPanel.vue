@@ -432,16 +432,6 @@ const clearIds = (rule: ColorRule) => {
     white-space: nowrap;
 }
 
-.rule-name-input {
-    width: 100px;
-    padding: 4px;
-    background: var(--bg-primary);
-    border: 1px solid var(--active-accent);
-    color: var(--text-primary);
-    font-size: 13px;
-    font-weight: 600;
-}
-
 .toggle-button {
     background: transparent;
     border: none;
@@ -547,6 +537,11 @@ const clearIds = (rule: ColorRule) => {
     border-radius: 4px;
     font-size: 13px;
     outline: none;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: var(--active-accent);
 }
 
 .filter-text-input {
