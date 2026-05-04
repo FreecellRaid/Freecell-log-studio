@@ -49,21 +49,25 @@
                     </span>
 
                     <input
-                        v-if="editingDocId === doc.docId"
+                        v-if="isRenamingDocument(doc)"
                         ref="renameInputRef"
                         v-model="renameDraft"
                         class="rename-input doc-name"
                         type="text"
                         @click.stop
                         @dblclick.stop
-                        @keydown.enter.prevent="submitDocumentRename(doc)"
+                        @keydown.enter.prevent="
+                            submitRename('document', doc.docId)
+                        "
                         @keydown.esc.prevent="cancelRename"
-                        @blur="submitDocumentRename(doc)"
+                        @blur="submitRename('document', doc.docId)"
                     />
                     <span
                         v-else
                         class="doc-name"
-                        @dblclick.stop="startDocumentRename(doc)"
+                        @dblclick.stop="
+                            startRename('document', doc.docId, doc.docName)
+                        "
                     >
                         {{ doc.docName }}
                     </span>
@@ -143,7 +147,7 @@
                             @dragend="handleChunkDragEnd"
                         >
                             <input
-                                v-if="editingChunkId === chunk.chunkId"
+                                v-if="isRenamingChunk(chunk)"
                                 ref="renameInputRef"
                                 v-model="renameDraft"
                                 class="rename-input chunk-name"
@@ -151,15 +155,21 @@
                                 @click.stop
                                 @dblclick.stop
                                 @keydown.enter.prevent="
-                                    submitChunkRename(chunk)
+                                    submitRename('chunk', chunk.chunkId)
                                 "
                                 @keydown.esc.prevent="cancelRename"
-                                @blur="submitChunkRename(chunk)"
+                                @blur="submitRename('chunk', chunk.chunkId)"
                             />
                             <span
                                 v-else
                                 class="chunk-name"
-                                @dblclick.stop="startChunkRename(chunk)"
+                                @dblclick.stop="
+                                    startRename(
+                                        'chunk',
+                                        chunk.chunkId,
+                                        chunk.chunkName,
+                                    )
+                                "
                             >
                                 {{ chunk.chunkName || '未命名分块' }}
                             </span>
@@ -219,8 +229,9 @@ const logEditorStore = useLogEditorStore();
 const chunkDrag = useChunkDragDrop();
 const activeContext = useActiveContext('chunkList');
 
-const editingDocId = ref('');
-const editingChunkId = ref('');
+const renameTarget = ref<{ kind: 'document' | 'chunk'; id: string } | null>(
+    null,
+);
 const renameDraft = ref('');
 const renameInputRef = ref<HTMLInputElement | null>(null);
 const projectNameDraft = ref('');
@@ -280,27 +291,24 @@ function focusRenameInput() {
 }
 
 function cancelRename() {
-    editingDocId.value = '';
-    editingChunkId.value = '';
+    renameTarget.value = null;
     renameDraft.value = '';
 }
 
-function startDocumentRename(doc: LogDocument) {
-    editingChunkId.value = '';
-    editingDocId.value = doc.docId;
-    renameDraft.value = doc.docName;
+function startRename(kind: 'document' | 'chunk', id: string, name: string) {
+    renameTarget.value = { kind, id };
+    renameDraft.value = name;
     focusRenameInput();
 }
 
-function startChunkRename(chunk: Chunk) {
-    editingDocId.value = '';
-    editingChunkId.value = chunk.chunkId;
-    renameDraft.value = chunk.chunkName;
-    focusRenameInput();
-}
-
-function submitDocumentRename(doc: LogDocument) {
-    if (editingDocId.value !== doc.docId) return;
+function submitRename(kind: 'document' | 'chunk', id: string) {
+    if (
+        !renameTarget.value ||
+        renameTarget.value.kind !== kind ||
+        renameTarget.value.id !== id
+    ) {
+        return;
+    }
 
     const nextName = renameDraft.value.trim();
     if (!nextName) {
@@ -308,21 +316,27 @@ function submitDocumentRename(doc: LogDocument) {
         return;
     }
 
-    logEditorStore.renameDocument(doc.docId, nextName);
+    if (kind === 'document') {
+        logEditorStore.renameDocument(id, nextName);
+    } else {
+        logEditorStore.updateChunk(id, { chunkName: nextName });
+    }
+
     cancelRename();
 }
 
-function submitChunkRename(chunk: Chunk) {
-    if (editingChunkId.value !== chunk.chunkId) return;
+function isRenamingDocument(doc: LogDocument) {
+    return (
+        renameTarget.value?.kind === 'document' &&
+        renameTarget.value.id === doc.docId
+    );
+}
 
-    const nextName = renameDraft.value.trim();
-    if (!nextName) {
-        cancelRename();
-        return;
-    }
-
-    logEditorStore.updateChunk(chunk.chunkId, { chunkName: nextName });
-    cancelRename();
+function isRenamingChunk(chunk: Chunk) {
+    return (
+        renameTarget.value?.kind === 'chunk' &&
+        renameTarget.value.id === chunk.chunkId
+    );
 }
 
 function handleMerge(currentChunkId: string, nextChunkId: string) {
