@@ -19,7 +19,7 @@
                     v-model="searchStore.quickSearch"
                     type="text"
                     placeholder="搜索消息内容..."
-                    class="main-search-input"
+                    class="form-control main-search-input"
                 />
                 <button
                     class="expand-toggle icon-interactive"
@@ -49,7 +49,7 @@
                     <div class="form-group">
                         <label>角色名</label>
                         <input
-                            class="form-group-input"
+                            class="form-control"
                             v-model="searchStore.filter.playerName"
                             type="text"
                             placeholder="匹配角色..."
@@ -58,7 +58,7 @@
                     <div class="form-group">
                         <label>账号</label>
                         <input
-                            class="form-group-input"
+                            class="form-control"
                             v-model="searchStore.filter.account"
                             type="text"
                             placeholder="匹配账号..."
@@ -67,7 +67,7 @@
                     <div class="form-group">
                         <label>备注</label>
                         <input
-                            class="form-group-input"
+                            class="form-control"
                             v-model="searchStore.filter.note"
                             type="text"
                             placeholder="匹配备注..."
@@ -76,7 +76,10 @@
                     <div class="form-row">
                         <div class="form-group flex-1">
                             <label>身份</label>
-                            <select v-model="searchStore.filter.role">
+                            <select
+                                v-model="searchStore.filter.role"
+                                class="form-control"
+                            >
                                 <option :value="undefined">ALL</option>
                                 <option value="pl">玩家</option>
                                 <option value="gm">主持人</option>
@@ -90,7 +93,10 @@
                             <div class="boolean-filter-grid">
                                 <div class="form-group boolean-filter-item">
                                     <label>场外</label>
-                                    <select v-model="isOocFilterValue">
+                                    <select
+                                        v-model="isOocFilterValue"
+                                        class="form-control"
+                                    >
                                         <option value="">ALL</option>
                                         <option value="true">是</option>
                                         <option value="false">否</option>
@@ -98,7 +104,10 @@
                                 </div>
                                 <div class="form-group boolean-filter-item">
                                     <label>指令</label>
-                                    <select v-model="isCommandFilterValue">
+                                    <select
+                                        v-model="isCommandFilterValue"
+                                        class="form-control"
+                                    >
                                         <option value="">ALL</option>
                                         <option value="true">是</option>
                                         <option value="false">否</option>
@@ -270,7 +279,7 @@ const truncate = (str: string, len: number) => {
 <style scoped>
 .search-controls {
     flex-shrink: 0;
-    padding: 12px;
+    padding: 12px 12px 0px 12px;
     border-bottom: 1px solid var(--border-color);
     z-index: 2;
 }
@@ -282,14 +291,6 @@ const truncate = (str: string, len: number) => {
 
 .main-search-input {
     flex: 1;
-    box-sizing: border-box;
-    padding: 6px 8px;
-    border: 1px solid var(--border-color);
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    border-radius: 4px;
-    font-size: 13px;
-    outline: none;
 }
 
 .expand-toggle {
@@ -314,7 +315,6 @@ const truncate = (str: string, len: number) => {
     border-radius: 4px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
     z-index: 2;
 }
 
@@ -326,25 +326,7 @@ const truncate = (str: string, len: number) => {
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-}
-
-.form-group label {
-    font-size: 12px;
-    color: var(--text-muted);
-}
-
-.form-group input,
-.form-group select {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 6px 8px;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    font-size: 13px;
-    outline: none;
+    gap: 4px;
 }
 
 .boolean-filter-grid {
@@ -459,16 +441,5 @@ const truncate = (str: string, len: number) => {
     margin-top: 0;
     padding-top: 0;
     padding-bottom: 0;
-}
-
-@media (max-width: 768px) {
-    .search-input-wrapper,
-    .form-row {
-        flex-direction: column;
-    }
-
-    .boolean-filter-grid {
-        grid-template-columns: 1fr;
-    }
 }
 </style>

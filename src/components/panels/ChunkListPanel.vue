@@ -544,8 +544,7 @@ function withScrollAnchor(action: () => void) {
 }
 
 .chunk-item:hover {
-    outline: 1px solid var(--active-accent);
-    outline-offset: -1px;
+    background: var(--hover-bg);
 }
 
 .chunk-item.is-active.is-selected {

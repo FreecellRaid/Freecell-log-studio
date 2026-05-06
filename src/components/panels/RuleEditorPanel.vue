@@ -83,6 +83,7 @@
 
                     <div class="form-group">
                         <input
+                            class="form-control"
                             type="text"
                             v-model="rule.ruleName"
                             @change="
@@ -98,6 +99,7 @@
                         <div class="form-group">
                             <label>优先级</label>
                             <input
+                                class="form-control"
                                 type="number"
                                 min="1"
                                 v-model.number="rule.priority"
@@ -111,6 +113,7 @@
                         <div class="form-group">
                             <label>染色范围</label>
                             <select
+                                class="form-control"
                                 v-model="rule.colorArea"
                                 @change="
                                     handleUpdate(rule.ruleId, {
@@ -128,7 +131,7 @@
                     <div class="form-group">
                         <label>角色名</label>
                         <input
-                            class="filter-text-input"
+                            class="form-control filter-text-input"
                             :value="formatArray(rule.filter.playerName)"
                             @change="updateFilter(rule, 'playerName', $event)"
                             placeholder="如: KP, 骰娘……"
@@ -137,7 +140,7 @@
                     <div class="form-group">
                         <label>账号</label>
                         <input
-                            class="filter-text-input"
+                            class="form-control filter-text-input"
                             :value="formatArray(rule.filter.account)"
                             @change="updateFilter(rule, 'account', $event)"
                             placeholder="如: 表情差分1, 表情差分2……"
@@ -146,7 +149,7 @@
                     <div class="form-group">
                         <label>内容</label>
                         <input
-                            class="filter-text-input"
+                            class="form-control filter-text-input"
                             :value="formatArray(rule.filter.content)"
                             @change="updateFilter(rule, 'content', $event)"
                             placeholder="如: 于此同时，另一边……"
@@ -155,7 +158,7 @@
                     <div class="form-group">
                         <label>备注</label>
                         <input
-                            class="filter-text-input"
+                            class="form-control filter-text-input"
                             :value="formatArray(rule.filter.note)"
                             @change="updateFilter(rule, 'note', $event)"
                             placeholder="如: 战斗轮消息……"
@@ -166,6 +169,7 @@
                         <div class="form-group">
                             <label>身份</label>
                             <select
+                                class="form-control"
                                 :value="rule.filter.role || ''"
                                 @change="updateFilter(rule, 'role', $event)"
                             >
@@ -180,6 +184,7 @@
                         <div class="form-group">
                             <label>是否场外</label>
                             <select
+                                class="form-control"
                                 :value="rule.filter.isOoc?.toString() || ''"
                                 @change="
                                     updateFilter(rule, 'isOoc', $event, true)
@@ -193,6 +198,7 @@
                         <div class="form-group">
                             <label>是否指令</label>
                             <select
+                                class="form-control"
                                 :value="rule.filter.isCommand?.toString() || ''"
                                 @change="
                                     updateFilter(
@@ -270,6 +276,7 @@ const activeViewId = computed(() => {
     const view = windowStore.currentActiveView;
     return view.originalId || view.windowId;
 });
+// 注意，这里传入的id不是响应式的！切换窗口会有bug
 const activeContext = useActiveContext(activeViewId.value);
 const expandedRules = ref<Set<string>>(new Set());
 
@@ -514,34 +521,9 @@ const clearIds = (rule: ColorRule) => {
     min-width: 0;
 }
 
-.form-group label {
-    display: block;
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-}
-
 .inline-hint {
     margin-left: 6px;
     color: var(--text-secondary);
-}
-
-.form-group input,
-.form-group select {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 6px 8px;
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    border-radius: 4px;
-    font-size: 13px;
-    outline: none;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-    border-color: var(--active-accent);
 }
 
 .filter-text-input {

@@ -22,8 +22,14 @@
                 v-for="fmt in exportStore.formats"
                 :key="fmt.formatId"
                 class="config-block"
+                :class="{
+                    'is-active': exportStore.activeFormatId === fmt.formatId,
+                }"
             >
-                <div class="config-header" @click="toggleExpand(fmt.formatId)">
+                <div
+                    class="config-header"
+                    @click="handleSelectFormat(fmt.formatId)"
+                >
                     <div
                         class="expand-icon"
                         :class="{ 'is-expanded': expandedId === fmt.formatId }"
@@ -62,6 +68,7 @@
                         <label>模板名称</label>
                         <div class="input-group">
                             <input
+                                class="form-control"
                                 v-model="fmt.formatName"
                                 type="text"
                                 @change="exportStore.saveToLocal()"
@@ -86,6 +93,7 @@
                         <div class="form-group">
                             <label>文件后缀</label>
                             <input
+                                class="form-control"
                                 v-model="fmt.fileExtension"
                                 type="text"
                                 @change="exportStore.saveToLocal()"
@@ -94,6 +102,7 @@
                         <div class="form-group">
                             <label>消息分隔符</label>
                             <input
+                                class="form-control"
                                 v-model="fmt.messageSeparator"
                                 type="text"
                                 @change="exportStore.saveToLocal()"
@@ -105,6 +114,7 @@
                         <div class="form-group">
                             <label>幕间分隔</label>
                             <input
+                                class="form-control"
                                 v-model="fmt.docSeparator"
                                 type="text"
                                 @change="exportStore.saveToLocal()"
@@ -113,6 +123,7 @@
                         <div class="form-group">
                             <label>场景分隔</label>
                             <input
+                                class="form-control"
                                 v-model="fmt.chunkSeparator"
                                 type="text"
                                 @change="exportStore.saveToLocal()"
@@ -123,6 +134,7 @@
                         <div class="form-group">
                             <label>玩家名格式</label>
                             <input
+                                class="form-control"
                                 v-model="fmt.playerNameFormat"
                                 type="text"
                                 @change="exportStore.saveToLocal()"
@@ -131,6 +143,7 @@
                         <div class="form-group">
                             <label>帐号格式</label>
                             <input
+                                class="form-control"
                                 v-model="fmt.accountFormat"
                                 type="text"
                                 @change="exportStore.saveToLocal()"
@@ -140,6 +153,7 @@
                     <div class="form-group">
                         <label>消息布局模板</label>
                         <textarea
+                            class="form-control"
                             v-model="fmt.messageTemplate"
                             rows="3"
                             @change="exportStore.saveToLocal()"
@@ -177,6 +191,11 @@ function handleTogglePreview(formatId: string) {
     windowStore.openExportPreview(formatId);
 }
 
+function handleSelectFormat(id: string) {
+    exportStore.setActive(id);
+    toggleExpand(id);
+}
+
 function toggleExpand(id: string) {
     expandedId.value = expandedId.value === id ? null : id;
 }
@@ -205,7 +224,7 @@ function handleDelete(id: string) {
 .config-header {
     display: flex;
     align-items: center;
-    padding: 8px 12px;
+    padding: 6px 12px;
     background-color: var(--bg-secondary);
     cursor: pointer;
     user-select: none;
@@ -213,6 +232,13 @@ function handleDelete(id: string) {
 
 .config-header:hover {
     background: var(--hover-bg);
+}
+
+.config-block.is-active .config-header {
+    background-color: var(--selection-bg);
+    color: var(--active-accent);
+    outline: 1px solid var(--active-accent);
+    outline-offset: -1px;
 }
 
 .config-name {
@@ -294,23 +320,8 @@ function handleDelete(id: string) {
     min-width: 0;
 }
 
-.form-group label {
-    display: block;
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-}
-
 .form-group input,
 .form-group textarea {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 6px 8px;
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    border-radius: 4px;
-    font-size: 13px;
     font-family: 'Fira Code', monospace;
     outline: none;
 }

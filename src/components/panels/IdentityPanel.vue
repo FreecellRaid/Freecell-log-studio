@@ -45,7 +45,7 @@
                         v-if="editingId === item.id"
                         v-model="editBuffer"
                         v-focus
-                        class="name-input"
+                        class="form-control name-input"
                         @blur="saveRename(item.id)"
                         @keyup.enter="saveRename(item.id)"
                     />
