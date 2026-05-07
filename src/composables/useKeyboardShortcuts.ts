@@ -41,7 +41,6 @@ export function useKeyboardShortcuts() {
         else if (isModKey && key === 'e') command = 'merge';
         else if (isModKey && key === 'd') command = 'selectNextSamePlayer';
         else if (!isModKey && key === 'enter') command = 'jump';
-        else if (!isModKey && key === 'enter') command = 'edit';
         if (command) {
             event.preventDefault();
             dispatch(command);
