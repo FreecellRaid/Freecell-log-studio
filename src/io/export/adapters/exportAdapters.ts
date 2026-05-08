@@ -1,95 +1,37 @@
-import type { ExportRow, ExportFormat, ExportStyle } from '@/types/export';
-import { parseTemplate, getPlaceholderValue } from '../templateParser';
-import type { TemplateToken } from '../templateParser';
+import type { ExportFormat, ExportRow, ExportStyle } from '@/types/export';
+import {
+    renderExportDocument,
+    type RenderedExportSegment,
+} from '../exportRender';
 
 // ===== TEXT ADAPTER =====
 
-function getMessageTokenStyle(
-    key: string,
-    row: ExportRow,
-): ExportStyle | undefined {
-    if (key === 'name') {
-        return row.nameStyle;
-    }
-
-    if (key === 'content') {
-        return row.contentStyle;
-    }
-
-    return undefined;
-}
-
-function splitContentSegments(value: string): string[] {
-    return value.split('\n');
-}
-
-function renderMessageTokens(
-    tokens: TemplateToken[],
-    row: ExportRow,
-    format: ExportFormat,
-    renderText: (value: string) => string,
-    renderTab: () => string,
-    renderNewline: () => string,
-    renderPlaceholder: (
-        value: string,
-        key: string,
-        style?: ExportStyle,
-    ) => string,
-): string {
-    return tokens
-        .map((token) => {
-            switch (token.type) {
-                case 'placeholder': {
-                    const value = getPlaceholderValue(token.value, row, format);
-                    const style = getMessageTokenStyle(token.value, row);
-
-                    if (token.value === 'content') {
-                        return splitContentSegments(value)
-                            .map((segment) =>
-                                renderPlaceholder(segment, token.value, style),
-                            )
-                            .join(renderNewline());
-                    }
-
-                    return renderPlaceholder(value, token.value, style);
-                }
-                case 'newline':
-                    return renderNewline();
-                case 'tab':
-                    return renderTab();
-                default:
-                    return renderText(token.value);
+function renderSegmentsToText(segments: RenderedExportSegment[]): string {
+    return segments
+        .map((segment) => {
+            if (segment.type === 'newline') {
+                return '\n';
             }
+
+            if (segment.type === 'tab') {
+                return '\t';
+            }
+
+            return segment.value;
         })
         .join('');
 }
 
 export function textAdapter(rows: ExportRow[], format: ExportFormat): string {
-    const msgTokens = parseTemplate(format.messageTemplate);
+    const rendered = renderExportDocument(rows, format);
 
-    return rows
-        .map((row) => {
-            if (row.type === 'documentSeparator') {
-                return format.docSeparator.replace('{{name}}', row.content);
-            }
-            if (row.type === 'chunkSeparator') {
-                return format.chunkSeparator.replace('{{name}}', row.content);
-            }
-            if (row.type === 'message') {
-                return renderMessageTokens(
-                    msgTokens,
-                    row,
-                    format,
-                    (value) => value,
-                    () => '\t',
-                    () => '\n',
-                    (value) => value,
-                );
-            }
-            return '';
-        })
-        .filter(Boolean)
-        .join(format.messageSeparator.replace(/\\n/g, '\n')); // 支持分隔符中的 \n
+    return rendered.blocks
+        .map(
+            (block) =>
+                renderSegmentsToText(block.segments) +
+                renderSegmentsToText(block.trailingSegments),
+        )
+        .join('');
 }
 
 // ===== HTML ADAPTER =====
@@ -112,46 +54,51 @@ function escapeHtml(text: string): string {
         .replace(/'/g, '&#39;');
 }
 
-export function htmlAdapter(rows: ExportRow[], format: ExportFormat): string {
-    const msgTokens = parseTemplate(format.messageTemplate);
+function renderSegmentsToHtml(segments: RenderedExportSegment[]): string {
+    return segments
+        .map((segment) => {
+            if (segment.type === 'newline') {
+                return '<br/>';
+            }
 
-    const body = rows
-        .map((row) => {
-            if (row.type === 'documentSeparator') {
-                const text = format.docSeparator.replace(
-                    '{{name}}',
-                    escapeHtml(row.content),
-                );
-                return `<div class="doc"><h3>${text}</h3></div>`;
+            if (segment.type === 'tab') {
+                return '&emsp;&emsp;';
             }
-            if (row.type === 'chunkSeparator') {
-                const text = format.chunkSeparator.replace(
-                    '{{name}}',
-                    escapeHtml(row.content),
-                );
-                return `<div class="chunk"><h4>${text}</h4></div>`;
+
+            const escapedValue = escapeHtml(segment.value);
+            const css = styleToCss(segment.style);
+
+            return css
+                ? `<span style="${css}">${escapedValue}</span>`
+                : escapedValue;
+        })
+        .join('');
+}
+
+function renderHtmlBody(rows: ExportRow[], format: ExportFormat): string {
+    const rendered = renderExportDocument(rows, format);
+
+    return rendered.blocks
+        .map((block) => {
+            const htmlContent =
+                renderSegmentsToHtml(block.segments) +
+                renderSegmentsToHtml(block.trailingSegments);
+
+            if (block.type === 'documentSeparator') {
+                return `<div class="doc"><h3>${htmlContent}</h3></div>`;
             }
-            if (row.type === 'message') {
-                const htmlContent = renderMessageTokens(
-                    msgTokens,
-                    row,
-                    format,
-                    (value) => escapeHtml(value),
-                    () => '&emsp;&emsp;',
-                    () => '<br/>',
-                    (value, _key, style) => {
-                        const css = styleToCss(style);
-                        const escapedValue = escapeHtml(value);
-                        return css
-                            ? `<span style="${css}">${escapedValue}</span>`
-                            : escapedValue;
-                    },
-                );
-                return `<div class="msg">${htmlContent}</div>`;
+
+            if (block.type === 'chunkSeparator') {
+                return `<div class="chunk"><h4>${htmlContent}</h4></div>`;
             }
-            return '';
+
+            return `<div class="msg">${htmlContent}</div>`;
         })
         .join('\n');
+}
+
+export function htmlAdapter(rows: ExportRow[], format: ExportFormat): string {
+    const body = renderHtmlBody(rows, format);
 
     return `<!DOCTYPE html>
     <html><head><meta charset="utf-8">
@@ -171,8 +118,8 @@ export function htmlAdapter(rows: ExportRow[], format: ExportFormat): string {
 // ===== DOC ADAPTER (Word 兼容 HTML) =====
 
 export function docAdapter(rows: ExportRow[], format: ExportFormat): string {
-    // 复用 HTML Adapter，但添加特定的 Word 命名空间，提高 Microsoft Word 的兼容性
-    const html = htmlAdapter(rows, format);
+    const body = renderHtmlBody(rows, format);
+    // 复用 HTML Adapter，但添加特定的 Word 命名空间
     return `\ufeff<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-    <head><meta charset="utf-8"></head><body>${html}</body></html>`;
+    <head><meta charset="utf-8"></head><body>${body}</body></html>`;
 }

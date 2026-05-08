@@ -54,11 +54,11 @@ export const PRESETS: ExportFormat[] = [
         formatName: '经典染色器格式',
         fileExtension: '.docx',
         playerNameFormat: '<{{name}}>:',
-        accountFormat: '({{account}})',
+        accountFormat: '',
         timeFormat: '{{time}}',
         docSeparator: '=== {{name}} ===',
         chunkSeparator: '\n',
-        messageTemplate: '{{time}}{{name}} {{account}} {{content}}',
+        messageTemplate: '{{time}}{{name}} {{content}}',
         messageSeparator: '\n',
     },
     {

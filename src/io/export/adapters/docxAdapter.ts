@@ -1,7 +1,9 @@
-import { Document, Packer, Paragraph, TextRun, Tab } from 'docx';
-import { parseTemplate, getPlaceholderValue } from '../templateParser';
-import type { TemplateToken } from '../templateParser';
-import type { ExportRow, ExportFormat, ExportStyle } from '@/types/export';
+import { Document, Packer, Paragraph, Tab, TextRun } from 'docx';
+import type { ExportFormat, ExportStyle, ExportRow } from '@/types/export';
+import {
+    renderExportDocument,
+    type RenderedExportSegment,
+} from '../exportRender';
 
 // ===== DOCX ADAPTER =====
 
@@ -11,8 +13,7 @@ function getDocxColor(color?: string): string | undefined {
     return color.startsWith('#') ? color.replace('#', '') : color;
 }
 
-// 处理样式配置到 TextRun 参数
-function applyStyle(style?: ExportStyle): any {
+function applyStyle(style?: ExportStyle): Record<string, unknown> {
     if (!style) return {};
     return {
         color: getDocxColor(style.color),
@@ -25,153 +26,68 @@ function createEmptyParagraph() {
     return new Paragraph({});
 }
 
-function getMessageTokenStyle(
-    key: string,
-    row: ExportRow,
-): ExportStyle | undefined {
-    if (key === 'name') {
-        return row.nameStyle;
+function createParagraphFromSegments(
+    segments: RenderedExportSegment[],
+): Paragraph {
+    if (segments.length === 0) {
+        return createEmptyParagraph();
     }
 
-    if (key === 'content') {
-        return row.contentStyle;
-    }
+    const runs: TextRun[] = [];
+    let pendingBreaks = 0;
 
-    return undefined;
-}
+    const pushRun = (run: TextRun) => {
+        if (pendingBreaks > 0) {
+            runs.push(new TextRun({ break: pendingBreaks }));
+            pendingBreaks = 0;
+        }
 
-function createRunsFromTokens(
-    tokens: TemplateToken[],
-    resolveToken: (token: TemplateToken) => TextRun[],
-): Paragraph[] {
-    const paragraphs: Paragraph[] = [];
-    let currentRuns: TextRun[] = [];
-
-    const pushParagraph = () => {
-        paragraphs.push(
-            currentRuns.length > 0
-                ? new Paragraph({ children: currentRuns })
-                : createEmptyParagraph(),
-        );
-        currentRuns = [];
+        runs.push(run);
     };
 
-    for (const token of tokens) {
-        if (token.type === 'newline') {
-            pushParagraph();
+    for (const segment of segments) {
+        if (segment.type === 'newline') {
+            pendingBreaks += 1;
             continue;
         }
 
-        if (token.type === 'tab') {
-            currentRuns.push(new TextRun({ children: [new Tab()] }));
+        if (segment.type === 'tab') {
+            pushRun(new TextRun({ children: [new Tab()] }));
             continue;
         }
 
-        const runs = resolveToken(token);
-        if (runs.length === 0) {
+        if (!segment.value) {
             continue;
         }
 
-        currentRuns.push(...runs);
+        pushRun(
+            new TextRun({
+                text: segment.value,
+                ...applyStyle(segment.style),
+            }),
+        );
     }
 
-    if (currentRuns.length > 0 || paragraphs.length === 0) {
-        pushParagraph();
+    if (pendingBreaks > 0) {
+        runs.push(new TextRun({ break: pendingBreaks }));
     }
 
-    return paragraphs;
-}
-
-function createSeparatorParagraphs(template: string, rowContent: string) {
-    const tokens = parseTemplate(template);
-
-    return createRunsFromTokens(tokens, (token) => {
-        if (token.type === 'placeholder') {
-            return token.value === 'name'
-                ? [new TextRun({ text: rowContent })]
-                : [];
-        }
-
-        return token.value ? [new TextRun({ text: token.value })] : [];
-    });
-}
-
-function createMessageParagraphs(row: ExportRow, format: ExportFormat) {
-    const tokens = parseTemplate(format.messageTemplate);
-
-    return createRunsFromTokens(tokens, (token) => {
-        if (token.type === 'placeholder') {
-            const text = getPlaceholderValue(token.value, row, format);
-            const style = getMessageTokenStyle(token.value, row);
-
-            if (!text) {
-                return [];
-            }
-
-            if (token.value === 'content') {
-                return text.split('\n').map(
-                    (segment, index) =>
-                        new TextRun({
-                            text: segment,
-                            break: index === 0 ? undefined : 1,
-                            ...applyStyle(style),
-                        }),
-                );
-            }
-
-            return [
-                new TextRun({
-                    text,
-                    ...applyStyle(style),
-                }),
-            ];
-        }
-
-        return token.value ? [new TextRun({ text: token.value })] : [];
-    });
+    return runs.length > 0
+        ? new Paragraph({ children: runs })
+        : createEmptyParagraph();
 }
 
 export async function docxAdapter(
     rows: ExportRow[],
     format: ExportFormat,
 ): Promise<Blob> {
-    const paragraphs: Paragraph[] = [];
-
-    for (const row of rows) {
-        if (row.type === 'documentSeparator') {
-            if (format.docSeparator) {
-                paragraphs.push(
-                    ...createSeparatorParagraphs(
-                        format.docSeparator,
-                        row.content || '',
-                    ),
-                );
-            }
-            continue;
-        }
-
-        if (row.type === 'chunkSeparator') {
-            if (format.chunkSeparator) {
-                paragraphs.push(
-                    ...createSeparatorParagraphs(
-                        format.chunkSeparator,
-                        row.content || '',
-                    ),
-                );
-            }
-            continue;
-        }
-
-        if (row.type === 'message') {
-            paragraphs.push(...createMessageParagraphs(row, format));
-
-            if (format.messageSeparator) {
-                paragraphs.push(
-                    ...createSeparatorParagraphs(format.messageSeparator, ''),
-                );
-            }
-        }
-    }
+    const rendered = renderExportDocument(rows, format);
+    const paragraphs = rendered.blocks.map((block) =>
+        createParagraphFromSegments([
+            ...block.segments,
+            ...block.trailingSegments,
+        ]),
+    );
 
     const doc = new Document({ sections: [{ children: paragraphs }] });
     return await Packer.toBlob(doc);

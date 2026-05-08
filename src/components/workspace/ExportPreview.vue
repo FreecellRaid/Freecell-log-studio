@@ -45,7 +45,6 @@
 
             <template v-else>
                 <DynamicScroller
-                    ref="scrollerRef"
                     :items="rowsWithId"
                     :min-item-size="24"
                     key-field="rowId"
@@ -56,149 +55,101 @@
                             :item="row"
                             :active="active"
                             :size-dependencies="[
-                                row.content,
+                                row.plainText,
+                                row.trailingPlainText,
                                 activeFormat.messageTemplate,
+                                activeFormat.messageSeparator,
+                                activeFormat.docSeparator,
+                                activeFormat.chunkSeparator,
                             ]"
                             :data-index="index"
                         >
                             <div class="preview-row">
                                 <div
-                                    v-if="
-                                        row.type === 'documentSeparator' &&
-                                        activeFormat.docSeparator
-                                    "
+                                    v-if="row.type !== 'message'"
                                     class="separator-preview"
                                 >
                                     <span
-                                        v-for="(
-                                            token, tIdx
-                                        ) in docSeparatorTokens"
-                                        :key="'doc-' + tIdx"
+                                        v-for="(segment, tIdx) in row.segments"
+                                        :key="'block-' + tIdx"
                                     >
-                                        <template v-if="token.type === 'text'">
-                                            {{ token.value }}
+                                        <template
+                                            v-if="segment.type === 'text'"
+                                        >
+                                            <span
+                                                :style="
+                                                    getSegmentStyle(segment)
+                                                "
+                                            >
+                                                {{ segment.value }}
+                                            </span>
                                         </template>
                                         <br
-                                            v-else-if="token.type === 'newline'"
+                                            v-else-if="
+                                                segment.type === 'newline'
+                                            "
                                         />
                                         <span
-                                            v-else-if="token.type === 'tab'"
+                                            v-else-if="segment.type === 'tab'"
                                             class="tab-space"
                                         ></span>
-                                        <template
-                                            v-else-if="
-                                                token.type === 'placeholder' &&
-                                                token.value === 'name'
-                                            "
-                                        >
-                                            {{ row.content }}
-                                        </template>
                                     </span>
                                 </div>
 
-                                <div
-                                    v-else-if="
-                                        row.type === 'chunkSeparator' &&
-                                        activeFormat.chunkSeparator
-                                    "
-                                    class="separator-preview"
-                                >
+                                <div v-else class="message-preview">
                                     <span
-                                        v-for="(
-                                            token, tIdx
-                                        ) in chunkSeparatorTokens"
-                                        :key="'chunk-' + tIdx"
-                                    >
-                                        <template v-if="token.type === 'text'">
-                                            {{ token.value }}
-                                        </template>
-                                        <br
-                                            v-else-if="token.type === 'newline'"
-                                        />
-                                        <span
-                                            v-else-if="token.type === 'tab'"
-                                            class="tab-space"
-                                        ></span>
-                                        <template
-                                            v-else-if="
-                                                token.type === 'placeholder' &&
-                                                token.value === 'name'
-                                            "
-                                        >
-                                            {{ row.content }}
-                                        </template>
-                                    </span>
-                                </div>
-
-                                <div
-                                    v-else-if="row.type === 'message'"
-                                    class="message-preview"
-                                >
-                                    <span
-                                        v-for="(token, tIdx) in messageTokens"
+                                        v-for="(segment, tIdx) in row.segments"
                                         :key="'msg-' + tIdx"
                                     >
-                                        <template v-if="token.type === 'text'">
-                                            {{ token.value }}
+                                        <template
+                                            v-if="segment.type === 'text'"
+                                        >
+                                            <span
+                                                :style="
+                                                    getSegmentStyle(segment)
+                                                "
+                                            >
+                                                {{ segment.value }}
+                                            </span>
                                         </template>
                                         <br
-                                            v-else-if="token.type === 'newline'"
+                                            v-else-if="
+                                                segment.type === 'newline'
+                                            "
                                         />
                                         <span
-                                            v-else-if="token.type === 'tab'"
+                                            v-else-if="segment.type === 'tab'"
                                             class="tab-space"
                                         ></span>
-                                        <span
-                                            v-else-if="
-                                                token.type === 'placeholder'
-                                            "
-                                            :style="
-                                                getStyleForPlaceholder(
-                                                    token.value,
-                                                    row,
-                                                )
-                                            "
-                                        >
-                                            <template
-                                                v-for="(
-                                                    segment, segmentIdx
-                                                ) in getPlaceholderSegments(
-                                                    token.value,
-                                                    row,
-                                                )"
-                                                :key="`placeholder-${tIdx}-${segmentIdx}`"
-                                            >
-                                                <br
-                                                    v-if="
-                                                        token.value ===
-                                                            'content' &&
-                                                        segmentIdx > 0
-                                                    "
-                                                />
-                                                {{ segment }}
-                                            </template>
-                                        </span>
                                     </span>
 
                                     <span class="message-separator">
                                         <span
                                             v-for="(
-                                                token, tIdx
-                                            ) in messageSeparatorTokens"
+                                                segment, tIdx
+                                            ) in row.trailingSegments"
                                             :key="'sep-' + tIdx"
                                         >
                                             <template
-                                                v-if="token.type === 'text'"
+                                                v-if="segment.type === 'text'"
                                             >
-                                                {{ token.value }}
+                                                <span
+                                                    :style="
+                                                        getSegmentStyle(segment)
+                                                    "
+                                                >
+                                                    {{ segment.value }}
+                                                </span>
                                             </template>
                                             <br
                                                 v-else-if="
-                                                    token.type === 'newline'
+                                                    segment.type === 'newline'
                                                 "
                                             />
                                             <span
-                                                v-else-if="token.type === 'tab'"
+                                                v-else-if="
+                                                    segment.type === 'tab'
+                                                "
                                                 class="tab-space"
                                             ></span>
                                         </span>
@@ -216,16 +167,19 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Eye, X, SquareSplitHorizontal } from '@lucide/vue';
-import { useLogStore } from '@/stores/logStore';
-import { useStyleStore } from '@/stores/styleStore';
-import { useExportStore } from '@/stores/exportStore';
-import { useUiStore } from '@/stores/uiStore';
-import { useWindowStore } from '@/stores/windowStore';
-import { flattenLogToRows } from '@/io/export/flattener';
-import { parseTemplate, getPlaceholderValue } from '@/io/export/templateParser';
-import type { ExportRow } from '@/types/export';
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
+
+import {
+    renderExportDocument,
+    type RenderedExportSegment,
+} from '@/io/export/exportRender';
+import { flattenLogToRows } from '@/io/export/flattener';
+import { useExportStore } from '@/stores/exportStore';
+import { useLogStore } from '@/stores/logStore';
+import { useStyleStore } from '@/stores/styleStore';
+import { useUiStore } from '@/stores/uiStore';
+import { useWindowStore } from '@/stores/windowStore';
 
 const logStore = useLogStore();
 const styleStore = useStyleStore();
@@ -236,6 +190,7 @@ const props = defineProps<{
     windowId: string;
     originalId: string;
 }>();
+
 const effectiveWindowId = computed(() => props.windowId);
 const isActive = computed(() => windowStore.activeFocus === props.windowId);
 const activeFormat = computed(
@@ -250,17 +205,19 @@ const canClose = computed(() => {
     );
 });
 
-// 计算行数据，并为每一行添加 rowId 供虚拟滚动 key 使用
 const rowsWithId = computed(() => {
     const rawRows = flattenLogToRows(
         logStore.documents,
         styleStore.viewSettings,
         styleStore.activeRules,
     );
-    return rawRows.map((row, index) => ({
-        ...row,
-        rowId: `${row.type}-${index}`,
-    }));
+
+    return renderExportDocument(rawRows, activeFormat.value).blocks.map(
+        (block, index) => ({
+            ...block,
+            rowId: `${block.type}-${index}`,
+        }),
+    );
 });
 
 // 兼容旧变量名
@@ -289,41 +246,15 @@ function handleClose() {
     }
 }
 
-const messageTokens = computed(() =>
-    parseTemplate(activeFormat.value.messageTemplate),
-);
-const messageSeparatorTokens = computed(() =>
-    parseTemplate(activeFormat.value.messageSeparator),
-);
-const docSeparatorTokens = computed(() =>
-    parseTemplate(activeFormat.value.docSeparator || ''),
-);
-const chunkSeparatorTokens = computed(() =>
-    parseTemplate(activeFormat.value.chunkSeparator || ''),
-);
-
-function getPlaceholderSegments(key: string, row: ExportRow): string[] {
-    const value = getPlaceholderValue(key, row, activeFormat.value);
-    return key === 'content' ? value.split('\n') : [value];
-}
-
-function getStyleForPlaceholder(
-    key: string,
-    row: ExportRow,
+function getSegmentStyle(
+    segment: RenderedExportSegment,
 ): Record<string, string> {
-    const exportStyle =
-        key === 'name'
-            ? row.nameStyle
-            : key === 'content'
-              ? row.contentStyle
-              : undefined;
-
-    if (!exportStyle) return {};
+    if (segment.type !== 'text' || !segment.style) return {};
 
     const css: Record<string, string> = {};
-    if (exportStyle.color) css.color = exportStyle.color;
-    if (exportStyle.bold) css.fontWeight = 'bold';
-    if (exportStyle.italic) css.fontStyle = 'italic';
+    if (segment.style.color) css.color = segment.style.color;
+    if (segment.style.bold) css.fontWeight = 'bold';
+    if (segment.style.italic) css.fontStyle = 'italic';
 
     return css;
 }
