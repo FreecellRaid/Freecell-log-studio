@@ -279,7 +279,7 @@ const truncate = (str: string, len: number) => {
 <style scoped>
 .search-controls {
     flex-shrink: 0;
-    padding: 12px 12px 0px 12px;
+    padding: 12px;
     border-bottom: 1px solid var(--border-color);
     z-index: 2;
 }
