@@ -53,7 +53,6 @@ UI 风格参考 VSCode。
 - **框架**：Vue 3
 - **状态管理**：Pinia
 - **语言**：TypeScript
-- **图标库**：Lucide Vue
 - **构建工具**：Vite
 
 ---
@@ -62,18 +61,23 @@ UI 风格参考 VSCode。
 
 ### 安装与运行
 
+本项目使用 pnpm 作为包管理器，在运行项目前，请确保你已安装 pnpm
+
 ```bash
+# 如果没有安装 pnpm，可通过 npm 全局安装
+npm install -g pnpm
+
 # 安装依赖
-npm install
+pnpm install
 
 # 启动开发服务器
-npm run dev
+pnpm dev
 
 # 构建生产版本
-npm run build
+pnpm build
 
 # 构建单文件版本（所有资源内联）
-npm run build:single
+pnpm build:single
 ```
 
 ---
