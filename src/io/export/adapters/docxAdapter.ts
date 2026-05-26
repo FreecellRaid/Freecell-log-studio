@@ -1,4 +1,4 @@
-import { Document, Packer, Paragraph, Tab, TextRun } from 'docx';
+import { AlignmentType, Document, Packer, Paragraph, Tab, TextRun } from 'docx';
 import type { ExportFormat, ExportStyle, ExportRow } from '@/types/export';
 import {
     renderExportDocument,
@@ -23,7 +23,7 @@ function applyStyle(style?: ExportStyle): Record<string, unknown> {
 }
 
 function createEmptyParagraph() {
-    return new Paragraph({});
+    return new Paragraph({ alignment: AlignmentType.LEFT });
 }
 
 function createParagraphFromSegments(
@@ -73,7 +73,7 @@ function createParagraphFromSegments(
     }
 
     return runs.length > 0
-        ? new Paragraph({ children: runs })
+        ? new Paragraph({ children: runs, alignment: AlignmentType.LEFT })
         : createEmptyParagraph();
 }
 
