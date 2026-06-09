@@ -43,7 +43,7 @@
                 <DynamicScroller
                     ref="scrollerRef"
                     :items="messages"
-                    :min-item-size="60"
+                    :min-item-size="90"
                     key-field="messageId"
                     class="scroller"
                 >
@@ -410,9 +410,16 @@ function withScrollAnchor(action: () => void) {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    overflow-anchor: none;
     padding: 0px 0px;
     position: relative;
     background-color: var(--bg-workspace);
+}
+
+.scroller {
+    flex: 1;
+    height: 100%;
+    overflow-anchor: none;
 }
 
 .scroller {
