@@ -66,7 +66,8 @@ export function chunkMessages(
     if (!messages || messages.length === 0) return [];
 
     const total = messages.length;
-    const maxChunkSize = Math.max(1, Math.max(Math.ceil(total * 0.2), 200));
+    // 暂时不自动分了，好像大家不是很喜欢这个功能，现在加了虚拟滚动没那么卡了
+    // const maxChunkSize = Math.max(1, Math.max(Math.ceil(total * 0.2), 200));
     const chunks: Chunk[] = [];
 
     const hasKeywordFilter =
@@ -88,13 +89,13 @@ export function chunkMessages(
 
         const crossedDay =
             !reachedEnd && !isSameDay(messages[i - 1].time, messages[i].time);
-        const reachedSizeLimit = i - start >= maxChunkSize;
+        // const reachedSizeLimit = i - start >= maxChunkSize;
 
         if (
             !reachedEnd &&
             !startsKeywordChunk &&
-            !crossedDay &&
-            !reachedSizeLimit
+            !crossedDay
+            // !reachedSizeLimit
         )
             continue;
 
