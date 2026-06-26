@@ -2,7 +2,7 @@
     <div
         class="help-overlay"
         data-focus-area="modal"
-        @pointerdown.self="windowStore.closeHelpDocument()"
+        @pointerdown.self="handleClose"
     >
         <div class="help-dialog" role="dialog" aria-modal="true">
             <div class="help-header">
@@ -14,7 +14,7 @@
                     class="close-button icon-interactive"
                     type="button"
                     title="关闭帮助 (Esc)"
-                    @click="windowStore.closeHelpDocument()"
+                    @click="handleClose"
                 >
                     <X class="ui-icon" />
                 </button>
@@ -192,6 +192,10 @@ import {
 import { useWindowStore } from '@/stores/windowStore';
 
 const windowStore = useWindowStore();
+
+function handleClose() {
+    windowStore.closeHelpDocument();
+}
 
 const shortcuts = [
     { key: 'Ctrl + A', desc: '全选' },
