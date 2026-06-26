@@ -1,5 +1,6 @@
 <template>
     <div
+        ref="editWrapper"
         class="message-item"
         :data-message-id="message.messageId"
         :class="{
@@ -7,7 +8,7 @@
             'is-active': isActive,
             'is-hidden-active': isHidden,
         }"
-        draggable="true"
+        :draggable="!isEditing"
         @click="handleClick"
         @dragstart="handleDragStart"
         @dragenter.prevent
@@ -87,6 +88,7 @@
 <script setup lang="ts">
 import { computed, ref, nextTick, watch } from 'vue';
 import type { Message } from '@/types/log';
+import { onClickOutside } from '@vueuse/core';
 import { useStyleStore } from '@/stores/styleStore';
 import { formatDate } from '@/utils/date';
 import { computeStyleForMessage } from '@/editor/styleEngine';
@@ -137,6 +139,11 @@ function handleClick(event: MouseEvent) {
 }
 
 function handleDragStart(event: DragEvent) {
+    if (props.isEditing) {
+        event.preventDefault();
+        return;
+    }
+
     emit(
         'dragstart',
         event,
@@ -180,11 +187,13 @@ function handleEditEnter(event: KeyboardEvent) {
     emit('saveEdit', props.message.messageId);
 }
 
+const editWrapper = ref<HTMLElement | null>(null);
+
 watch(
     () => props.isEditing,
     async (newVal) => {
+        await nextTick();
         if (newVal) {
-            await nextTick();
             if (editInput.value) {
                 editInput.value.focus({ preventScroll: true });
                 editInput.value.setSelectionRange(
@@ -195,6 +204,13 @@ watch(
         }
     },
 );
+
+onClickOutside(editWrapper, () => {
+    if (!props.isEditing) {
+        return;
+    }
+    emit('saveEdit', props.message.messageId);
+});
 </script>
 
 <style scoped>
