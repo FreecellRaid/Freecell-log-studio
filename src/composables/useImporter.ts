@@ -1,6 +1,7 @@
 import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
-import type { LogDocument } from '@/types/log';
+import { useWindowStore } from '@/stores/windowStore';
+import type { Chunk, LogDocument } from '@/types/log';
 import { buildLogDocument } from '@/io/import/parser';
 import { dispatchAdapter } from '@/io/import/importAdapters';
 import { tryParseProjectFile } from '@/io/localStorage/project';
@@ -41,7 +42,45 @@ export async function importFiles(
 export function useFileImport() {
     const logStore = useLogStore();
     const styleStore = useStyleStore();
+    const windowStore = useWindowStore();
     const projectManager = useProjectManager();
+
+    function getFirstChunk(): Chunk | null {
+        let firstChunk: Chunk | null = null;
+        let firstDocIndex = Number.POSITIVE_INFINITY;
+        let firstChunkIndex = Number.POSITIVE_INFINITY;
+
+        for (const doc of logStore.documents) {
+            for (const chunk of doc.chunks) {
+                if (
+                    doc.docIndex < firstDocIndex ||
+                    (doc.docIndex === firstDocIndex &&
+                        chunk.chunkIndex < firstChunkIndex)
+                ) {
+                    firstChunk = chunk;
+                    firstDocIndex = doc.docIndex;
+                    firstChunkIndex = chunk.chunkIndex;
+                }
+            }
+        }
+
+        return firstChunk;
+    }
+
+    function hasOpenedChunkView(): boolean {
+        return Array.from(windowStore.openWindows.values()).some(
+            (win) => win.windowName === 'chunkView',
+        );
+    }
+
+    // 自动打开第一个场景进入编辑
+    function openFirstChunkViewIfNeeded() {
+        if (hasOpenedChunkView()) return;
+        const firstChunk = getFirstChunk();
+        if (firstChunk) {
+            windowStore.setActiveChunk(firstChunk.chunkId);
+        }
+    }
 
     async function importAndApply(files: File[]): Promise<number> {
         const fileEntries = await Promise.all(
@@ -85,6 +124,9 @@ export function useFileImport() {
                     confirmIfNeeded: true,
                 },
             );
+            if (applied) {
+                openFirstChunkViewIfNeeded();
+            }
             return applied ? 1 : 0;
         }
 
@@ -99,6 +141,7 @@ export function useFileImport() {
 
         logStore.appendDocuments(documents);
         styleStore.syncSystemRulesFromMessages(logStore.allMessages);
+        openFirstChunkViewIfNeeded();
         return documents.length;
     }
 
