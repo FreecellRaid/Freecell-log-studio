@@ -33,7 +33,7 @@ export function transformRowToMessage(
     } else if (!name) {
         name = account;
     } else if (!account) {
-        account = `${name}_ID`;
+        account = `${name}`;
     }
 
     const firstLine = content.split('\n')[0] || '';

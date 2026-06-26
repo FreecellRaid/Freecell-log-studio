@@ -2,7 +2,7 @@ import type { ImportRow, ImportAdapter } from '@/types/import';
 import { parseLogDate } from '@/utils/date';
 import { cleanContent } from './cleaner';
 
-// 在if写崩溃了之后，加了个adapter调度器
+// 为什么各家没有结构化导出，还要自己用正则抠……
 // adapter test 标准: 元信息+100, 强特征+10, 弱特征+1, 错误特征-10
 export function dispatchAdapter(text: string): ImportAdapter {
     const sampleLines = text.split('\n').slice(0, 100);
@@ -201,12 +201,13 @@ export const CcfoliaImportAdapter: ImportAdapter = {
         let score = 0;
         const text = sampleLines.join('\n');
 
-        // 强特征嗅探，title中有元信息
+        // title 有元信息
+        // <title>ccfolia - logs</title>
         if (text.includes('<title>ccfolia - logs</title>')) {
             score += 100;
         }
 
-        // 弱特征嗅探：计算带有 style="color:..." 的 <p> 标签数量
+        // 弱特征：计算带有 style="color:..." 的 <p> 标签数量
         const matchCount = (text.match(/<p\s+style="color:/g) || []).length;
         score += matchCount;
 
@@ -307,9 +308,110 @@ export const PineappleImportAdapter: ImportAdapter = {
     },
 };
 
+// sealchat 格式
+// [YYYY-MM-DD hh:mm:ss] <playerName> content
+const SEALCHAT_LOG_REGEX =
+    /^\[(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2})\]\s+<([^>]+)>\s*(.*)$/;
+
+export const SealchatImportAdapter: ImportAdapter = {
+    id: 'sealchat-adapter',
+    name: 'sealchat 格式',
+
+    test: (sampleLines: string[]) => {
+        let score = 0;
+        const text = sampleLines.join('\n');
+
+        // 头部元信息
+        // 频道: 频道名 (hash)
+        // 导出时间: 2026-06-26T06:56:32Z
+        // 消息数量: number
+        // ---
+        if (/频道:\s+.*?\n导出时间:\s+.*?\n消息数量:\s+\d+/.test(text)) {
+            score += 100;
+        }
+
+        for (const line of sampleLines) {
+            if (
+                /^\[\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}\]\s+<[^>]+>/.test(line)
+            ) {
+                score += 10;
+            }
+        }
+        return score;
+    },
+
+    parse: (text: string) => {
+        const lines = text.split('\n');
+        const rows: ImportRow[] = [];
+
+        let currentName: string | null = null;
+        let currentTimeStr: string | undefined = undefined;
+        let contentBuffer: string[] = [];
+        let channelInfo: string | undefined = undefined;
+
+        const flushBuffer = () => {
+            if (currentName !== null && contentBuffer.length > 0) {
+                const rawContent = contentBuffer.join('\n');
+                rows.push({
+                    playerName: currentName,
+                    // sealchat 导出没有 account 字段
+                    time: currentTimeStr
+                        ? parseLogDate(currentTimeStr)
+                        : undefined,
+                    content: cleanContent(rawContent),
+                    // 将捕获到的频道名称作为第一条消息的 meta 信息存入
+                    meta: channelInfo ? { channel: channelInfo } : undefined,
+                });
+                channelInfo = undefined;
+            }
+            contentBuffer = [];
+        };
+
+        for (const line of lines) {
+            // 提取头部频道元信息
+            if (!currentName && line.startsWith('频道:')) {
+                channelInfo = line.replace('频道:', '').trim();
+                continue;
+            }
+
+            // 跳过头部的分割线和其他无用的头部统计信息
+            if (
+                !currentName &&
+                (line.trim() === '---' ||
+                    line.startsWith('导出时间:') ||
+                    line.startsWith('消息数量:'))
+            ) {
+                continue;
+            }
+
+            const match = line.match(SEALCHAT_LOG_REGEX);
+
+            if (match) {
+                flushBuffer();
+
+                currentTimeStr = match[1];
+                currentName = match[2].trim();
+                const contentText = match[3];
+
+                if (contentText) {
+                    contentBuffer.push(contentText);
+                }
+            } else {
+                if (currentName !== null && line.trim().length > 0) {
+                    contentBuffer.push(line);
+                }
+            }
+        }
+        flushBuffer();
+
+        return rows;
+    },
+};
+
 const ALL_ADAPTERS: ImportAdapter[] = [
     StandardImportAdapter,
     PaintedLogAdapter,
     CcfoliaImportAdapter,
     PineappleImportAdapter,
+    SealchatImportAdapter,
 ];
