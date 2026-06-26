@@ -1,21 +1,17 @@
 <template>
     <div
         class="file-importer"
+        @click="triggerFileInput"
         @dragover.prevent="isDragging = true"
         @dragleave.prevent="isDragging = false"
         @drop.prevent="handleDrop"
         :class="{ 'is-dragging': isDragging }"
     >
         <div class="drop-zone">
-            <div class="icon-container">
-                <FolderOpen class="ui-icon icon" />
-            </div>
+            <FolderOpen class="bg-icon" />
             <h2 class="title">导入跑团 Log</h2>
-            <p class="subtitle">将文件拖拽到此处，或点击</p>
+            <p class="subtitle">将文件拖拽到此处， 或点击任意处导入文件</p>
 
-            <button class="browse-btn" @click="triggerFileInput">
-                导入文件
-            </button>
             <input
                 type="file"
                 ref="fileInput"
@@ -86,13 +82,10 @@ async function processFiles(files: File[]) {
 
 <style scoped>
 .file-importer {
-    height: 100%;
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--bg-workspace);
-    color: var(--text-primary);
-    transition: all 0.2s ease;
 }
 
 .file-importer.is-dragging {
@@ -101,45 +94,29 @@ async function processFiles(files: File[]) {
 }
 
 .drop-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     text-align: center;
     max-width: 400px;
 }
 
-.icon-container .icon {
-    width: 64px;
-    height: 64px;
-    opacity: 0.6;
-    color: var(--icon-color);
-}
-
 .title {
-    font-size: 20px;
-    margin: 16px 0 8px;
-    color: var(--text-primary);
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--active-accent);
+    opacity: 0.8;
 }
 
 .subtitle {
     font-size: 14px;
     color: var(--text-muted);
-    margin-bottom: 24px;
-}
-
-.browse-btn {
-    background-color: var(--active-accent);
-    color: var(--bg-workspace);
-    border: none;
-    padding: 8px 24px;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.browse-btn:hover {
-    opacity: 0.9;
 }
 
 .shortcuts-hint {
-    margin-top: 32px;
+    margin-top: 24px;
     font-size: 12px;
+    min-width: 200px;
     color: var(--text-muted);
 }
 

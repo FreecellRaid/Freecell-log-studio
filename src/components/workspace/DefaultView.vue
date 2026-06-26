@@ -14,22 +14,20 @@
 
         <div class="welcome-content">
             <div class="welcome-container">
-                <div class="icon-container">
-                    <Dices class="ui-icon icon" />
-                </div>
-
-                <p class="kaomoji-egg">
+                <Dices class="bg-icon" />
+                <p class="kaomoji">
                     {{ currentKaomoji.text }}
                 </p>
+                <p class="subtitle">从左侧场景列表中选择一个以开始编辑</p>
 
                 <div class="foot-hint">
                     <div class="foot-hint-item">
-                        <span>Ctrl + K 查看帮助文档</span>
+                        <span>切换侧边栏</span>
+                        <span>Ctrl + B</span>
                     </div>
                     <div class="foot-hint-item">
-                        当前没有处于活跃状态的场景。
-                        <br />
-                        从左侧场景列表中选择一个以开始编辑。
+                        <span>打开帮助文档</span>
+                        <span>Ctrl + K</span>
                     </div>
                 </div>
             </div>
@@ -81,33 +79,32 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    max-width: 400px;
     text-align: center;
+    max-width: 400px;
 }
 
-.icon-container .icon {
-    width: 64px;
-    height: 64px;
-    opacity: 0.6;
-    color: var(--icon-color);
-}
-
-.kaomoji-egg {
+.kaomoji {
     font-size: 24px;
-    font-weight: normal;
+    font-weight: 600;
     color: var(--active-accent);
     opacity: 0.8;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
 }
 
 .foot-hint {
     margin-top: 24px;
     font-size: 12px;
+    min-width: 200px;
     color: var(--text-muted);
 }
 
 .foot-hint-item {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     margin: 4px 0;
     padding: 4px 8px;
     background-color: var(--bg-secondary);

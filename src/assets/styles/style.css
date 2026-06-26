@@ -90,6 +90,17 @@ body,
     stroke-width: 1.9;
 }
 
+/* 背景icon样式 */
+.bg-icon {
+    width: 64px;
+    height: 64px;
+    display: block;
+    color: var(--icon-color);
+    opacity: 0.6;
+    flex-shrink: 0;
+    stroke-width: 1.9;
+}
+
 .icon-interactive {
     color: var(--icon-color);
     background: transparent;
