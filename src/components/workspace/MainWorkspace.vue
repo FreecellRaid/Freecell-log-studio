@@ -24,10 +24,12 @@
 
                 <div
                     v-if="shouldRenderResizeHandle(pane.paneIndex)"
-                    class="pane-resize-handle"
+                    class="resize-handle pane-resize-handle"
                     :class="{
-                        'pane-resize-handle-vertical':
+                        'resize-handle-y':
                             windowStore.paneDirection === 'vertical',
+                        'resize-handle-x':
+                            windowStore.paneDirection === 'horizontal',
                     }"
                     @mousedown="startResize"
                 ></div>
@@ -157,26 +159,5 @@ function startResize(e: MouseEvent) {
     min-height: 0;
     overflow: hidden;
     position: relative;
-}
-
-.pane-resize-handle {
-    width: 4px;
-    height: 100%;
-    cursor: col-resize;
-    flex-shrink: 0;
-    background-color: transparent;
-    transition: background-color 0.15s;
-    z-index: 10;
-}
-
-.pane-resize-handle:hover,
-.pane-resize-handle:active {
-    background-color: var(--active-accent);
-}
-
-.pane-layout.pane-layout-vertical .pane-resize-handle {
-    width: 100%;
-    height: 4px;
-    cursor: row-resize;
 }
 </style>

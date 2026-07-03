@@ -148,7 +148,8 @@ body,
 .sidebar-right {
     background-color: var(--bg-sidebar);
     border-left: 1px solid var(--border-color);
-    width: 280px;
+    flex-shrink: 0;
+    position: relative;
 }
 
 .workspace {
@@ -157,6 +158,46 @@ body,
     overflow-y: auto;
     position: relative;
 }
+
+/* 通用拖拽手柄 */
+.resize-handle {
+    flex-shrink: 0;
+    background-color: transparent;
+    transition: background-color 0.15s;
+    z-index: 10;
+}
+
+.resize-handle:hover,
+.resize-handle:active {
+    background-color: var(--active-accent);
+}
+
+.resize-handle-x {
+    width: 4px;
+    height: 100%;
+    cursor: col-resize;
+}
+
+.resize-handle-y {
+    width: 100%;
+    height: 4px;
+    cursor: row-resize;
+}
+
+.resize-handle-overlay {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+}
+
+.resize-handle-left-edge {
+    left: -2px;
+}
+
+.resize-handle-right-edge {
+    right: -2px;
+}
+
 .status-bar {
     height: 16px;
     background-color: var(--bg-statusbar);

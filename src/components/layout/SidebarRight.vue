@@ -1,164 +1,170 @@
 <template>
-    <div class="panel">
-        <header class="panel-header">
-            <div class="header-title">
-                <h3>消息属性检查器</h3>
-            </div>
-            <div class="count" v-if="selectedItems.length > 0">
-                已选中 {{ selectedItems.length }} 条
-            </div>
-        </header>
-
-        <div class="inspector-content">
-            <div v-if="selectedMessageCount === 0" class="panel-empty-hint">
-                <div>
-                    未选中消息
-                    <br />
-                    在编辑器中点击消息以查看详情
+    <div :style="{ width: uiStore.rightPanelWidth + 'px' }">
+        <div
+            class="resize-handle resize-handle-x resize-handle-overlay resize-handle-left-edge"
+            @mousedown="startResize"
+        ></div>
+        <div class="panel">
+            <header class="panel-header">
+                <div class="header-title">
+                    <h3>消息属性检查器</h3>
                 </div>
-            </div>
+                <div class="count" v-if="selectedItems.length > 0">
+                    已选中 {{ selectedItems.length }} 条
+                </div>
+            </header>
 
-            <div v-for="chunk in allChunks" :key="chunk.chunkId">
-                <div
-                    v-for="message in chunk.messages"
-                    :key="message.messageId"
-                    v-show="
-                        activeContext.selectedMessageIds.value.has(
-                            message.messageId,
-                        )
-                    "
-                    class="message-detail-card"
-                >
-                    <div class="card-header">
-                        <span class="id-badge">
-                            ID: {{ message.messageId }}
-                        </span>
+            <div class="inspector-content">
+                <div v-if="selectedMessageCount === 0" class="panel-empty-hint">
+                    <div>
+                        未选中消息
+                        <br />
+                        在编辑器中点击消息以查看详情
                     </div>
+                </div>
 
-                    <div class="property-grid">
-                        <div class="prop-item-time">
-                            <label>时间:</label>
-                            <div>{{ formatDate(message.time) }}</div>
+                <div v-for="chunk in allChunks" :key="chunk.chunkId">
+                    <div
+                        v-for="message in chunk.messages"
+                        :key="message.messageId"
+                        v-show="
+                            activeContext.selectedMessageIds.value.has(
+                                message.messageId,
+                            )
+                        "
+                        class="message-detail-card"
+                    >
+                        <div class="card-header">
+                            <span class="id-badge">
+                                ID: {{ message.messageId }}
+                            </span>
                         </div>
 
-                        <div class="prop-item">
-                            <label>玩家名</label>
-                            <input
-                                type="text"
-                                :value="message.playerName"
-                                @input="
-                                    updateField(
-                                        chunk.chunkId,
-                                        message.messageId,
-                                        'playerName',
-                                        $event,
-                                    )
-                                "
-                            />
-                        </div>
+                        <div class="property-grid">
+                            <div class="prop-item-time">
+                                <label>时间:</label>
+                                <div>{{ formatDate(message.time) }}</div>
+                            </div>
 
-                        <div class="prop-item">
-                            <label>账号</label>
-                            <input
-                                type="text"
-                                :value="message.account"
-                                @input="
-                                    updateField(
-                                        chunk.chunkId,
-                                        message.messageId,
-                                        'account',
-                                        $event,
-                                    )
-                                "
-                            />
-                        </div>
-
-                        <div class="prop-item">
-                            <label>身份</label>
-                            <select
-                                :value="message.role"
-                                @change="
-                                    updateField(
-                                        chunk.chunkId,
-                                        message.messageId,
-                                        'role',
-                                        $event,
-                                    )
-                                "
-                            >
-                                <option value="pl">玩家</option>
-                                <option value="gm">主持人</option>
-                                <option value="npc">NPC</option>
-                                <option value="ob">观众</option>
-                                <option value="bot">骰子</option>
-                            </select>
-                        </div>
-                        <div class="prop-row">
-                            <label class="checkbox-label">
+                            <div class="prop-item">
+                                <label>玩家名</label>
                                 <input
-                                    type="checkbox"
-                                    :checked="message.isOoc"
+                                    type="text"
+                                    :value="message.playerName"
+                                    @input="
+                                        updateField(
+                                            chunk.chunkId,
+                                            message.messageId,
+                                            'playerName',
+                                            $event,
+                                        )
+                                    "
+                                />
+                            </div>
+
+                            <div class="prop-item">
+                                <label>账号</label>
+                                <input
+                                    type="text"
+                                    :value="message.account"
+                                    @input="
+                                        updateField(
+                                            chunk.chunkId,
+                                            message.messageId,
+                                            'account',
+                                            $event,
+                                        )
+                                    "
+                                />
+                            </div>
+
+                            <div class="prop-item">
+                                <label>身份</label>
+                                <select
+                                    :value="message.role"
                                     @change="
                                         updateField(
                                             chunk.chunkId,
                                             message.messageId,
-                                            'isOoc',
+                                            'role',
                                             $event,
-                                            'boolean',
                                         )
                                     "
-                                />
-                                场外消息
-                            </label>
-                            <label class="checkbox-label">
-                                <input
-                                    type="checkbox"
-                                    :checked="message.isCommand"
-                                    @change="
+                                >
+                                    <option value="pl">玩家</option>
+                                    <option value="gm">主持人</option>
+                                    <option value="npc">NPC</option>
+                                    <option value="ob">观众</option>
+                                    <option value="bot">骰子</option>
+                                </select>
+                            </div>
+                            <div class="prop-row">
+                                <label class="checkbox-label">
+                                    <input
+                                        type="checkbox"
+                                        :checked="message.isOoc"
+                                        @change="
+                                            updateField(
+                                                chunk.chunkId,
+                                                message.messageId,
+                                                'isOoc',
+                                                $event,
+                                                'boolean',
+                                            )
+                                        "
+                                    />
+                                    场外消息
+                                </label>
+                                <label class="checkbox-label">
+                                    <input
+                                        type="checkbox"
+                                        :checked="message.isCommand"
+                                        @change="
+                                            updateField(
+                                                chunk.chunkId,
+                                                message.messageId,
+                                                'isCommand',
+                                                $event,
+                                                'boolean',
+                                            )
+                                        "
+                                    />
+                                    指令消息
+                                </label>
+                            </div>
+
+                            <div class="prop-item full-width">
+                                <label>消息内容</label>
+                                <textarea
+                                    :value="message.content"
+                                    @input="
                                         updateField(
                                             chunk.chunkId,
                                             message.messageId,
-                                            'isCommand',
+                                            'content',
                                             $event,
-                                            'boolean',
                                         )
                                     "
+                                    rows="5"
+                                ></textarea>
+                            </div>
+
+                            <div class="prop-item full-width">
+                                <label>备注</label>
+                                <input
+                                    type="text"
+                                    :value="message.note"
+                                    @input="
+                                        updateField(
+                                            chunk.chunkId,
+                                            message.messageId,
+                                            'note',
+                                            $event,
+                                        )
+                                    "
+                                    placeholder="备注信息..."
                                 />
-                                指令消息
-                            </label>
-                        </div>
-
-                        <div class="prop-item full-width">
-                            <label>消息内容</label>
-                            <textarea
-                                :value="message.content"
-                                @input="
-                                    updateField(
-                                        chunk.chunkId,
-                                        message.messageId,
-                                        'content',
-                                        $event,
-                                    )
-                                "
-                                rows="5"
-                            ></textarea>
-                        </div>
-
-                        <div class="prop-item full-width">
-                            <label>备注</label>
-                            <input
-                                type="text"
-                                :value="message.note"
-                                @input="
-                                    updateField(
-                                        chunk.chunkId,
-                                        message.messageId,
-                                        'note',
-                                        $event,
-                                    )
-                                "
-                                placeholder="备注信息..."
-                            />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -170,14 +176,24 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useActiveContext } from '@/composables/useActiveContext';
+import { usePanelResize } from '@/composables/usePanelResize';
 import { useLogStore } from '@/stores/logStore';
 import { useLogEditorStore } from '@/stores/editorStore';
+import { useUiStore } from '@/stores/uiStore';
 import { formatDate } from '@/utils/date';
 
 const activeContext = useActiveContext();
 const logStore = useLogStore();
 const logEditorStore = useLogEditorStore();
+const uiStore = useUiStore();
 const allChunks = computed(() => logStore.allChunks);
+const { startResize } = usePanelResize({
+    edge: 'left',
+    getWidth: () => uiStore.rightPanelWidth,
+    setWidth: (width) => {
+        uiStore.rightPanelWidth = width;
+    },
+});
 
 // updateMessage 需要 chunkId 才能准确定位
 const selectedItems = computed(() => {

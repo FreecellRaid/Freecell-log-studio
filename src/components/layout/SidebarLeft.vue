@@ -209,7 +209,7 @@
 
         <div
             v-if="windowStore.leftSidebarVisible"
-            class="resize-handle"
+            class="resize-handle resize-handle-x resize-handle-overlay resize-handle-right-edge"
             @mousedown="startResize"
         ></div>
     </div>
@@ -228,7 +228,8 @@ import {
 } from '@lucide/vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useStyleStore } from '@/stores/styleStore';
-import { useUiStore, PANEL_MIN_WIDTH, PANEL_MAX_WIDTH } from '@/stores/uiStore';
+import { usePanelResize } from '@/composables/usePanelResize';
+import { useUiStore } from '@/stores/uiStore';
 import { useWindowStore } from '@/stores/windowStore';
 import ChunkListPanel from '@/components/panels/ChunkListPanel.vue';
 import IdentityPanel from '@/components/panels/IdentityPanel.vue';
@@ -243,33 +244,13 @@ const showSettings = ref(false);
 const closeSettings = () => {
     showSettings.value = false;
 };
-
-function startResize(e: MouseEvent) {
-    e.preventDefault();
-    const startX = e.clientX;
-    const startWidth = uiStore.leftPanelWidth;
-
-    function onMouseMove(ev: MouseEvent) {
-        const delta = ev.clientX - startX;
-        const newWidth = Math.min(
-            PANEL_MAX_WIDTH,
-            Math.max(PANEL_MIN_WIDTH, startWidth + delta),
-        );
-        uiStore.leftPanelWidth = newWidth;
-    }
-
-    function onMouseUp() {
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
-    }
-
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
-}
+const { startResize } = usePanelResize({
+    edge: 'right',
+    getWidth: () => uiStore.leftPanelWidth,
+    setWidth: (width) => {
+        uiStore.leftPanelWidth = width;
+    },
+});
 
 onMounted(() => {
     window.addEventListener('click', closeSettings);
@@ -379,21 +360,6 @@ function handleNavClick(panelName: typeof windowStore.activeLeftPanelName) {
     min-width: 0;
     min-height: 0;
     flex-shrink: 0;
-}
-
-.resize-handle {
-    position: absolute;
-    top: 0;
-    right: -2px;
-    width: 4px;
-    height: 100%;
-    cursor: col-resize;
-    z-index: 10;
-}
-
-.resize-handle:hover,
-.resize-handle:active {
-    background-color: var(--active-accent);
 }
 
 .panel-content {
