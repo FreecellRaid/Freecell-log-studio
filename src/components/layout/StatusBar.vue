@@ -1,5 +1,5 @@
 <template>
-    <div v-if="activeChunk" class="status-bar">
+    <div class="status-bar">
         <div class="status-left">
             <div class="status-item" title="选中消息命中的自定义染色规则数">
                 <Palette class="ui-icon" />
@@ -30,44 +30,61 @@
             </div>
         </div>
 
-        <div class="status-right">
-            <div
-                v-if="currentDocumentName"
-                class="status-item status-item-truncate status-item-document"
-                title="当前文档"
-            >
-                <FolderOpen class="ui-icon" />
-                {{ currentDocumentName }}
-            </div>
-            <div class="status-item status-item-truncate" title="当前活动分块">
-                <FileText class="ui-icon" />
-                {{ activeChunkName }}
-            </div>
-            <div class="status-item" title="当前分块消息数（可见/总数）">
-                <MessagesSquare class="ui-icon" />
-                {{ activeChunkVisibleMsgs }} /
-                {{ activeChunkTotalMsgs }} 可见/总数
-            </div>
-            <div class="status-item" v-if="selectedCount > 0">
-                {{ selectedCount }} Selected
-            </div>
-            <div
-                class="status-item"
-                v-if="currentSelectedIndex !== null"
-                title="选中位置"
-            >
-                Ln {{ currentSelectedIndex + 1 }}
-            </div>
+        <div v-if="activeChunk || activeExportFormat" class="status-right">
+            <template v-if="activeChunk">
+                <div
+                    v-if="currentDocumentName"
+                    class="status-item status-item-truncate status-item-document"
+                    title="当前文档"
+                >
+                    <FolderOpen class="ui-icon" />
+                    {{ currentDocumentName }}
+                </div>
+                <div
+                    class="status-item status-item-truncate"
+                    title="当前焦点分块"
+                >
+                    <FileText class="ui-icon" />
+                    {{ activeChunkName }}
+                </div>
+                <div class="status-item" title="当前分块消息数（可见/总数）">
+                    <MessagesSquare class="ui-icon" />
+                    {{ activeChunkVisibleMsgs }} /
+                    {{ activeChunkTotalMsgs }} 可见/总数
+                </div>
+                <div class="status-item" v-if="selectedCount > 0">
+                    已选中 {{ selectedCount }} 条
+                </div>
+                <div
+                    class="status-item"
+                    v-if="currentSelectedIndex !== null"
+                    title="选中位置"
+                >
+                    Ln {{ currentSelectedIndex + 1 }}
+                </div>
+            </template>
+
+            <template v-else-if="activeExportFormat">
+                <div
+                    class="status-item status-item-truncate status-item-export-template"
+                    title="当前导出模板"
+                >
+                    <Eye class="ui-icon" />
+                    当前模板: {{ activeExportFormat.formatName }}
+                </div>
+                <div class="status-item" title="当前导出预览项数">
+                    <MessagesSquare class="ui-icon" />
+                    {{ exportPreviewRowCount }} 项
+                </div>
+            </template>
         </div>
-    </div>
-    <div v-else>
-        <div class="status-item">导入文件查看详细信息</div>
     </div>
 </template>
 
 <script setup lang="ts">
 import {
     Command,
+    Eye,
     FileText,
     FolderOpen,
     MessageCircle,
@@ -75,6 +92,9 @@ import {
     Palette,
 } from '@lucide/vue';
 import { computed } from 'vue';
+import { flattenLogToRows } from '@/io/export/flattener';
+import { renderExportDocument } from '@/io/export/exportRender';
+import { useExportStore } from '@/stores/exportStore';
 import { useLogStore } from '@/stores/logStore';
 import { useWindowStore } from '@/stores/windowStore';
 import { useStyleStore } from '@/stores/styleStore';
@@ -84,15 +104,37 @@ import { matchesMessageFilter } from '@/editor/filter';
 const logStore = useLogStore();
 const windowStore = useWindowStore();
 const styleStore = useStyleStore();
+const exportStore = useExportStore();
 const activeContext = useActiveContext();
 
 const activeChunk = computed(function () {
-    if (
-        !windowStore.currentActiveView.originalId ||
-        windowStore.currentActiveView.originalId === 'defaultView'
-    )
+    if (windowStore.currentActiveView.windowName === 'chunkView') {
+        return logStore.findChunkById(windowStore.currentActiveView.originalId);
+    } else return null;
+});
+
+const activeExportFormat = computed(function () {
+    if (windowStore.currentActiveView.windowName !== 'exportPreview') {
         return null;
-    return logStore.findChunkById(windowStore.currentActiveView.originalId);
+    }
+
+    return (
+        exportStore.formatById(windowStore.currentActiveView.originalId) ||
+        exportStore.activeFormat
+    );
+});
+
+const exportPreviewRowCount = computed(function () {
+    if (!activeExportFormat.value) return 0;
+
+    const rawRows = flattenLogToRows(
+        logStore.documents,
+        styleStore.viewSettings,
+        styleStore.activeRules,
+    );
+
+    return renderExportDocument(rawRows, activeExportFormat.value).blocks
+        .length;
 });
 
 const activeChunkName = computed(function () {
@@ -122,7 +164,6 @@ const activeChunkVisibleMsgs = computed(function () {
             count++;
         }
     }
-    // console.log('activeChunkVisibleMsgs:', count);
     return count;
 });
 
@@ -191,7 +232,6 @@ const currentSelectedIndex = computed<number | null>(function () {
     align-items: center;
     gap: 8px;
     font-size: 12px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     user-select: none;
     overflow: hidden;
 }
@@ -220,8 +260,6 @@ const currentSelectedIndex = computed<number | null>(function () {
     height: 100%;
     min-width: 0;
     padding: 0 10px;
-    cursor: default;
-    transition: background-color 0.15s;
     white-space: nowrap;
     flex-shrink: 0;
 }
@@ -233,6 +271,10 @@ const currentSelectedIndex = computed<number | null>(function () {
 
 .status-item-document {
     max-width: 220px;
+}
+
+.status-item-export-template {
+    max-width: 320px;
 }
 
 .status-left .status-item-truncate {
@@ -260,6 +302,10 @@ const currentSelectedIndex = computed<number | null>(function () {
 
     .status-item-document {
         max-width: 160px;
+    }
+
+    .status-item-export-template {
+        max-width: 220px;
     }
 }
 </style>
