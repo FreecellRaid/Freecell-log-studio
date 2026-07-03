@@ -2,10 +2,10 @@
     <div class="panel">
         <header class="panel-header">
             <div class="header-title">
-                <h3>INSPECTOR</h3>
+                <h3>消息属性检查器</h3>
             </div>
             <div class="count" v-if="selectedItems.length > 0">
-                {{ selectedItems.length }} Selected
+                已选中 {{ selectedItems.length }} 条
             </div>
         </header>
 
@@ -37,12 +37,12 @@
 
                     <div class="property-grid">
                         <div class="prop-item-time">
-                            <label>Time:</label>
+                            <label>时间:</label>
                             <div>{{ formatDate(message.time) }}</div>
                         </div>
 
                         <div class="prop-item">
-                            <label>Player Name</label>
+                            <label>玩家名</label>
                             <input
                                 type="text"
                                 :value="message.playerName"
@@ -58,7 +58,7 @@
                         </div>
 
                         <div class="prop-item">
-                            <label>Account</label>
+                            <label>账号</label>
                             <input
                                 type="text"
                                 :value="message.account"
@@ -74,24 +74,7 @@
                         </div>
 
                         <div class="prop-item">
-                            <label>Index (In Chunk)</label>
-                            <input
-                                type="number"
-                                :value="message.messageIndex"
-                                @input="
-                                    updateField(
-                                        chunk.chunkId,
-                                        message.messageId,
-                                        'messageIndex',
-                                        $event,
-                                        'number',
-                                    )
-                                "
-                            />
-                        </div>
-
-                        <div class="prop-item">
-                            <label>Role</label>
+                            <label>身份</label>
                             <select
                                 :value="message.role"
                                 @change="
@@ -110,7 +93,6 @@
                                 <option value="bot">骰子</option>
                             </select>
                         </div>
-
                         <div class="prop-row">
                             <label class="checkbox-label">
                                 <input
@@ -126,7 +108,7 @@
                                         )
                                     "
                                 />
-                                OOC
+                                场外消息
                             </label>
                             <label class="checkbox-label">
                                 <input
@@ -142,12 +124,12 @@
                                         )
                                     "
                                 />
-                                Command
+                                指令消息
                             </label>
                         </div>
 
                         <div class="prop-item full-width">
-                            <label>Content</label>
+                            <label>消息内容</label>
                             <textarea
                                 :value="message.content"
                                 @input="
@@ -158,12 +140,12 @@
                                         $event,
                                     )
                                 "
-                                rows="3"
+                                rows="5"
                             ></textarea>
                         </div>
 
                         <div class="prop-item full-width">
-                            <label>Note</label>
+                            <label>备注</label>
                             <input
                                 type="text"
                                 :value="message.note"
