@@ -133,20 +133,6 @@ const props = defineProps<{
 const effectiveWindowId = computed(() => props.windowId);
 const currentChunkId = computed(() => props.originalId);
 
-const logStore = useLogStore();
-const uiStore = useUiStore();
-const styleStore = useStyleStore();
-const windowStore = useWindowStore();
-const logEditorStore = useLogEditorStore();
-const activeContext = useActiveContext(effectiveWindowId.value);
-const dragDropTool = useMessageDragDrop();
-const { dispatch } = useCommandDispatcher();
-
-const scrollerRef = ref<ScrollerInstance | null>(null);
-const dropIndicatorIndex = ref<number | null>(null);
-const editingMessageId = ref<string | null>(null);
-const editingContent = ref('');
-
 interface ScrollerInstance {
     scrollToItem: (index: number) => void;
     scrollToBottom: () => void;
@@ -157,6 +143,15 @@ interface ScrollAnchor {
     scrollTop: number;
     scrollHeight: number;
 }
+
+const logStore = useLogStore();
+const uiStore = useUiStore();
+const styleStore = useStyleStore();
+const windowStore = useWindowStore();
+const logEditorStore = useLogEditorStore();
+const activeContext = useActiveContext(effectiveWindowId.value);
+const dragDropTool = useMessageDragDrop();
+const { dispatch } = useCommandDispatcher();
 
 const currentChunk = computed(() =>
     logStore.findChunkById(currentChunkId.value),
@@ -183,6 +178,8 @@ const isViewFocused = computed(
     () => windowStore.activeFocus === effectiveWindowId.value,
 );
 
+const scrollerRef = ref<ScrollerInstance | null>(null);
+
 watch(
     () => windowStore.pendingMessageReveal,
     async (target) => {
@@ -208,6 +205,45 @@ watch(
     },
     { flush: 'post', immediate: true },
 );
+
+function getScrollerElement() {
+    const root = scrollerRef.value?.$el;
+    return root instanceof HTMLElement ? root : null;
+}
+
+function captureScrollAnchor(): ScrollAnchor | null {
+    const scrollerEl = getScrollerElement();
+    if (!scrollerEl) {
+        return null;
+    }
+
+    return {
+        scrollTop: scrollerEl.scrollTop,
+        scrollHeight: scrollerEl.scrollHeight,
+    };
+}
+
+async function restoreScrollAnchor(anchor: ScrollAnchor | null) {
+    if (!anchor) {
+        return;
+    }
+
+    await nextTick();
+
+    const scrollerEl = getScrollerElement();
+    if (!scrollerEl) {
+        return;
+    }
+
+    const heightDelta = scrollerEl.scrollHeight - anchor.scrollHeight;
+    scrollerEl.scrollTop = Math.max(0, anchor.scrollTop + heightDelta);
+}
+
+function withScrollAnchor(action: () => void) {
+    const anchor = captureScrollAnchor();
+    action();
+    void restoreScrollAnchor(anchor);
+}
 
 function handleSplit() {
     windowStore.openSplitView('chunkView', currentChunkId.value);
@@ -243,6 +279,9 @@ function handleMessageSelect(event: MouseEvent, msgId: string, index: number) {
     });
 }
 
+const editingMessageId = ref<string | null>(null);
+const editingContent = ref('');
+
 function handleStartEdit(message: Message) {
     withScrollAnchor(() => {
         editingMessageId.value = message.messageId;
@@ -273,6 +312,8 @@ function handleCancelEdit() {
         editingMessageId.value = null;
     });
 }
+
+const dropIndicatorIndex = ref<number | null>(null);
 
 function handleMessageDragStart(
     event: DragEvent,
@@ -355,45 +396,6 @@ function handleActionDelete(messageId: string) {
 
     logEditorStore.deleteMessage(currentChunkId.value, messageId);
 }
-
-function getScrollerElement() {
-    const root = scrollerRef.value?.$el;
-    return root instanceof HTMLElement ? root : null;
-}
-
-function captureScrollAnchor(): ScrollAnchor | null {
-    const scrollerEl = getScrollerElement();
-    if (!scrollerEl) {
-        return null;
-    }
-
-    return {
-        scrollTop: scrollerEl.scrollTop,
-        scrollHeight: scrollerEl.scrollHeight,
-    };
-}
-
-async function restoreScrollAnchor(anchor: ScrollAnchor | null) {
-    if (!anchor) {
-        return;
-    }
-
-    await nextTick();
-
-    const scrollerEl = getScrollerElement();
-    if (!scrollerEl) {
-        return;
-    }
-
-    const heightDelta = scrollerEl.scrollHeight - anchor.scrollHeight;
-    scrollerEl.scrollTop = Math.max(0, anchor.scrollTop + heightDelta);
-}
-
-function withScrollAnchor(action: () => void) {
-    const anchor = captureScrollAnchor();
-    action();
-    void restoreScrollAnchor(anchor);
-}
 </script>
 
 <style scoped>
@@ -412,11 +414,6 @@ function withScrollAnchor(action: () => void) {
     flex: 1;
     height: 100%;
     overflow-anchor: none;
-}
-
-.scroller {
-    flex: 1;
-    height: 100%;
 }
 
 .message-slot {

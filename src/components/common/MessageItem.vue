@@ -230,15 +230,6 @@ onClickOutside(editWrapper, () => {
     box-shadow: inset 0 0 0 1px var(--active-accent);
 }
 
-:global(.scrollbar-visible) .message-item:hover {
-    box-shadow: none;
-}
-
-:global(.scrollbar-visible) .message-item:hover .message-actions {
-    opacity: 0;
-    pointer-events: none;
-}
-
 .message-item.is-selected.is-active {
     background-color: var(--selection-bg);
 }
