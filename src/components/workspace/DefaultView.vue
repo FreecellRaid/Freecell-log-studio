@@ -12,25 +12,18 @@
             </div>
         </header>
 
-        <div class="welcome-content">
-            <div class="welcome-container">
-                <Dices class="bg-icon" />
-                <p class="kaomoji">
-                    {{ currentKaomoji.text }}
-                </p>
-                <p class="subtitle">
-                    将 .txt / .json / .html 文件拖入工作区即可导入
-                </p>
-                <p class="secondary-subtitle">
-                    已导入内容后，可从左侧场景列表中选择一个以开始编辑
-                </p>
+        <div class="welcome-container">
+            <div class="welcome-content">
+                <FolderOpen class="bg-icon" />
+                <h2 class="title">导入跑团 Log</h2>
+                <p class="subtitle">将文件拖拽至工作台区域即可导入~</p>
 
-                <div class="foot-hint">
-                    <div class="foot-hint-item">
+                <div class="shortcuts-hint">
+                    <div class="shortcut-item">
                         <span>切换侧边栏</span>
                         <span>Ctrl + B</span>
                     </div>
-                    <div class="foot-hint-item">
+                    <div class="shortcut-item">
                         <span>打开帮助文档</span>
                         <span>Ctrl + K</span>
                     </div>
@@ -41,8 +34,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { Dices, LayoutDashboard } from '@lucide/vue';
+import { onMounted } from 'vue';
+import { FolderOpen, LayoutDashboard } from '@lucide/vue';
 import { useWindowStore } from '@/stores/windowStore';
 
 const windowStore = useWindowStore();
@@ -54,33 +47,16 @@ onMounted(() => {
         originalId: 'defaultView',
     });
 });
-
-const kaomojis = [
-    { text: '(*^▽^*) 今天也要愉快的跑团哦！' },
-    { text: '(๑•̀ㅂ•́)و✧ 大成功!!!!' },
-    { text: 'φ(>ω<*) 正在记录关键线索...' },
-    { text: 'O(∩_∩)O 日志整理中' },
-    { text: '大失败！(╯°Д°)╯︵ ┻━┻' },
-    { text: '（〃｀ 3′〃）DM 正在注视着你' },
-    { text: 'ヽ(✿✿▽ﾟ)诺 结档撒花！' },
-    { text: 'ヘ(_ _ヘ) san check 中...' },
-];
-const currentKaomoji = ref({ text: '' });
-onMounted(() => {
-    const randomIndex = Math.floor(Math.random() * kaomojis.length);
-    currentKaomoji.value = kaomojis[randomIndex];
-});
 </script>
 
 <style scoped>
-.welcome-content {
-    flex: 1;
+.welcome-container {
+    flex: 1 1 auto;
     display: flex;
     align-items: center;
     justify-content: center;
 }
-
-.welcome-container {
+.welcome-content {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -88,7 +64,7 @@ onMounted(() => {
     max-width: 400px;
 }
 
-.kaomoji {
+.title {
     font-size: 24px;
     font-weight: 600;
     color: var(--active-accent);
@@ -100,20 +76,14 @@ onMounted(() => {
     color: var(--text-muted);
 }
 
-.secondary-subtitle {
-    margin: 4px 0 0;
-    font-size: 12px;
-    color: var(--text-secondary);
-}
-
-.foot-hint {
-    margin-top: 24px;
+.shortcuts-hint {
+    margin-top: 4px;
     font-size: 12px;
     min-width: 200px;
     color: var(--text-muted);
 }
 
-.foot-hint-item {
+.shortcut-item {
     display: flex;
     justify-content: space-between;
     margin: 4px 0;

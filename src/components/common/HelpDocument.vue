@@ -29,8 +29,7 @@
                     <ul class="tip-list">
                         <li>
                             <strong>拖入工作区</strong>
-                            - 任意时刻将 .txt / .json / .html
-                            文件拖入中间工作区即可导入
+                            - 任意时刻将文件拖入中间工作区即可导入
                         </li>
                     </ul>
                 </section>

@@ -264,7 +264,6 @@ body,
 }
 .view-header {
     height: 40px;
-    min-height: 40px;
     display: flex;
     justify-content: space-between;
     align-items: center;
