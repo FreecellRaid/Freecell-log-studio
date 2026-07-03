@@ -11,11 +11,10 @@
         <header class="view-header">
             <div class="view-title">
                 <Eye class="ui-icon icon-view-title" />
-                <h2 class="text-view-title">导出预览</h2>
-                <span class="msg-count" v-if="activeFormat">
-                    当前模板: {{ activeFormat.formatName }} ({{ rows.length }}
-                    项)
-                </span>
+                <h2 class="text-view-title">
+                    {{ activeFormat.formatName }}预览
+                </h2>
+                <span class="msg-count">({{ rows.length }} 行)</span>
             </div>
             <div class="view-actions">
                 <button
@@ -28,7 +27,6 @@
                 </button>
 
                 <button
-                    v-if="windowStore.hasSplitView || canClose"
                     class="view-action-btn"
                     title="关闭"
                     @click.stop="handleClose"
@@ -197,14 +195,6 @@ const activeFormat = computed(
     () => exportStore.formatById(props.originalId) || exportStore.activeFormat,
 );
 
-const canClose = computed(() => {
-    return (
-        !windowStore.hasSplitView &&
-        effectiveWindowId.value !== 'defaultView' &&
-        windowStore.openWindows.size > 1
-    );
-});
-
 const rowsWithId = computed(() => {
     const rawRows = flattenLogToRows(
         logStore.documents,
@@ -277,7 +267,6 @@ function getSegmentStyle(
 .export-preview-content {
     /* 移除 padding，改到 row 内部
        否则虚拟滚动计算偏移时会有偏差 */
-    padding: 0;
     font-family: monospace;
     font-size: 14px;
     line-height: 1.5;

@@ -24,7 +24,6 @@
                 </button>
 
                 <button
-                    v-if="windowStore.hasSplitView || canClose"
                     class="view-action-btn"
                     title="关闭"
                     @click.stop="handleClose"
@@ -182,13 +181,6 @@ const messages = computed(() => {
 
 const isViewFocused = computed(
     () => windowStore.activeFocus === effectiveWindowId.value,
-);
-
-const canClose = computed(
-    () =>
-        !windowStore.hasSplitView &&
-        effectiveWindowId.value !== 'defaultView' &&
-        windowStore.openWindows.size > 1,
 );
 
 watch(
