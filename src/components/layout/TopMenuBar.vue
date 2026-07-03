@@ -481,8 +481,7 @@ const vClickOutside = {
     top: 100%;
     margin-top: 8px;
     background: var(--bg-topbar);
-    border: none;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px var(--box-shadow);
     z-index: 100;
 }
 
@@ -496,7 +495,7 @@ const vClickOutside = {
 }
 
 .export-panel {
-    right: 0;
+    right: -10px;
     width: 160px;
     padding: 6px 0;
 }
@@ -537,14 +536,9 @@ const vClickOutside = {
     border-top: none;
 }
 
-.stored-project-main {
-    min-width: 0;
-}
-
 .stored-project-name {
     font-size: 13px;
     font-weight: 600;
-    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

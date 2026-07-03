@@ -93,22 +93,17 @@ async function handleDrop(event: DragEvent) {
     align-items: center;
     justify-content: center;
     pointer-events: none;
-    background: color-mix(in srgb, var(--selection-bg) 68%, transparent);
+    background: var(--selection-bg);
     border: 2px dashed var(--active-accent);
+    opacity: 0.7;
 }
 
 .drop-overlay-content {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
     color: var(--active-accent);
-    background: var(--bg-topbar);
-    border: 1px solid var(--active-accent);
-    border-radius: 6px;
     font-size: 14px;
     font-weight: 600;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
 }
 
 .drop-overlay-content .ui-icon {

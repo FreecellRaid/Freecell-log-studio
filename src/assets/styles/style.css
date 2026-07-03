@@ -25,6 +25,7 @@
     /* 其他状态 */
     --icon-color: #697485;
     --icon-color-strong: #000000;
+    --box-shadow: rgba(0, 0, 0, 0.3);
     --scrollbar-thumb: rgba(0, 0, 0, 0.32);
 }
 
@@ -49,7 +50,7 @@
 
     --icon-color: #a3a3a3;
     --icon-color-strong: #ffffff;
-
+    --box-shadow: rgba(0, 0, 0, 0.5);
     --scrollbar-thumb: rgba(255, 255, 255, 0.32);
 }
 

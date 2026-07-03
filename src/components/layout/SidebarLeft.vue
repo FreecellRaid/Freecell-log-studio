@@ -409,15 +409,15 @@ function handleNavClick(panelName: typeof windowStore.activeLeftPanelName) {
 /* 设置弹出框样式 */
 .settings-popover {
     position: absolute;
-    left: 48px;
+    left: 49px;
     bottom: -1px;
     width: 200px;
     background-color: var(--bg-sidebar);
-    border: 1px solid var(--border-color);
     padding: 12px;
     z-index: 100;
     cursor: default;
     color: var(--text-primary);
+    box-shadow: 5px -3px 12px var(--box-shadow);
 }
 
 .popover-header {

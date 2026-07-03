@@ -241,7 +241,7 @@ const shortcuts = [
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--box-shadow);
 }
 
 .help-dialog {
@@ -252,7 +252,7 @@ const shortcuts = [
     background: var(--bg-topbar);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 24px var(--box-shadow);
 }
 
 .help-header {
@@ -339,7 +339,7 @@ const shortcuts = [
     display: contents;
 }
 
-kbd {
+.kbd {
     display: inline-block;
     padding: 2px 6px;
     font-family: 'Fira Code', monospace;
