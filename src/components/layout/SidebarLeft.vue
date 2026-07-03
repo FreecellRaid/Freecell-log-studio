@@ -110,14 +110,14 @@
                         <label class="setting-item">
                             <input
                                 type="checkbox"
-                                v-model="styleStore.viewSettings.showTime"
+                                v-model="uiStore.showTime"
                             />
                             <span>显示消息时间</span>
                         </label>
                         <label class="setting-item">
                             <input
                                 type="checkbox"
-                                v-model="styleStore.viewSettings.showAccount"
+                                v-model="uiStore.showAccount"
                             />
                             <span>显示帐号</span>
                         </label>

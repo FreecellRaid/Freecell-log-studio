@@ -107,8 +107,6 @@ export function cloneRules(rules: ColorRule[]): ColorRule[] {
 
 export function cloneViewSettings(viewSettings: ViewSettings): ViewSettings {
     return {
-        showTime: viewSettings.showTime,
-        showAccount: viewSettings.showAccount,
         hideOoc: viewSettings.hideOoc,
         hideCommand: viewSettings.hideCommand,
         enableMarkdown: viewSettings.enableMarkdown,
@@ -358,8 +356,6 @@ function normalizeRules(rawRules: unknown): ColorRule[] {
 
 function normalizeViewSettings(rawViewSettings: unknown): ViewSettings {
     const defaults: ViewSettings = {
-        showTime: true,
-        showAccount: true,
         hideOoc: false,
         hideCommand: false,
         enableMarkdown: false,
@@ -371,14 +367,6 @@ function normalizeViewSettings(rawViewSettings: unknown): ViewSettings {
     }
 
     return {
-        showTime:
-            typeof rawViewSettings.showTime === 'boolean'
-                ? rawViewSettings.showTime
-                : defaults.showTime,
-        showAccount:
-            typeof rawViewSettings.showAccount === 'boolean'
-                ? rawViewSettings.showAccount
-                : defaults.showAccount,
         hideOoc:
             typeof rawViewSettings.hideOoc === 'boolean'
                 ? rawViewSettings.hideOoc

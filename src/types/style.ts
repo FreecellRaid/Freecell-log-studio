@@ -16,8 +16,6 @@ export interface ColorRule {
 }
 
 export interface ViewSettings {
-    showTime: boolean;
-    showAccount: boolean;
     hideOoc: boolean;
     hideCommand: boolean;
     enableMarkdown: boolean;

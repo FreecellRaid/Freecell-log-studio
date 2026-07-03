@@ -7,8 +7,6 @@ import { collectIdentityValues } from '@/editor/identity';
 
 function ruleStore() {
     const viewSettings = ref<ViewSettings>({
-        showTime: true,
-        showAccount: true,
         hideOoc: false,
         hideCommand: false,
         enableMarkdown: false,
@@ -202,8 +200,6 @@ function ruleStore() {
 
     function replaceViewSettings(newSettings: ViewSettings) {
         viewSettings.value = {
-            showTime: newSettings.showTime,
-            showAccount: newSettings.showAccount,
             hideOoc: newSettings.hideOoc,
             hideCommand: newSettings.hideCommand,
             enableMarkdown: newSettings.enableMarkdown,

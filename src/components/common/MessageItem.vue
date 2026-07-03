@@ -51,14 +51,14 @@
             <span class="message-name" :style="computedStyles.nameStyle">
                 {{ message.playerName }}
                 <span
-                    v-if="styleStore.viewSettings.showAccount"
+                    v-if="uiStore.showAccount"
                     class="message-account"
                 >
                     ({{ message.account }})
                 </span>
             </span>
 
-            <span class="message-time" v-if="styleStore.viewSettings.showTime">
+            <span class="message-time" v-if="uiStore.showTime">
                 {{ formatDate(message.time) }}
             </span>
         </div>
@@ -90,6 +90,7 @@ import { computed, ref, nextTick, watch } from 'vue';
 import type { Message } from '@/types/log';
 import { onClickOutside } from '@vueuse/core';
 import { useStyleStore } from '@/stores/styleStore';
+import { useUiStore } from '@/stores/uiStore';
 import { formatDate } from '@/utils/date';
 import { computeStyleForMessage } from '@/editor/styleEngine';
 import { Trash2, Plus, Scissors, ChevronsDown } from '@lucide/vue';
@@ -129,6 +130,7 @@ const emit = defineEmits<{
 }>();
 
 const styleStore = useStyleStore();
+const uiStore = useUiStore();
 
 const computedStyles = computed(function () {
     return computeStyleForMessage(props.message, styleStore.activeRules);
