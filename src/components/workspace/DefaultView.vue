@@ -18,7 +18,12 @@
                 <p class="kaomoji">
                     {{ currentKaomoji.text }}
                 </p>
-                <p class="subtitle">从左侧场景列表中选择一个以开始编辑</p>
+                <p class="subtitle">
+                    将 .txt / .json / .html 文件拖入工作区即可导入
+                </p>
+                <p class="secondary-subtitle">
+                    已导入内容后，可从左侧场景列表中选择一个以开始编辑
+                </p>
 
                 <div class="foot-hint">
                     <div class="foot-hint-item">
@@ -93,6 +98,12 @@ onMounted(() => {
 .subtitle {
     font-size: 14px;
     color: var(--text-muted);
+}
+
+.secondary-subtitle {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: var(--text-secondary);
 }
 
 .foot-hint {

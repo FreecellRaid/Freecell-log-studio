@@ -1,78 +1,78 @@
 <template>
     <div
         class="file-importer"
-        @click="triggerFileInput"
-        @dragover.prevent="isDragging = true"
-        @dragleave.prevent="isDragging = false"
-        @drop.prevent="handleDrop"
-        :class="{ 'is-dragging': isDragging }"
+        :class="{ 'is-file-dragging': isFileDragging }"
+        @dragenter="handleDragEnter"
+        @dragover="handleDragOver"
+        @dragleave="handleDragLeave"
+        @drop="handleDrop"
     >
-        <div class="drop-zone">
-            <FolderOpen class="bg-icon" />
-            <h2 class="title">导入跑团 Log</h2>
-            <p class="subtitle">将文件拖拽到此处， 或点击任意处导入文件</p>
+        <slot />
 
-            <input
-                type="file"
-                ref="fileInput"
-                @change="handleFileSelect"
-                accept=".txt,.json,.html"
-                multiple
-                hidden
-            />
-
-            <div class="shortcuts-hint">
-                <div class="shortcut-item">
-                    <span>切换侧边栏</span>
-                    <span>Ctrl + B</span>
-                </div>
-                <div class="shortcut-item">
-                    <span>打开帮助文档</span>
-                    <span>Ctrl + K</span>
-                </div>
+        <div v-if="isFileDragging" class="workspace-drop-overlay">
+            <div class="drop-overlay-content">
+                <FolderOpen class="ui-icon" />
+                <span>松开鼠标导入文件</span>
             </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { FolderOpen } from '@lucide/vue';
 import { ref } from 'vue';
+import { FolderOpen } from '@lucide/vue';
 import { useFileImport } from '@/composables/useImporter';
 
-const fileInput = ref<HTMLInputElement | null>(null);
-const isDragging = ref(false);
 const { importAndApply } = useFileImport();
+const isFileDragging = ref(false);
+const fileDragDepth = ref(0);
 
-function triggerFileInput() {
-    if (fileInput.value) {
-        fileInput.value.click();
+function hasFileTransfer(event: DragEvent) {
+    const types = event.dataTransfer?.types;
+    if (!types) return false;
+    return Array.from(types).includes('Files');
+}
+
+function resetFileDragging() {
+    isFileDragging.value = false;
+    fileDragDepth.value = 0;
+}
+
+function handleDragEnter(event: DragEvent) {
+    if (!hasFileTransfer(event)) return;
+    event.preventDefault();
+    fileDragDepth.value += 1;
+    isFileDragging.value = true;
+}
+
+function handleDragOver(event: DragEvent) {
+    if (!hasFileTransfer(event)) return;
+    event.preventDefault();
+    isFileDragging.value = true;
+    if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = 'copy';
+    }
+}
+
+function handleDragLeave(event: DragEvent) {
+    if (!hasFileTransfer(event)) return;
+    event.preventDefault();
+    fileDragDepth.value = Math.max(0, fileDragDepth.value - 1);
+    if (fileDragDepth.value === 0) {
+        isFileDragging.value = false;
     }
 }
 
 async function handleDrop(event: DragEvent) {
-    isDragging.value = false;
+    if (!hasFileTransfer(event)) return;
+    event.preventDefault();
     const files = event.dataTransfer?.files;
-    if (files && files.length > 0) {
-        await processFiles(Array.from(files));
-    }
-}
+    resetFileDragging();
 
-async function handleFileSelect(event: Event) {
-    const target = event.target as HTMLInputElement;
-    const files = target.files;
-    if (files && files.length > 0) {
-        await processFiles(Array.from(files));
-    }
-    // 清空 input 值，允许重复导入相同名称的文件
-    if (fileInput.value) {
-        fileInput.value.value = '';
-    }
-}
+    if (!files || files.length === 0) return;
 
-async function processFiles(files: File[]) {
     try {
-        await importAndApply(files);
+        await importAndApply(Array.from(files));
     } catch (error) {
         console.error(error);
         alert(error instanceof Error ? error.message : '解析文件时发生错误');
@@ -82,50 +82,37 @@ async function processFiles(files: File[]) {
 
 <style scoped>
 .file-importer {
-    flex: 1;
+    position: relative;
+}
+
+.workspace-drop-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 15;
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.file-importer.is-dragging {
-    background-color: var(--selection-bg);
+    pointer-events: none;
+    background: color-mix(in srgb, var(--selection-bg) 68%, transparent);
     border: 2px dashed var(--active-accent);
 }
 
-.drop-zone {
-    display: flex;
-    flex-direction: column;
+.drop-overlay-content {
+    display: inline-flex;
     align-items: center;
-    text-align: center;
-    max-width: 400px;
-}
-
-.title {
-    font-size: 24px;
-    font-weight: 600;
+    gap: 10px;
+    padding: 12px 16px;
     color: var(--active-accent);
-    opacity: 0.8;
-}
-
-.subtitle {
+    background: var(--bg-topbar);
+    border: 1px solid var(--active-accent);
+    border-radius: 6px;
     font-size: 14px;
-    color: var(--text-muted);
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
 }
 
-.shortcuts-hint {
-    margin-top: 24px;
-    font-size: 12px;
-    min-width: 200px;
-    color: var(--text-muted);
-}
-
-.shortcut-item {
-    display: flex;
-    justify-content: space-between;
-    margin: 4px 0;
-    padding: 4px 8px;
-    background-color: var(--bg-secondary);
-    border-radius: 4px;
+.drop-overlay-content .ui-icon {
+    width: 18px;
+    height: 18px;
 }
 </style>

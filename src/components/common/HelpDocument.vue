@@ -23,6 +23,20 @@
             <div class="help-content">
                 <section class="help-section">
                     <div class="section-title">
+                        <Upload class="ui-icon" />
+                        <h3>文件导入</h3>
+                    </div>
+                    <ul class="tip-list">
+                        <li>
+                            <strong>拖入工作区</strong>
+                            - 任意时刻将 .txt / .json / .html
+                            文件拖入中间工作区即可导入
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="help-section">
+                    <div class="section-title">
                         <MessageSquare class="ui-icon" />
                         <h3>消息操作</h3>
                     </div>
@@ -188,6 +202,7 @@ import {
     TextInitial,
     UserRound,
     CodeXml,
+    Upload,
 } from '@lucide/vue';
 import { useWindowStore } from '@/stores/windowStore';
 

@@ -1,47 +1,43 @@
 <template>
-    <div class="main-workspace">
-        <FileImporter v-if="isWorkspaceEmpty" />
-        <template v-else>
-            <div
-                class="pane-layout"
-                :class="{
-                    'pane-layout-vertical':
-                        windowStore.paneDirection === 'vertical',
-                }"
-            >
-                <template v-for="pane in workspacePanes" :key="pane.paneIndex">
-                    <div
-                        class="workspace-pane"
-                        :style="getPaneStyle(pane.paneIndex)"
-                        @pointerdown.capture="handlePaneClick(pane.paneIndex)"
-                    >
-                        <component
-                            :is="getViewComponent(pane.instance?.windowName)"
-                            v-if="pane.instance"
-                            :key="pane.instance.windowId"
-                            v-bind="getComponentProps(pane.instance)"
-                        />
-                        <DefaultView v-else />
-                    </div>
+    <FileImporter class="main-workspace">
+        <div
+            class="pane-layout"
+            :class="{
+                'pane-layout-vertical':
+                    windowStore.paneDirection === 'vertical',
+            }"
+        >
+            <template v-for="pane in workspacePanes" :key="pane.paneIndex">
+                <div
+                    class="workspace-pane"
+                    :style="getPaneStyle(pane.paneIndex)"
+                    @pointerdown.capture="handlePaneClick(pane.paneIndex)"
+                >
+                    <component
+                        :is="getViewComponent(pane.instance?.windowName)"
+                        v-if="pane.instance"
+                        :key="pane.instance.windowId"
+                        v-bind="getComponentProps(pane.instance)"
+                    />
+                    <DefaultView v-else />
+                </div>
 
-                    <div
-                        v-if="shouldRenderResizeHandle(pane.paneIndex)"
-                        class="pane-resize-handle"
-                        :class="{
-                            'pane-resize-handle-vertical':
-                                windowStore.paneDirection === 'vertical',
-                        }"
-                        @mousedown="startResize"
-                    ></div>
-                </template>
-            </div>
-        </template>
-    </div>
+                <div
+                    v-if="shouldRenderResizeHandle(pane.paneIndex)"
+                    class="pane-resize-handle"
+                    :class="{
+                        'pane-resize-handle-vertical':
+                            windowStore.paneDirection === 'vertical',
+                    }"
+                    @mousedown="startResize"
+                ></div>
+            </template>
+        </div>
+    </FileImporter>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useLogStore } from '@/stores/logStore';
 import { useWindowStore } from '@/stores/windowStore';
 import type { WindowInstance, WindowName } from '@/types/window';
 import FileImporter from '@/components/common/FileImporter.vue';
@@ -49,9 +45,7 @@ import ChunkView from './ChunkView.vue';
 import ExportPreview from './ExportPreview.vue';
 import DefaultView from './DefaultView.vue';
 
-const logStore = useLogStore();
 const windowStore = useWindowStore();
-const isWorkspaceEmpty = computed(() => logStore.documents.length === 0);
 const workspacePanes = computed(() => windowStore.workspacePanes);
 
 const viewComponentMap: Partial<Record<WindowName, any>> = {
@@ -151,6 +145,7 @@ function startResize(e: MouseEvent) {
     display: flex;
     width: 100%;
     height: 100%;
+    min-height: 0;
 }
 
 .pane-layout.pane-layout-vertical {
