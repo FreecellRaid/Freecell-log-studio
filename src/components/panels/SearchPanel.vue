@@ -22,7 +22,7 @@
                     class="form-control main-search-input"
                 />
                 <button
-                    class="expand-toggle icon-interactive"
+                    class="icon-button icon-interactive"
                     @click="
                         searchStore.isAdvancedExpanded =
                             !searchStore.isAdvancedExpanded
@@ -293,7 +293,7 @@ const truncate = (str: string, len: number) => {
     flex: 1;
 }
 
-.expand-toggle {
+.icon-button {
     background: none;
     border: none;
     cursor: pointer;
@@ -301,11 +301,6 @@ const truncate = (str: string, len: number) => {
     align-items: center;
     justify-content: center;
     color: var(--icon-color);
-}
-
-.expand-toggle :deep(.ui-icon) {
-    width: 14px;
-    height: 14px;
 }
 
 .advanced-options {

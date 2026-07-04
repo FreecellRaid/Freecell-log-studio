@@ -610,34 +610,17 @@ const clearIds = (rule: ColorRule) => {
     color: var(--active-accent);
 }
 
-.icon-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: none;
-    padding: 0;
+.rule-header .icon-button {
     margin-left: 8px;
-    cursor: pointer;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.15s ease;
-    color: var(--icon-color);
-}
-
-.icon-button :deep(.ui-icon) {
-    width: 16px;
-    height: 16px;
 }
 
 .rule-header:hover .icon-button,
 .rule-header:focus-within .icon-button {
     opacity: 1;
     pointer-events: auto;
-}
-
-.icon-button-warning:hover {
-    color: var(--color-warning);
 }
 
 /* 展开内容区 */

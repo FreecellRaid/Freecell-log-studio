@@ -626,9 +626,8 @@ function withScrollAnchor(action: () => void) {
     border: none;
     padding: 0px 2px;
     cursor: pointer;
-    border-radius: 4px;
     color: var(--icon-color);
-    opacity: 0.75;
+    opacity: 0.7;
 }
 
 .action-button:hover {

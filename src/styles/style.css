@@ -128,6 +128,31 @@ body,
     color: var(--color-warning);
 }
 
+.icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: var(--icon-color);
+    transition:
+        color 0.15s ease,
+        opacity 0.15s ease,
+        background-color 0.15s ease;
+}
+
+.icon-button .ui-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.icon-button-warning:hover,
+.icon-button-warning:focus-visible {
+    color: var(--color-warning);
+}
+
 /* layers样式 */
 .top-bar {
     height: 40px;

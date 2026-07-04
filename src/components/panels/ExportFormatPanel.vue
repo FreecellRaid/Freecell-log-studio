@@ -404,23 +404,10 @@ function handleDelete(id: string) {
     white-space: nowrap;
 }
 
-.icon-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: none;
-    padding: 0;
+.config-header .icon-button {
     margin-left: 8px;
-    cursor: pointer;
     opacity: 0;
     pointer-events: none;
-    color: var(--icon-color);
-}
-
-.ui-icon {
-    width: 16px;
-    height: 16px;
 }
 
 .config-header:hover .icon-button,
@@ -439,10 +426,6 @@ function handleDelete(id: string) {
     opacity: 1;
     pointer-events: auto;
     margin-left: 0;
-}
-
-.icon-button-warning:hover {
-    color: var(--color-warning);
 }
 
 .config-body {
