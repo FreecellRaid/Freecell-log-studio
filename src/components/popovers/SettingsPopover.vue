@@ -1,5 +1,5 @@
 <template>
-    <div class="settings-popover">
+    <div class="popover">
         <div class="popover-header">偏好设置</div>
 
         <div class="settings-section">
@@ -80,13 +80,9 @@ const styleStore = useStyleStore();
 </script>
 
 <style scoped>
-.settings-popover {
+.popover {
     width: 200px;
-    background-color: var(--bg-sidebar);
     padding: 12px;
-    z-index: 100;
-    cursor: default;
-    color: var(--text-primary);
     box-shadow: 5px -3px 12px var(--box-shadow);
 }
 

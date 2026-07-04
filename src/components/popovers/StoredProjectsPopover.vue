@@ -1,5 +1,5 @@
 <template>
-    <div class="stored-projects-panel">
+    <div class="popover">
         <div class="stored-projects-toolbar">
             <span>本地工程</span>
             <button
@@ -11,13 +11,14 @@
                 <RefreshCcw class="ui-icon" aria-hidden="true" />
             </button>
         </div>
-        <div v-if="storedProjects.length === 0" class="stored-projects-empty">
+        <div v-if="projects.length === 0" class="stored-projects-empty">
             当前没有已保存的本地工程
         </div>
         <div
-            v-for="project in storedProjects"
+            v-for="project in projects"
             :key="project.projectId"
             class="stored-project-item"
+            @click="handleOpenStoredProject(project.projectId)"
         >
             <div class="stored-project-main">
                 <div class="stored-project-name">
@@ -29,14 +30,6 @@
                 </div>
             </div>
             <div class="stored-project-actions">
-                <button
-                    class="icon-interactive"
-                    type="button"
-                    title="打开工程"
-                    @click="handleOpenStoredProject(project.projectId)"
-                >
-                    <FolderOpen class="ui-icon" aria-hidden="true" />
-                </button>
                 <button
                     class="icon-interactive icon-button-warning"
                     type="button"
@@ -50,22 +43,31 @@
     </div>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue';
+import { RefreshCcw, Trash2 } from '@lucide/vue';
 import { formatDate } from '@/utils/date';
 import type { ProjectFile } from '@/types/project';
 import { useProjectManager } from '@/composables/useProjectManager';
 
+defineProps<{
+    projects: ProjectFile[];
+}>();
+
+const emit = defineEmits<{
+    refresh: [];
+    close: [];
+}>();
+
 const projectManager = useProjectManager();
-const storedProjects = ref<ProjectFile[]>([]);
 
 function refreshStoredProjects() {
-    storedProjects.value = projectManager.getStoredProjects();
+    emit('refresh');
 }
 
 function handleOpenStoredProject(projectId: string) {
     try {
         if (projectManager.openStoredProject(projectId)) {
             refreshStoredProjects();
+            emit('close');
         }
     } catch (error) {
         console.error(error);
@@ -96,14 +98,11 @@ function formatStoredProjectTime(time: string) {
 }
 </script>
 <style scoped>
-.stored-projects-panel {
+.popover {
     width: 280px;
-    box-sizing: border-box;
     max-height: 400px;
     overflow-y: auto;
-    padding: 10px 12px;
-    color: var(--text-primary);
-    background: var(--bg-topbar);
+    padding-top: 10px;
     box-shadow: 0 4px 12px var(--box-shadow);
 }
 
@@ -111,6 +110,7 @@ function formatStoredProjectTime(time: string) {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: 0px 10px;
     margin-bottom: 4px;
     font-size: 13px;
     color: var(--text-muted);
@@ -124,7 +124,7 @@ function formatStoredProjectTime(time: string) {
 }
 
 .stored-projects-empty {
-    padding: 10px 0;
+    padding: 10px 12px;
     font-size: 12px;
     color: var(--text-muted);
 }
@@ -134,8 +134,11 @@ function formatStoredProjectTime(time: string) {
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    padding: 8px 0;
+    padding: 10px 12px;
     border-top: none;
+}
+.stored-project-item:hover {
+    background-color: var(--hover-bg);
 }
 
 .stored-project-main {

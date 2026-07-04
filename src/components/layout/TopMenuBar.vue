@@ -64,7 +64,11 @@
                     v-if="showStoredProjectsPopover"
                     class="topbar-popover stored-projects-popover"
                 >
-                    <StoredProjectsPopover />
+                    <StoredProjectsPopover
+                        :projects="storedProjects"
+                        @refresh="refreshStoredProjects"
+                        @close="closeAllPopovers"
+                    />
                 </div>
             </div>
 
@@ -116,6 +120,7 @@ import { useWindowStore } from '@/stores/windowStore';
 import { useActiveContext } from '@/composables/useActiveContext';
 import { useFileImport } from '@/composables/useImporter';
 import { useProjectManager } from '@/composables/useProjectManager';
+import { vClickOutside } from '@/directives/clickOutside';
 import type { ProjectFile } from '@/types/project';
 import StoredProjectsPopover from '@/components/popovers/StoredProjectsPopover.vue';
 import ExportPopover from '@/components/popovers/ExportPopover.vue';
@@ -132,7 +137,7 @@ const activeContext = useActiveContext();
 const { importAndApply } = useFileImport();
 const projectManager = useProjectManager();
 
-const showExportPopover = ref(true);
+const showExportPopover = ref(false);
 const showStoredProjectsPopover = ref(false);
 const storedProjects = ref<ProjectFile[]>([]);
 function closeAllPopovers() {
@@ -293,15 +298,16 @@ function handleClearAll() {
 
 .topbar-popover {
     position: absolute;
-    top: calc(100% + 8px);
     z-index: 100;
 }
 
 .stored-projects-popover {
-    right: -70px;
+    top: 36px;
+    right: -80px;
 }
 
 .export-popover {
+    top: 30px;
     right: -10px;
 }
 </style>

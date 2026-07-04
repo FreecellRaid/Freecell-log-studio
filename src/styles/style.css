@@ -435,6 +435,14 @@ body,
     height: 16px;
 }
 
+/* 通用 Popover 样式 */
+.popover {
+    background-color: var(--bg-sidebar);
+    z-index: 100;
+    cursor: default;
+    color: var(--text-primary);
+}
+
 /* 滚动条，不知道为什么无论怎么写就是去不掉这个圆角 */
 * {
     scrollbar-width: thin;

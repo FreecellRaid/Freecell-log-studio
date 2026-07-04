@@ -1,5 +1,5 @@
 <template>
-    <div class="export-popover">
+    <div class="popover">
         <div class="export-item" @click="handleExportText">导出为 TEXT</div>
         <div class="export-item" @click="handleExportHtml">导出为 HTML</div>
         <div class="export-item" @click="handleExportDoc">导出为 DOC</div>
@@ -62,16 +62,13 @@ function handleExportProject() {
 }
 </script>
 <style scoped>
-.export-popover {
+.popover {
     width: 160px;
-    box-sizing: border-box;
-    padding: 6px 0;
-    background: var(--bg-topbar);
     box-shadow: 0 4px 12px var(--box-shadow);
 }
 
 .export-item {
-    padding: 8px 16px;
+    padding: 10px 16px;
     font-size: 13px;
     color: var(--text-primary);
     cursor: pointer;
