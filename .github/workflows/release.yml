@@ -1,0 +1,117 @@
+name: Release single-file build
+
+on:
+    workflow_dispatch:
+        inputs:
+            version:
+                description: 'Release version, for example 1.2.3 or v1.2.3'
+                required: true
+                type: string
+            prerelease:
+                description: 'Mark this GitHub Release as a prerelease'
+                required: false
+                default: false
+                type: boolean
+
+permissions:
+    contents: write
+
+concurrency:
+    group: release-${{ github.ref }}
+    cancel-in-progress: false
+
+jobs:
+    release:
+        if: github.ref_type == 'branch'
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  cache: 'pnpm'
+
+            - name: Normalize and validate version
+              id: version
+              env:
+                  RAW_VERSION: ${{ inputs.version }}
+              shell: bash
+              run: |
+                  raw="$RAW_VERSION"
+                  version="${raw#v}"
+
+                  if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+                    echo "::error::Version must be valid semver, for example 1.2.3 or v1.2.3"
+                    exit 1
+                  fi
+
+                  current_version="$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")"
+                  if [[ "$version" == "$current_version" ]]; then
+                    echo "::error::package.json is already at version $version"
+                    exit 1
+                  fi
+
+                  echo "version=$version" >> "$GITHUB_OUTPUT"
+                  echo "tag=v$version" >> "$GITHUB_OUTPUT"
+                  echo "asset=freecell-log-studio-v$version.html" >> "$GITHUB_OUTPUT"
+
+            - name: Stop if tag already exists
+              shell: bash
+              run: |
+                  if git rev-parse -q --verify "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null; then
+                    echo "::error::Tag ${{ steps.version.outputs.tag }} already exists"
+                    exit 1
+                  fi
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Update package version
+              run: pnpm version "${{ steps.version.outputs.version }}" --no-git-tag-version
+
+            - name: Build single-file artifact
+              run: pnpm build:single
+
+            - name: Rename artifact
+              shell: bash
+              run: |
+                  test -f dist/index.html
+                  mkdir -p release
+                  cp dist/index.html "release/${{ steps.version.outputs.asset }}"
+
+            - name: Commit version bump and create tag
+              shell: bash
+              run: |
+                  git config user.name "github-actions[bot]"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+                  git add package.json pnpm-lock.yaml
+                  git commit -m "chore: release ${{ steps.version.outputs.tag }}"
+                  git tag -a "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.tag }}"
+                  git push origin "HEAD:${{ github.ref_name }}"
+                  git push origin "${{ steps.version.outputs.tag }}"
+
+            - name: Create GitHub Release
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  IS_PRERELEASE: ${{ inputs.prerelease }}
+              shell: bash
+              run: |
+                  prerelease_flag=""
+                  if [[ "$IS_PRERELEASE" == "true" ]]; then
+                    prerelease_flag="--prerelease"
+                  fi
+
+                  gh release create "${{ steps.version.outputs.tag }}" \
+                    "release/${{ steps.version.outputs.asset }}" \
+                    --title "Freecell Log Studio ${{ steps.version.outputs.tag }}" \
+                    --notes "Single-file HTML build for ${{ steps.version.outputs.tag }}." \
+                    $prerelease_flag
