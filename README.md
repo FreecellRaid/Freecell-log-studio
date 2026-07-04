@@ -5,6 +5,9 @@ UI 风格参考 VSCode。
 
 主要面向跑团玩家及有日志整理需求的用户。
 
+[点击此处](https://freecellraid.github.io/Freecell-log-studio/)开始使用网页版  
+点击右侧 release 下载单文件离线版
+
 ---
 
 ## Preview
