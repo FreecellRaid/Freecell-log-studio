@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { useLogStore } from '@/stores/logStore';
 import { useHistoryStore } from '@/stores/historyStore';
+import { useStyleStore } from '@/stores/styleStore';
 import { generateId } from '@/utils/id';
 import type { Chunk, Message } from '@/types/log';
 
@@ -11,6 +12,7 @@ function hasKeys<T extends object>(value: Partial<T>) {
 export const useLogEditorStore = defineStore('logEditor', () => {
     const logStore = useLogStore();
     const historyStore = useHistoryStore();
+    const styleStore = useStyleStore();
 
     function runEdit(
         hasChange: boolean | (() => boolean),
@@ -145,13 +147,26 @@ export const useLogEditorStore = defineStore('logEditor', () => {
         if (!message) return;
 
         const safeUpdates = sanitizeMessageUpdates(updates);
+        const shouldSyncIdentities =
+            ('playerName' in safeUpdates &&
+                !Object.is(message.playerName, safeUpdates.playerName)) ||
+            ('account' in safeUpdates &&
+                !Object.is(message.account, safeUpdates.account));
+
         runEdit(
             hasKeys(safeUpdates) && hasEntityUpdates(message, safeUpdates),
             () => {
                 Object.assign(message, safeUpdates);
             },
             {
-                normalize: () => logStore.normalizeMessages(chunk),
+                normalize: () => {
+                    logStore.normalizeMessages(chunk);
+                    if (shouldSyncIdentities) {
+                        styleStore.syncSystemRulesFromMessages(
+                            logStore.allMessages,
+                        );
+                    }
+                },
             },
         );
     }
