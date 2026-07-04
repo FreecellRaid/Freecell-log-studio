@@ -46,8 +46,8 @@
                         v-model="editBuffer"
                         v-focus
                         class="form-control name-input"
-                        @blur="saveRename(item.id)"
-                        @keyup.enter="saveRename(item.id)"
+                        v-click-outside="() => saveRename(item.id)"
+                        @keydown.enter.exact.prevent="saveRename(item.id)"
                     />
                     <div v-else class="name-display" :title="item.id">
                         <span class="text">{{ item.id }}</span>
@@ -121,6 +121,7 @@ import {
     collectMessageIdsByIdentity,
     findFirstRoleByIdentity,
 } from '@/editor/identity';
+import { vClickOutside } from '@/directives/clickOutside';
 
 interface IdentityListItem {
     id: string;

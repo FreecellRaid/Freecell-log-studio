@@ -69,9 +69,17 @@
                         <div class="input-group">
                             <input
                                 class="form-control"
-                                v-model="fmt.formatName"
                                 type="text"
-                                @change="exportStore.saveToLocal()"
+                                :value="getFormatDraftValue(fmt, 'formatName')"
+                                @input="
+                                    updateFormatDraft(fmt, 'formatName', $event)
+                                "
+                                v-click-outside="
+                                    () => commitFormatDraft(fmt, 'formatName')
+                                "
+                                @keydown.enter.exact.prevent="
+                                    commitFormatDraft(fmt, 'formatName')
+                                "
                                 placeholder="输入模板名称"
                             />
                             <button
@@ -94,18 +102,51 @@
                             <label>文件后缀</label>
                             <input
                                 class="form-control"
-                                v-model="fmt.fileExtension"
                                 type="text"
-                                @change="exportStore.saveToLocal()"
+                                :value="
+                                    getFormatDraftValue(fmt, 'fileExtension')
+                                "
+                                @input="
+                                    updateFormatDraft(
+                                        fmt,
+                                        'fileExtension',
+                                        $event,
+                                    )
+                                "
+                                v-click-outside="
+                                    () =>
+                                        commitFormatDraft(fmt, 'fileExtension')
+                                "
+                                @keydown.enter.exact.prevent="
+                                    commitFormatDraft(fmt, 'fileExtension')
+                                "
                             />
                         </div>
                         <div class="form-group">
                             <label>消息分隔符</label>
                             <input
                                 class="form-control"
-                                v-model="fmt.messageSeparator"
                                 type="text"
-                                @change="exportStore.saveToLocal()"
+                                :value="
+                                    getFormatDraftValue(fmt, 'messageSeparator')
+                                "
+                                @input="
+                                    updateFormatDraft(
+                                        fmt,
+                                        'messageSeparator',
+                                        $event,
+                                    )
+                                "
+                                v-click-outside="
+                                    () =>
+                                        commitFormatDraft(
+                                            fmt,
+                                            'messageSeparator',
+                                        )
+                                "
+                                @keydown.enter.exact.prevent="
+                                    commitFormatDraft(fmt, 'messageSeparator')
+                                "
                             />
                         </div>
                     </div>
@@ -115,18 +156,47 @@
                             <label>幕间分隔</label>
                             <input
                                 class="form-control"
-                                v-model="fmt.docSeparator"
                                 type="text"
-                                @change="exportStore.saveToLocal()"
+                                :value="
+                                    getFormatDraftValue(fmt, 'docSeparator')
+                                "
+                                @input="
+                                    updateFormatDraft(
+                                        fmt,
+                                        'docSeparator',
+                                        $event,
+                                    )
+                                "
+                                v-click-outside="
+                                    () => commitFormatDraft(fmt, 'docSeparator')
+                                "
+                                @keydown.enter.exact.prevent="
+                                    commitFormatDraft(fmt, 'docSeparator')
+                                "
                             />
                         </div>
                         <div class="form-group">
                             <label>场景分隔</label>
                             <input
                                 class="form-control"
-                                v-model="fmt.chunkSeparator"
                                 type="text"
-                                @change="exportStore.saveToLocal()"
+                                :value="
+                                    getFormatDraftValue(fmt, 'chunkSeparator')
+                                "
+                                @input="
+                                    updateFormatDraft(
+                                        fmt,
+                                        'chunkSeparator',
+                                        $event,
+                                    )
+                                "
+                                v-click-outside="
+                                    () =>
+                                        commitFormatDraft(fmt, 'chunkSeparator')
+                                "
+                                @keydown.enter.exact.prevent="
+                                    commitFormatDraft(fmt, 'chunkSeparator')
+                                "
                             />
                         </div>
                     </div>
@@ -135,18 +205,51 @@
                             <label>玩家名格式</label>
                             <input
                                 class="form-control"
-                                v-model="fmt.playerNameFormat"
                                 type="text"
-                                @change="exportStore.saveToLocal()"
+                                :value="
+                                    getFormatDraftValue(fmt, 'playerNameFormat')
+                                "
+                                @input="
+                                    updateFormatDraft(
+                                        fmt,
+                                        'playerNameFormat',
+                                        $event,
+                                    )
+                                "
+                                v-click-outside="
+                                    () =>
+                                        commitFormatDraft(
+                                            fmt,
+                                            'playerNameFormat',
+                                        )
+                                "
+                                @keydown.enter.exact.prevent="
+                                    commitFormatDraft(fmt, 'playerNameFormat')
+                                "
                             />
                         </div>
                         <div class="form-group">
                             <label>帐号格式</label>
                             <input
                                 class="form-control"
-                                v-model="fmt.accountFormat"
                                 type="text"
-                                @change="exportStore.saveToLocal()"
+                                :value="
+                                    getFormatDraftValue(fmt, 'accountFormat')
+                                "
+                                @input="
+                                    updateFormatDraft(
+                                        fmt,
+                                        'accountFormat',
+                                        $event,
+                                    )
+                                "
+                                v-click-outside="
+                                    () =>
+                                        commitFormatDraft(fmt, 'accountFormat')
+                                "
+                                @keydown.enter.exact.prevent="
+                                    commitFormatDraft(fmt, 'accountFormat')
+                                "
                             />
                         </div>
                     </div>
@@ -154,9 +257,21 @@
                         <label>消息布局模板</label>
                         <textarea
                             class="form-control"
-                            v-model="fmt.messageTemplate"
+                            :value="getFormatDraftValue(fmt, 'messageTemplate')"
                             rows="3"
-                            @change="exportStore.saveToLocal()"
+                            @input="
+                                updateFormatDraft(
+                                    fmt,
+                                    'messageTemplate',
+                                    $event,
+                                )
+                            "
+                            v-click-outside="
+                                () => commitFormatDraft(fmt, 'messageTemplate')
+                            "
+                            @keydown.enter.exact.prevent="
+                                commitFormatDraft(fmt, 'messageTemplate')
+                            "
                         ></textarea>
                     </div>
                 </div>
@@ -170,10 +285,25 @@ import { computed, ref } from 'vue';
 import { Plus, ChevronRight, Trash2, Check, Eye } from '@lucide/vue';
 import { EXPORT_PRESET_IDS, useExportStore } from '@/stores/exportStore';
 import { useWindowStore } from '@/stores/windowStore';
+import type { ExportFormat } from '@/types/export';
+import { vClickOutside } from '@/directives/clickOutside';
+import { useDraftValues } from '@/composables/useDraftValues';
 
 const exportStore = useExportStore();
 const windowStore = useWindowStore();
 const expandedId = ref<string | null>(exportStore.activeFormatId);
+type FormatDraftField = Extract<
+    keyof ExportFormat,
+    | 'formatName'
+    | 'fileExtension'
+    | 'messageSeparator'
+    | 'docSeparator'
+    | 'chunkSeparator'
+    | 'playerNameFormat'
+    | 'accountFormat'
+    | 'messageTemplate'
+>;
+const formatDrafts = useDraftValues<FormatDraftField>();
 const previewedFormatIds = computed(() => {
     const ids = new Set<string>();
 
@@ -202,6 +332,25 @@ function toggleExpand(id: string) {
 
 function isPreset(id: string) {
     return EXPORT_PRESET_IDS.includes(id as (typeof EXPORT_PRESET_IDS)[number]);
+}
+
+function getFormatDraftValue(fmt: ExportFormat, field: FormatDraftField) {
+    return formatDrafts.getValue(fmt.formatId, field, fmt[field]);
+}
+
+function updateFormatDraft(
+    fmt: ExportFormat,
+    field: FormatDraftField,
+    event: Event,
+) {
+    formatDrafts.update(fmt.formatId, field, event);
+}
+
+function commitFormatDraft(fmt: ExportFormat, field: FormatDraftField) {
+    formatDrafts.commit(fmt.formatId, field, (value) => {
+        fmt[field] = value;
+        exportStore.saveToLocal();
+    });
 }
 
 function handleCreateFormat() {
@@ -266,9 +415,6 @@ function handleDelete(id: string) {
     cursor: pointer;
     opacity: 0;
     pointer-events: none;
-    transition:
-        opacity 0.15s ease,
-        color 0.2s;
     color: var(--icon-color);
 }
 

@@ -50,13 +50,29 @@
                                 <label>玩家名</label>
                                 <input
                                     type="text"
-                                    :value="message.playerName"
+                                    :value="
+                                        getDraftValue(message, 'playerName')
+                                    "
                                     @input="
-                                        updateField(
+                                        updateDraft(
+                                            message,
+                                            'playerName',
+                                            $event,
+                                        )
+                                    "
+                                    v-click-outside="
+                                        () =>
+                                            commitDraft(
+                                                chunk.chunkId,
+                                                message.messageId,
+                                                'playerName',
+                                            )
+                                    "
+                                    @keydown.enter.exact.prevent="
+                                        commitDraft(
                                             chunk.chunkId,
                                             message.messageId,
                                             'playerName',
-                                            $event,
                                         )
                                     "
                                 />
@@ -66,13 +82,23 @@
                                 <label>账号</label>
                                 <input
                                     type="text"
-                                    :value="message.account"
+                                    :value="getDraftValue(message, 'account')"
                                     @input="
-                                        updateField(
+                                        updateDraft(message, 'account', $event)
+                                    "
+                                    v-click-outside="
+                                        () =>
+                                            commitDraft(
+                                                chunk.chunkId,
+                                                message.messageId,
+                                                'account',
+                                            )
+                                    "
+                                    @keydown.enter.exact.prevent="
+                                        commitDraft(
                                             chunk.chunkId,
                                             message.messageId,
                                             'account',
-                                            $event,
                                         )
                                     "
                                 />
@@ -136,13 +162,23 @@
                             <div class="prop-item full-width">
                                 <label>消息内容</label>
                                 <textarea
-                                    :value="message.content"
+                                    :value="getDraftValue(message, 'content')"
                                     @input="
-                                        updateField(
+                                        updateDraft(message, 'content', $event)
+                                    "
+                                    v-click-outside="
+                                        () =>
+                                            commitDraft(
+                                                chunk.chunkId,
+                                                message.messageId,
+                                                'content',
+                                            )
+                                    "
+                                    @keydown.enter.exact.prevent="
+                                        commitDraft(
                                             chunk.chunkId,
                                             message.messageId,
                                             'content',
-                                            $event,
                                         )
                                     "
                                     rows="5"
@@ -153,13 +189,23 @@
                                 <label>备注</label>
                                 <input
                                     type="text"
-                                    :value="message.note"
+                                    :value="getDraftValue(message, 'note')"
                                     @input="
-                                        updateField(
+                                        updateDraft(message, 'note', $event)
+                                    "
+                                    v-click-outside="
+                                        () =>
+                                            commitDraft(
+                                                chunk.chunkId,
+                                                message.messageId,
+                                                'note',
+                                            )
+                                    "
+                                    @keydown.enter.exact.prevent="
+                                        commitDraft(
                                             chunk.chunkId,
                                             message.messageId,
                                             'note',
-                                            $event,
                                         )
                                     "
                                     placeholder="备注信息..."
@@ -176,11 +222,14 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useActiveContext } from '@/composables/useActiveContext';
+import { useDraftValues } from '@/composables/useDraftValues';
 import { usePanelResize } from '@/composables/usePanelResize';
 import { useLogStore } from '@/stores/logStore';
 import { useLogEditorStore } from '@/stores/editorStore';
 import { useUiStore } from '@/stores/uiStore';
+import type { Message } from '@/types/log';
 import { formatDate } from '@/utils/date';
+import { vClickOutside } from '@/directives/clickOutside';
 
 const activeContext = useActiveContext();
 const logStore = useLogStore();
@@ -210,6 +259,34 @@ const selectedItems = computed(() => {
 const selectedMessageCount = computed(
     () => activeContext.selectedMessageIds.value.size,
 );
+
+type EditableTextField = 'playerName' | 'account' | 'content' | 'note';
+
+const messageDrafts = useDraftValues<EditableTextField>();
+
+function getDraftValue(message: Message, field: EditableTextField) {
+    return messageDrafts.getValue(
+        message.messageId,
+        field,
+        message[field] ?? '',
+    );
+}
+
+function updateDraft(message: Message, field: EditableTextField, event: Event) {
+    messageDrafts.update(message.messageId, field, event);
+}
+
+function commitDraft(
+    chunkId: string,
+    messageId: string,
+    field: EditableTextField,
+) {
+    messageDrafts.commit(messageId, field, (value) => {
+        logEditorStore.updateMessage(chunkId, messageId, {
+            [field]: value,
+        });
+    });
+}
 
 function updateField(
     chunkId: string,

@@ -85,12 +85,18 @@
                         <input
                             class="form-control"
                             type="text"
-                            v-model="rule.ruleName"
-                            @change="
-                                handleUpdate(rule.ruleId, {
-                                    ruleName: rule.ruleName,
-                                })
+                            :value="
+                                getRuleDraftValue(
+                                    rule.ruleId,
+                                    'ruleName',
+                                    rule.ruleName,
+                                )
                             "
+                            @input="
+                                updateRuleDraft(rule.ruleId, 'ruleName', $event)
+                            "
+                            v-click-outside="() => commitRuleName(rule)"
+                            @keydown.enter.exact.prevent="commitRuleName(rule)"
                             placeholder="输入规则名称"
                         />
                     </div>
@@ -102,11 +108,23 @@
                                 class="form-control"
                                 type="number"
                                 min="1"
-                                v-model.number="rule.priority"
-                                @change="
-                                    handleUpdate(rule.ruleId, {
-                                        priority: rule.priority,
-                                    })
+                                :value="
+                                    getRuleDraftValue(
+                                        rule.ruleId,
+                                        'priority',
+                                        String(rule.priority),
+                                    )
+                                "
+                                @input="
+                                    updateRuleDraft(
+                                        rule.ruleId,
+                                        'priority',
+                                        $event,
+                                    )
+                                "
+                                v-click-outside="() => commitRulePriority(rule)"
+                                @keydown.enter.exact.prevent="
+                                    commitRulePriority(rule)
                                 "
                             />
                         </div>
@@ -132,8 +150,26 @@
                         <label>角色名</label>
                         <input
                             class="form-control filter-text-input"
-                            :value="formatArray(rule.filter.playerName)"
-                            @change="updateFilter(rule, 'playerName', $event)"
+                            :value="
+                                getRuleDraftValue(
+                                    rule.ruleId,
+                                    'filter.playerName',
+                                    formatArray(rule.filter.playerName),
+                                )
+                            "
+                            @input="
+                                updateRuleDraft(
+                                    rule.ruleId,
+                                    'filter.playerName',
+                                    $event,
+                                )
+                            "
+                            v-click-outside="
+                                () => commitFilterDraft(rule, 'playerName')
+                            "
+                            @keydown.enter.exact.prevent="
+                                commitFilterDraft(rule, 'playerName')
+                            "
                             placeholder="如: KP, 骰娘……"
                         />
                     </div>
@@ -141,8 +177,26 @@
                         <label>账号</label>
                         <input
                             class="form-control filter-text-input"
-                            :value="formatArray(rule.filter.account)"
-                            @change="updateFilter(rule, 'account', $event)"
+                            :value="
+                                getRuleDraftValue(
+                                    rule.ruleId,
+                                    'filter.account',
+                                    formatArray(rule.filter.account),
+                                )
+                            "
+                            @input="
+                                updateRuleDraft(
+                                    rule.ruleId,
+                                    'filter.account',
+                                    $event,
+                                )
+                            "
+                            v-click-outside="
+                                () => commitFilterDraft(rule, 'account')
+                            "
+                            @keydown.enter.exact.prevent="
+                                commitFilterDraft(rule, 'account')
+                            "
                             placeholder="如: 表情差分1, 表情差分2……"
                         />
                     </div>
@@ -150,8 +204,26 @@
                         <label>内容</label>
                         <input
                             class="form-control filter-text-input"
-                            :value="formatArray(rule.filter.content)"
-                            @change="updateFilter(rule, 'content', $event)"
+                            :value="
+                                getRuleDraftValue(
+                                    rule.ruleId,
+                                    'filter.content',
+                                    formatArray(rule.filter.content),
+                                )
+                            "
+                            @input="
+                                updateRuleDraft(
+                                    rule.ruleId,
+                                    'filter.content',
+                                    $event,
+                                )
+                            "
+                            v-click-outside="
+                                () => commitFilterDraft(rule, 'content')
+                            "
+                            @keydown.enter.exact.prevent="
+                                commitFilterDraft(rule, 'content')
+                            "
                             placeholder="如: 于此同时，另一边……"
                         />
                     </div>
@@ -159,8 +231,26 @@
                         <label>备注</label>
                         <input
                             class="form-control filter-text-input"
-                            :value="formatArray(rule.filter.note)"
-                            @change="updateFilter(rule, 'note', $event)"
+                            :value="
+                                getRuleDraftValue(
+                                    rule.ruleId,
+                                    'filter.note',
+                                    formatArray(rule.filter.note),
+                                )
+                            "
+                            @input="
+                                updateRuleDraft(
+                                    rule.ruleId,
+                                    'filter.note',
+                                    $event,
+                                )
+                            "
+                            v-click-outside="
+                                () => commitFilterDraft(rule, 'note')
+                            "
+                            @keydown.enter.exact.prevent="
+                                commitFilterDraft(rule, 'note')
+                            "
                             placeholder="如: 战斗轮消息……"
                         />
                     </div>
@@ -264,10 +354,12 @@ import { ref, computed } from 'vue';
 import { useStyleStore } from '@/stores/styleStore';
 import { useLogStore } from '@/stores/logStore';
 import { useActiveContext } from '@/composables/useActiveContext';
+import { useDraftValues } from '@/composables/useDraftValues';
 import type { ColorRule } from '@/types/style';
 import type { MessageFilter } from '@/types/log';
 import { matchesMessageFilter } from '@/editor/filter';
 import { useWindowStore } from '@/stores/windowStore';
+import { vClickOutside } from '@/directives/clickOutside';
 
 const styleStore = useStyleStore();
 const logStore = useLogStore();
@@ -279,6 +371,15 @@ const activeViewId = computed(() => {
 // 注意，这里传入的id不是响应式的！切换窗口会有bug
 const activeContext = useActiveContext(activeViewId.value);
 const expandedRules = ref<Set<string>>(new Set());
+
+type RuleDraftField =
+    | 'ruleName'
+    | 'priority'
+    | 'filter.playerName'
+    | 'filter.account'
+    | 'filter.content'
+    | 'filter.note';
+const ruleDrafts = useDraftValues<RuleDraftField>();
 
 function toggleExpand(ruleId: string) {
     if (expandedRules.value.has(ruleId)) {
@@ -314,6 +415,31 @@ function handleUpdate(ruleId: string, updates: Partial<ColorRule>) {
     styleStore.updateRule(ruleId, updates);
 }
 
+function getRuleDraftValue(
+    ruleId: string,
+    field: RuleDraftField,
+    fallback: string,
+) {
+    return ruleDrafts.getValue(ruleId, field, fallback);
+}
+
+function updateRuleDraft(ruleId: string, field: RuleDraftField, event: Event) {
+    ruleDrafts.update(ruleId, field, event);
+}
+
+function commitRuleName(rule: ColorRule) {
+    ruleDrafts.commit(rule.ruleId, 'ruleName', (value) => {
+        handleUpdate(rule.ruleId, { ruleName: value });
+    });
+}
+
+function commitRulePriority(rule: ColorRule) {
+    ruleDrafts.commit(rule.ruleId, 'priority', (value) => {
+        const priority = Math.max(1, parseInt(value, 10) || 1);
+        handleUpdate(rule.ruleId, { priority });
+    });
+}
+
 // 更新顶层属性
 function updateColor(rule: ColorRule, event: Event) {
     const color = (event.target as HTMLInputElement).value;
@@ -340,6 +466,28 @@ function updateFilter(
     const val = (
         event.target as HTMLInputElement | HTMLSelectElement
     ).value.trim();
+    updateFilterValue(rule, key, val, isBoolean);
+}
+
+function commitFilterDraft(
+    rule: ColorRule,
+    key: Extract<
+        keyof ColorRule['filter'],
+        'playerName' | 'account' | 'content' | 'note'
+    >,
+) {
+    ruleDrafts.commit(rule.ruleId, `filter.${key}`, (value) => {
+        updateFilterValue(rule, key, value);
+    });
+}
+
+function updateFilterValue(
+    rule: ColorRule,
+    key: keyof ColorRule['filter'],
+    value: string,
+    isBoolean = false,
+) {
+    const val = value.trim();
     const newFilter: MessageFilter = { ...rule.filter };
 
     if (!val) {

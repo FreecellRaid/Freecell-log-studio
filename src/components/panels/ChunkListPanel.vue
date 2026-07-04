@@ -9,9 +9,9 @@
                     class="project-name-input"
                     type="text"
                     placeholder="未命名工程"
-                    @keydown.enter.prevent="submitProjectName"
+                    v-click-outside="() => submitProjectName()"
+                    @keydown.enter.exact.prevent="submitProjectName"
                     @keydown.esc.prevent="resetProjectNameDraft"
-                    @blur="submitProjectName"
                 />
                 <template v-else>
                     <h3 title="双击重命名工程" @dblclick="startProjectNameEdit">
@@ -56,11 +56,13 @@
                         type="text"
                         @click.stop
                         @dblclick.stop
-                        @keydown.enter.prevent="
+                        v-click-outside="
+                            () => submitRename('document', doc.docId)
+                        "
+                        @keydown.enter.exact.prevent="
                             submitRename('document', doc.docId)
                         "
                         @keydown.esc.prevent="cancelRename"
-                        @blur="submitRename('document', doc.docId)"
                     />
                     <span
                         v-else
@@ -154,11 +156,13 @@
                                 type="text"
                                 @click.stop
                                 @dblclick.stop
-                                @keydown.enter.prevent="
+                                v-click-outside="
+                                    () => submitRename('chunk', chunk.chunkId)
+                                "
+                                @keydown.enter.exact.prevent="
                                     submitRename('chunk', chunk.chunkId)
                                 "
                                 @keydown.esc.prevent="cancelRename"
-                                @blur="submitRename('chunk', chunk.chunkId)"
                             />
                             <span
                                 v-else
@@ -221,6 +225,7 @@ import { useStyleStore } from '@/stores/styleStore';
 import { useWindowStore } from '@/stores/windowStore';
 import type { Chunk, LogDocument } from '@/types/log';
 import { useActiveContext } from '@/composables/useActiveContext';
+import { vClickOutside } from '@/directives/clickOutside';
 
 const logStore = useLogStore();
 const styleStore = useStyleStore();

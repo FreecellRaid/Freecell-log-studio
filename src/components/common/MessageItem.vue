@@ -1,6 +1,5 @@
 <template>
     <div
-        ref="editWrapper"
         class="message-item"
         :data-message-id="message.messageId"
         :class="{
@@ -15,6 +14,11 @@
         @dragover.prevent="handleDragOver"
         @drop.prevent.stop="handleDrop"
         @dragend="handleDragEnd"
+        v-click-outside="
+            () => {
+                if (isEditing) emit('saveEdit', message.messageId);
+            }
+        "
     >
         <div class="message-actions">
             <button
@@ -50,10 +54,7 @@
         <div class="message-header">
             <span class="message-name" :style="computedStyles.nameStyle">
                 {{ message.playerName }}
-                <span
-                    v-if="uiStore.showAccount"
-                    class="message-account"
-                >
+                <span v-if="uiStore.showAccount" class="message-account">
                     ({{ message.account }})
                 </span>
             </span>
@@ -74,7 +75,9 @@
                     ref="editInput"
                     v-model="editContentLocal"
                     class="content-editor absolute-editor"
-                    @keydown.enter="handleEditEnter"
+                    @keydown.enter.exact.prevent="
+                        $emit('saveEdit', message.messageId)
+                    "
                     @keydown.esc="$emit('cancelEdit')"
                 ></textarea>
             </div>
@@ -88,12 +91,12 @@
 <script setup lang="ts">
 import { computed, ref, nextTick, watch } from 'vue';
 import type { Message } from '@/types/log';
-import { onClickOutside } from '@vueuse/core';
 import { useStyleStore } from '@/stores/styleStore';
 import { useUiStore } from '@/stores/uiStore';
 import { formatDate } from '@/utils/date';
 import { computeStyleForMessage } from '@/editor/styleEngine';
 import { Trash2, Plus, Scissors, ChevronsDown } from '@lucide/vue';
+import { vClickOutside } from '@/directives/clickOutside';
 
 // 加入虚拟滚动之后，把编辑状态放在messageItem里会导致状态丢失
 // 统一改成父组件传入
@@ -181,15 +184,6 @@ const editContentLocal = computed({
     set: (val) => emit('updateContent', val),
 });
 const editInput = ref<HTMLTextAreaElement | null>(null);
-function handleEditEnter(event: KeyboardEvent) {
-    if (event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) {
-        return;
-    }
-    event.preventDefault();
-    emit('saveEdit', props.message.messageId);
-}
-
-const editWrapper = ref<HTMLElement | null>(null);
 
 watch(
     () => props.isEditing,
@@ -206,13 +200,6 @@ watch(
         }
     },
 );
-
-onClickOutside(editWrapper, () => {
-    if (!props.isEditing) {
-        return;
-    }
-    emit('saveEdit', props.message.messageId);
-});
 </script>
 
 <style scoped>
