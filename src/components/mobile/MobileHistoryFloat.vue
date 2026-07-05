@@ -1,5 +1,9 @@
 <template>
-    <div class="mobile-history-float" aria-label="历史操作">
+    <div
+        v-if="historyStore.canUndo || historyStore.canRedo"
+        class="mobile-history-float"
+        aria-label="历史操作"
+    >
         <button
             type="button"
             title="撤销"
@@ -29,13 +33,13 @@ const historyStore = useHistoryStore();
 <style scoped>
 .mobile-history-float {
     position: fixed;
-    right: 12px;
-    bottom: calc(70px + env(safe-area-inset-bottom));
+    left: 40%;
+    bottom: calc(80px + env(safe-area-inset-bottom));
     z-index: 40;
     display: inline-flex;
     align-items: center;
     overflow: hidden;
-    border: 1px solid var(--border-color);
+    border-radius: 40px;
     background: var(--bg-topbar);
     box-shadow: 0 4px 16px var(--box-shadow);
 }
@@ -44,7 +48,6 @@ const historyStore = useHistoryStore();
     width: 42px;
     height: 38px;
     border: 0;
-    border-right: 1px solid var(--border-color);
     background: transparent;
     color: var(--icon-color);
     display: inline-flex;
