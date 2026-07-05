@@ -123,16 +123,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { Download, Trash2, Save, FolderOpen, Upload } from '@lucide/vue';
 import { useLogStore } from '@/stores/logStore';
-import { useStyleStore } from '@/stores/styleStore';
-import { useClipboardStore } from '@/stores/clipboardStore';
-import { useHistoryStore } from '@/stores/historyStore';
 import { useWindowStore } from '@/stores/windowStore';
-import { useActiveContext } from '@/composables/useActiveContext';
 import { useFileImportInput } from '@/composables/useImporter';
 import { useProjectManager } from '@/composables/useProjectManager';
+import { useWorkspaceActions } from '@/composables/useWorkspaceActions';
 import { vClickOutside } from '@/directives/clickOutside';
 import type { ProjectFile } from '@/types/project';
 import StoredProjectsPopover from '@/components/popovers/StoredProjectsPopover.vue';
@@ -140,14 +137,12 @@ import ExportPopover from '@/components/popovers/ExportPopover.vue';
 import ImportPopover from '@/components/popovers/ImportPopover.vue';
 
 const logStore = useLogStore();
-const styleStore = useStyleStore();
-const clipboardStore = useClipboardStore();
-const historyStore = useHistoryStore();
 const windowStore = useWindowStore();
-const activeContext = useActiveContext();
 const { setFileInput, triggerImport, handleFileChange, importFromClipboard } =
     useFileImportInput();
 const projectManager = useProjectManager();
+const workspaceActions = useWorkspaceActions();
+const hasWorkspaceState = workspaceActions.hasWorkspaceState;
 
 const showExportPopover = ref(false);
 const showStoredProjectsPopover = ref(false);
@@ -191,47 +186,20 @@ function toggleStoredProjects() {
     showStoredProjectsPopover.value = targetState;
 }
 
-const hasWorkspaceState = computed(() => {
-    return (
-        logStore.documents.length > 0 ||
-        styleStore.rules.length > 0 ||
-        clipboardStore.copiedMessages.length > 0 ||
-        activeContext.hasSelection.value ||
-        historyStore.undoStack.length > 0 ||
-        historyStore.redoStack.length > 0
-    );
-});
-
 function refreshStoredProjects() {
     storedProjects.value = projectManager.getStoredProjects();
 }
 
 function handleSaveProject() {
     closeAllPopovers();
-    const result = projectManager.saveCurrentProjectToLocal();
-    if (!result.success) {
-        alert('本地存储空间不足，保存失败。');
-        return;
-    }
-    refreshStoredProjects();
-    alert(
-        result.removedCount > 0
-            ? `工程已保存，并自动清理了 ${result.removedCount} 个旧版本。`
-            : '工程已成功保存到本地。',
-    );
+    workspaceActions.saveCurrentProjectWithFeedback({
+        afterSave: refreshStoredProjects,
+    });
 }
 
 function handleClearAll() {
     closeAllPopovers();
-    if (!hasWorkspaceState.value) return;
-    if (!window.confirm('确定要清空所有数据吗？本操作不可撤销。')) return;
-
-    logStore.clearData();
-    styleStore.clearRules();
-    clipboardStore.clearClipboard();
-    activeContext.clearSelection();
-    historyStore.clearHistory();
-    windowStore.setFocus('default');
+    workspaceActions.clearWorkspaceWithConfirmation();
 }
 </script>
 
