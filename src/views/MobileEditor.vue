@@ -44,6 +44,8 @@
             />
         </main>
 
+        <MobileHistoryFloat />
+
         <nav class="mobile-panel-dock">
             <button
                 v-for="item in bottomPanels"
@@ -203,6 +205,7 @@ import {
 import HelpDocument from '@/components/common/HelpDocument.vue';
 import StoredProjectsPopover from '@/components/popovers/StoredProjectsPopover.vue';
 import MobileBottomPanelDrawer from '@/components/mobile/MobileBottomPanelDrawer.vue';
+import MobileHistoryFloat from '@/components/mobile/MobileHistoryFloat.vue';
 import MobileLeftDrawer from '@/components/mobile/MobileLeftDrawer.vue';
 import MobileMessageList from '@/components/mobile/MobileMessageList.vue';
 import MobileTopBar from '@/components/mobile/MobileTopBar.vue';
