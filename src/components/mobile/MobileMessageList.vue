@@ -24,13 +24,19 @@
                 @click="$emit('selectMessage', message.messageId)"
             >
                 <header class="mobile-message-header">
-                    <strong :style="getMessageStyle(message).nameStyle">
+                    <strong
+                        class="mobile-message-name"
+                        :style="getMessageStyle(message).nameStyle"
+                    >
                         {{ message.playerName || '未知角色' }}
                     </strong>
-                    <span v-if="uiStore.showAccount && message.account">
+                    <span
+                        v-if="uiStore.showAccount && message.account"
+                        class="mobile-message-account"
+                    >
                         {{ message.account }}
                     </span>
-                    <time v-if="uiStore.showTime">
+                    <time v-if="uiStore.showTime" class="mobile-message-time">
                         {{ formatDate(message.time) }}
                     </time>
                 </header>
@@ -173,21 +179,42 @@ function getMessageStyle(message: Message) {
 }
 
 .mobile-message-header {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, auto) minmax(0, 1fr) max-content;
     align-items: baseline;
     gap: 8px;
     font-size: 13px;
     color: var(--text-secondary);
+    min-width: 0;
 }
 
-.mobile-message-header strong {
+.mobile-message-name {
+    min-width: 0;
+    max-width: 42vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     color: var(--text-primary);
     font-size: 14px;
 }
 
-.mobile-message-header time {
-    margin-left: auto;
+.mobile-message-account {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.mobile-message-time {
+    max-width: 34vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: right;
+}
+
+.mobile-message-header:not(:has(.mobile-message-account)) {
+    grid-template-columns: minmax(0, 1fr) max-content;
 }
 
 .mobile-message-content {
