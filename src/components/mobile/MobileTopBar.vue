@@ -1,22 +1,32 @@
 <template>
     <header class="mobile-topbar">
+        <input
+            :ref="setFileInput"
+            type="file"
+            accept=".txt,.json,application/json"
+            multiple
+            hidden
+            @change="handleFileChange"
+        />
+
         <button
             class="mobile-topbar-button"
             type="button"
             title="打开全局菜单"
-            @click="$emit('menu')"
+            @click="mobileStore.openLeftDrawer"
         >
             <PanelLeftOpen class="ui-icon" />
         </button>
 
         <div class="mobile-project-summary">
-            <h4>{{ projectName || '未命名工程' }}</h4>
+            <h4>{{ logStore.projectName || '未命名工程' }}</h4>
+            <p>{{ logStore.totalMessages }} 条消息</p>
         </div>
         <button
             class="mobile-topbar-button"
             type="button"
             title="导入文档/工程"
-            @click="$emit('import')"
+            @click="triggerImport"
         >
             <Upload class="ui-icon" />
         </button>
@@ -40,17 +50,14 @@
 import { ref } from 'vue';
 import { Download, PanelLeftOpen, Upload } from '@lucide/vue';
 import ExportPopover from '@/components/popovers/ExportPopover.vue';
-
-defineProps<{
-    projectName: string;
-}>();
-
-defineEmits<{
-    (e: 'menu'): void;
-    (e: 'import'): void;
-}>();
+import { useFileImportInput } from '@/composables/useImporter';
+import { useLogStore } from '@/stores/logStore';
+import { useMobileEditorStore } from '@/stores/mobileEditorStore';
 
 const showExportPopover = ref(false);
+const logStore = useLogStore();
+const mobileStore = useMobileEditorStore();
+const { setFileInput, triggerImport, handleFileChange } = useFileImportInput();
 </script>
 
 <style scoped>
@@ -71,6 +78,25 @@ const showExportPopover = ref(false);
     display: flex;
     flex-direction: column;
     gap: 2px;
+}
+
+.mobile-project-summary h4,
+.mobile-project-summary p {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mobile-project-summary h4 {
+    font-size: 14px;
+    line-height: 1.25;
+}
+
+.mobile-project-summary p {
+    font-size: 11px;
+    line-height: 1.2;
+    color: var(--text-secondary);
 }
 
 .mobile-topbar-button {
