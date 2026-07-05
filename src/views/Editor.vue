@@ -24,9 +24,10 @@
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent } from 'vue';
+import { defineAsyncComponent, onMounted } from 'vue';
 import { useWindowStore } from '@/stores/windowStore';
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
+import { useScrollbarVisibility } from '@/composables/useScrollbarVisibility';
 import TopMenuBar from '@/components/layout/TopMenuBar.vue';
 import SidebarLeft from '@/components/layout/SidebarLeft.vue';
 import MainWorkspace from '@/components/workspace/MainWorkspace.vue';
@@ -41,4 +42,7 @@ const SidebarRight = defineAsyncComponent(
 
 const windowStore = useWindowStore();
 useKeyboardShortcuts();
+onMounted(() => {
+    useScrollbarVisibility();
+});
 </script>
