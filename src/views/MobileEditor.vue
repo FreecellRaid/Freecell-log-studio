@@ -3,7 +3,7 @@
         <HelpDocument v-if="windowStore.isHelpOpen" />
 
         <input
-            ref="fileInput"
+            :ref="setFileInput"
             type="file"
             accept=".txt,.json,application/json"
             multiple
@@ -66,7 +66,7 @@
 
         <MobileLeftDrawer
             v-if="leftDrawerOpen"
-            :has-workspace-state="projectManager.hasWorkspaceState.value"
+            :has-workspace-state="workspaceActions.hasWorkspaceState.value"
             @close="leftDrawerOpen = false"
             @edit-project-name="startProjectNameEdit"
             @save-project="handleSaveProject"
@@ -206,8 +206,9 @@ import MobileBottomPanelDrawer from '@/components/mobile/MobileBottomPanelDrawer
 import MobileLeftDrawer from '@/components/mobile/MobileLeftDrawer.vue';
 import MobileMessageList from '@/components/mobile/MobileMessageList.vue';
 import MobileTopBar from '@/components/mobile/MobileTopBar.vue';
-import { useFileImport } from '@/composables/useImporter';
+import { useFileImportInput } from '@/composables/useImporter';
 import { useProjectManager } from '@/composables/useProjectManager';
+import { useWorkspaceActions } from '@/composables/useWorkspaceActions';
 import { useLogEditorStore } from '@/stores/editorStore';
 import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
@@ -243,9 +244,9 @@ const styleStore = useStyleStore();
 const windowStore = useWindowStore();
 const editorStore = useLogEditorStore();
 const projectManager = useProjectManager();
-const { importAndApply } = useFileImport();
+const workspaceActions = useWorkspaceActions();
 
-const fileInput = ref<HTMLInputElement | null>(null);
+const { setFileInput, triggerImport, handleFileChange } = useFileImportInput();
 const activeBottomPanel = ref<MobileBottomPanelName | null>(null);
 const activeSheet = ref<MobileSheetName>(null);
 const leftDrawerOpen = ref(false);
@@ -338,25 +339,6 @@ function closeSheet() {
     editingMessage.value = null;
 }
 
-function triggerImport() {
-    fileInput.value?.click();
-}
-
-async function handleFileChange(event: Event) {
-    const target = event.target as HTMLInputElement;
-    const files = target.files;
-    if (!files?.length) return;
-
-    try {
-        await importAndApply(Array.from(files));
-    } catch (error) {
-        console.error(error);
-        alert(error instanceof Error ? error.message : '解析文件时发生错误');
-    } finally {
-        target.value = '';
-    }
-}
-
 function selectMessage(messageId: string) {
     selectedMessageId.value =
         selectedMessageId.value === messageId ? null : messageId;
@@ -436,16 +418,7 @@ function submitChunkRename() {
 }
 
 function handleSaveProject() {
-    const result = projectManager.saveCurrentProjectToLocal();
-    if (!result.success) {
-        alert('本地存储空间不足，保存失败。');
-        return;
-    }
-    alert(
-        result.removedCount > 0
-            ? `工程已保存，并自动清理了 ${result.removedCount} 个旧版本。`
-            : '工程已成功保存到本地。',
-    );
+    workspaceActions.saveCurrentProjectWithFeedback();
 }
 
 function showStoredProjects() {
@@ -458,13 +431,13 @@ function refreshStoredProjects() {
 }
 
 function handleClearAll() {
-    if (!projectManager.hasWorkspaceState.value) return;
-    if (!window.confirm('确定要清空所有数据吗？本操作不可撤销。')) return;
-    logStore.clearData();
-    styleStore.clearRules();
-    windowStore.setFocus('defaultView');
-    activeBottomPanel.value = null;
-    leftDrawerOpen.value = false;
+    workspaceActions.clearWorkspaceWithConfirmation({
+        focusTarget: 'defaultView',
+        afterClear: () => {
+            activeBottomPanel.value = null;
+            leftDrawerOpen.value = false;
+        },
+    });
 }
 </script>
 

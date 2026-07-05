@@ -1,10 +1,8 @@
 <template>
     <template v-if="activeChunk">
         <section class="mobile-editor-header">
-            <div>
-                <h1>{{ activeChunk.chunkName || '未命名场景' }}</h1>
-                <p>{{ messages.length }} 条消息</p>
-            </div>
+            <h4>{{ activeChunk.chunkName || '未命名场景' }}</h4>
+            <p>{{ messages.length }} 条消息</p>
             <button
                 class="mobile-icon-button"
                 type="button"
@@ -15,7 +13,7 @@
             </button>
         </section>
 
-        <section class="mobile-message-list">
+        <section>
             <article
                 v-for="(message, index) in messages"
                 :key="message.messageId"
@@ -50,7 +48,10 @@
                     <span v-if="message.note">{{ message.note }}</span>
                 </footer>
 
-                <div class="mobile-message-actions">
+                <div
+                    v-if="selectedMessageId === message.messageId"
+                    class="mobile-message-actions"
+                >
                     <button
                         class="mobile-action-button"
                         type="button"
@@ -118,22 +119,20 @@ function getMessageStyle(message: Message) {
 
 <style scoped>
 .mobile-editor-header {
-    min-height: 58px;
-    padding: 10px 12px 10px 44px;
+    min-height: 50px;
+    padding: 0px 12px 0px 20px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 12px;
     border-bottom: 1px solid var(--border-color);
     background: var(--bg-workspace);
     position: sticky;
-    top: 0;
+    top: -1px;
     z-index: 1;
 }
 
-.mobile-editor-header h1 {
+.mobile-editor-header h4 {
     margin: 0;
-    font-size: 17px;
     line-height: 1.25;
 }
 
@@ -144,9 +143,10 @@ function getMessageStyle(message: Message) {
 }
 
 .mobile-icon-button {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
     border: 0;
+    margin-left: auto;
     background: transparent;
     color: var(--icon-color);
     display: inline-flex;
@@ -156,25 +156,20 @@ function getMessageStyle(message: Message) {
 }
 
 .mobile-icon-button .ui-icon {
-    width: 20px;
-    height: 20px;
-}
-
-.mobile-message-list {
-    padding: 12px;
+    width: 18px;
+    height: 18px;
 }
 
 .mobile-message {
-    padding: 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border-color);
     background: var(--bg-workspace);
-    margin-bottom: 10px;
 }
 
 .mobile-message.is-selected {
-    border-color: var(--active-accent);
     background: var(--selection-bg);
+    outline: 1px solid var(--active-accent);
+    outline-offset: -1px;
 }
 
 .mobile-message-header {
@@ -216,7 +211,7 @@ function getMessageStyle(message: Message) {
 }
 
 .mobile-action-button {
-    min-height: 40px;
+    min-height: 36px;
     border: 1px solid var(--border-color);
     background: var(--bg-sidebar);
     color: var(--text-primary);

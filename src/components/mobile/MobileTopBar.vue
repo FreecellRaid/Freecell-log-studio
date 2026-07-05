@@ -10,8 +10,7 @@
         </button>
 
         <div class="mobile-project-summary">
-            <strong>{{ projectName || '未命名工程' }}</strong>
-            <span>{{ totalMessages }} 条消息</span>
+            <h4>{{ projectName || '未命名工程' }}</h4>
         </div>
         <button
             class="mobile-topbar-button"
@@ -44,7 +43,6 @@ import ExportPopover from '@/components/popovers/ExportPopover.vue';
 
 defineProps<{
     projectName: string;
-    totalMessages: number;
 }>();
 
 defineEmits<{
@@ -75,23 +73,6 @@ const showExportPopover = ref(false);
     gap: 2px;
 }
 
-.mobile-project-summary strong,
-.mobile-project-summary span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.mobile-project-summary strong {
-    font-size: 15px;
-    line-height: 1.2;
-}
-
-.mobile-project-summary span {
-    color: var(--text-secondary);
-    font-size: 12px;
-}
-
 .mobile-topbar-button {
     width: 42px;
     height: 42px;
@@ -117,7 +98,7 @@ const showExportPopover = ref(false);
 .mobile-export-popover {
     position: absolute;
     top: calc(100% + 4px);
-    right: 0;
+    right: -10px;
     z-index: 120;
     background: var(--bg-topbar);
 }
