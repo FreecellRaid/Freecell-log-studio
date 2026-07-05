@@ -43,155 +43,31 @@
                             <div>{{ formatDate(message.time) }}</div>
                         </div>
 
-                        <div class="prop-item">
-                            <label>玩家名</label>
-                            <input
-                                type="text"
-                                :value="getDraftValue(message, 'playerName')"
-                                @input="
-                                    updateDraft(message, 'playerName', $event)
-                                "
-                                v-click-outside="
-                                    () =>
-                                        commitDraft(
-                                            chunkId,
-                                            message.messageId,
-                                            'playerName',
-                                        )
-                                "
-                                @keydown.enter.exact.prevent="
+                        <MessageDetailEditor
+                            :message="message"
+                            :values="getMessageValues(message)"
+                            @text-input="
+                                (field, value) =>
+                                    updateDraft(message, field, value)
+                            "
+                            @commit-text="
+                                (field) =>
                                     commitDraft(
                                         chunkId,
                                         message.messageId,
-                                        'playerName',
+                                        field,
                                     )
-                                "
-                            />
-                        </div>
-
-                        <div class="prop-item">
-                            <label>账号</label>
-                            <input
-                                type="text"
-                                :value="getDraftValue(message, 'account')"
-                                @input="updateDraft(message, 'account', $event)"
-                                v-click-outside="
-                                    () =>
-                                        commitDraft(
-                                            chunkId,
-                                            message.messageId,
-                                            'account',
-                                        )
-                                "
-                                @keydown.enter.exact.prevent="
-                                    commitDraft(
-                                        chunkId,
-                                        message.messageId,
-                                        'account',
-                                    )
-                                "
-                            />
-                        </div>
-
-                        <div class="prop-item">
-                            <label>身份</label>
-                            <select
-                                :value="message.role"
-                                @change="
+                            "
+                            @field-change="
+                                (field, value) =>
                                     updateField(
                                         chunkId,
                                         message.messageId,
-                                        'role',
-                                        $event,
+                                        field,
+                                        value,
                                     )
-                                "
-                            >
-                                <option value="pl">玩家</option>
-                                <option value="gm">主持人</option>
-                                <option value="npc">NPC</option>
-                                <option value="ob">观众</option>
-                                <option value="bot">骰子</option>
-                            </select>
-                        </div>
-                        <div class="prop-row">
-                            <ToggleButton
-                                :model-value="message.isOoc"
-                                class="inspector-toggle"
-                                @update:model-value="
-                                    updateBooleanField(
-                                        chunkId,
-                                        message.messageId,
-                                        'isOoc',
-                                        Boolean($event),
-                                    )
-                                "
-                            >
-                                场外消息
-                            </ToggleButton>
-                            <ToggleButton
-                                :model-value="message.isCommand"
-                                class="inspector-toggle"
-                                @update:model-value="
-                                    updateBooleanField(
-                                        chunkId,
-                                        message.messageId,
-                                        'isCommand',
-                                        Boolean($event),
-                                    )
-                                "
-                            >
-                                指令消息
-                            </ToggleButton>
-                        </div>
-
-                        <div class="prop-item full-width">
-                            <label>消息内容</label>
-                            <textarea
-                                :value="getDraftValue(message, 'content')"
-                                @input="updateDraft(message, 'content', $event)"
-                                v-click-outside="
-                                    () =>
-                                        commitDraft(
-                                            chunkId,
-                                            message.messageId,
-                                            'content',
-                                        )
-                                "
-                                @keydown.enter.exact.prevent="
-                                    commitDraft(
-                                        chunkId,
-                                        message.messageId,
-                                        'content',
-                                    )
-                                "
-                                rows="5"
-                            ></textarea>
-                        </div>
-
-                        <div class="prop-item full-width">
-                            <label>备注</label>
-                            <input
-                                type="text"
-                                :value="getDraftValue(message, 'note')"
-                                @input="updateDraft(message, 'note', $event)"
-                                v-click-outside="
-                                    () =>
-                                        commitDraft(
-                                            chunkId,
-                                            message.messageId,
-                                            'note',
-                                        )
-                                "
-                                @keydown.enter.exact.prevent="
-                                    commitDraft(
-                                        chunkId,
-                                        message.messageId,
-                                        'note',
-                                    )
-                                "
-                                placeholder="备注信息..."
-                            />
-                        </div>
+                            "
+                        />
                     </div>
                 </div>
             </div>
@@ -201,16 +77,18 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import MessageDetailEditor from '@/components/common/MessageDetailEditor.vue';
+import type {
+    MessageDetailTextField,
+    MessageDetailValues,
+} from '@/components/common/MessageDetailEditor.vue';
 import { useActiveContext } from '@/composables/useActiveContext';
 import { useDraftValues } from '@/composables/useDraftValues';
 import { usePanelResize } from '@/composables/usePanelResize';
 import { useLogStore } from '@/stores/logStore';
 import { useLogEditorStore } from '@/stores/editorStore';
 import { useUiStore } from '@/stores/uiStore';
-import ToggleButton from '@/components/common/ToggleButton.vue';
 import type { Message } from '@/types/log';
-import { formatDate } from '@/utils/date';
-import { vClickOutside } from '@/directives/clickOutside';
 
 const activeContext = useActiveContext();
 const logStore = useLogStore();
@@ -240,11 +118,9 @@ const selectedMessageCount = computed(
     () => activeContext.selectedMessageIds.value.size,
 );
 
-type EditableTextField = 'playerName' | 'account' | 'content' | 'note';
+const messageDrafts = useDraftValues<MessageDetailTextField>();
 
-const messageDrafts = useDraftValues<EditableTextField>();
-
-function getDraftValue(message: Message, field: EditableTextField) {
+function getDraftValue(message: Message, field: MessageDetailTextField) {
     return messageDrafts.getValue(
         message.messageId,
         field,
@@ -252,14 +128,30 @@ function getDraftValue(message: Message, field: EditableTextField) {
     );
 }
 
-function updateDraft(message: Message, field: EditableTextField, event: Event) {
-    messageDrafts.update(message.messageId, field, event);
+function getMessageValues(message: Message): MessageDetailValues {
+    return {
+        playerName: getDraftValue(message, 'playerName'),
+        account: getDraftValue(message, 'account'),
+        role: message.role,
+        content: getDraftValue(message, 'content'),
+        note: getDraftValue(message, 'note'),
+        isOoc: message.isOoc,
+        isCommand: message.isCommand,
+    };
+}
+
+function updateDraft(
+    message: Message,
+    field: MessageDetailTextField,
+    value: string,
+) {
+    messageDrafts.update(message.messageId, field, value);
 }
 
 function commitDraft(
     chunkId: string,
     messageId: string,
-    field: EditableTextField,
+    field: MessageDetailTextField,
 ) {
     messageDrafts.commit(messageId, field, (value) => {
         logEditorStore.updateMessage(chunkId, messageId, {
@@ -283,23 +175,8 @@ function updateField(
     chunkId: string,
     messageId: string,
     field: string,
-    event: Event,
-    type: 'string' | 'number' | 'boolean' = 'string',
+    value: unknown,
 ) {
-    const target = event.target as
-        | HTMLInputElement
-        | HTMLSelectElement
-        | HTMLTextAreaElement;
-    let value: any;
-
-    if (type === 'boolean') {
-        value = (target as HTMLInputElement).checked;
-    } else if (type === 'number') {
-        value = parseInt(target.value, 10) || 0;
-    } else {
-        value = target.value;
-    }
-
     logEditorStore.updateMessage(chunkId, messageId, {
         [field]: value,
     });
@@ -333,66 +210,5 @@ function updateField(
     border-bottom: 1px solid var(--border-color);
     font-family: monospace;
     font-size: 11px;
-}
-
-.property-grid {
-    padding: 10px;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-}
-
-.prop-item-time {
-    grid-column: span 2;
-    display: flex;
-    gap: 4px;
-    font-size: 12px;
-}
-
-.prop-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.prop-item.full-width {
-    grid-column: span 2;
-}
-
-.prop-item label {
-    font-size: 11px;
-    color: var(--text-muted);
-}
-
-.prop-item input[type='text'],
-.prop-item input[type='number'],
-.prop-item select,
-.prop-item textarea {
-    width: 100%;
-    box-sizing: border-box;
-    background-color: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    padding: 6px 8px;
-    border-radius: 4px;
-    font-size: 13px;
-    outline: none;
-}
-
-.prop-item input:focus,
-.prop-item select:focus,
-.prop-item textarea:focus {
-    border-color: var(--active-accent);
-}
-
-.prop-row {
-    grid-column: span 2;
-    display: flex;
-    gap: 20px;
-    padding-top: 5px;
-}
-
-.inspector-toggle {
-    font-size: 12px;
 }
 </style>

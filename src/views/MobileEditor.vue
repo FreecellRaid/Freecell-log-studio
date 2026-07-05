@@ -76,118 +76,23 @@
             @clear-all="handleClearAll"
         />
 
-        <div
+        <MobileActiveSheet
             v-if="activeSheet"
-            class="mobile-sheet-backdrop"
-            @click.self="closeSheet"
-        >
-            <section class="mobile-sheet">
-                <header class="mobile-drawer-header">
-                    <h2>{{ sheetTitle }}</h2>
-                    <button
-                        class="mobile-icon-button"
-                        type="button"
-                        title="关闭"
-                        @click="closeSheet"
-                    >
-                        <X class="ui-icon" />
-                    </button>
-                </header>
-
-                <form
-                    v-if="activeSheet === 'message' && editingMessage"
-                    class="mobile-form"
-                    @submit.prevent="submitMessageEdit"
-                >
-                    <label class="mobile-field">
-                        <span>玩家名</span>
-                        <input v-model="messageDraft.playerName" type="text" />
-                    </label>
-                    <label class="mobile-field">
-                        <span>账号</span>
-                        <input v-model="messageDraft.account" type="text" />
-                    </label>
-                    <label class="mobile-field">
-                        <span>身份</span>
-                        <select v-model="messageDraft.role">
-                            <option value="pl">玩家</option>
-                            <option value="gm">主持人</option>
-                            <option value="npc">NPC</option>
-                            <option value="ob">观众</option>
-                            <option value="bot">骰子</option>
-                            <option value="unknown">未知</option>
-                        </select>
-                    </label>
-                    <label class="mobile-field">
-                        <span>消息内容</span>
-                        <textarea v-model="messageDraft.content" rows="7" />
-                    </label>
-                    <label class="mobile-field">
-                        <span>备注</span>
-                        <input v-model="messageDraft.note" type="text" />
-                    </label>
-                    <label class="mobile-toggle">
-                        <span>场外消息</span>
-                        <input v-model="messageDraft.isOoc" type="checkbox" />
-                    </label>
-                    <label class="mobile-toggle">
-                        <span>指令消息</span>
-                        <input v-model="messageDraft.isCommand" type="checkbox" />
-                    </label>
-                    <div class="mobile-form-actions">
-                        <button class="mobile-primary-button" type="submit">
-                            保存
-                        </button>
-                        <button
-                            class="mobile-secondary-button"
-                            type="button"
-                            @click="closeSheet"
-                        >
-                            取消
-                        </button>
-                    </div>
-                </form>
-
-                <form
-                    v-else-if="activeSheet === 'projectName'"
-                    class="mobile-form"
-                    @submit.prevent="submitProjectName"
-                >
-                    <label class="mobile-field">
-                        <span>项目名</span>
-                        <input v-model="projectNameDraft" type="text" />
-                    </label>
-                    <button class="mobile-primary-button" type="submit">
-                        保存
-                    </button>
-                </form>
-
-                <form
-                    v-else-if="activeSheet === 'chunkName' && activeChunk"
-                    class="mobile-form"
-                    @submit.prevent="submitChunkRename"
-                >
-                    <label class="mobile-field">
-                        <span>场景名</span>
-                        <input v-model="chunkNameDraft" type="text" />
-                    </label>
-                    <button class="mobile-primary-button" type="submit">
-                        保存
-                    </button>
-                </form>
-
-                <div
-                    v-else-if="activeSheet === 'storedProjects'"
-                    class="mobile-stored-projects"
-                >
-                    <StoredProjectsPopover
-                        :projects="storedProjects"
-                        @refresh="refreshStoredProjects"
-                        @close="closeSheet"
-                    />
-                </div>
-            </section>
-        </div>
+            v-model:project-name-draft="projectNameDraft"
+            v-model:chunk-name-draft="chunkNameDraft"
+            :active-sheet="activeSheet"
+            :title="sheetTitle"
+            :editing-message="editingMessage"
+            :message-draft="messageDraft"
+            :stored-projects="storedProjects"
+            @close="closeSheet"
+            @message-text-input="updateMessageDraftText"
+            @message-text-commit="commitMessageDraftText"
+            @message-field-change="updateMessageDraftField"
+            @commit-project-name="commitProjectName"
+            @commit-chunk-name="commitChunkRename"
+            @refresh-stored-projects="refreshStoredProjects"
+        />
     </div>
 </template>
 
@@ -200,10 +105,13 @@ import {
     Search,
     TextInitial,
     UserRound,
-    X,
 } from '@lucide/vue';
 import HelpDocument from '@/components/common/HelpDocument.vue';
-import StoredProjectsPopover from '@/components/popovers/StoredProjectsPopover.vue';
+import type {
+    MessageDetailTextField,
+    MessageDetailValues,
+} from '@/components/common/MessageDetailEditor.vue';
+import MobileActiveSheet from '@/components/mobile/MobileActiveSheet.vue';
 import MobileBottomPanelDrawer from '@/components/mobile/MobileBottomPanelDrawer.vue';
 import MobileHistoryFloat from '@/components/mobile/MobileHistoryFloat.vue';
 import MobileLeftDrawer from '@/components/mobile/MobileLeftDrawer.vue';
@@ -217,7 +125,7 @@ import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
 import { useUiStore } from '@/stores/uiStore';
 import { useWindowStore } from '@/stores/windowStore';
-import type { Chunk, Message, RoleType } from '@/types/log';
+import type { Chunk, Message } from '@/types/log';
 import type { MobileBottomPanelName, MobileSheetName } from '@/types/mobile';
 import type { ProjectFile } from '@/types/project';
 
@@ -259,15 +167,7 @@ const storedProjects = ref<ProjectFile[]>([]);
 const projectNameDraft = ref('');
 const chunkNameDraft = ref('');
 
-const messageDraft = reactive<{
-    playerName: string;
-    account: string;
-    role: RoleType;
-    content: string;
-    note: string;
-    isOoc: boolean;
-    isCommand: boolean;
-}>({
+const messageDraft = reactive<MessageDetailValues>({
     playerName: '',
     account: '',
     role: 'unknown',
@@ -359,27 +259,46 @@ function startMessageEdit(message: Message) {
     activeSheet.value = 'message';
 }
 
-function submitMessageEdit() {
+function updateMessageDraftText(
+    field: MessageDetailTextField,
+    value: string,
+) {
+    messageDraft[field] = value;
+}
+
+function commitMessageDraftText(field: MessageDetailTextField) {
     if (!editingMessage.value) return;
     editorStore.updateMessage(
         editingMessage.value.chunkId,
         editingMessage.value.messageId,
         {
-            playerName: messageDraft.playerName,
-            account: messageDraft.account,
-            role: messageDraft.role,
-            content: messageDraft.content,
-            note: messageDraft.note,
-            isOoc: messageDraft.isOoc,
-            isCommand: messageDraft.isCommand,
+            [field]: messageDraft[field],
         },
     );
-    closeSheet();
+}
+
+function updateMessageDraftField<K extends keyof MessageDetailValues>(
+    field: K,
+    value: MessageDetailValues[K],
+) {
+    messageDraft[field] = value;
+    if (!editingMessage.value) return;
+    editorStore.updateMessage(
+        editingMessage.value.chunkId,
+        editingMessage.value.messageId,
+        {
+            [field]: value,
+        },
+    );
 }
 
 function insertAfter(message: Message, index: number) {
     if (!activeChunk.value) return;
-    editorStore.insertNewMessageAfter(activeChunk.value.chunkId, message, index);
+    editorStore.insertNewMessageAfter(
+        activeChunk.value.chunkId,
+        message,
+        index,
+    );
 }
 
 function mergeWithNext(messageId: string) {
@@ -401,9 +320,8 @@ function startProjectNameEdit() {
     activeSheet.value = 'projectName';
 }
 
-function submitProjectName() {
+function commitProjectName() {
     logStore.setProjectName(projectNameDraft.value);
-    closeSheet();
 }
 
 function startChunkRename() {
@@ -412,12 +330,11 @@ function startChunkRename() {
     activeSheet.value = 'chunkName';
 }
 
-function submitChunkRename() {
+function commitChunkRename() {
     if (!activeChunk.value) return;
     editorStore.updateChunk(activeChunk.value.chunkId, {
         chunkName: chunkNameDraft.value.trim() || '未命名场景',
     });
-    closeSheet();
 }
 
 function handleSaveProject() {
@@ -533,49 +450,7 @@ function handleClearAll() {
     height: 20px;
 }
 
-.mobile-sheet-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.35);
-    z-index: 90;
-}
-
-.mobile-sheet-backdrop {
-    display: flex;
-    align-items: flex-end;
-}
-
-.mobile-sheet {
-    width: 100%;
-    max-height: min(78dvh, 720px);
-    overflow-y: auto;
-    background: var(--bg-workspace);
-    border-radius: 12px 12px 0 0;
-    padding-bottom: env(safe-area-inset-bottom);
-    box-shadow: 0 -8px 30px var(--box-shadow);
-}
-
-.mobile-drawer-header {
-    min-height: 50px;
-    padding: 0 8px 0 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.mobile-drawer-header h2 {
-    margin: 0;
-    font-size: 16px;
-}
-
-.mobile-form,
-.mobile-stored-projects {
-    padding: 12px;
-}
-
-.mobile-primary-button,
-.mobile-secondary-button {
+.mobile-primary-button {
     min-height: 40px;
     border: 1px solid var(--border-color);
     background: var(--bg-sidebar);
@@ -588,56 +463,5 @@ function handleClearAll() {
     background: var(--active-accent);
     border-color: var(--active-accent);
     color: #ffffff;
-}
-
-.mobile-secondary-button {
-    width: 100%;
-}
-
-.mobile-field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-bottom: 12px;
-    font-size: 13px;
-    color: var(--text-secondary);
-}
-
-.mobile-field input,
-.mobile-field textarea,
-.mobile-field select {
-    width: 100%;
-    box-sizing: border-box;
-    border: 1px solid var(--border-color);
-    background: var(--bg-workspace);
-    color: var(--text-primary);
-    border-radius: 8px;
-    padding: 10px 12px;
-    font: inherit;
-}
-
-.mobile-field textarea {
-    resize: vertical;
-    min-height: 140px;
-}
-
-.mobile-toggle {
-    min-height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    color: var(--text-primary);
-}
-
-.mobile-toggle input {
-    width: 22px;
-    height: 22px;
-}
-
-.mobile-form-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
 }
 </style>

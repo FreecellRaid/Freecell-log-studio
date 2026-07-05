@@ -13,10 +13,11 @@ export function useDraftValues<Field extends string>() {
         return values[getKey(entityId, field)] ?? fallback;
     }
 
-    function update(entityId: string, field: Field, event: Event) {
-        values[getKey(entityId, field)] = (
-            event.target as DraftInputElement
-        ).value;
+    function update(entityId: string, field: Field, nextValue: Event | string) {
+        values[getKey(entityId, field)] =
+            typeof nextValue === 'string'
+                ? nextValue
+                : (nextValue.target as DraftInputElement).value;
     }
 
     function commit(
