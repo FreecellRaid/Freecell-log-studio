@@ -1,3 +1,5 @@
+import { ref } from 'vue';
+import type { ComponentPublicInstance } from 'vue';
 import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
 import { useWindowStore } from '@/stores/windowStore';
@@ -147,5 +149,41 @@ export function useFileImport() {
 
     return {
         importAndApply,
+    };
+}
+
+export function useFileImportInput() {
+    const fileInput = ref<HTMLInputElement | null>(null);
+    const { importAndApply } = useFileImport();
+
+    function setFileInput(element: Element | ComponentPublicInstance | null) {
+        fileInput.value = element instanceof HTMLInputElement ? element : null;
+    }
+
+    function triggerImport() {
+        fileInput.value?.click();
+    }
+
+    async function handleFileChange(event: Event) {
+        const target = event.target as HTMLInputElement;
+        const files = target.files;
+        if (!files?.length) return;
+
+        try {
+            await importAndApply(Array.from(files));
+        } catch (error) {
+            console.error(error);
+            alert(
+                error instanceof Error ? error.message : '解析文件时发生错误',
+            );
+        } finally {
+            target.value = '';
+        }
+    }
+
+    return {
+        setFileInput,
+        triggerImport,
+        handleFileChange,
     };
 }

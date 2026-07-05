@@ -81,7 +81,7 @@
                 <Upload class="ui-icon" aria-hidden="true" />
             </button>
             <input
-                ref="fileInput"
+                :ref="setFileInput"
                 type="file"
                 accept=".txt,.json,application/json"
                 multiple
@@ -118,23 +118,20 @@ import { useClipboardStore } from '@/stores/clipboardStore';
 import { useHistoryStore } from '@/stores/historyStore';
 import { useWindowStore } from '@/stores/windowStore';
 import { useActiveContext } from '@/composables/useActiveContext';
-import { useFileImport } from '@/composables/useImporter';
+import { useFileImportInput } from '@/composables/useImporter';
 import { useProjectManager } from '@/composables/useProjectManager';
 import { vClickOutside } from '@/directives/clickOutside';
 import type { ProjectFile } from '@/types/project';
 import StoredProjectsPopover from '@/components/popovers/StoredProjectsPopover.vue';
 import ExportPopover from '@/components/popovers/ExportPopover.vue';
 
-const fileInput = ref<HTMLInputElement | null>(null);
-
 const logStore = useLogStore();
 const styleStore = useStyleStore();
 const clipboardStore = useClipboardStore();
 const historyStore = useHistoryStore();
 const windowStore = useWindowStore();
-
 const activeContext = useActiveContext();
-const { importAndApply } = useFileImport();
+const { setFileInput, triggerImport, handleFileChange } = useFileImportInput();
 const projectManager = useProjectManager();
 
 const showExportPopover = ref(false);
@@ -171,25 +168,6 @@ const hasWorkspaceState = computed(() => {
         historyStore.redoStack.length > 0
     );
 });
-
-function triggerImport() {
-    fileInput.value?.click();
-}
-
-async function handleFileChange(event: Event) {
-    const target = event.target as HTMLInputElement;
-    const files = target.files;
-    if (!files?.length) return;
-
-    try {
-        await importAndApply(Array.from(files));
-    } catch (error) {
-        console.error(error);
-        alert(error instanceof Error ? error.message : '解析文件时发生错误');
-    } finally {
-        target.value = '';
-    }
-}
 
 function refreshStoredProjects() {
     storedProjects.value = projectManager.getStoredProjects();
