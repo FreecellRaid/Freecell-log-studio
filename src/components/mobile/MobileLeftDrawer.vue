@@ -149,11 +149,6 @@ function clearAll() {
 
 <style scoped>
 .mobile-left-backdrop {
-    position: fixed;
-    inset: 0;
-    background: var(--box-shadow);
-    z-index: 90;
-    display: flex;
     align-items: stretch;
     justify-content: flex-start;
 }
@@ -168,107 +163,15 @@ function clearAll() {
 }
 
 .mobile-drawer-header {
-    min-height: 50px;
-    padding: 0 8px 0 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border-color);
     margin-bottom: 10px;
-}
-
-.mobile-drawer-header h2 {
-    margin: 0;
-    font-size: 16px;
 }
 
 .mobile-drawer-header p {
     margin: 3px 0 0;
-    color: var(--text-secondary);
-    font-size: 12px;
-}
-
-.mobile-icon-button {
-    width: 42px;
-    height: 42px;
-    border: 0;
-    background: transparent;
-    color: var(--icon-color);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.mobile-icon-button .ui-icon {
-    width: 20px;
-    height: 20px;
 }
 
 .mobile-left-actions,
 .mobile-settings-list {
     padding: 0px 12px;
-}
-
-.drawer-row {
-    width: 100%;
-    min-height: 46px;
-    border: 0;
-    background: transparent;
-    color: var(--text-primary);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 0 4px;
-    text-align: left;
-    box-sizing: border-box;
-    font-size: 16px;
-}
-
-.drawer-row:last-child {
-    border-bottom: 0;
-}
-
-.drawer-row:hover,
-.drawer-row:focus-visible {
-    background: var(--hover-bg);
-}
-
-.drawer-row > span:not(.drawer-row-icon) {
-    min-width: 0;
-    flex: 1;
-}
-
-.drawer-row-icon {
-    width: 28px;
-    height: 28px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    color: var(--icon-color);
-}
-
-.drawer-row-icon .ui-icon {
-    width: 18px;
-    height: 18px;
-}
-
-.drawer-row.is-warning {
-    color: var(--color-warning);
-}
-
-.drawer-row.is-warning .drawer-row-icon {
-    color: var(--color-warning);
-}
-
-.drawer-row:disabled {
-    opacity: 0.5;
-}
-
-.drawer-row input {
-    width: 22px;
-    height: 22px;
-    flex-shrink: 0;
 }
 </style>

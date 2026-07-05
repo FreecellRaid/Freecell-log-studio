@@ -45,13 +45,10 @@
                         :value="mobileStore.projectNameDraft"
                         type="text"
                         @input="
-                            mobileStore.projectNameDraft =
-                                getInputValue($event)
+                            mobileStore.projectNameDraft = getInputValue($event)
                         "
                         @blur="commitProjectName"
-                        @keydown.enter.exact.prevent="
-                            commitProjectName()
-                        "
+                        @keydown.enter.exact.prevent="commitProjectName()"
                     />
                 </label>
             </div>
@@ -126,10 +123,7 @@ function getInputValue(event: Event) {
     return (event.target as HTMLInputElement).value;
 }
 
-function updateMessageDraftText(
-    field: MessageDetailTextField,
-    value: string,
-) {
+function updateMessageDraftText(field: MessageDetailTextField, value: string) {
     mobileStore.updateMessageDraftText(field, value);
 }
 
@@ -177,11 +171,6 @@ function refreshStoredProjects() {
 
 <style scoped>
 .mobile-sheet-backdrop {
-    position: fixed;
-    inset: 0;
-    background: var(--box-shadow);
-    z-index: 90;
-    display: flex;
     align-items: flex-end;
 }
 
@@ -193,61 +182,5 @@ function refreshStoredProjects() {
     border-radius: 12px 12px 0 0;
     padding-bottom: env(safe-area-inset-bottom);
     box-shadow: 0 -8px 30px var(--box-shadow);
-}
-
-.mobile-drawer-header {
-    min-height: 50px;
-    padding: 0 8px 0 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.mobile-drawer-header h2 {
-    margin: 0;
-    font-size: 16px;
-}
-
-.mobile-icon-button {
-    width: 42px;
-    height: 42px;
-    border: 0;
-    background: transparent;
-    color: var(--icon-color);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.mobile-icon-button .ui-icon {
-    width: 20px;
-    height: 20px;
-}
-
-.mobile-form,
-.mobile-stored-projects {
-    padding: 12px;
-}
-
-.mobile-field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-bottom: 12px;
-    font-size: 13px;
-    color: var(--text-secondary);
-}
-
-.mobile-field input {
-    width: 100%;
-    box-sizing: border-box;
-    border: 1px solid var(--border-color);
-    background: var(--bg-workspace);
-    color: var(--text-primary);
-    border-radius: 8px;
-    padding: 10px 12px;
-    font: inherit;
 }
 </style>

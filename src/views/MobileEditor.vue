@@ -24,15 +24,3 @@ import { useWindowStore } from '@/stores/windowStore';
 
 const windowStore = useWindowStore();
 </script>
-
-<style scoped>
-.mobile-editor {
-    width: 100%;
-    height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    color: var(--text-primary);
-    background: var(--bg-workspace);
-}
-</style>

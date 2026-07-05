@@ -99,23 +99,6 @@ const { setFileInput, triggerImport, handleFileChange } = useFileImportInput();
     color: var(--text-secondary);
 }
 
-.mobile-topbar-button {
-    width: 42px;
-    height: 42px;
-    border: 0;
-    background: transparent;
-    color: var(--icon-color);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.mobile-topbar-button .ui-icon {
-    width: 20px;
-    height: 20px;
-}
-
 .mobile-export-container {
     position: relative;
     flex-shrink: 0;

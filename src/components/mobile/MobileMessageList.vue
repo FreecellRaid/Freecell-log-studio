@@ -152,14 +152,7 @@ function getMessageStyle(message: Message) {
 .mobile-icon-button {
     width: 40px;
     height: 40px;
-    border: 0;
     margin-left: auto;
-    background: transparent;
-    color: var(--icon-color);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
 }
 
 .mobile-icon-button .ui-icon {
@@ -240,14 +233,5 @@ function getMessageStyle(message: Message) {
 
 .mobile-action-button {
     min-height: 36px;
-    border: 1px solid var(--border-color);
-    background: var(--bg-sidebar);
-    color: var(--text-primary);
-    padding: 0 14px;
-    border-radius: 8px;
-}
-
-.mobile-action-button.is-warning {
-    color: var(--color-warning);
 }
 </style>

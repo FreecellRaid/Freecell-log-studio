@@ -126,12 +126,4 @@ function startChunkRename() {
     color: var(--icon-color);
 }
 
-.mobile-primary-button {
-    min-height: 40px;
-    border: 1px solid var(--active-accent);
-    background: var(--active-accent);
-    color: #ffffff;
-    padding: 0 14px;
-    border-radius: 8px;
-}
 </style>

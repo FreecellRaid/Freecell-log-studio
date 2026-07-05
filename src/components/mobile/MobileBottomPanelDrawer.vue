@@ -41,11 +41,7 @@ const mobileStore = useMobileEditorStore();
 
 <style scoped>
 .mobile-bottom-backdrop {
-    position: fixed;
-    inset: 0;
-    background: var(--box-shadow);
     z-index: 100;
-    display: flex;
     align-items: flex-end;
 }
 
