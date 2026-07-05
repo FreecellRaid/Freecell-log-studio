@@ -1,12 +1,28 @@
 <template>
-    <div class="mobile-bottom-backdrop" @click.self="$emit('close')">
+    <div
+        v-if="mobileStore.activeBottomPanel"
+        class="mobile-bottom-backdrop"
+        @click.self="mobileStore.closeBottomPanel"
+    >
         <section class="mobile-bottom-drawer">
             <div class="mobile-drawer-body">
-                <ChunkListPanel v-if="activePanel === 'chunkList'" />
-                <IdentityPanel v-else-if="activePanel === 'identity'" />
-                <RuleEditorPanel v-else-if="activePanel === 'ruleEditor'" />
-                <SearchPanel v-else-if="activePanel === 'search'" />
-                <ExportFormatPanel v-else-if="activePanel === 'exportFormat'" />
+                <ChunkListPanel
+                    v-if="mobileStore.activeBottomPanel === 'chunkList'"
+                />
+                <IdentityPanel
+                    v-else-if="mobileStore.activeBottomPanel === 'identity'"
+                />
+                <RuleEditorPanel
+                    v-else-if="mobileStore.activeBottomPanel === 'ruleEditor'"
+                />
+                <SearchPanel
+                    v-else-if="mobileStore.activeBottomPanel === 'search'"
+                />
+                <ExportFormatPanel
+                    v-else-if="
+                        mobileStore.activeBottomPanel === 'exportFormat'
+                    "
+                />
             </div>
         </section>
     </div>
@@ -18,16 +34,9 @@ import ExportFormatPanel from '@/components/panels/ExportFormatPanel.vue';
 import IdentityPanel from '@/components/panels/IdentityPanel.vue';
 import RuleEditorPanel from '@/components/panels/RuleEditorPanel.vue';
 import SearchPanel from '@/components/panels/SearchPanel.vue';
-import type { MobileBottomPanelName } from '@/types/mobile';
+import { useMobileEditorStore } from '@/stores/mobileEditorStore';
 
-defineProps<{
-    activePanel: MobileBottomPanelName;
-    title: string;
-}>();
-
-defineEmits<{
-    (e: 'close'): void;
-}>();
+const mobileStore = useMobileEditorStore();
 </script>
 
 <style scoped>

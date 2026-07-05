@@ -19,9 +19,10 @@
                 :key="message.messageId"
                 class="mobile-message"
                 :class="{
-                    'is-selected': selectedMessageId === message.messageId,
+                    'is-selected':
+                        mobileStore.selectedMessageId === message.messageId,
                 }"
-                @click="$emit('selectMessage', message.messageId)"
+                @click="mobileStore.selectMessage(message.messageId)"
             >
                 <header class="mobile-message-header">
                     <strong
@@ -55,7 +56,7 @@
                 </footer>
 
                 <div
-                    v-if="selectedMessageId === message.messageId"
+                    v-if="mobileStore.selectedMessageId === message.messageId"
                     class="mobile-message-actions"
                 >
                     <button
@@ -97,18 +98,17 @@ import { Pencil } from '@lucide/vue';
 import { computeStyleForMessage } from '@/editor/styleEngine';
 import { useStyleStore } from '@/stores/styleStore';
 import { useUiStore } from '@/stores/uiStore';
+import { useMobileEditorStore } from '@/stores/mobileEditorStore';
 import type { Chunk, Message } from '@/types/log';
 import { formatDate } from '@/utils/date';
 
 defineProps<{
     activeChunk: Chunk | null;
     messages: Message[];
-    selectedMessageId: string | null;
 }>();
 
 defineEmits<{
     (e: 'renameChunk'): void;
-    (e: 'selectMessage', messageId: string): void;
     (e: 'editMessage', message: Message): void;
     (e: 'insertAfter', message: Message, index: number): void;
     (e: 'mergeWithNext', messageId: string): void;
@@ -117,6 +117,7 @@ defineEmits<{
 
 const uiStore = useUiStore();
 const styleStore = useStyleStore();
+const mobileStore = useMobileEditorStore();
 
 function getMessageStyle(message: Message) {
     return computeStyleForMessage(message, styleStore.activeRules);

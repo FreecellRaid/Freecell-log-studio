@@ -1,5 +1,9 @@
 <template>
-    <div class="mobile-sheet-backdrop" @click.self="$emit('close')">
+    <div
+        v-if="mobileStore.activeSheet"
+        class="mobile-sheet-backdrop"
+        @click.self="mobileStore.closeSheet"
+    >
         <section class="mobile-sheet">
             <header class="mobile-drawer-header">
                 <h2>{{ title }}</h2>
@@ -7,79 +11,77 @@
                     class="mobile-icon-button"
                     type="button"
                     title="关闭"
-                    @click="$emit('close')"
+                    @click="mobileStore.closeSheet"
                 >
                     <X class="ui-icon" />
                 </button>
             </header>
 
             <div
-                v-if="activeSheet === 'message' && editingMessage"
+                v-if="
+                    mobileStore.activeSheet === 'message' &&
+                    mobileStore.editingMessage
+                "
                 class="mobile-form"
             >
                 <MessageDetailEditor
-                    :message="editingMessage"
-                    :values="messageDraft"
+                    :message="mobileStore.editingMessage"
+                    :values="mobileStore.messageDraft"
                     :show-meta="false"
                     :content-rows="7"
-                    @text-input="
-                        (field, value) =>
-                            $emit('messageTextInput', field, value)
-                    "
-                    @commit-text="(field) => $emit('messageTextCommit', field)"
-                    @field-change="
-                        (field, value) =>
-                            $emit('messageFieldChange', field, value)
-                    "
+                    @text-input="updateMessageDraftText"
+                    @commit-text="commitMessageDraftText"
+                    @field-change="updateMessageDraftField"
                 />
             </div>
 
-            <div v-else-if="activeSheet === 'projectName'" class="mobile-form">
+            <div
+                v-else-if="mobileStore.activeSheet === 'projectName'"
+                class="mobile-form"
+            >
                 <label class="mobile-field">
                     <span>项目名</span>
                     <input
-                        :value="projectNameDraft"
+                        :value="mobileStore.projectNameDraft"
                         type="text"
                         @input="
-                            $emit(
-                                'update:projectNameDraft',
-                                getInputValue($event),
-                            )
+                            mobileStore.projectNameDraft =
+                                getInputValue($event)
                         "
-                        @blur="$emit('commitProjectName')"
+                        @blur="commitProjectName"
                         @keydown.enter.exact.prevent="
-                            $emit('commitProjectName')
+                            commitProjectName()
                         "
-                    />
-                </label>
-            </div>
-
-            <div v-else-if="activeSheet === 'chunkName'" class="mobile-form">
-                <label class="mobile-field">
-                    <span>场景名</span>
-                    <input
-                        :value="chunkNameDraft"
-                        type="text"
-                        @input="
-                            $emit(
-                                'update:chunkNameDraft',
-                                getInputValue($event),
-                            )
-                        "
-                        @blur="$emit('commitChunkName')"
-                        @keydown.enter.exact.prevent="$emit('commitChunkName')"
                     />
                 </label>
             </div>
 
             <div
-                v-else-if="activeSheet === 'storedProjects'"
+                v-else-if="mobileStore.activeSheet === 'chunkName'"
+                class="mobile-form"
+            >
+                <label class="mobile-field">
+                    <span>场景名</span>
+                    <input
+                        :value="mobileStore.chunkNameDraft"
+                        type="text"
+                        @input="
+                            mobileStore.chunkNameDraft = getInputValue($event)
+                        "
+                        @blur="commitChunkName"
+                        @keydown.enter.exact.prevent="commitChunkName"
+                    />
+                </label>
+            </div>
+
+            <div
+                v-else-if="mobileStore.activeSheet === 'storedProjects'"
                 class="mobile-stored-projects"
             >
                 <StoredProjectsPopover
-                    :projects="storedProjects"
-                    @refresh="$emit('refreshStoredProjects')"
-                    @close="$emit('close')"
+                    :projects="mobileStore.storedProjects"
+                    @refresh="refreshStoredProjects"
+                    @close="mobileStore.closeSheet"
                 />
             </div>
         </section>
@@ -87,6 +89,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { X } from '@lucide/vue';
 import MessageDetailEditor from '@/components/common/MessageDetailEditor.vue';
 import type {
@@ -94,38 +97,81 @@ import type {
     MessageDetailValues,
 } from '@/components/common/MessageDetailEditor.vue';
 import StoredProjectsPopover from '@/components/popovers/StoredProjectsPopover.vue';
-import type { Message } from '@/types/log';
-import type { MobileSheetName } from '@/types/mobile';
-import type { ProjectFile } from '@/types/project';
+import { useLogEditorStore } from '@/stores/editorStore';
+import { useLogStore } from '@/stores/logStore';
+import { useMobileEditorStore } from '@/stores/mobileEditorStore';
+import { useProjectManager } from '@/composables/useProjectManager';
 
-defineProps<{
-    activeSheet: MobileSheetName;
-    title: string;
-    editingMessage: Message | null;
-    messageDraft: MessageDetailValues;
-    projectNameDraft: string;
-    chunkNameDraft: string;
-    storedProjects: ProjectFile[];
-}>();
+const mobileStore = useMobileEditorStore();
+const logStore = useLogStore();
+const editorStore = useLogEditorStore();
+const projectManager = useProjectManager();
 
-defineEmits<{
-    (e: 'close'): void;
-    (e: 'messageTextInput', field: MessageDetailTextField, value: string): void;
-    (e: 'messageTextCommit', field: MessageDetailTextField): void;
-    <K extends keyof MessageDetailValues>(
-        e: 'messageFieldChange',
-        field: K,
-        value: MessageDetailValues[K],
-    ): void;
-    (e: 'update:projectNameDraft', value: string): void;
-    (e: 'update:chunkNameDraft', value: string): void;
-    (e: 'commitProjectName'): void;
-    (e: 'commitChunkName'): void;
-    (e: 'refreshStoredProjects'): void;
-}>();
+const title = computed(() => {
+    switch (mobileStore.activeSheet) {
+        case 'message':
+            return '编辑消息';
+        case 'projectName':
+            return '项目名';
+        case 'chunkName':
+            return '场景名';
+        case 'storedProjects':
+            return '本地快照';
+        default:
+            return '';
+    }
+});
 
 function getInputValue(event: Event) {
     return (event.target as HTMLInputElement).value;
+}
+
+function updateMessageDraftText(
+    field: MessageDetailTextField,
+    value: string,
+) {
+    mobileStore.updateMessageDraftText(field, value);
+}
+
+function commitMessageDraftText(field: MessageDetailTextField) {
+    if (!mobileStore.editingMessage) return;
+    editorStore.updateMessage(
+        mobileStore.editingMessage.chunkId,
+        mobileStore.editingMessage.messageId,
+        {
+            [field]: mobileStore.messageDraft[field],
+        },
+    );
+}
+
+function updateMessageDraftField<K extends keyof MessageDetailValues>(
+    field: K,
+    value: MessageDetailValues[K],
+) {
+    mobileStore.updateMessageDraftField(field, value);
+    if (!mobileStore.editingMessage) return;
+    editorStore.updateMessage(
+        mobileStore.editingMessage.chunkId,
+        mobileStore.editingMessage.messageId,
+        {
+            [field]: value,
+        },
+    );
+}
+
+function commitProjectName() {
+    logStore.setProjectName(mobileStore.projectNameDraft);
+}
+
+function commitChunkName() {
+    if (!mobileStore.editingChunkId) return;
+    editorStore.updateChunk(mobileStore.editingChunkId, {
+        chunkName: mobileStore.chunkNameDraft.trim() || '未命名场景',
+    });
+}
+
+function refreshStoredProjects() {
+    mobileStore.setStoredProjects(projectManager.getStoredProjects());
 }
 </script>
 

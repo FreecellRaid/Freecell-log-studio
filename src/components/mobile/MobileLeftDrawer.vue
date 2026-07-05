@@ -1,5 +1,9 @@
 <template>
-    <div class="mobile-left-backdrop" @click.self="$emit('close')">
+    <div
+        v-if="mobileStore.leftDrawerOpen"
+        class="mobile-left-backdrop"
+        @click.self="mobileStore.closeLeftDrawer"
+    >
         <aside class="mobile-left-drawer">
             <header class="mobile-drawer-header">
                 <h2>{{ logStore.projectName || '未命名工程' }}</h2>
@@ -10,7 +14,7 @@
                 <button
                     class="drawer-row"
                     type="button"
-                    @click="$emit('editProjectName')"
+                    @click="startProjectNameEdit"
                 >
                     <span class="drawer-row-icon">
                         <Pencil class="ui-icon" />
@@ -20,7 +24,7 @@
                 <button
                     class="drawer-row"
                     type="button"
-                    @click="$emit('saveProject')"
+                    @click="workspaceActions.saveCurrentProjectWithFeedback()"
                 >
                     <span class="drawer-row-icon">
                         <Save class="ui-icon" />
@@ -30,7 +34,7 @@
                 <button
                     class="drawer-row"
                     type="button"
-                    @click="$emit('showStoredProjects')"
+                    @click="showStoredProjects"
                 >
                     <span class="drawer-row-icon">
                         <FolderOpen class="ui-icon" />
@@ -63,8 +67,8 @@
                 <button
                     class="drawer-row is-warning"
                     type="button"
-                    :disabled="!hasWorkspaceState"
-                    @click="$emit('clearAll')"
+                    :disabled="!workspaceActions.hasWorkspaceState.value"
+                    @click="clearAll"
                 >
                     <span class="drawer-row-icon">
                         <Trash2 class="ui-icon" />
@@ -114,24 +118,33 @@ import {
     Trash2,
 } from '@lucide/vue';
 import { useLogStore } from '@/stores/logStore';
+import { useMobileEditorStore } from '@/stores/mobileEditorStore';
 import { useUiStore } from '@/stores/uiStore';
 import { useWindowStore } from '@/stores/windowStore';
-
-defineProps<{
-    hasWorkspaceState: boolean;
-}>();
-
-defineEmits<{
-    (e: 'close'): void;
-    (e: 'editProjectName'): void;
-    (e: 'saveProject'): void;
-    (e: 'showStoredProjects'): void;
-    (e: 'clearAll'): void;
-}>();
+import { useProjectManager } from '@/composables/useProjectManager';
+import { useWorkspaceActions } from '@/composables/useWorkspaceActions';
 
 const logStore = useLogStore();
 const uiStore = useUiStore();
 const windowStore = useWindowStore();
+const mobileStore = useMobileEditorStore();
+const projectManager = useProjectManager();
+const workspaceActions = useWorkspaceActions();
+
+function startProjectNameEdit() {
+    mobileStore.startProjectNameEdit(logStore.projectName);
+}
+
+function showStoredProjects() {
+    mobileStore.openStoredProjects(projectManager.getStoredProjects());
+}
+
+function clearAll() {
+    workspaceActions.clearWorkspaceWithConfirmation({
+        focusTarget: 'defaultView',
+        afterClear: mobileStore.resetAfterClear,
+    });
+}
 </script>
 
 <style scoped>
