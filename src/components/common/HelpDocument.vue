@@ -8,12 +8,12 @@
             <div class="help-header">
                 <div class="header-title">
                     <HelpCircle class="ui-icon" />
-                    <h2>帮助文档</h2>
+                    <h2>{{ helpDocument.title }}</h2>
                 </div>
                 <button
                     class="close-button icon-interactive"
                     type="button"
-                    title="关闭帮助 (Esc)"
+                    :title="helpDocument.closeTitle"
                     @click="handleClose"
                 >
                     <X class="ui-icon" />
@@ -21,155 +21,35 @@
             </div>
 
             <div class="help-content">
-                <section class="help-section">
+                <section
+                    v-for="section in helpDocument.sections"
+                    :key="section.title"
+                    class="help-section"
+                >
                     <div class="section-title">
-                        <Upload class="ui-icon" />
-                        <h3>文件导入</h3>
+                        <component
+                            :is="iconComponents[section.icon]"
+                            class="ui-icon"
+                        />
+                        <h3>{{ section.title }}</h3>
                     </div>
-                    <ul class="tip-list">
-                        <li>
-                            <strong>拖入工作区</strong>
-                            - 任意时刻将文件拖入中间工作区即可导入
+                    <ul v-if="section.type === 'tips'" class="tip-list">
+                        <li
+                            v-for="item in section.items"
+                            :key="item.term"
+                        >
+                            <strong>{{ item.term }}</strong>
+                            - {{ item.description }}
                         </li>
                     </ul>
-                </section>
-
-                <section class="help-section">
-                    <div class="section-title">
-                        <MessageSquare class="ui-icon" />
-                        <h3>消息操作</h3>
-                    </div>
-                    <ul class="tip-list">
-                        <li>
-                            <strong>双击消息</strong>
-                            - 进入编辑，enter保存编辑
-                        </li>
-                        <li>
-                            <strong>拖拽消息</strong>
-                            - 移动消息
-                        </li>
-                        <li>
-                            <strong>Ctrl + 点击</strong>
-                            - 多选消息
-                        </li>
-                        <li>
-                            <strong>Shift + 点击</strong>
-                            - 范围选择
-                        </li>
-                    </ul>
-                </section>
-
-                <section class="help-section">
-                    <div class="section-title">
-                        <FolderOpen class="ui-icon" />
-                        <h3>场景管理</h3>
-                    </div>
-                    <ul class="tip-list">
-                        <li>
-                            <strong>双击名称</strong>
-                            - 重命名
-                        </li>
-                        <li>
-                            <strong>拖拽场景</strong>
-                            - 移动场景
-                        </li>
-                        <li>
-                            <strong>向下合并</strong>
-                            - 合并相邻场景
-                        </li>
-                    </ul>
-                </section>
-                <section class="help-section">
-                    <div class="section-title">
-                        <UserRound class="ui-icon" />
-                        <h3>身份管理</h3>
-                    </div>
-                    <ul class="tip-list">
-                        <li>
-                            <strong>切换模式</strong>
-                            - 点击标题旁图标可在角色/账号模式间切换
-                        </li>
-                        <li>
-                            <strong>双击名称</strong>
-                            - 重命名身份，会同步更新所有关联消息
-                        </li>
-                        <li>
-                            <strong>下拉选择</strong>
-                            - 修改身份角色
-                        </li>
-                        <li>
-                            <strong>点击色块</strong>
-                            - 修改该身份的染色
-                        </li>
-                    </ul>
-                </section>
-                <section class="help-section">
-                    <div class="section-title">
-                        <Palette class="ui-icon" />
-                        <h3>染色规则</h3>
-                    </div>
-                    <ul class="tip-list">
-                        <li>
-                            <strong>优先级</strong>
-                            - 数字越大越优先，高优先级覆盖低优先级
-                        </li>
-                        <li>
-                            <strong>筛选条件</strong>
-                            - 文本字段支持逗号分隔多个关键词
-                        </li>
-                        <li>
-                            <strong>选区绑定</strong>
-                            - 可将当前选中的消息直接绑定到规则
-                        </li>
-                    </ul>
-                </section>
-
-                <section class="help-section">
-                    <div class="section-title">
-                        <TextInitial class="ui-icon" />
-                        <h3>导出模板占位符</h3>
-                    </div>
-                    <ul class="tip-list">
-                        <li>
-                            <strong v-pre>{{ name }}</strong>
-                            - 角色名
-                        </li>
-                        <li>
-                            <strong v-pre>{{ account }}</strong>
-                            - 账号
-                        </li>
-                        <li>
-                            <strong v-pre>{{ content }}</strong>
-                            - 消息内容
-                        </li>
-                        <li>
-                            <strong v-pre>{{ time }}</strong>
-                            - 时间
-                        </li>
-                        <li>
-                            <strong>\t</strong>
-                            - 制表符
-                        </li>
-                        <li>
-                            <strong>\n</strong>
-                            - 换行符
-                        </li>
-                    </ul>
-                </section>
-
-                <section class="help-section">
-                    <div class="section-title">
-                        <Keyboard class="ui-icon" />
-                        <h3>快捷键</h3>
-                    </div>
-                    <div class="shortcut-grid">
+                    <div v-else class="shortcut-grid">
                         <div
-                            v-for="shortcut in shortcuts"
+                            v-for="shortcut in section.items"
                             :key="shortcut.key"
                             class="shortcut-row"
                         >
-                            <kbd>{{ shortcut.key }}</kbd>
-                            <span>{{ shortcut.desc }}</span>
+                            <kbd class="shortcut-key">{{ shortcut.key }}</kbd>
+                            <span>{{ shortcut.description }}</span>
                         </div>
                     </div>
                 </section>
@@ -177,13 +57,13 @@
 
             <div class="help-footer">
                 <a
-                    href="https://github.com/FreecellRaid/Freecell-log-studio"
+                    :href="helpDocument.footer.url"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="github-link"
                 >
                     <CodeXml class="ui-icon" />
-                    <span>GitHub 项目主页</span>
+                    <span>{{ helpDocument.footer.label }}</span>
                 </a>
             </div>
         </div>
@@ -204,33 +84,64 @@ import {
     Upload,
 } from '@lucide/vue';
 import { useWindowStore } from '@/stores/windowStore';
+import helpDocumentJson from '@/data/helpDocument.json';
+
+type HelpIconName =
+    | 'Upload'
+    | 'MessageSquare'
+    | 'FolderOpen'
+    | 'UserRound'
+    | 'Palette'
+    | 'TextInitial'
+    | 'Keyboard';
+
+type HelpTipSection = {
+    type: 'tips';
+    icon: HelpIconName;
+    title: string;
+    items: Array<{
+        term: string;
+        description: string;
+    }>;
+};
+
+type HelpShortcutSection = {
+    type: 'shortcuts';
+    icon: HelpIconName;
+    title: string;
+    items: Array<{
+        key: string;
+        description: string;
+    }>;
+};
+
+type HelpDocumentContent = {
+    title: string;
+    closeTitle: string;
+    sections: Array<HelpTipSection | HelpShortcutSection>;
+    footer: {
+        url: string;
+        label: string;
+    };
+};
+
+const helpDocument = helpDocumentJson as HelpDocumentContent;
+
+const iconComponents = {
+    Upload,
+    MessageSquare,
+    FolderOpen,
+    UserRound,
+    Palette,
+    TextInitial,
+    Keyboard,
+} satisfies Record<HelpIconName, unknown>;
 
 const windowStore = useWindowStore();
 
 function handleClose() {
     windowStore.closeHelpDocument();
 }
-
-const shortcuts = [
-    { key: 'Ctrl + A', desc: '全选' },
-    { key: 'Esc', desc: '取消选择' },
-    { key: 'Ctrl + C', desc: '复制' },
-    { key: 'Ctrl + V', desc: '粘贴' },
-    { key: 'Ctrl + Z', desc: '撤销' },
-    { key: 'Ctrl + Y', desc: '重做' },
-    { key: 'Ctrl + E', desc: '合并' },
-    { key: 'Ctrl + ↑/↓', desc: '选中上/下一条' },
-    { key: 'Ctrl + D', desc: '选中相同发言人' },
-    { key: 'Ctrl + /', desc: '切换场内外' },
-    { key: 'Ctrl + \\', desc: '切换指令' },
-    { key: 'Ctrl + backspace', desc: '删除' },
-    { key: 'Enter', desc: '跳转到搜索结果' },
-    { key: 'Ctrl + S', desc: '保存' },
-    { key: 'Ctrl + P', desc: '导出预览' },
-    { key: 'Ctrl + B', desc: '切换左侧边栏' },
-    { key: 'Ctrl + I', desc: '切换右侧边栏' },
-    { key: 'Ctrl + K', desc: '打开帮助文档' },
-];
 </script>
 
 <style scoped>
@@ -339,7 +250,7 @@ const shortcuts = [
     display: contents;
 }
 
-.kbd {
+.shortcut-key {
     display: inline-block;
     padding: 2px 6px;
     font-family: 'Fira Code', monospace;

@@ -1,0 +1,215 @@
+{
+    "title": "帮助文档",
+    "closeTitle": "关闭帮助 (Esc)",
+    "sections": [
+        {
+            "type": "tips",
+            "icon": "Upload",
+            "title": "文件导入",
+            "items": [
+                {
+                    "term": "拖入工作区",
+                    "description": "任意时刻将文件拖入中间工作区即可导入"
+                }
+            ]
+        },
+        {
+            "type": "tips",
+            "icon": "MessageSquare",
+            "title": "消息操作",
+            "items": [
+                {
+                    "term": "双击消息",
+                    "description": "进入编辑，enter保存编辑"
+                },
+                {
+                    "term": "拖拽消息",
+                    "description": "移动消息"
+                },
+                {
+                    "term": "Ctrl + 点击",
+                    "description": "多选消息"
+                },
+                {
+                    "term": "Shift + 点击",
+                    "description": "范围选择"
+                }
+            ]
+        },
+        {
+            "type": "tips",
+            "icon": "FolderOpen",
+            "title": "场景管理",
+            "items": [
+                {
+                    "term": "双击名称",
+                    "description": "重命名"
+                },
+                {
+                    "term": "拖拽场景",
+                    "description": "移动场景"
+                },
+                {
+                    "term": "向下合并",
+                    "description": "合并相邻场景"
+                }
+            ]
+        },
+        {
+            "type": "tips",
+            "icon": "UserRound",
+            "title": "身份管理",
+            "items": [
+                {
+                    "term": "切换模式",
+                    "description": "点击标题旁图标可在角色/账号模式间切换"
+                },
+                {
+                    "term": "双击名称",
+                    "description": "重命名身份，会同步更新所有关联消息"
+                },
+                {
+                    "term": "下拉选择",
+                    "description": "修改身份角色"
+                },
+                {
+                    "term": "点击色块",
+                    "description": "修改该身份的染色"
+                }
+            ]
+        },
+        {
+            "type": "tips",
+            "icon": "Palette",
+            "title": "染色规则",
+            "items": [
+                {
+                    "term": "优先级",
+                    "description": "数字越大越优先，高优先级覆盖低优先级"
+                },
+                {
+                    "term": "筛选条件",
+                    "description": "文本字段支持逗号分隔多个关键词"
+                },
+                {
+                    "term": "选区绑定",
+                    "description": "可将当前选中的消息直接绑定到规则"
+                }
+            ]
+        },
+        {
+            "type": "tips",
+            "icon": "TextInitial",
+            "title": "导出模板占位符",
+            "items": [
+                {
+                    "term": "{{ name }}",
+                    "description": "角色名"
+                },
+                {
+                    "term": "{{ account }}",
+                    "description": "账号"
+                },
+                {
+                    "term": "{{ content }}",
+                    "description": "消息内容"
+                },
+                {
+                    "term": "{{ time }}",
+                    "description": "时间"
+                },
+                {
+                    "term": "\\t",
+                    "description": "制表符"
+                },
+                {
+                    "term": "\\n",
+                    "description": "换行符"
+                }
+            ]
+        },
+        {
+            "type": "shortcuts",
+            "icon": "Keyboard",
+            "title": "快捷键",
+            "items": [
+                {
+                    "key": "Ctrl + A",
+                    "description": "全选"
+                },
+                {
+                    "key": "Esc",
+                    "description": "取消选择"
+                },
+                {
+                    "key": "Ctrl + C",
+                    "description": "复制"
+                },
+                {
+                    "key": "Ctrl + V",
+                    "description": "粘贴"
+                },
+                {
+                    "key": "Ctrl + Z",
+                    "description": "撤销"
+                },
+                {
+                    "key": "Ctrl + Y",
+                    "description": "重做"
+                },
+                {
+                    "key": "Ctrl + E",
+                    "description": "合并"
+                },
+                {
+                    "key": "Ctrl + ↑/↓",
+                    "description": "选中上/下一条"
+                },
+                {
+                    "key": "Ctrl + D",
+                    "description": "选中相同发言人"
+                },
+                {
+                    "key": "Ctrl + /",
+                    "description": "切换场内外"
+                },
+                {
+                    "key": "Ctrl + \\",
+                    "description": "切换指令"
+                },
+                {
+                    "key": "Ctrl + backspace",
+                    "description": "删除"
+                },
+                {
+                    "key": "Enter",
+                    "description": "跳转到搜索结果"
+                },
+                {
+                    "key": "Ctrl + S",
+                    "description": "保存"
+                },
+                {
+                    "key": "Ctrl + P",
+                    "description": "导出预览"
+                },
+                {
+                    "key": "Ctrl + B",
+                    "description": "切换左侧边栏"
+                },
+                {
+                    "key": "Ctrl + I",
+                    "description": "切换右侧边栏"
+                },
+                {
+                    "key": "Ctrl + K",
+                    "description": "打开帮助文档"
+                }
+            ]
+        }
+    ],
+    "footer": {
+        "url": "https://github.com/FreecellRaid/Freecell-log-studio",
+        "label": "GitHub 项目主页"
+    }
+}
