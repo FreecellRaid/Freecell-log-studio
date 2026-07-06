@@ -160,17 +160,6 @@ function commitDraft(
     });
 }
 
-function updateBooleanField(
-    chunkId: string,
-    messageId: string,
-    field: 'isOoc' | 'isCommand',
-    value: boolean,
-) {
-    logEditorStore.updateMessage(chunkId, messageId, {
-        [field]: value,
-    });
-}
-
 function updateField(
     chunkId: string,
     messageId: string,

@@ -161,9 +161,3 @@
 .drawer-row:disabled {
     opacity: 0.5;
 }
-
-.drawer-row input {
-    width: 22px;
-    height: 22px;
-    flex-shrink: 0;
-}

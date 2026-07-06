@@ -78,33 +78,34 @@
             </div>
 
             <div class="mobile-settings-list">
-                <label class="drawer-row">
+                <div class="drawer-row">
                     <span class="drawer-row-icon">
                         <Clock3 class="ui-icon" />
                     </span>
                     <span>显示时间</span>
-                    <input v-model="uiStore.showTime" type="checkbox" />
-                </label>
-                <label class="drawer-row">
+                    <ToggleButton v-model="uiStore.showTime" />
+                </div>
+                <div class="drawer-row">
                     <span class="drawer-row-icon">
                         <AtSign class="ui-icon" />
                     </span>
                     <span>显示账号</span>
-                    <input v-model="uiStore.showAccount" type="checkbox" />
-                </label>
-                <label class="drawer-row">
+                    <ToggleButton v-model="uiStore.showAccount" />
+                </div>
+                <div class="drawer-row">
                     <span class="drawer-row-icon">
                         <Eye class="ui-icon" />
                     </span>
                     <span>显示被过滤消息</span>
-                    <input v-model="uiStore.showHidden" type="checkbox" />
-                </label>
+                    <ToggleButton v-model="uiStore.showHidden" />
+                </div>
             </div>
         </aside>
     </div>
 </template>
 
 <script setup lang="ts">
+import ToggleButton from '@/components/common/ToggleButton.vue';
 import {
     AtSign,
     BookOpen,
@@ -173,5 +174,9 @@ function clearAll() {
 .mobile-left-actions,
 .mobile-settings-list {
     padding: 0px 12px;
+}
+
+.drawer-row :deep(.toggle-button) {
+    margin-left: auto;
 }
 </style>

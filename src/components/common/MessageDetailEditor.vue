@@ -43,26 +43,22 @@
         </div>
 
         <div class="prop-row">
-            <label class="checkbox-label">
-                <input
-                    type="checkbox"
-                    :checked="values.isOoc"
-                    @change="
-                        emitFieldChange('isOoc', getEventChecked($event))
-                    "
-                />
+            <ToggleButton
+                :model-value="values.isOoc"
+                @update:model-value="
+                    emitFieldChange('isOoc', Boolean($event))
+                "
+            >
                 场外消息
-            </label>
-            <label class="checkbox-label">
-                <input
-                    type="checkbox"
-                    :checked="values.isCommand"
-                    @change="
-                        emitFieldChange('isCommand', getEventChecked($event))
-                    "
-                />
+            </ToggleButton>
+            <ToggleButton
+                :model-value="values.isCommand"
+                @update:model-value="
+                    emitFieldChange('isCommand', Boolean($event))
+                "
+            >
                 指令消息
-            </label>
+            </ToggleButton>
         </div>
 
         <div class="prop-item full-width">
@@ -91,6 +87,7 @@
 </template>
 
 <script setup lang="ts">
+import ToggleButton from '@/components/common/ToggleButton.vue';
 import type { Message, RoleType } from '@/types/log';
 import { formatDate } from '@/utils/date';
 
@@ -150,10 +147,6 @@ function emitFieldChange<K extends keyof MessageDetailValues>(
 
 function getEventValue(event: Event) {
     return (event.target as HTMLInputElement | HTMLTextAreaElement).value;
-}
-
-function getEventChecked(event: Event) {
-    return (event.target as HTMLInputElement).checked;
 }
 
 function getRoleValue(event: Event): RoleType {
@@ -221,11 +214,7 @@ void props;
     padding-top: 5px;
 }
 
-.checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+.prop-row :deep(.toggle-button) {
     font-size: 12px;
-    cursor: pointer;
 }
 </style>
