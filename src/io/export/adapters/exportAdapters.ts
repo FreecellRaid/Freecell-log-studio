@@ -62,7 +62,7 @@ function renderSegmentsToHtml(segments: RenderedExportSegment[]): string {
             }
 
             if (segment.type === 'tab') {
-                return '&emsp;&emsp;';
+                return '<span>&#9;</span>';
             }
 
             const escapedValue = escapeHtml(segment.value);

@@ -42,12 +42,15 @@ export function useExport() {
 
     // ===== 对外接口 =====
 
-    const buildTextContent = (
+    function buildClipboardContent(
         format: ExportFormat = exportStore.activeFormat,
-    ): string => {
+    ): { text: string; html: string } {
         const rows = buildRows();
-        return textAdapter(rows, format);
-    };
+        return {
+            text: textAdapter(rows, format),
+            html: htmlAdapter(rows, format),
+        };
+    }
 
     const exportAsText = async (
         format: ExportFormat = exportStore.activeFormat,
@@ -60,11 +63,11 @@ export function useExport() {
         );
     };
 
-    const copyTextToClipboard = async (
+    const copyExportToClipboard = async (
         format: ExportFormat = exportStore.activeFormat,
     ) => {
-        const content = buildTextContent(format);
-        await writeTextToClipboard(content);
+        const content = buildClipboardContent(format);
+        await writeExportToClipboard(content);
     };
 
     const exportAsHtml = async (
@@ -107,8 +110,26 @@ export function useExport() {
         exportAsHtml,
         exportAsDoc,
         exportAsDocx,
-        copyTextToClipboard,
+        copyExportToClipboard,
     };
+}
+
+async function writeExportToClipboard(content: { text: string; html: string }) {
+    if (navigator.clipboard?.write && window.ClipboardItem) {
+        await navigator.clipboard.write([
+            new ClipboardItem({
+                'text/plain': new Blob([content.text], {
+                    type: 'text/plain',
+                }),
+                'text/html': new Blob([content.html], {
+                    type: 'text/html',
+                }),
+            }),
+        ]);
+        return;
+    }
+
+    await writeTextToClipboard(content.text);
 }
 
 async function writeTextToClipboard(content: string) {

@@ -20,11 +20,11 @@ const {
     exportAsHtml,
     exportAsDoc,
     exportAsDocx,
-    copyTextToClipboard,
+    copyExportToClipboard,
 } = useExport();
 async function handleCopyText() {
     try {
-        await copyTextToClipboard();
+        await copyExportToClipboard();
         alert('已复制导出内容到剪切板');
     } catch (error) {
         console.error(error);
