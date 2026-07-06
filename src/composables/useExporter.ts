@@ -8,14 +8,14 @@ import {
     htmlAdapter,
     docAdapter,
 } from '@/io/export/adapters/exportAdapters';
-import type { ExportFormat } from '@/types/export';
+import type { ExportFormat, ExportRow } from '@/types/export';
 
 export function useExport() {
     const logStore = useLogStore();
     const styleStore = useStyleStore();
     const exportStore = useExportStore();
 
-    function buildRows() {
+    function buildRows(): ExportRow[] {
         const { documents } = logStore;
         const { viewSettings, activeRules } = styleStore;
 
@@ -23,7 +23,10 @@ export function useExport() {
     }
 
     async function exportWithAdapter(
-        adapter: (rows: any, format: ExportFormat) => any,
+        adapter: (
+            rows: ExportRow[],
+            format: ExportFormat,
+        ) => string | Blob | Promise<string | Blob>,
         format: ExportFormat,
         fileExtension: string,
         mimeType: string,
@@ -39,8 +42,17 @@ export function useExport() {
 
     // ===== 对外接口 =====
 
-    const exportAsText = (format: ExportFormat = exportStore.activeFormat) => {
-        exportWithAdapter(
+    const buildTextContent = (
+        format: ExportFormat = exportStore.activeFormat,
+    ): string => {
+        const rows = buildRows();
+        return textAdapter(rows, format);
+    };
+
+    const exportAsText = async (
+        format: ExportFormat = exportStore.activeFormat,
+    ) => {
+        await exportWithAdapter(
             textAdapter,
             format,
             format.fileExtension || '.txt',
@@ -48,8 +60,17 @@ export function useExport() {
         );
     };
 
-    const exportAsHtml = (format: ExportFormat = exportStore.activeFormat) => {
-        exportWithAdapter(
+    const copyTextToClipboard = async (
+        format: ExportFormat = exportStore.activeFormat,
+    ) => {
+        const content = buildTextContent(format);
+        await writeTextToClipboard(content);
+    };
+
+    const exportAsHtml = async (
+        format: ExportFormat = exportStore.activeFormat,
+    ) => {
+        await exportWithAdapter(
             htmlAdapter,
             format,
             '.html',
@@ -57,8 +78,15 @@ export function useExport() {
         );
     };
 
-    const exportAsDoc = (format: ExportFormat = exportStore.activeFormat) => {
-        exportWithAdapter(docAdapter, format, '.doc', 'application/msword');
+    const exportAsDoc = async (
+        format: ExportFormat = exportStore.activeFormat,
+    ) => {
+        await exportWithAdapter(
+            docAdapter,
+            format,
+            '.doc',
+            'application/msword',
+        );
     };
 
     const exportAsDocx = async (
@@ -79,7 +107,34 @@ export function useExport() {
         exportAsHtml,
         exportAsDoc,
         exportAsDocx,
+        copyTextToClipboard,
     };
+}
+
+async function writeTextToClipboard(content: string) {
+    if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(content);
+        return;
+    }
+
+    const textarea = document.createElement('textarea');
+    textarea.value = content;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    textarea.style.top = '0';
+
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    try {
+        const copied = document.execCommand('copy');
+        if (!copied) {
+            throw new Error('复制失败');
+        }
+    } finally {
+        document.body.removeChild(textarea);
+    }
 }
 
 function downloadFile(

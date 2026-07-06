@@ -1,5 +1,6 @@
 <template>
     <div class="popover">
+        <div class="export-item" @click="handleCopyText">导出到剪切板</div>
         <div class="export-item" @click="handleExportText">导出为 TEXT</div>
         <div class="export-item" @click="handleExportHtml">导出为 HTML</div>
         <div class="export-item" @click="handleExportDoc">导出为 DOC</div>
@@ -14,10 +15,26 @@ import { useExport } from '@/composables/useExporter';
 import { useProjectManager } from '@/composables/useProjectManager';
 const projectManager = useProjectManager();
 
-const { exportAsText, exportAsHtml, exportAsDoc, exportAsDocx } = useExport();
+const {
+    exportAsText,
+    exportAsHtml,
+    exportAsDoc,
+    exportAsDocx,
+    copyTextToClipboard,
+} = useExport();
+async function handleCopyText() {
+    try {
+        await copyTextToClipboard();
+        alert('已复制导出内容到剪切板');
+    } catch (error) {
+        console.error(error);
+        alert(error instanceof Error ? error.message : '复制导出时发生错误');
+    }
+}
+
 async function handleExportText() {
     try {
-        exportAsText();
+        await exportAsText();
     } catch (error) {
         console.error(error);
         alert(error instanceof Error ? error.message : '导出TXT时发生错误');
