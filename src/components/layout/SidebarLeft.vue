@@ -302,5 +302,6 @@ function handleNavClick(panelName: typeof windowStore.activeLeftPanelName) {
     position: absolute;
     left: 49px;
     bottom: -1px;
+    z-index: 10;
 }
 </style>

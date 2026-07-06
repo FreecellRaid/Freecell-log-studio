@@ -125,38 +125,34 @@
                                 </select>
                             </div>
                             <div class="prop-row">
-                                <label class="checkbox-label">
-                                    <input
-                                        type="checkbox"
-                                        :checked="message.isOoc"
-                                        @change="
-                                            updateField(
-                                                chunk.chunkId,
-                                                message.messageId,
-                                                'isOoc',
-                                                $event,
-                                                'boolean',
-                                            )
-                                        "
-                                    />
+                                <ToggleButton
+                                    :model-value="message.isOoc"
+                                    class="inspector-toggle"
+                                    @update:model-value="
+                                        updateBooleanField(
+                                            chunk.chunkId,
+                                            message.messageId,
+                                            'isOoc',
+                                            Boolean($event),
+                                        )
+                                    "
+                                >
                                     场外消息
-                                </label>
-                                <label class="checkbox-label">
-                                    <input
-                                        type="checkbox"
-                                        :checked="message.isCommand"
-                                        @change="
-                                            updateField(
-                                                chunk.chunkId,
-                                                message.messageId,
-                                                'isCommand',
-                                                $event,
-                                                'boolean',
-                                            )
-                                        "
-                                    />
+                                </ToggleButton>
+                                <ToggleButton
+                                    :model-value="message.isCommand"
+                                    class="inspector-toggle"
+                                    @update:model-value="
+                                        updateBooleanField(
+                                            chunk.chunkId,
+                                            message.messageId,
+                                            'isCommand',
+                                            Boolean($event),
+                                        )
+                                    "
+                                >
                                     指令消息
-                                </label>
+                                </ToggleButton>
                             </div>
 
                             <div class="prop-item full-width">
@@ -227,6 +223,7 @@ import { usePanelResize } from '@/composables/usePanelResize';
 import { useLogStore } from '@/stores/logStore';
 import { useLogEditorStore } from '@/stores/editorStore';
 import { useUiStore } from '@/stores/uiStore';
+import ToggleButton from '@/components/common/ToggleButton.vue';
 import type { Message } from '@/types/log';
 import { formatDate } from '@/utils/date';
 import { vClickOutside } from '@/directives/clickOutside';
@@ -285,6 +282,17 @@ function commitDraft(
         logEditorStore.updateMessage(chunkId, messageId, {
             [field]: value,
         });
+    });
+}
+
+function updateBooleanField(
+    chunkId: string,
+    messageId: string,
+    field: 'isOoc' | 'isCommand',
+    value: boolean,
+) {
+    logEditorStore.updateMessage(chunkId, messageId, {
+        [field]: value,
     });
 }
 
@@ -389,7 +397,6 @@ function updateField(
     border-color: var(--active-accent);
 }
 
-/* 复选框行 */
 .prop-row {
     grid-column: span 2;
     display: flex;
@@ -397,11 +404,7 @@ function updateField(
     padding-top: 5px;
 }
 
-.checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+.inspector-toggle {
     font-size: 12px;
-    cursor: pointer;
 }
 </style>
