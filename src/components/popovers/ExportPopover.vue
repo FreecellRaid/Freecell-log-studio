@@ -3,7 +3,7 @@
         <div class="export-item" @click="handleCopyText">导出到剪切板</div>
         <div class="export-item" @click="handleExportText">导出为 TEXT</div>
         <div class="export-item" @click="handleExportHtml">导出为 HTML</div>
-        <div class="export-item" @click="handleExportDoc">导出为 DOC</div>
+        <!-- <div class="export-item" @click="handleExportDoc">导出为 DOC</div> -->
         <div class="export-item" @click="handleExportDocx">导出为 DOCX</div>
         <div class="export-item" @click="handleExportProject">
             导出为工程文件
@@ -18,7 +18,7 @@ const projectManager = useProjectManager();
 const {
     exportAsText,
     exportAsHtml,
-    exportAsDoc,
+    // exportAsDoc,
     exportAsDocx,
     copyExportToClipboard,
 } = useExport();
@@ -49,14 +49,14 @@ async function handleExportHtml() {
     }
 }
 
-async function handleExportDoc() {
-    try {
-        await exportAsDoc();
-    } catch (error) {
-        console.error(error);
-        alert('导出 Doc 时发生错误');
-    }
-}
+// async function handleExportDoc() {
+//     try {
+//         await exportAsDoc();
+//     } catch (error) {
+//         console.error(error);
+//         alert('导出 Doc 时发生错误');
+//     }
+// }
 
 async function handleExportDocx() {
     try {
