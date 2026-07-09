@@ -2,6 +2,7 @@ import type { ColorRule, ViewSettings } from '@/types/style';
 import type { LogDocument, MessageFilter } from '@/types/log';
 import { isRoleType } from '@/types/log';
 import type { ProjectFile } from '@/types/project';
+import { stripFileExtension } from '@/utils/fileName';
 import { generateId } from '@/utils/id';
 
 export const PROJECT_FILE_VERSION = 1 as const;
@@ -240,7 +241,7 @@ function normalizeDocuments(rawDocuments: unknown): LogDocument[] {
             docId: typeof doc.docId === 'string' ? doc.docId : generateId(),
             docName:
                 typeof doc.docName === 'string'
-                    ? doc.docName
+                    ? stripFileExtension(doc.docName)
                     : `Document-${docIndex + 1}`,
             docIndex:
                 typeof doc.docIndex === 'number' ? doc.docIndex : docIndex,
@@ -402,7 +403,7 @@ export function normalizeProjectFile(
             : rawProject.projectId;
     const projectName =
         typeof rawProject.projectName === 'string'
-            ? rawProject.projectName.trim()
+            ? stripFileExtension(rawProject.projectName)
             : '';
     const time =
         typeof rawProject.time === 'string' &&

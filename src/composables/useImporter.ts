@@ -7,6 +7,7 @@ import type { Chunk, LogDocument } from '@/types/log';
 import { buildLogDocument } from '@/io/import/parser';
 import { dispatchAdapter } from '@/io/import/importAdapters';
 import { tryParseProjectFile } from '@/io/localStorage/project';
+import { stripFileExtension } from '@/utils/fileName';
 import { useProjectManager } from './useProjectManager';
 
 // 统一换行符并移除0宽字符，防止正则崩掉
@@ -133,7 +134,10 @@ export function useFileImport() {
         }
 
         const documents = await importFiles(
-            fileEntries.map((e) => ({ name: e.file.name, text: e.text })),
+            fileEntries.map((e) => ({
+                name: stripFileExtension(e.file.name),
+                text: e.text,
+            })),
             logStore.documents.length,
         );
 
