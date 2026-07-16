@@ -283,13 +283,16 @@ function windowStore() {
     // 打开帮助弹窗
     function openHelpDocument() {
         isHelpOpen.value = true;
-        setFocus('help');
+        registerWindow({
+            windowId: 'help',
+            windowName: 'help',
+            windowType: 'modal',
+            originalId: 'help',
+        });
     }
     function closeHelpDocument() {
         isHelpOpen.value = false;
-        if (activeFocus.value === 'help') {
-            focusStack.value.pop();
-        }
+        unregisterWindow('help');
     }
 
     const isWindowOpen = (windowId: string) => openWindows.value.has(windowId);
