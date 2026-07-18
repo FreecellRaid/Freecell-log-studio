@@ -34,7 +34,7 @@
                     class="icon-interactive icon-button-warning"
                     type="button"
                     title="删除工程"
-                    @click="handleDeleteStoredProject(project.projectId)"
+                    @click.stop="handleDeleteStoredProject(project.projectId)"
                 >
                     <Trash2 class="ui-icon" aria-hidden="true" />
                 </button>
