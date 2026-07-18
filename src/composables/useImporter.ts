@@ -8,6 +8,7 @@ import { buildLogDocument } from '@/io/import/parser';
 import { dispatchAdapter } from '@/io/import/importAdapters';
 import { tryParseProjectFile } from '@/io/localStorage/project';
 import { stripFileExtension } from '@/utils/fileName';
+import { readFileAsText } from '@/io/import/textDecoder';
 import { useProjectManager } from './useProjectManager';
 
 // 统一换行符并移除0宽字符，防止正则崩掉
@@ -88,10 +89,13 @@ export function useFileImport() {
     async function importAndApply(files: File[]): Promise<number> {
         const fileEntries = await Promise.all(
             files.map(async (file) => {
-                const rawText = await file.text();
+                const decoded = await readFileAsText(file);
+                console.log(
+                    `文件 ${file.name} 检测编码: ${decoded.encoding}（置信度 ${decoded.confidence.toFixed(2)}）`,
+                );
                 return {
                     file,
-                    text: preprocessText(rawText),
+                    text: preprocessText(decoded.text),
                 };
             }),
         );

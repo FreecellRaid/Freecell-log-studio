@@ -17,6 +17,9 @@ importers:
       docx:
         specifier: ^9.6.1
         version: 9.6.1
+      jschardet:
+        specifier: ^3.1.4
+        version: 3.1.4
       pinia:
         specifier: ^3.0.4
         version: 3.0.4(typescript@5.9.3)(vue@3.5.31(typescript@5.9.3))
@@ -363,6 +366,10 @@ packages:
 
   isarray@1.0.0:
     resolution: {integrity: sha512-VLghIWNM6ELQzo7zwmcg0NmTVyWKYjvIeM83yjp0wRDTmUnrM678fQbcKBo6n2CJEF0szoG//ytg+TKla89ALQ==}
+
+  jschardet@3.1.4:
+    resolution: {integrity: sha512-/kmVISmrwVwtyYU40iQUOp3SUPk2dhNCMsZBQX0R1/jZ8maaXJ/oZIzUOiyOqcgtLnETFKYChbJ5iDC/eWmFHg==}
+    engines: {node: '>=0.1.90'}
 
   jszip@3.10.1:
     resolution: {integrity: sha512-xXDvecyTpGLrqFrvkrUSoxxfJI5AH7U8zxxtVclpsUtMCq4JQ290LY8AW5c7Ggnr/Y/oK+bQMbqK2qmtk3pN4g==}
@@ -945,6 +952,8 @@ snapshots:
   is-what@5.5.0: {}
 
   isarray@1.0.0: {}
+
+  jschardet@3.1.4: {}
 
   jszip@3.10.1:
     dependencies:

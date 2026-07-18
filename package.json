@@ -16,6 +16,7 @@
         "@lucide/vue": "^1.7.0",
         "@vueuse/core": "^14.3.0",
         "docx": "^9.6.1",
+        "jschardet": "^3.1.4",
         "pinia": "^3.0.4",
         "vue": "^3.5.30",
         "vue-virtual-scroller": "^2.0.1"
