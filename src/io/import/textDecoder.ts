@@ -1,5 +1,3 @@
-import { detect } from 'jschardet';
-
 export interface DecodedText {
     text: string;
     encoding: string;
@@ -78,7 +76,7 @@ function toBinaryString(bytes: Uint8Array): string {
     return chunks.join('');
 }
 
-export function decodeText(bytes: Uint8Array): DecodedText {
+export async function decodeText(bytes: Uint8Array): Promise<DecodedText> {
     // UTF-8 可被浏览器直接检测，优先用这个
     if (isValidUtf8(bytes)) {
         return {
@@ -97,6 +95,8 @@ export function decodeText(bytes: Uint8Array): DecodedText {
         };
     }
 
+    // 绝大多数文件都是 UTF-8，遇到检测不了的再导入，优化首屏加载
+    const { detect } = await import('jschardet');
     const detected = detect(toBinaryString(bytes));
     const detectedName = detected.encoding || '';
     const decoderLabel = ENCODING_LABELS[normalizeEncodingName(detectedName)];
@@ -120,5 +120,5 @@ export function decodeText(bytes: Uint8Array): DecodedText {
 }
 
 export async function readFileAsText(file: File): Promise<DecodedText> {
-    return decodeText(new Uint8Array(await file.arrayBuffer()));
+    return await decodeText(new Uint8Array(await file.arrayBuffer()));
 }

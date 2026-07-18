@@ -34,10 +34,7 @@
                         <h3>{{ section.title }}</h3>
                     </div>
                     <ul v-if="section.type === 'tips'" class="tip-list">
-                        <li
-                            v-for="item in section.items"
-                            :key="item.term"
-                        >
+                        <li v-for="item in section.items" :key="item.term">
                             <strong>{{ item.term }}</strong>
                             - {{ item.description }}
                         </li>

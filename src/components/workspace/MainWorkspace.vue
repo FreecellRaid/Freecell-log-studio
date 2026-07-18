@@ -39,13 +39,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, defineAsyncComponent } from 'vue';
 import { useWindowStore } from '@/stores/windowStore';
 import type { WindowInstance, WindowName } from '@/types/window';
 import FileImporter from '@/components/common/FileImporter.vue';
-import ChunkView from './ChunkView.vue';
-import ExportPreview from './ExportPreview.vue';
 import DefaultView from './DefaultView.vue';
+
+const ChunkView = defineAsyncComponent(() => import('./ChunkView.vue'));
+const ExportPreview = defineAsyncComponent(() => import('./ExportPreview.vue'));
 
 const windowStore = useWindowStore();
 const workspacePanes = computed(() => windowStore.workspacePanes);

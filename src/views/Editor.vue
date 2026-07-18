@@ -24,14 +24,20 @@
 </template>
 
 <script setup lang="ts">
+import { defineAsyncComponent } from 'vue';
 import { useWindowStore } from '@/stores/windowStore';
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
-import HelpDocument from '@/components/common/HelpDocument.vue';
 import TopMenuBar from '@/components/layout/TopMenuBar.vue';
 import SidebarLeft from '@/components/layout/SidebarLeft.vue';
 import MainWorkspace from '@/components/workspace/MainWorkspace.vue';
 import StatusBar from '@/components/layout/StatusBar.vue';
-import SidebarRight from '@/components/layout/SidebarRight.vue';
+
+const HelpDocument = defineAsyncComponent(
+    () => import('@/components/common/HelpDocument.vue'),
+);
+const SidebarRight = defineAsyncComponent(
+    () => import('@/components/layout/SidebarRight.vue'),
+);
 
 const windowStore = useWindowStore();
 useKeyboardShortcuts();
