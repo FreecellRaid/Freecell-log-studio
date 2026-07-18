@@ -16,7 +16,11 @@
             <div class="welcome-content">
                 <FolderOpen class="bg-icon" />
                 <h2 class="title">导入跑团 Log</h2>
-                <p class="subtitle">将文件拖拽至工作台区域即可导入~</p>
+                <p class="subtitle">
+                    将文件拖拽至工作台区域，或点击右上角
+                    <FolderOpen class="ui-icon" />
+                    进行导入
+                </p>
 
                 <div class="shortcuts-hint">
                     <div class="shortcut-item">

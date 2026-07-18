@@ -86,23 +86,16 @@ export function useFileImport() {
         }
     }
 
-    async function importAndApply(files: File[]): Promise<number> {
-        const fileEntries = await Promise.all(
-            files.map(async (file) => {
-                const decoded = await readFileAsText(file);
-                console.log(
-                    `文件 ${file.name} 检测编码: ${decoded.encoding}（置信度 ${decoded.confidence.toFixed(2)}）`,
-                );
-                return {
-                    file,
-                    text: preprocessText(decoded.text),
-                };
-            }),
-        );
-
-        const projectFiles = fileEntries
+    async function importTextAndApply(
+        entries: { name: string; text: string }[],
+    ): Promise<number> {
+        const textEntries = entries.map((entry) => ({
+            name: entry.name,
+            text: preprocessText(entry.text),
+        }));
+        const projectFiles = textEntries
             .map((entry) => ({
-                file: entry.file,
+                name: entry.name,
                 project: tryParseProjectFile(entry.text, {
                     regenerateProjectId: true,
                 }),
@@ -111,7 +104,7 @@ export function useFileImport() {
                 (
                     entry,
                 ): entry is {
-                    file: File;
+                    name: string;
                     project: NonNullable<
                         ReturnType<typeof tryParseProjectFile>
                     >;
@@ -119,7 +112,7 @@ export function useFileImport() {
             );
 
         if (projectFiles.length > 0) {
-            if (fileEntries.length !== 1) {
+            if (textEntries.length !== 1) {
                 throw new Error(
                     '工程 JSON 仅支持单文件导入，请不要与普通日志混合导入。',
                 );
@@ -138,9 +131,9 @@ export function useFileImport() {
         }
 
         const documents = await importFiles(
-            fileEntries.map((e) => ({
-                name: stripFileExtension(e.file.name),
-                text: e.text,
+            textEntries.map((entry) => ({
+                name: entry.name,
+                text: entry.text,
             })),
             logStore.documents.length,
         );
@@ -155,14 +148,31 @@ export function useFileImport() {
         return documents.length;
     }
 
+    async function importAndApply(files: File[]): Promise<number> {
+        const entries = await Promise.all(
+            files.map(async (file) => {
+                const decoded = await readFileAsText(file);
+                console.log(
+                    `文件 ${file.name} 检测编码: ${decoded.encoding}（置信度 ${decoded.confidence.toFixed(2)}）`,
+                );
+                return {
+                    name: stripFileExtension(file.name),
+                    text: decoded.text,
+                };
+            }),
+        );
+        return importTextAndApply(entries);
+    }
+
     return {
         importAndApply,
+        importTextAndApply,
     };
 }
 
 export function useFileImportInput() {
     const fileInput = ref<HTMLInputElement | null>(null);
-    const { importAndApply } = useFileImport();
+    const { importAndApply, importTextAndApply } = useFileImport();
 
     function setFileInput(element: Element | ComponentPublicInstance | null) {
         fileInput.value = element instanceof HTMLInputElement ? element : null;
@@ -189,9 +199,30 @@ export function useFileImportInput() {
         }
     }
 
+    async function importFromClipboard() {
+        try {
+            if (!navigator.clipboard?.readText) {
+                throw new Error('当前浏览器不支持读取剪切板。');
+            }
+            const text = await navigator.clipboard.readText();
+            if (!text.trim()) {
+                throw new Error('剪切板中没有可导入的文本。');
+            }
+            await importTextAndApply([{ name: '剪切板导入', text }]);
+        } catch (error) {
+            console.error(error);
+            alert(
+                error instanceof Error
+                    ? error.message
+                    : '从剪切板导入时发生错误',
+            );
+        }
+    }
+
     return {
         setFileInput,
         triggerImport,
         handleFileChange,
+        importFromClipboard,
     };
 }

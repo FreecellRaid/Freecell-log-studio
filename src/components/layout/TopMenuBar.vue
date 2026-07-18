@@ -29,7 +29,7 @@
             </div>
             <div>跑团Log编辑器</div>
         </div>
-        <div class="global-actions">
+        <div class="global-actions" v-click-outside="closeAllPopovers">
             <button
                 class="icon-interactive icon-button-warning"
                 type="button"
@@ -50,7 +50,7 @@
                 <Save class="ui-icon" aria-hidden="true" />
             </button>
 
-            <div class="snapshot-container" v-click-outside="closeAllPopovers">
+            <div class="snapshot-container">
                 <button
                     class="icon-interactive"
                     type="button"
@@ -72,14 +72,27 @@
                 </div>
             </div>
 
-            <button
-                class="icon-interactive"
-                type="button"
-                title="导入文档/工程"
-                @click="triggerImport"
-            >
-                <Upload class="ui-icon" aria-hidden="true" />
-            </button>
+            <div class="import-container">
+                <button
+                    class="icon-interactive"
+                    type="button"
+                    title="导入文档/工程"
+                    aria-haspopup="menu"
+                    :aria-expanded="showImportPopover"
+                    @click.stop="toggleImportPanel"
+                >
+                    <Upload class="ui-icon" aria-hidden="true" />
+                </button>
+                <div
+                    v-if="showImportPopover"
+                    class="topbar-popover import-popover"
+                >
+                    <ImportPopover
+                        @file="handleSelectFileImport"
+                        @clipboard="handleClipboardImport"
+                    />
+                </div>
+            </div>
             <input
                 :ref="setFileInput"
                 type="file"
@@ -89,7 +102,7 @@
                 @change="handleFileChange"
             />
 
-            <div class="export-container" v-click-outside="closeAllPopovers">
+            <div class="export-container">
                 <button
                     class="icon-interactive"
                     type="button"
@@ -124,6 +137,7 @@ import { vClickOutside } from '@/directives/clickOutside';
 import type { ProjectFile } from '@/types/project';
 import StoredProjectsPopover from '@/components/popovers/StoredProjectsPopover.vue';
 import ExportPopover from '@/components/popovers/ExportPopover.vue';
+import ImportPopover from '@/components/popovers/ImportPopover.vue';
 
 const logStore = useLogStore();
 const styleStore = useStyleStore();
@@ -131,15 +145,34 @@ const clipboardStore = useClipboardStore();
 const historyStore = useHistoryStore();
 const windowStore = useWindowStore();
 const activeContext = useActiveContext();
-const { setFileInput, triggerImport, handleFileChange } = useFileImportInput();
+const { setFileInput, triggerImport, handleFileChange, importFromClipboard } =
+    useFileImportInput();
 const projectManager = useProjectManager();
 
 const showExportPopover = ref(false);
 const showStoredProjectsPopover = ref(false);
+const showImportPopover = ref(false);
 const storedProjects = ref<ProjectFile[]>([]);
 function closeAllPopovers() {
     showExportPopover.value = false;
     showStoredProjectsPopover.value = false;
+    showImportPopover.value = false;
+}
+
+function toggleImportPanel() {
+    const targetState = !showImportPopover.value;
+    closeAllPopovers();
+    showImportPopover.value = targetState;
+}
+
+function handleSelectFileImport() {
+    closeAllPopovers();
+    triggerImport();
+}
+
+async function handleClipboardImport() {
+    closeAllPopovers();
+    await importFromClipboard();
 }
 
 function toggleExportPanel() {
@@ -174,6 +207,7 @@ function refreshStoredProjects() {
 }
 
 function handleSaveProject() {
+    closeAllPopovers();
     const result = projectManager.saveCurrentProjectToLocal();
     if (!result.success) {
         alert('本地存储空间不足，保存失败。');
@@ -188,6 +222,7 @@ function handleSaveProject() {
 }
 
 function handleClearAll() {
+    closeAllPopovers();
     if (!hasWorkspaceState.value) return;
     if (!window.confirm('确定要清空所有数据吗？本操作不可撤销。')) return;
 
@@ -207,7 +242,8 @@ function handleClearAll() {
 }
 
 .global-actions > button,
-.snapshot-container > button {
+.snapshot-container > button,
+.import-container > button {
     width: 28px;
     height: 28px;
     flex-shrink: 0;
@@ -268,7 +304,8 @@ function handleClearAll() {
 }
 
 .export-container,
-.snapshot-container {
+.snapshot-container,
+.import-container {
     display: flex;
     align-items: center;
     position: relative;
@@ -286,6 +323,11 @@ function handleClearAll() {
 
 .export-popover {
     top: 30px;
+    right: -10px;
+}
+
+.import-popover {
+    top: 36px;
     right: -10px;
 }
 </style>
