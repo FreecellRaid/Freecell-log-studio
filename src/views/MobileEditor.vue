@@ -1,5 +1,10 @@
 <template>
-    <div class="mobile-editor">
+    <div
+        class="mobile-editor"
+        @touchstart="handleTouchStart"
+        @touchend="handleTouchEnd"
+        @touchcancel="handleTouchCancel"
+    >
         <HelpDocument v-if="windowStore.isHelpOpen" />
         <MobileTopBar />
         <MobileWorkspace />
@@ -13,8 +18,10 @@
 
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue';
+import { useSwipeGesture } from '@/composables/useSwipeGesture';
 import { useMobileEditorStore } from '@/stores/mobileEditorStore';
 import { useWindowStore } from '@/stores/windowStore';
+import type { MobileBottomPanelName } from '@/types/mobile';
 
 const HelpDocument = defineAsyncComponent(
     () => import('@/components/common/HelpDocument.vue'),
@@ -43,4 +50,58 @@ const MobileWorkspace = defineAsyncComponent(
 
 const windowStore = useWindowStore();
 const mobileStore = useMobileEditorStore();
+
+const bottomPanelNames: MobileBottomPanelName[] = [
+    'chunkList',
+    'identity',
+    'ruleEditor',
+    'search',
+    'exportFormat',
+];
+
+const openLeftDrawerGesture = useSwipeGesture({
+    direction: 'right',
+    canStart: (event) => !hasOpenOverlay() && event.touches[0].clientX <= 24,
+    onSwipe: mobileStore.openLeftDrawer,
+});
+const openBottomDrawerGesture = useSwipeGesture({
+    direction: 'up',
+    canStart: (event) =>
+        !hasOpenOverlay() &&
+        event.touches[0].clientY >= window.innerHeight - 72,
+    onSwipe: () => {
+        const activePanel = windowStore.activeLeftPanelName;
+        const panel = bottomPanelNames.includes(
+            activePanel as MobileBottomPanelName,
+        )
+            ? (activePanel as MobileBottomPanelName)
+            : 'chunkList';
+        mobileStore.openBottomPanel(panel);
+        windowStore.setLeftPanel(panel);
+    },
+});
+
+function hasOpenOverlay() {
+    return Boolean(
+        mobileStore.leftDrawerOpen ||
+        mobileStore.activeBottomPanel ||
+        mobileStore.activeSheet ||
+        windowStore.isHelpOpen,
+    );
+}
+
+function handleTouchStart(event: TouchEvent) {
+    openLeftDrawerGesture.onTouchStart(event);
+    openBottomDrawerGesture.onTouchStart(event);
+}
+
+function handleTouchEnd(event: TouchEvent) {
+    openLeftDrawerGesture.onTouchEnd(event);
+    openBottomDrawerGesture.onTouchEnd(event);
+}
+
+function handleTouchCancel() {
+    openLeftDrawerGesture.onTouchCancel();
+    openBottomDrawerGesture.onTouchCancel();
+}
 </script>

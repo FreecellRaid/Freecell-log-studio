@@ -3,6 +3,9 @@
         v-if="mobileStore.activeSheet"
         class="mobile-sheet-backdrop"
         @click.self="mobileStore.closeSheet"
+        @touchstart="closeGesture.onTouchStart"
+        @touchend="closeGesture.onTouchEnd"
+        @touchcancel="closeGesture.onTouchCancel"
     >
         <section class="mobile-sheet">
             <header class="mobile-drawer-header">
@@ -96,6 +99,7 @@ import { useLogEditorStore } from '@/stores/editorStore';
 import { useLogStore } from '@/stores/logStore';
 import { useMobileEditorStore } from '@/stores/mobileEditorStore';
 import { useProjectManager } from '@/composables/useProjectManager';
+import { useSwipeGesture } from '@/composables/useSwipeGesture';
 
 const MessageDetailEditor = defineAsyncComponent(
     () => import('@/components/common/MessageDetailEditor.vue'),
@@ -108,6 +112,16 @@ const mobileStore = useMobileEditorStore();
 const logStore = useLogStore();
 const editorStore = useLogEditorStore();
 const projectManager = useProjectManager();
+const closeGesture = useSwipeGesture({
+    direction: 'down',
+    canStart: (event) => {
+        const target = event.target;
+        const sheet =
+            target instanceof Element ? target.closest('.mobile-sheet') : null;
+        return !(sheet instanceof HTMLElement) || sheet.scrollTop === 0;
+    },
+    onSwipe: mobileStore.closeSheet,
+});
 
 const title = computed(() => {
     switch (mobileStore.activeSheet) {

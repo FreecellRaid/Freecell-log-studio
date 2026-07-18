@@ -3,6 +3,9 @@
         v-if="mobileStore.activeBottomPanel"
         class="mobile-bottom-backdrop"
         @click.self="mobileStore.closeBottomPanel"
+        @touchstart="closeGesture.onTouchStart"
+        @touchend="closeGesture.onTouchEnd"
+        @touchcancel="closeGesture.onTouchCancel"
     >
         <section class="mobile-bottom-drawer">
             <div class="mobile-drawer-body">
@@ -28,6 +31,7 @@
 
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue';
+import { useSwipeGesture } from '@/composables/useSwipeGesture';
 import { useMobileEditorStore } from '@/stores/mobileEditorStore';
 
 const ChunkListPanel = defineAsyncComponent(
@@ -47,6 +51,18 @@ const SearchPanel = defineAsyncComponent(
 );
 
 const mobileStore = useMobileEditorStore();
+const closeGesture = useSwipeGesture({
+    direction: 'down',
+    canStart: (event) => {
+        const target = event.target;
+        const body =
+            target instanceof Element
+                ? target.closest('.mobile-drawer-body')
+                : null;
+        return !(body instanceof HTMLElement) || body.scrollTop === 0;
+    },
+    onSwipe: mobileStore.closeBottomPanel,
+});
 </script>
 
 <style scoped>
