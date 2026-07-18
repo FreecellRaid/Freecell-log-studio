@@ -19,10 +19,11 @@
                 :key="message.messageId"
                 class="mobile-message"
                 :class="{
-                    'is-selected':
-                        mobileStore.selectedMessageId === message.messageId,
+                    'is-selected': activeContext.selectedMessageIds.value.has(
+                        message.messageId,
+                    ),
                 }"
-                @click="mobileStore.selectMessage(message.messageId)"
+                @click="toggleMessageSelection(message.messageId)"
             >
                 <header class="mobile-message-header">
                     <strong
@@ -56,7 +57,11 @@
                 </footer>
 
                 <div
-                    v-if="mobileStore.selectedMessageId === message.messageId"
+                    v-if="
+                        activeContext.selectedMessageIds.value.has(
+                            message.messageId,
+                        )
+                    "
                     class="mobile-message-actions"
                 >
                     <button
@@ -98,11 +103,11 @@ import { Pencil } from '@lucide/vue';
 import { computeStyleForMessage } from '@/editor/styleEngine';
 import { useStyleStore } from '@/stores/styleStore';
 import { useUiStore } from '@/stores/uiStore';
-import { useMobileEditorStore } from '@/stores/mobileEditorStore';
+import { useActiveContext } from '@/composables/useActiveContext';
 import type { Chunk, Message } from '@/types/log';
 import { formatDate } from '@/utils/date';
 
-defineProps<{
+const props = defineProps<{
     activeChunk: Chunk | null;
     messages: Message[];
 }>();
@@ -117,7 +122,15 @@ defineEmits<{
 
 const uiStore = useUiStore();
 const styleStore = useStyleStore();
-const mobileStore = useMobileEditorStore();
+const activeContext = useActiveContext(() => props.activeChunk?.chunkId);
+
+function toggleMessageSelection(messageId: string) {
+    if (activeContext.selectedMessageIds.value.has(messageId)) {
+        activeContext.clearMessageSelection();
+        return;
+    }
+    activeContext.setMessagesSelection([messageId]);
+}
 
 function getMessageStyle(message: Message) {
     return computeStyleForMessage(message, styleStore.activeRules);

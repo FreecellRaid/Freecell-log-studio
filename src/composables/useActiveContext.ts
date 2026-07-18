@@ -1,17 +1,20 @@
-import { computed } from 'vue';
+import { computed, toValue } from 'vue';
+import type { MaybeRefOrGetter } from 'vue';
 import type { Message, MessageFilter } from '@/types/log';
 import { matchesMessageFilter } from '@/editor/filter';
 import { useLogStore } from '@/stores/logStore';
 import { useWindowStore } from '@/stores/windowStore';
 import { useSelectionStore } from '@/stores/selectionStore';
 
-export function useActiveContext(ownerId?: string) {
+export function useActiveContext(
+    ownerId?: MaybeRefOrGetter<string | undefined>,
+) {
     const logStore = useLogStore();
     const windowStore = useWindowStore();
     const selectionStore = useSelectionStore();
 
     const effectiveId = computed(() => {
-        let targetId = ownerId;
+        let targetId = ownerId ? toValue(ownerId) : undefined;
         if (!targetId) {
             const stack = windowStore.focusStack;
             for (let i = stack.length - 1; i >= 0; i--) {

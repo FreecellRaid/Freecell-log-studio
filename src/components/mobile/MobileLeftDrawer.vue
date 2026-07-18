@@ -1,8 +1,8 @@
 <template>
     <div
-        v-if="mobileStore.leftDrawerOpen"
+        v-if="mobileUiStore.leftDrawerOpen"
         class="mobile-left-backdrop"
-        @click.self="mobileStore.closeLeftDrawer"
+        @click.self="mobileUiStore.closeOverlay"
         @touchstart="closeGesture.onTouchStart"
         @touchend="closeGesture.onTouchEnd"
         @touchcancel="closeGesture.onTouchCancel"
@@ -122,36 +122,37 @@ import {
     Trash2,
 } from '@lucide/vue';
 import { useLogStore } from '@/stores/logStore';
-import { useMobileEditorStore } from '@/stores/mobileEditorStore';
+import { useMobileUiStore } from '@/stores/mobileUiStore';
+import { useEditorSessionStore } from '@/stores/editorSessionStore';
 import { useUiStore } from '@/stores/uiStore';
 import { useWindowStore } from '@/stores/windowStore';
-import { useProjectManager } from '@/composables/useProjectManager';
 import { useWorkspaceActions } from '@/composables/useWorkspaceActions';
 import { useSwipeGesture } from '@/composables/useSwipeGesture';
 
 const logStore = useLogStore();
 const uiStore = useUiStore();
 const windowStore = useWindowStore();
-const mobileStore = useMobileEditorStore();
-const projectManager = useProjectManager();
+const mobileUiStore = useMobileUiStore();
+const editorSessionStore = useEditorSessionStore();
 const workspaceActions = useWorkspaceActions();
 const closeGesture = useSwipeGesture({
     direction: 'left',
-    onSwipe: mobileStore.closeLeftDrawer,
+    onSwipe: mobileUiStore.closeOverlay,
 });
 
 function startProjectNameEdit() {
-    mobileStore.startProjectNameEdit(logStore.projectName);
+    editorSessionStore.startEditing({ kind: 'projectName' });
+    mobileUiStore.openSheet('projectName');
 }
 
 function showStoredProjects() {
-    mobileStore.openStoredProjects(projectManager.getStoredProjects());
+    mobileUiStore.openSheet('storedProjects');
 }
 
 function clearAll() {
     workspaceActions.clearWorkspaceWithConfirmation({
         focusTarget: 'defaultView',
-        afterClear: mobileStore.resetAfterClear,
+        afterClear: mobileUiStore.reset,
     });
 }
 </script>

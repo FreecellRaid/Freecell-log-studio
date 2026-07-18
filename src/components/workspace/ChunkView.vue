@@ -119,6 +119,7 @@ import { useActiveContext } from '@/composables/useActiveContext';
 import { useCommandDispatcher } from '@/composables/useCommandDispatcher';
 import { useMessageDragDrop } from '@/composables/useDragDrop';
 import { useLogEditorStore } from '@/stores/editorStore';
+import { useEditorSessionStore } from '@/stores/editorSessionStore';
 import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
 import { useUiStore } from '@/stores/uiStore';
@@ -149,7 +150,8 @@ const uiStore = useUiStore();
 const styleStore = useStyleStore();
 const windowStore = useWindowStore();
 const logEditorStore = useLogEditorStore();
-const activeContext = useActiveContext(effectiveWindowId.value);
+const editorSessionStore = useEditorSessionStore();
+const activeContext = useActiveContext(effectiveWindowId);
 const dragDropTool = useMessageDragDrop();
 const { dispatch } = useCommandDispatcher();
 
@@ -279,12 +281,21 @@ function handleMessageSelect(event: MouseEvent, msgId: string, index: number) {
     });
 }
 
-const editingMessageId = ref<string | null>(null);
+const editingMessageId = computed(() => {
+    const target = editorSessionStore.activeTarget;
+    return target?.kind === 'message' && target.chunkId === currentChunkId.value
+        ? target.messageId
+        : null;
+});
 const editingContent = ref('');
 
 function handleStartEdit(message: Message) {
     withScrollAnchor(() => {
-        editingMessageId.value = message.messageId;
+        editorSessionStore.startEditing({
+            kind: 'message',
+            chunkId: currentChunkId.value,
+            messageId: message.messageId,
+        });
         editingContent.value = message.content;
     });
 }
@@ -303,15 +314,27 @@ function handleSaveEdit(messageId: string) {
                 content: editingContent.value,
             });
         }
-        editingMessageId.value = null;
+        editorSessionStore.stopEditing();
     });
 }
 
 function handleCancelEdit() {
     withScrollAnchor(() => {
-        editingMessageId.value = null;
+        editorSessionStore.stopEditing();
     });
 }
+
+watch(
+    editingMessageId,
+    (messageId) => {
+        if (!messageId) return;
+        const message = messages.value.find(
+            (item) => item.messageId === messageId,
+        );
+        if (message) editingContent.value = message.content;
+    },
+    { immediate: true },
+);
 
 const dropIndicatorIndex = ref<number | null>(null);
 

@@ -13,7 +13,7 @@
             class="mobile-topbar-button"
             type="button"
             title="打开全局菜单"
-            @click="mobileStore.openLeftDrawer"
+            @click="mobileUiStore.openLeftDrawer"
         >
             <PanelLeftOpen class="ui-icon" />
         </button>
@@ -51,7 +51,7 @@ import { defineAsyncComponent, ref } from 'vue';
 import { Download, PanelLeftOpen, Upload } from '@lucide/vue';
 import { useFileImportInput } from '@/composables/useImporter';
 import { useLogStore } from '@/stores/logStore';
-import { useMobileEditorStore } from '@/stores/mobileEditorStore';
+import { useMobileUiStore } from '@/stores/mobileUiStore';
 
 const ExportPopover = defineAsyncComponent(
     () => import('@/components/popovers/ExportPopover.vue'),
@@ -59,7 +59,7 @@ const ExportPopover = defineAsyncComponent(
 
 const showExportPopover = ref(false);
 const logStore = useLogStore();
-const mobileStore = useMobileEditorStore();
+const mobileUiStore = useMobileUiStore();
 const { setFileInput, triggerImport, handleFileChange } = useFileImportInput();
 </script>
 

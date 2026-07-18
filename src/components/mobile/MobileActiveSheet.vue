@@ -1,8 +1,8 @@
 <template>
     <div
-        v-if="mobileStore.activeSheet"
+        v-if="mobileUiStore.activeSheet"
         class="mobile-sheet-backdrop"
-        @click.self="mobileStore.closeSheet"
+        @click.self="closeSheet"
         @touchstart="closeGesture.onTouchStart"
         @touchend="closeGesture.onTouchEnd"
         @touchcancel="closeGesture.onTouchCancel"
@@ -14,22 +14,19 @@
                     class="mobile-icon-button"
                     type="button"
                     title="关闭"
-                    @click="mobileStore.closeSheet"
+                    @click="closeSheet"
                 >
                     <X class="ui-icon" />
                 </button>
             </header>
 
             <div
-                v-if="
-                    mobileStore.activeSheet === 'message' &&
-                    mobileStore.editingMessage
-                "
+                v-if="mobileUiStore.activeSheet === 'message' && editingMessage"
                 class="mobile-form"
             >
                 <MessageDetailEditor
-                    :message="mobileStore.editingMessage"
-                    :values="mobileStore.messageDraft"
+                    :message="editingMessage"
+                    :values="messageDraft"
                     :show-meta="false"
                     :content-rows="7"
                     @text-input="updateMessageDraftText"
@@ -39,17 +36,15 @@
             </div>
 
             <div
-                v-else-if="mobileStore.activeSheet === 'projectName'"
+                v-else-if="mobileUiStore.activeSheet === 'projectName'"
                 class="mobile-form"
             >
                 <label class="mobile-field">
                     <span>项目名</span>
                     <input
-                        :value="mobileStore.projectNameDraft"
+                        :value="projectNameDraft"
                         type="text"
-                        @input="
-                            mobileStore.projectNameDraft = getInputValue($event)
-                        "
+                        @input="projectNameDraft = getInputValue($event)"
                         @blur="commitProjectName"
                         @keydown.enter.exact.prevent="commitProjectName()"
                     />
@@ -57,17 +52,15 @@
             </div>
 
             <div
-                v-else-if="mobileStore.activeSheet === 'chunkName'"
+                v-else-if="mobileUiStore.activeSheet === 'chunkName'"
                 class="mobile-form"
             >
                 <label class="mobile-field">
                     <span>场景名</span>
                     <input
-                        :value="mobileStore.chunkNameDraft"
+                        :value="chunkNameDraft"
                         type="text"
-                        @input="
-                            mobileStore.chunkNameDraft = getInputValue($event)
-                        "
+                        @input="chunkNameDraft = getInputValue($event)"
                         @blur="commitChunkName"
                         @keydown.enter.exact.prevent="commitChunkName"
                     />
@@ -75,13 +68,13 @@
             </div>
 
             <div
-                v-else-if="mobileStore.activeSheet === 'storedProjects'"
+                v-else-if="mobileUiStore.activeSheet === 'storedProjects'"
                 class="mobile-stored-projects"
             >
                 <StoredProjectsPopover
-                    :projects="mobileStore.storedProjects"
+                    :projects="storedProjects"
                     @refresh="refreshStoredProjects"
-                    @close="mobileStore.closeSheet"
+                    @close="closeSheet"
                 />
             </div>
         </section>
@@ -89,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent } from 'vue';
+import { computed, defineAsyncComponent, reactive, ref, watch } from 'vue';
 import { X } from '@lucide/vue';
 import type {
     MessageDetailTextField,
@@ -97,7 +90,8 @@ import type {
 } from '@/components/common/MessageDetailEditor.vue';
 import { useLogEditorStore } from '@/stores/editorStore';
 import { useLogStore } from '@/stores/logStore';
-import { useMobileEditorStore } from '@/stores/mobileEditorStore';
+import { useMobileUiStore } from '@/stores/mobileUiStore';
+import { useEditorSessionStore } from '@/stores/editorSessionStore';
 import { useProjectManager } from '@/composables/useProjectManager';
 import { useSwipeGesture } from '@/composables/useSwipeGesture';
 
@@ -108,10 +102,33 @@ const StoredProjectsPopover = defineAsyncComponent(
     () => import('@/components/popovers/StoredProjectsPopover.vue'),
 );
 
-const mobileStore = useMobileEditorStore();
+const mobileUiStore = useMobileUiStore();
+const editorSessionStore = useEditorSessionStore();
 const logStore = useLogStore();
 const editorStore = useLogEditorStore();
 const projectManager = useProjectManager();
+const editingMessage = computed(() => {
+    const target = editorSessionStore.activeTarget;
+    if (target?.kind !== 'message') return null;
+    return logStore.messagesById.get(target.messageId) ?? null;
+});
+const messageDraft = reactive<MessageDetailValues>({
+    playerName: editingMessage.value?.playerName ?? '',
+    account: editingMessage.value?.account ?? '',
+    role: editingMessage.value?.role ?? 'unknown',
+    content: editingMessage.value?.content ?? '',
+    note: editingMessage.value?.note ?? '',
+    isOoc: editingMessage.value?.isOoc ?? false,
+    isCommand: editingMessage.value?.isCommand ?? false,
+});
+const projectNameDraft = ref(logStore.projectName);
+const chunkNameDraft = ref(
+    editorSessionStore.activeTarget?.kind === 'chunkName'
+        ? (logStore.findChunkById(editorSessionStore.activeTarget.chunkId)
+              ?.chunkName ?? '')
+        : '',
+);
+const storedProjects = ref(projectManager.getStoredProjects());
 const closeGesture = useSwipeGesture({
     direction: 'down',
     canStart: (event) => {
@@ -120,11 +137,11 @@ const closeGesture = useSwipeGesture({
             target instanceof Element ? target.closest('.mobile-sheet') : null;
         return !(sheet instanceof HTMLElement) || sheet.scrollTop === 0;
     },
-    onSwipe: mobileStore.closeSheet,
+    onSwipe: closeSheet,
 });
 
 const title = computed(() => {
-    switch (mobileStore.activeSheet) {
+    switch (mobileUiStore.activeSheet) {
         case 'message':
             return '编辑消息';
         case 'projectName':
@@ -143,49 +160,58 @@ function getInputValue(event: Event) {
 }
 
 function updateMessageDraftText(field: MessageDetailTextField, value: string) {
-    mobileStore.updateMessageDraftText(field, value);
+    messageDraft[field] = value;
 }
 
 function commitMessageDraftText(field: MessageDetailTextField) {
-    if (!mobileStore.editingMessage) return;
-    editorStore.updateMessage(
-        mobileStore.editingMessage.chunkId,
-        mobileStore.editingMessage.messageId,
-        {
-            [field]: mobileStore.messageDraft[field],
-        },
-    );
+    const target = editorSessionStore.activeTarget;
+    if (target?.kind !== 'message') return;
+    editorStore.updateMessage(target.chunkId, target.messageId, {
+        [field]: messageDraft[field],
+    });
 }
 
 function updateMessageDraftField<K extends keyof MessageDetailValues>(
     field: K,
     value: MessageDetailValues[K],
 ) {
-    mobileStore.updateMessageDraftField(field, value);
-    if (!mobileStore.editingMessage) return;
-    editorStore.updateMessage(
-        mobileStore.editingMessage.chunkId,
-        mobileStore.editingMessage.messageId,
-        {
-            [field]: value,
-        },
-    );
+    messageDraft[field] = value;
+    const target = editorSessionStore.activeTarget;
+    if (target?.kind !== 'message') return;
+    editorStore.updateMessage(target.chunkId, target.messageId, {
+        [field]: value,
+    });
 }
 
 function commitProjectName() {
-    logStore.setProjectName(mobileStore.projectNameDraft);
+    logStore.setProjectName(projectNameDraft.value);
 }
 
 function commitChunkName() {
-    if (!mobileStore.editingChunkId) return;
-    editorStore.updateChunk(mobileStore.editingChunkId, {
-        chunkName: mobileStore.chunkNameDraft.trim() || '未命名场景',
+    const target = editorSessionStore.activeTarget;
+    if (target?.kind !== 'chunkName') return;
+    editorStore.updateChunk(target.chunkId, {
+        chunkName: chunkNameDraft.value.trim() || '未命名场景',
     });
 }
 
 function refreshStoredProjects() {
-    mobileStore.setStoredProjects(projectManager.getStoredProjects());
+    storedProjects.value = projectManager.getStoredProjects();
 }
+
+function closeSheet() {
+    mobileUiStore.closeOverlay();
+    editorSessionStore.stopEditing();
+}
+
+watch(
+    () => editorSessionStore.activeTarget,
+    (target) => {
+        if (!target && mobileUiStore.activeSheet !== 'storedProjects') {
+            mobileUiStore.closeOverlay();
+        }
+    },
+);
 </script>
 
 <style scoped>

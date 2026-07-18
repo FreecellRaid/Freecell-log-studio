@@ -1,8 +1,8 @@
 <template>
     <div
-        v-if="mobileStore.activeBottomPanel"
+        v-if="mobileUiStore.bottomPanelOpen"
         class="mobile-bottom-backdrop"
-        @click.self="mobileStore.closeBottomPanel"
+        @click.self="mobileUiStore.closeOverlay"
         @touchstart="closeGesture.onTouchStart"
         @touchend="closeGesture.onTouchEnd"
         @touchcancel="closeGesture.onTouchCancel"
@@ -10,19 +10,21 @@
         <section class="mobile-bottom-drawer">
             <div class="mobile-drawer-body">
                 <ChunkListPanel
-                    v-if="mobileStore.activeBottomPanel === 'chunkList'"
+                    v-if="windowStore.activeLeftPanelName === 'chunkList'"
                 />
                 <IdentityPanel
-                    v-else-if="mobileStore.activeBottomPanel === 'identity'"
+                    v-else-if="windowStore.activeLeftPanelName === 'identity'"
                 />
                 <RuleEditorPanel
-                    v-else-if="mobileStore.activeBottomPanel === 'ruleEditor'"
+                    v-else-if="windowStore.activeLeftPanelName === 'ruleEditor'"
                 />
                 <SearchPanel
-                    v-else-if="mobileStore.activeBottomPanel === 'search'"
+                    v-else-if="windowStore.activeLeftPanelName === 'search'"
                 />
                 <ExportFormatPanel
-                    v-else-if="mobileStore.activeBottomPanel === 'exportFormat'"
+                    v-else-if="
+                        windowStore.activeLeftPanelName === 'exportFormat'
+                    "
                 />
             </div>
         </section>
@@ -32,7 +34,8 @@
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue';
 import { useSwipeGesture } from '@/composables/useSwipeGesture';
-import { useMobileEditorStore } from '@/stores/mobileEditorStore';
+import { useMobileUiStore } from '@/stores/mobileUiStore';
+import { useWindowStore } from '@/stores/windowStore';
 
 const ChunkListPanel = defineAsyncComponent(
     () => import('@/components/panels/ChunkListPanel.vue'),
@@ -50,7 +53,8 @@ const SearchPanel = defineAsyncComponent(
     () => import('@/components/panels/SearchPanel.vue'),
 );
 
-const mobileStore = useMobileEditorStore();
+const mobileUiStore = useMobileUiStore();
+const windowStore = useWindowStore();
 const closeGesture = useSwipeGesture({
     direction: 'down',
     canStart: (event) => {
@@ -61,7 +65,7 @@ const closeGesture = useSwipeGesture({
                 : null;
         return !(body instanceof HTMLElement) || body.scrollTop === 0;
     },
-    onSwipe: mobileStore.closeBottomPanel,
+    onSwipe: mobileUiStore.closeOverlay,
 });
 </script>
 

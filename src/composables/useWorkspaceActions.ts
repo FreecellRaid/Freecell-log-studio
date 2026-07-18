@@ -1,10 +1,11 @@
-import { useActiveContext } from '@/composables/useActiveContext';
 import { useProjectManager } from '@/composables/useProjectManager';
 import { useClipboardStore } from '@/stores/clipboardStore';
 import { useHistoryStore } from '@/stores/historyStore';
 import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
 import { useWindowStore } from '@/stores/windowStore';
+import { useSelectionStore } from '@/stores/selectionStore';
+import { useEditorSessionStore } from '@/stores/editorSessionStore';
 
 export function useWorkspaceActions() {
     const logStore = useLogStore();
@@ -12,7 +13,8 @@ export function useWorkspaceActions() {
     const clipboardStore = useClipboardStore();
     const historyStore = useHistoryStore();
     const windowStore = useWindowStore();
-    const activeContext = useActiveContext();
+    const selectionStore = useSelectionStore();
+    const editorSessionStore = useEditorSessionStore();
     const projectManager = useProjectManager();
 
     function saveCurrentProjectWithFeedback(options?: {
@@ -45,7 +47,8 @@ export function useWorkspaceActions() {
         logStore.clearData();
         styleStore.clearRules();
         clipboardStore.clearClipboard();
-        activeContext.clearSelection();
+        selectionStore.clearAllSelections();
+        editorSessionStore.stopEditing();
         historyStore.clearHistory();
         windowStore.setFocus(options?.focusTarget ?? 'default');
         options?.afterClear?.();

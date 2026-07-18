@@ -117,6 +117,10 @@ function SelectionStore() {
         }
     }
 
+    function clearAllSelections() {
+        selections.value = new Map();
+    }
+
     function getSelectedIds(
         windowId: string,
         type: SelectionType,
@@ -305,6 +309,7 @@ function SelectionStore() {
         select,
         deselect,
         clearSelection,
+        clearAllSelections,
         getSelectedIds,
         getSelectedItems,
         selectNext,

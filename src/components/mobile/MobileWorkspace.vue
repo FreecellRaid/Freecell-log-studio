@@ -6,7 +6,7 @@
             <button
                 class="mobile-primary-button"
                 type="button"
-                @click="mobileStore.openBottomPanel('chunkList')"
+                @click="openChunkList"
             >
                 打开场景列表
             </button>
@@ -31,7 +31,9 @@ import { MessagesSquare } from '@lucide/vue';
 import MobileMessageList from '@/components/mobile/MobileMessageList.vue';
 import { useLogEditorStore } from '@/stores/editorStore';
 import { useLogStore } from '@/stores/logStore';
-import { useMobileEditorStore } from '@/stores/mobileEditorStore';
+import { useMobileUiStore } from '@/stores/mobileUiStore';
+import { useEditorSessionStore } from '@/stores/editorSessionStore';
+import { useActiveContext } from '@/composables/useActiveContext';
 import { useStyleStore } from '@/stores/styleStore';
 import { useUiStore } from '@/stores/uiStore';
 import { useWindowStore } from '@/stores/windowStore';
@@ -42,7 +44,8 @@ const uiStore = useUiStore();
 const styleStore = useStyleStore();
 const windowStore = useWindowStore();
 const editorStore = useLogEditorStore();
-const mobileStore = useMobileEditorStore();
+const mobileUiStore = useMobileUiStore();
+const editorSessionStore = useEditorSessionStore();
 
 const activeChunk = computed<Chunk | null>(() => {
     const currentView = windowStore.currentActiveView;
@@ -52,6 +55,7 @@ const activeChunk = computed<Chunk | null>(() => {
 
     return logStore.allChunks[0] ?? null;
 });
+const activeContext = useActiveContext(() => activeChunk.value?.chunkId);
 
 const visibleMessages = computed(() => {
     if (!activeChunk.value) return [];
@@ -67,7 +71,12 @@ const visibleMessages = computed(() => {
 });
 
 function startMessageEdit(message: Message) {
-    mobileStore.setEditingMessage(message);
+    editorSessionStore.startEditing({
+        kind: 'message',
+        chunkId: message.chunkId,
+        messageId: message.messageId,
+    });
+    mobileUiStore.openSheet('message');
 }
 
 function insertAfter(message: Message, index: number) {
@@ -88,14 +97,23 @@ function deleteMessage(messageId: string) {
     if (!activeChunk.value) return;
     if (!window.confirm('确定要删除这条消息吗？')) return;
     editorStore.deleteMessage(activeChunk.value.chunkId, messageId);
-    if (mobileStore.selectedMessageId === messageId) {
-        mobileStore.selectMessage(messageId);
+    if (activeContext.selectedMessageIds.value.has(messageId)) {
+        activeContext.clearMessageSelection();
     }
+}
+
+function openChunkList() {
+    windowStore.setLeftPanel('chunkList', { revealSidebar: false });
+    mobileUiStore.openBottomPanel();
 }
 
 function startChunkRename() {
     if (!activeChunk.value) return;
-    mobileStore.startChunkRename(activeChunk.value);
+    editorSessionStore.startEditing({
+        kind: 'chunkName',
+        chunkId: activeChunk.value.chunkId,
+    });
+    mobileUiStore.openSheet('chunkName');
 }
 </script>
 
@@ -125,5 +143,4 @@ function startChunkRename() {
     height: 56px;
     color: var(--icon-color);
 }
-
 </style>

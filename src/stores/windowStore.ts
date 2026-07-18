@@ -81,13 +81,18 @@ function windowStore() {
     }
 
     // 切换左侧面板内容
-    function setLeftPanel(name: WindowName) {
+    function setLeftPanel(
+        name: WindowName,
+        options: { revealSidebar?: boolean } = {},
+    ) {
         if (activeLeftPanelName.value && activeLeftPanelName.value !== name) {
             unregisterWindow(activeLeftPanelName.value);
         }
 
         activeLeftPanelName.value = name;
-        leftSidebarVisible.value = true;
+        if (options.revealSidebar !== false) {
+            leftSidebarVisible.value = true;
+        }
         registerWindow({
             windowId: name,
             windowName: name,

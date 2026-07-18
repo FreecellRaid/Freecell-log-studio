@@ -10,16 +10,16 @@
         <MobileWorkspace />
         <MobileHistoryFloat />
         <MobilePanelDock />
-        <MobileBottomPanelDrawer v-if="mobileStore.activeBottomPanel" />
-        <MobileLeftDrawer v-if="mobileStore.leftDrawerOpen" />
-        <MobileActiveSheet v-if="mobileStore.activeSheet" />
+        <MobileBottomPanelDrawer v-if="mobileUiStore.bottomPanelOpen" />
+        <MobileLeftDrawer v-if="mobileUiStore.leftDrawerOpen" />
+        <MobileActiveSheet v-if="mobileUiStore.activeSheet" />
     </div>
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent } from 'vue';
+import { defineAsyncComponent, onUnmounted } from 'vue';
 import { useSwipeGesture } from '@/composables/useSwipeGesture';
-import { useMobileEditorStore } from '@/stores/mobileEditorStore';
+import { useMobileUiStore } from '@/stores/mobileUiStore';
 import { useWindowStore } from '@/stores/windowStore';
 import type { MobileBottomPanelName } from '@/types/mobile';
 
@@ -49,7 +49,7 @@ const MobileWorkspace = defineAsyncComponent(
 );
 
 const windowStore = useWindowStore();
-const mobileStore = useMobileEditorStore();
+const mobileUiStore = useMobileUiStore();
 
 const bottomPanelNames: MobileBottomPanelName[] = [
     'chunkList',
@@ -62,7 +62,7 @@ const bottomPanelNames: MobileBottomPanelName[] = [
 const openLeftDrawerGesture = useSwipeGesture({
     direction: 'right',
     canStart: (event) => !hasOpenOverlay() && event.touches[0].clientX <= 24,
-    onSwipe: mobileStore.openLeftDrawer,
+    onSwipe: mobileUiStore.openLeftDrawer,
 });
 const openBottomDrawerGesture = useSwipeGesture({
     direction: 'up',
@@ -76,18 +76,13 @@ const openBottomDrawerGesture = useSwipeGesture({
         )
             ? (activePanel as MobileBottomPanelName)
             : 'chunkList';
-        mobileStore.openBottomPanel(panel);
-        windowStore.setLeftPanel(panel);
+        windowStore.setLeftPanel(panel, { revealSidebar: false });
+        mobileUiStore.openBottomPanel();
     },
 });
 
 function hasOpenOverlay() {
-    return Boolean(
-        mobileStore.leftDrawerOpen ||
-        mobileStore.activeBottomPanel ||
-        mobileStore.activeSheet ||
-        windowStore.isHelpOpen,
-    );
+    return Boolean(mobileUiStore.activeOverlay || windowStore.isHelpOpen);
 }
 
 function handleTouchStart(event: TouchEvent) {
@@ -104,4 +99,6 @@ function handleTouchCancel() {
     openLeftDrawerGesture.onTouchCancel();
     openBottomDrawerGesture.onTouchCancel();
 }
+
+onUnmounted(mobileUiStore.reset);
 </script>

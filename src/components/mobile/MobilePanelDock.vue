@@ -5,7 +5,9 @@
             :key="item.name"
             type="button"
             :class="{
-                'is-active': mobileStore.activeBottomPanel === item.name,
+                'is-active':
+                    mobileUiStore.bottomPanelOpen &&
+                    windowStore.activeLeftPanelName === item.name,
             }"
             @click="togglePanel(item.name)"
         >
@@ -23,11 +25,11 @@ import {
     TextInitial,
     UserRound,
 } from '@lucide/vue';
-import { useMobileEditorStore } from '@/stores/mobileEditorStore';
+import { useMobileUiStore } from '@/stores/mobileUiStore';
 import { useWindowStore } from '@/stores/windowStore';
 import type { MobileBottomPanelName } from '@/types/mobile';
 
-const mobileStore = useMobileEditorStore();
+const mobileUiStore = useMobileUiStore();
 const windowStore = useWindowStore();
 
 const bottomPanels: Array<{
@@ -43,11 +45,15 @@ const bottomPanels: Array<{
 ];
 
 function togglePanel(panelName: MobileBottomPanelName) {
-    const shouldOpen = mobileStore.activeBottomPanel !== panelName;
-    mobileStore.toggleBottomPanel(panelName);
-    if (shouldOpen) {
-        windowStore.setLeftPanel(panelName);
+    const isCurrentOpen =
+        mobileUiStore.bottomPanelOpen &&
+        windowStore.activeLeftPanelName === panelName;
+    if (isCurrentOpen) {
+        mobileUiStore.closeOverlay();
+        return;
     }
+    windowStore.setLeftPanel(panelName, { revealSidebar: false });
+    mobileUiStore.openBottomPanel();
 }
 </script>
 

@@ -223,6 +223,7 @@ import { useLogEditorStore } from '@/stores/editorStore';
 import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
 import { useWindowStore } from '@/stores/windowStore';
+import { useEditorSessionStore } from '@/stores/editorSessionStore';
 import type { Chunk, LogDocument } from '@/types/log';
 import { useActiveContext } from '@/composables/useActiveContext';
 import { vClickOutside } from '@/directives/clickOutside';
@@ -231,6 +232,7 @@ const logStore = useLogStore();
 const styleStore = useStyleStore();
 const windowStore = useWindowStore();
 const logEditorStore = useLogEditorStore();
+const editorSessionStore = useEditorSessionStore();
 const chunkDrag = useChunkDragDrop();
 const activeContext = useActiveContext('chunkList');
 
@@ -258,6 +260,7 @@ watch(
 );
 
 function startProjectNameEdit() {
+    editorSessionStore.startEditing({ kind: 'projectName' });
     projectNameDraft.value = logStore.projectName;
     isEditingProjectName.value = true;
     nextTick(() => {
@@ -270,11 +273,13 @@ function submitProjectName() {
     logStore.setProjectName(projectNameDraft.value.trim());
     projectNameDraft.value = logStore.projectName;
     isEditingProjectName.value = false;
+    editorSessionStore.stopEditing();
 }
 
 function resetProjectNameDraft() {
     projectNameDraft.value = logStore.projectName;
     isEditingProjectName.value = false;
+    editorSessionStore.stopEditing();
 }
 
 function handleToggleExpand(doc: LogDocument) {
@@ -298,11 +303,15 @@ function focusRenameInput() {
 function cancelRename() {
     renameTarget.value = null;
     renameDraft.value = '';
+    editorSessionStore.stopEditing();
 }
 
 function startRename(kind: 'document' | 'chunk', id: string, name: string) {
     renameTarget.value = { kind, id };
     renameDraft.value = name;
+    if (kind === 'chunk') {
+        editorSessionStore.startEditing({ kind: 'chunkName', chunkId: id });
+    }
     focusRenameInput();
 }
 
