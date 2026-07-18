@@ -27,13 +27,13 @@ import {
 } from '@lucide/vue';
 import { useMobileUiStore } from '@/stores/mobileUiStore';
 import { useWindowStore } from '@/stores/windowStore';
-import type { MobileBottomPanelName } from '@/types/mobile';
+import type { WindowName } from '@/types/window';
 
 const mobileUiStore = useMobileUiStore();
 const windowStore = useWindowStore();
 
 const bottomPanels: Array<{
-    name: MobileBottomPanelName;
+    name: WindowName;
     label: string;
     icon: typeof FolderOpen;
 }> = [
@@ -44,7 +44,7 @@ const bottomPanels: Array<{
     { name: 'exportFormat', label: '模板', icon: TextInitial },
 ];
 
-function togglePanel(panelName: MobileBottomPanelName) {
+function togglePanel(panelName: WindowName) {
     const isCurrentOpen =
         mobileUiStore.bottomPanelOpen &&
         windowStore.activeLeftPanelName === panelName;

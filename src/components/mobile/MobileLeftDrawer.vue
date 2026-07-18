@@ -37,7 +37,7 @@
                 <button
                     class="drawer-row"
                     type="button"
-                    @click="showStoredProjects"
+                    @click="openLatestStoredProject"
                 >
                     <span class="drawer-row-icon">
                         <FolderOpen class="ui-icon" />
@@ -145,8 +145,13 @@ function startProjectNameEdit() {
     mobileUiStore.openSheet('projectName');
 }
 
-function showStoredProjects() {
-    mobileUiStore.openSheet('storedProjects');
+function openLatestStoredProject() {
+    const latestProject = workspaceActions.getStoredProjects()[0];
+    if (!latestProject) return;
+
+    if (workspaceActions.openStoredProject(latestProject.projectId)) {
+        mobileUiStore.reset();
+    }
 }
 
 function clearAll() {

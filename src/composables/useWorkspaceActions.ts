@@ -57,6 +57,8 @@ export function useWorkspaceActions() {
 
     return {
         hasWorkspaceState: projectManager.hasWorkspaceState,
+        getStoredProjects: projectManager.getStoredProjects,
+        openStoredProject: projectManager.openStoredProject,
         saveCurrentProjectWithFeedback,
         clearWorkspaceWithConfirmation,
     };

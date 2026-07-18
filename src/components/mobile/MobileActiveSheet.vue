@@ -66,17 +66,6 @@
                     />
                 </label>
             </div>
-
-            <div
-                v-else-if="mobileUiStore.activeSheet === 'storedProjects'"
-                class="mobile-stored-projects"
-            >
-                <StoredProjectsPopover
-                    :projects="storedProjects"
-                    @refresh="refreshStoredProjects"
-                    @close="closeSheet"
-                />
-            </div>
         </section>
     </div>
 </template>
@@ -92,21 +81,16 @@ import { useLogEditorStore } from '@/stores/editorStore';
 import { useLogStore } from '@/stores/logStore';
 import { useMobileUiStore } from '@/stores/mobileUiStore';
 import { useEditorSessionStore } from '@/stores/editorSessionStore';
-import { useProjectManager } from '@/composables/useProjectManager';
 import { useSwipeGesture } from '@/composables/useSwipeGesture';
 
 const MessageDetailEditor = defineAsyncComponent(
     () => import('@/components/common/MessageDetailEditor.vue'),
-);
-const StoredProjectsPopover = defineAsyncComponent(
-    () => import('@/components/popovers/StoredProjectsPopover.vue'),
 );
 
 const mobileUiStore = useMobileUiStore();
 const editorSessionStore = useEditorSessionStore();
 const logStore = useLogStore();
 const editorStore = useLogEditorStore();
-const projectManager = useProjectManager();
 const editingMessage = computed(() => {
     const target = editorSessionStore.activeTarget;
     if (target?.kind !== 'message') return null;
@@ -128,7 +112,6 @@ const chunkNameDraft = ref(
               ?.chunkName ?? '')
         : '',
 );
-const storedProjects = ref(projectManager.getStoredProjects());
 const closeGesture = useSwipeGesture({
     direction: 'down',
     canStart: (event) => {
@@ -148,8 +131,6 @@ const title = computed(() => {
             return '项目名';
         case 'chunkName':
             return '场景名';
-        case 'storedProjects':
-            return '本地快照';
         default:
             return '';
     }
@@ -195,10 +176,6 @@ function commitChunkName() {
     });
 }
 
-function refreshStoredProjects() {
-    storedProjects.value = projectManager.getStoredProjects();
-}
-
 function closeSheet() {
     mobileUiStore.closeOverlay();
     editorSessionStore.stopEditing();
@@ -207,7 +184,7 @@ function closeSheet() {
 watch(
     () => editorSessionStore.activeTarget,
     (target) => {
-        if (!target && mobileUiStore.activeSheet !== 'storedProjects') {
+        if (!target) {
             mobileUiStore.closeOverlay();
         }
     },
