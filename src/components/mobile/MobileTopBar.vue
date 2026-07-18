@@ -47,12 +47,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { defineAsyncComponent, ref } from 'vue';
 import { Download, PanelLeftOpen, Upload } from '@lucide/vue';
-import ExportPopover from '@/components/popovers/ExportPopover.vue';
 import { useFileImportInput } from '@/composables/useImporter';
 import { useLogStore } from '@/stores/logStore';
 import { useMobileEditorStore } from '@/stores/mobileEditorStore';
+
+const ExportPopover = defineAsyncComponent(
+    () => import('@/components/popovers/ExportPopover.vue'),
+);
 
 const showExportPopover = ref(false);
 const logStore = useLogStore();

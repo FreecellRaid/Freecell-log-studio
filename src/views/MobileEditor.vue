@@ -5,22 +5,42 @@
         <MobileWorkspace />
         <MobileHistoryFloat />
         <MobilePanelDock />
-        <MobileBottomPanelDrawer />
-        <MobileLeftDrawer />
-        <MobileActiveSheet />
+        <MobileBottomPanelDrawer v-if="mobileStore.activeBottomPanel" />
+        <MobileLeftDrawer v-if="mobileStore.leftDrawerOpen" />
+        <MobileActiveSheet v-if="mobileStore.activeSheet" />
     </div>
 </template>
 
 <script setup lang="ts">
-import HelpDocument from '@/components/common/HelpDocument.vue';
-import MobileActiveSheet from '@/components/mobile/MobileActiveSheet.vue';
-import MobileBottomPanelDrawer from '@/components/mobile/MobileBottomPanelDrawer.vue';
-import MobileHistoryFloat from '@/components/mobile/MobileHistoryFloat.vue';
-import MobileLeftDrawer from '@/components/mobile/MobileLeftDrawer.vue';
-import MobilePanelDock from '@/components/mobile/MobilePanelDock.vue';
-import MobileTopBar from '@/components/mobile/MobileTopBar.vue';
-import MobileWorkspace from '@/components/mobile/MobileWorkspace.vue';
+import { defineAsyncComponent } from 'vue';
+import { useMobileEditorStore } from '@/stores/mobileEditorStore';
 import { useWindowStore } from '@/stores/windowStore';
 
+const HelpDocument = defineAsyncComponent(
+    () => import('@/components/common/HelpDocument.vue'),
+);
+const MobileActiveSheet = defineAsyncComponent(
+    () => import('@/components/mobile/MobileActiveSheet.vue'),
+);
+const MobileBottomPanelDrawer = defineAsyncComponent(
+    () => import('@/components/mobile/MobileBottomPanelDrawer.vue'),
+);
+const MobileHistoryFloat = defineAsyncComponent(
+    () => import('@/components/mobile/MobileHistoryFloat.vue'),
+);
+const MobileLeftDrawer = defineAsyncComponent(
+    () => import('@/components/mobile/MobileLeftDrawer.vue'),
+);
+const MobilePanelDock = defineAsyncComponent(
+    () => import('@/components/mobile/MobilePanelDock.vue'),
+);
+const MobileTopBar = defineAsyncComponent(
+    () => import('@/components/mobile/MobileTopBar.vue'),
+);
+const MobileWorkspace = defineAsyncComponent(
+    () => import('@/components/mobile/MobileWorkspace.vue'),
+);
+
 const windowStore = useWindowStore();
+const mobileStore = useMobileEditorStore();
 </script>

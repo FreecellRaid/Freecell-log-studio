@@ -86,18 +86,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, defineAsyncComponent } from 'vue';
 import { X } from '@lucide/vue';
-import MessageDetailEditor from '@/components/common/MessageDetailEditor.vue';
 import type {
     MessageDetailTextField,
     MessageDetailValues,
 } from '@/components/common/MessageDetailEditor.vue';
-import StoredProjectsPopover from '@/components/popovers/StoredProjectsPopover.vue';
 import { useLogEditorStore } from '@/stores/editorStore';
 import { useLogStore } from '@/stores/logStore';
 import { useMobileEditorStore } from '@/stores/mobileEditorStore';
 import { useProjectManager } from '@/composables/useProjectManager';
+
+const MessageDetailEditor = defineAsyncComponent(
+    () => import('@/components/common/MessageDetailEditor.vue'),
+);
+const StoredProjectsPopover = defineAsyncComponent(
+    () => import('@/components/popovers/StoredProjectsPopover.vue'),
+);
 
 const mobileStore = useMobileEditorStore();
 const logStore = useLogStore();
