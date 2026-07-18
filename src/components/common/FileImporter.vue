@@ -2,10 +2,10 @@
     <div
         class="file-importer"
         :class="{ 'is-file-dragging': isFileDragging }"
-        @dragenter="handleDragEnter"
-        @dragover="handleDragOver"
-        @dragleave="handleDragLeave"
-        @drop="handleDrop"
+        @dragenter.capture="handleDragEnter"
+        @dragover.capture="handleDragOver"
+        @dragleave.capture="handleDragLeave"
+        @drop.capture="handleDrop"
     >
         <slot />
 
@@ -41,6 +41,8 @@ function resetFileDragging() {
 function handleDragEnter(event: DragEvent) {
     if (!hasFileTransfer(event)) return;
     event.preventDefault();
+    // 避免 messageItem 的 drop.stop 阻止事件冒泡导致无法收到 drag 事件
+    event.stopPropagation();
     fileDragDepth.value += 1;
     isFileDragging.value = true;
 }
@@ -48,6 +50,7 @@ function handleDragEnter(event: DragEvent) {
 function handleDragOver(event: DragEvent) {
     if (!hasFileTransfer(event)) return;
     event.preventDefault();
+    event.stopPropagation();
     isFileDragging.value = true;
     if (event.dataTransfer) {
         event.dataTransfer.dropEffect = 'copy';
@@ -57,6 +60,7 @@ function handleDragOver(event: DragEvent) {
 function handleDragLeave(event: DragEvent) {
     if (!hasFileTransfer(event)) return;
     event.preventDefault();
+    event.stopPropagation();
     fileDragDepth.value = Math.max(0, fileDragDepth.value - 1);
     if (fileDragDepth.value === 0) {
         isFileDragging.value = false;
@@ -66,6 +70,7 @@ function handleDragLeave(event: DragEvent) {
 async function handleDrop(event: DragEvent) {
     if (!hasFileTransfer(event)) return;
     event.preventDefault();
+    event.stopPropagation();
     const files = event.dataTransfer?.files;
     resetFileDragging();
 
