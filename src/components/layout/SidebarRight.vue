@@ -1,5 +1,8 @@
 <template>
-    <div :style="{ width: uiStore.rightPanelWidth + 'px' }">
+    <div
+        class="sidebar-right-container"
+        :style="{ width: uiStore.rightPanelWidth + 'px' }"
+    >
         <div
             class="resize-handle resize-handle-x resize-handle-overlay resize-handle-left-edge"
             @mousedown="startResize"
@@ -304,6 +307,11 @@ function updateField(
 </script>
 
 <style scoped>
+.sidebar-right-container {
+    height: 100%;
+    min-height: 0;
+}
+
 .inspector-content {
     flex: 1;
     min-height: 0;
