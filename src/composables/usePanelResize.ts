@@ -22,15 +22,31 @@ export function usePanelResize(options: UsePanelResizeOptions) {
         const direction = options.edge === 'right' ? 1 : -1;
         const minWidth = options.minWidth ?? PANEL_MIN_WIDTH;
         const maxWidth = options.maxWidth ?? PANEL_MAX_WIDTH;
+        let frameId: number | null = null;
+        let pendingWidth = startWidth;
+
+        function applyPendingWidth() {
+            frameId = null;
+            options.setWidth(pendingWidth);
+        }
 
         function onMouseMove(ev: MouseEvent) {
             const delta = ev.clientX - startX;
-            options.setWidth(
-                clampWidth(startWidth + delta * direction, minWidth, maxWidth),
+            pendingWidth = clampWidth(
+                startWidth + delta * direction,
+                minWidth,
+                maxWidth,
             );
+            if (frameId === null) {
+                frameId = requestAnimationFrame(applyPendingWidth);
+            }
         }
 
         function onMouseUp() {
+            if (frameId !== null) {
+                cancelAnimationFrame(frameId);
+                applyPendingWidth();
+            }
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
             document.body.style.cursor = '';

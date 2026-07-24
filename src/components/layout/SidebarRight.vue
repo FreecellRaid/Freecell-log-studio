@@ -23,190 +23,171 @@
                     </div>
                 </div>
 
-                <div v-for="chunk in allChunks" :key="chunk.chunkId">
-                    <div
-                        v-for="message in chunk.messages"
-                        :key="message.messageId"
-                        v-show="
-                            activeContext.selectedMessageIds.value.has(
-                                message.messageId,
-                            )
-                        "
-                        class="message-detail-card"
-                    >
-                        <div class="card-header">
-                            <span class="id-badge">
-                                ID: {{ message.messageId }}
-                            </span>
+                <div
+                    v-for="{ message, chunkId } in selectedItems"
+                    :key="message.messageId"
+                    class="message-detail-card"
+                >
+                    <div class="card-header">
+                        <span class="id-badge">
+                            ID: {{ message.messageId }}
+                        </span>
+                    </div>
+
+                    <div class="property-grid">
+                        <div class="prop-item-time">
+                            <label>时间:</label>
+                            <div>{{ formatDate(message.time) }}</div>
                         </div>
 
-                        <div class="property-grid">
-                            <div class="prop-item-time">
-                                <label>时间:</label>
-                                <div>{{ formatDate(message.time) }}</div>
-                            </div>
-
-                            <div class="prop-item">
-                                <label>玩家名</label>
-                                <input
-                                    type="text"
-                                    :value="
-                                        getDraftValue(message, 'playerName')
-                                    "
-                                    @input="
-                                        updateDraft(
-                                            message,
-                                            'playerName',
-                                            $event,
-                                        )
-                                    "
-                                    v-click-outside="
-                                        () =>
-                                            commitDraft(
-                                                chunk.chunkId,
-                                                message.messageId,
-                                                'playerName',
-                                            )
-                                    "
-                                    @keydown.enter.exact.prevent="
+                        <div class="prop-item">
+                            <label>玩家名</label>
+                            <input
+                                type="text"
+                                :value="getDraftValue(message, 'playerName')"
+                                @input="
+                                    updateDraft(message, 'playerName', $event)
+                                "
+                                v-click-outside="
+                                    () =>
                                         commitDraft(
-                                            chunk.chunkId,
+                                            chunkId,
                                             message.messageId,
                                             'playerName',
                                         )
-                                    "
-                                />
-                            </div>
+                                "
+                                @keydown.enter.exact.prevent="
+                                    commitDraft(
+                                        chunkId,
+                                        message.messageId,
+                                        'playerName',
+                                    )
+                                "
+                            />
+                        </div>
 
-                            <div class="prop-item">
-                                <label>账号</label>
-                                <input
-                                    type="text"
-                                    :value="getDraftValue(message, 'account')"
-                                    @input="
-                                        updateDraft(message, 'account', $event)
-                                    "
-                                    v-click-outside="
-                                        () =>
-                                            commitDraft(
-                                                chunk.chunkId,
-                                                message.messageId,
-                                                'account',
-                                            )
-                                    "
-                                    @keydown.enter.exact.prevent="
+                        <div class="prop-item">
+                            <label>账号</label>
+                            <input
+                                type="text"
+                                :value="getDraftValue(message, 'account')"
+                                @input="updateDraft(message, 'account', $event)"
+                                v-click-outside="
+                                    () =>
                                         commitDraft(
-                                            chunk.chunkId,
+                                            chunkId,
                                             message.messageId,
                                             'account',
                                         )
-                                    "
-                                />
-                            </div>
+                                "
+                                @keydown.enter.exact.prevent="
+                                    commitDraft(
+                                        chunkId,
+                                        message.messageId,
+                                        'account',
+                                    )
+                                "
+                            />
+                        </div>
 
-                            <div class="prop-item">
-                                <label>身份</label>
-                                <select
-                                    :value="message.role"
-                                    @change="
-                                        updateField(
-                                            chunk.chunkId,
-                                            message.messageId,
-                                            'role',
-                                            $event,
-                                        )
-                                    "
-                                >
-                                    <option value="pl">玩家</option>
-                                    <option value="gm">主持人</option>
-                                    <option value="npc">NPC</option>
-                                    <option value="ob">观众</option>
-                                    <option value="bot">骰子</option>
-                                </select>
-                            </div>
-                            <div class="prop-row">
-                                <ToggleButton
-                                    :model-value="message.isOoc"
-                                    class="inspector-toggle"
-                                    @update:model-value="
-                                        updateBooleanField(
-                                            chunk.chunkId,
-                                            message.messageId,
-                                            'isOoc',
-                                            Boolean($event),
-                                        )
-                                    "
-                                >
-                                    场外消息
-                                </ToggleButton>
-                                <ToggleButton
-                                    :model-value="message.isCommand"
-                                    class="inspector-toggle"
-                                    @update:model-value="
-                                        updateBooleanField(
-                                            chunk.chunkId,
-                                            message.messageId,
-                                            'isCommand',
-                                            Boolean($event),
-                                        )
-                                    "
-                                >
-                                    指令消息
-                                </ToggleButton>
-                            </div>
+                        <div class="prop-item">
+                            <label>身份</label>
+                            <select
+                                :value="message.role"
+                                @change="
+                                    updateField(
+                                        chunkId,
+                                        message.messageId,
+                                        'role',
+                                        $event,
+                                    )
+                                "
+                            >
+                                <option value="pl">玩家</option>
+                                <option value="gm">主持人</option>
+                                <option value="npc">NPC</option>
+                                <option value="ob">观众</option>
+                                <option value="bot">骰子</option>
+                            </select>
+                        </div>
+                        <div class="prop-row">
+                            <ToggleButton
+                                :model-value="message.isOoc"
+                                class="inspector-toggle"
+                                @update:model-value="
+                                    updateBooleanField(
+                                        chunkId,
+                                        message.messageId,
+                                        'isOoc',
+                                        Boolean($event),
+                                    )
+                                "
+                            >
+                                场外消息
+                            </ToggleButton>
+                            <ToggleButton
+                                :model-value="message.isCommand"
+                                class="inspector-toggle"
+                                @update:model-value="
+                                    updateBooleanField(
+                                        chunkId,
+                                        message.messageId,
+                                        'isCommand',
+                                        Boolean($event),
+                                    )
+                                "
+                            >
+                                指令消息
+                            </ToggleButton>
+                        </div>
 
-                            <div class="prop-item full-width">
-                                <label>消息内容</label>
-                                <textarea
-                                    :value="getDraftValue(message, 'content')"
-                                    @input="
-                                        updateDraft(message, 'content', $event)
-                                    "
-                                    v-click-outside="
-                                        () =>
-                                            commitDraft(
-                                                chunk.chunkId,
-                                                message.messageId,
-                                                'content',
-                                            )
-                                    "
-                                    @keydown.enter.exact.prevent="
+                        <div class="prop-item full-width">
+                            <label>消息内容</label>
+                            <textarea
+                                :value="getDraftValue(message, 'content')"
+                                @input="updateDraft(message, 'content', $event)"
+                                v-click-outside="
+                                    () =>
                                         commitDraft(
-                                            chunk.chunkId,
+                                            chunkId,
                                             message.messageId,
                                             'content',
                                         )
-                                    "
-                                    rows="5"
-                                ></textarea>
-                            </div>
+                                "
+                                @keydown.enter.exact.prevent="
+                                    commitDraft(
+                                        chunkId,
+                                        message.messageId,
+                                        'content',
+                                    )
+                                "
+                                rows="5"
+                            ></textarea>
+                        </div>
 
-                            <div class="prop-item full-width">
-                                <label>备注</label>
-                                <input
-                                    type="text"
-                                    :value="getDraftValue(message, 'note')"
-                                    @input="
-                                        updateDraft(message, 'note', $event)
-                                    "
-                                    v-click-outside="
-                                        () =>
-                                            commitDraft(
-                                                chunk.chunkId,
-                                                message.messageId,
-                                                'note',
-                                            )
-                                    "
-                                    @keydown.enter.exact.prevent="
+                        <div class="prop-item full-width">
+                            <label>备注</label>
+                            <input
+                                type="text"
+                                :value="getDraftValue(message, 'note')"
+                                @input="updateDraft(message, 'note', $event)"
+                                v-click-outside="
+                                    () =>
                                         commitDraft(
-                                            chunk.chunkId,
+                                            chunkId,
                                             message.messageId,
                                             'note',
                                         )
-                                    "
-                                    placeholder="备注信息..."
-                                />
-                            </div>
+                                "
+                                @keydown.enter.exact.prevent="
+                                    commitDraft(
+                                        chunkId,
+                                        message.messageId,
+                                        'note',
+                                    )
+                                "
+                                placeholder="备注信息..."
+                            />
                         </div>
                     </div>
                 </div>
@@ -232,7 +213,6 @@ const activeContext = useActiveContext();
 const logStore = useLogStore();
 const logEditorStore = useLogEditorStore();
 const uiStore = useUiStore();
-const allChunks = computed(() => logStore.allChunks);
 const { startResize } = usePanelResize({
     edge: 'left',
     getWidth: () => uiStore.rightPanelWidth,
