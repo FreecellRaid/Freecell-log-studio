@@ -92,13 +92,13 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { IdCard, UserRound } from '@lucide/vue';
-import { useStyleStore } from '@/stores/styleStore';
-import { useLogStore } from '@/stores/logStore';
-import { useHistoryStore } from '@/stores/historyStore';
-import { useLogEditorStore } from '@/stores/editorStore';
+import { useStyleStore } from '@/stores/project/styleStore';
+import { useLogStore } from '@/stores/project/logStore';
+import { useHistoryStore } from '@/stores/editor/historyStore';
+import { useLogEditorStore } from '@/stores/project/logEditorStore';
 import type { RoleType } from '@/types/log';
 import type { ColorMode, ColorRule } from '@/types/style';
-import { useWindowStore } from '@/stores/windowStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
 import {
     buildIdentityStats,
     collectMessageIdsByIdentity,

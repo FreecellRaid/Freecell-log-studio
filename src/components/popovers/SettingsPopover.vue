@@ -57,8 +57,8 @@
 
 <script setup lang="ts">
 import ToggleButton from '@/components/common/ToggleButton.vue';
-import { useStyleStore } from '@/stores/styleStore';
-import { useUiStore } from '@/stores/uiStore';
+import { useStyleStore } from '@/stores/project/styleStore';
+import { useUiStore } from '@/stores/ui/uiStore';
 
 const uiStore = useUiStore();
 const styleStore = useStyleStore();

@@ -173,11 +173,11 @@ import {
     type RenderedExportSegment,
 } from '@/io/export/exportRender';
 import { flattenLogToRows } from '@/io/export/flattener';
-import { useExportStore } from '@/stores/exportStore';
-import { useLogStore } from '@/stores/logStore';
-import { useStyleStore } from '@/stores/styleStore';
-import { useUiStore } from '@/stores/uiStore';
-import { useWindowStore } from '@/stores/windowStore';
+import { useExportStore } from '@/stores/editor/exportStore';
+import { useLogStore } from '@/stores/project/logStore';
+import { useStyleStore } from '@/stores/project/styleStore';
+import { useUiStore } from '@/stores/ui/uiStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
 
 const logStore = useLogStore();
 const styleStore = useStyleStore();

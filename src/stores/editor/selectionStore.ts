@@ -1,0 +1,323 @@
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+
+type SelectionType = 'message' | 'chunk' | 'rule' | 'format';
+
+interface SelectionState {
+    selectionType: SelectionType;
+    ids: Set<string>;
+    anchorId?: string;
+    lastSelectedId?: string;
+}
+
+function SelectionStore() {
+    const selections = ref<Map<string, SelectionState>>(new Map());
+
+    function _getKey(windowId: string, type: SelectionType): string {
+        return `${windowId}::${type}`;
+    }
+
+    function getState(windowId: string, type: SelectionType): SelectionState {
+        if (windowId === 'defaultView') {
+            return {
+                selectionType: type,
+                ids: new Set(),
+            };
+        }
+
+        const key = _getKey(windowId, type);
+        if (!selections.value.has(key)) {
+            return createState(windowId, type);
+        }
+        return selections.value.get(key)!;
+    }
+
+    function createState(
+        windowId: string,
+        type: SelectionType,
+    ): SelectionState {
+        const key = _getKey(windowId, type);
+        const newState: SelectionState = {
+            selectionType: type,
+            ids: new Set(),
+        };
+        const newMap = new Map(selections.value);
+        newMap.set(key, newState);
+        selections.value = newMap;
+        return newState;
+    }
+
+    function select(
+        windowId: string,
+        type: SelectionType,
+        ids: string | string[],
+        isMulti: boolean = false,
+    ) {
+        const state = getState(windowId, type);
+        const idList = Array.isArray(ids) ? ids : [ids];
+
+        /**
+         * 选中一个或多个 ID
+         * @param isMulti - true: 添加到现有选区；false: 替换现有选区
+         */
+        const newIds = isMulti ? new Set(state.ids) : new Set<string>();
+
+        idList.forEach((id) => newIds.add(id));
+        state.ids = newIds;
+
+        if (idList.length > 0) {
+            state.lastSelectedId = idList[idList.length - 1];
+            if (!isMulti) {
+                state.anchorId = state.lastSelectedId;
+            }
+        }
+    }
+
+    function deselect(
+        windowId: string,
+        type: SelectionType,
+        ids: string | string[],
+    ) {
+        const state = getState(windowId, type);
+        const idList = Array.isArray(ids) ? ids : [ids];
+        const newIds = new Set(state.ids);
+
+        idList.forEach((id) => newIds.delete(id));
+        state.ids = newIds;
+
+        // 如果最后选中的元素被移除了，重置 lastSelectedId
+        if (state.lastSelectedId && idList.includes(state.lastSelectedId)) {
+            state.lastSelectedId = Array.from(newIds).pop();
+        }
+    }
+
+    function clearSelection(windowId: string, type?: SelectionType) {
+        if (windowId === 'defaultView') return;
+
+        const newMap = new Map(selections.value);
+        let hasChanges = false;
+
+        if (type) {
+            const key = _getKey(windowId, type);
+            // 使用 delete 彻底移除键值对，防止内存泄露
+            if (newMap.has(key)) {
+                newMap.delete(key);
+                hasChanges = true;
+            }
+        } else {
+            for (const key of newMap.keys()) {
+                if (key.startsWith(`${windowId}::`)) {
+                    newMap.delete(key);
+                    hasChanges = true;
+                }
+            }
+        }
+        if (hasChanges) {
+            selections.value = newMap;
+        }
+    }
+
+    function clearAllSelections() {
+        selections.value = new Map();
+    }
+
+    function getSelectedIds(
+        windowId: string,
+        type: SelectionType,
+    ): Set<string> {
+        return getState(windowId, type).ids;
+    }
+
+    function getSelectedItems<T>(
+        windowId: string,
+        type: SelectionType,
+        sourceItems: T[],
+        idGetter: (item: T) => string,
+    ): T[] {
+        const ids = getSelectedIds(windowId, type);
+        if (ids.size === 0) return [];
+        return sourceItems.filter((item) => ids.has(idGetter(item)));
+    }
+
+    function selectNext(
+        windowId: string,
+        type: SelectionType,
+        items: any[],
+        idGetter: (item: any) => string = (i: any) => i.id,
+    ) {
+        const state = getState(windowId, type);
+        if (!state.lastSelectedId || items.length === 0) return;
+
+        const currentIndex = items.findIndex(
+            (item) => idGetter(item) === state.lastSelectedId,
+        );
+        if (currentIndex === -1 || currentIndex === items.length - 1) return;
+
+        const nextItem = items[currentIndex + 1];
+        if (nextItem) {
+            const nextId = idGetter(nextItem);
+            const newIds = new Set(state.ids);
+            newIds.add(nextId);
+            state.ids = newIds;
+            state.lastSelectedId = nextId;
+        }
+    }
+
+    function selectPrevious(
+        windowId: string,
+        type: SelectionType,
+        items: any[],
+        idGetter: (item: any) => string = (i: any) => i.id,
+    ) {
+        const state = getState(windowId, type);
+        if (!state.lastSelectedId || items.length === 0) return;
+
+        const currentIndex = items.findIndex(
+            (item) => idGetter(item) === state.lastSelectedId,
+        );
+        if (currentIndex <= 0) return;
+
+        const prevItem = items[currentIndex - 1];
+        if (prevItem) {
+            const prevId = idGetter(prevItem);
+            const newIds = new Set(state.ids);
+            newIds.add(prevId);
+            state.ids = newIds;
+            state.lastSelectedId = prevId;
+        }
+    }
+
+    /**
+     * 根据属性选中下一个匹配项
+     * @param windowId 窗口ID
+     * @param type 类型
+     * @param items 原始数据列表
+     * @param propertyName 匹配的属性键名
+     * @param idGetter 获取ID的方法
+     */
+    function selectNextByProperty<T>(
+        windowId: string,
+        type: SelectionType,
+        items: T[],
+        propertyName: keyof T,
+        idGetter: (item: T) => string,
+    ) {
+        const state = getState(windowId, type);
+        const lastId = state.lastSelectedId;
+        if (!lastId || items.length === 0) return;
+
+        const currentIndex = items.findIndex((i) => idGetter(i) === lastId);
+        if (currentIndex === -1) return;
+
+        const currentItem = items[currentIndex];
+        const targetValue = currentItem[propertyName];
+
+        // 从当前索引之后开始查找第一个匹配属性值的项
+        const nextMatch = items.slice(currentIndex + 1).find((item) => {
+            return item[propertyName] === targetValue;
+        });
+
+        if (nextMatch) {
+            const nextId = idGetter(nextMatch);
+            const newIds = new Set(state.ids);
+            newIds.add(nextId);
+            state.ids = newIds;
+            state.lastSelectedId = nextId;
+        }
+    }
+
+    function selectAll(
+        windowId: string,
+        type: SelectionType,
+        items: any[],
+        idGetter: (item: any) => string = (i: any) => i.id,
+    ) {
+        const state = getState(windowId, type);
+        const allIds = items.map((item) => idGetter(item));
+        state.ids = new Set(allIds);
+
+        if (allIds.length > 0) {
+            state.lastSelectedId = allIds[allIds.length - 1];
+        }
+    }
+
+    // cmd/sft 点选
+    function handleEventSelection<T>(
+        windowId: string,
+        type: SelectionType,
+        event: MouseEvent,
+        targetId: string,
+        items: T[],
+        idGetter: (item: T) => string,
+    ) {
+        const state = getState(windowId, type);
+        const isMulti = event.ctrlKey || event.metaKey;
+        const isRange = event.shiftKey;
+
+        if (isRange) {
+            window.getSelection()?.removeAllRanges();
+
+            const anchorId = state.anchorId || state.lastSelectedId;
+            if (!anchorId) {
+                select(windowId, type, targetId, false);
+                state.anchorId = targetId;
+            } else {
+                const anchorIndex = items.findIndex(
+                    (i) => idGetter(i) === anchorId,
+                );
+                const targetIndex = items.findIndex(
+                    (i) => idGetter(i) === targetId,
+                );
+
+                if (anchorIndex !== -1 && targetIndex !== -1) {
+                    const start = Math.min(anchorIndex, targetIndex);
+                    const end = Math.max(anchorIndex, targetIndex);
+
+                    const rangeIds = items.slice(start, end + 1).map(idGetter);
+
+                    const newIds = isMulti
+                        ? new Set(state.ids)
+                        : new Set<string>();
+                    rangeIds.forEach((id) => newIds.add(id));
+
+                    state.ids = newIds;
+                    state.lastSelectedId = targetId;
+                } else {
+                    select(windowId, type, targetId, false);
+                }
+            }
+        } else if (isMulti) {
+            const newIds = new Set(state.ids);
+            if (newIds.has(targetId)) {
+                newIds.delete(targetId);
+            } else {
+                newIds.add(targetId);
+            }
+            state.ids = newIds;
+            state.lastSelectedId = targetId;
+            state.anchorId = targetId;
+        } else {
+            select(windowId, type, targetId, false);
+            state.anchorId = targetId;
+        }
+    }
+
+    return {
+        selections,
+        getState,
+        createState,
+        select,
+        deselect,
+        clearSelection,
+        clearAllSelections,
+        getSelectedIds,
+        getSelectedItems,
+        selectNext,
+        selectPrevious,
+        selectNextByProperty,
+        selectAll,
+        handleEventSelection,
+    };
+}
+
+export const useSelectionStore = defineStore('selection', SelectionStore);

@@ -1,0 +1,176 @@
+import { computed, toValue } from 'vue';
+import type { MaybeRefOrGetter } from 'vue';
+import type { Message, MessageFilter } from '@/types/log';
+import { matchesMessageFilter } from '@/editor/filter';
+import { useLogStore } from '@/stores/project/logStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
+import { useSelectionStore } from '@/stores/editor/selectionStore';
+
+export function useActiveContext(
+    ownerId?: MaybeRefOrGetter<string | undefined>,
+) {
+    const logStore = useLogStore();
+    const windowStore = useWindowStore();
+    const selectionStore = useSelectionStore();
+
+    const effectiveId = computed(() => {
+        let targetId = ownerId ? toValue(ownerId) : undefined;
+        if (!targetId) {
+            const stack = windowStore.focusStack;
+            for (let i = stack.length - 1; i >= 0; i--) {
+                const windowId = stack[i];
+                const win = windowStore.openWindows.get(windowId);
+                if (!win || win.windowType === 'modal') continue;
+                targetId = windowId;
+                break;
+            }
+        }
+
+        if (!targetId) return 'defaultView';
+        const win = windowStore.openWindows.get(targetId);
+        return win?.originalId || targetId;
+    });
+    const selectedMessageIds = computed(() =>
+        selectionStore.getSelectedIds(effectiveId.value, 'message'),
+    );
+
+    const selectedChunkIds = computed(() =>
+        selectionStore.getSelectedIds(effectiveId.value, 'chunk'),
+    );
+
+    const lastSelectedMessageId = computed(
+        () =>
+            selectionStore.getState(effectiveId.value, 'message')
+                .lastSelectedId || null,
+    );
+
+    const hasSelection = computed(
+        () =>
+            selectedMessageIds.value.size > 0 ||
+            selectedChunkIds.value.size > 0,
+    );
+
+    const selectedMessagesCount = computed(() => selectedMessageIds.value.size);
+
+    // 获取选中的 Message 对象列表
+    const selectedMessages = computed(() => {
+        const ids = selectedMessageIds.value;
+        if (ids.size === 0) return [];
+
+        const result: Message[] = [];
+        ids.forEach((messageId) => {
+            const message = logStore.messagesById.get(messageId);
+            if (message) {
+                result.push(message);
+            }
+        });
+
+        if (result.length <= 1) {
+            return result;
+        }
+
+        result.sort(
+            (a, b) =>
+                (logStore.messageOrderById.get(a.messageId) ?? 0) -
+                (logStore.messageOrderById.get(b.messageId) ?? 0),
+        );
+        return result;
+    });
+
+    // 处理消息点击（集成 Sft/Cmd）
+    function handleMessageClickSelection(
+        event: MouseEvent,
+        messageId: string,
+        messages: Message[],
+    ) {
+        selectionStore.handleEventSelection(
+            effectiveId.value,
+            'message',
+            event,
+            messageId,
+            messages,
+            (m) => m.messageId,
+        );
+    }
+
+    function setMessagesSelection(ids: string[]) {
+        selectionStore.select(effectiveId.value, 'message', ids, false);
+    }
+
+    function clearMessageSelection() {
+        selectionStore.clearSelection(effectiveId.value, 'message');
+    }
+
+    // Chunk 相关操作
+    function handleChunkClickSelection(event: MouseEvent, chunkId: string) {
+        const allChunks = logStore.documents.flatMap((doc) => doc.chunks);
+
+        selectionStore.handleEventSelection(
+            effectiveId.value,
+            'chunk',
+            event,
+            chunkId,
+            allChunks,
+            (c) => c.chunkId,
+        );
+    }
+
+    function setChunkSelection(chunkIds: string[]) {
+        selectionStore.select(effectiveId.value, 'chunk', chunkIds, false);
+    }
+
+    function selectAllChunks() {
+        const allIds = logStore.documents.flatMap((doc) =>
+            doc.chunks.map((c) => c.chunkId),
+        );
+        selectionStore.select(effectiveId.value, 'chunk', allIds, false);
+    }
+
+    function clearChunkSelection() {
+        selectionStore.clearSelection(effectiveId.value, 'chunk');
+    }
+
+    function selectAllInChunk(chunkId: string) {
+        const chunk = logStore.findChunkById(chunkId);
+        if (chunk) {
+            const ids = chunk.messages.map((m) => m.messageId);
+            selectionStore.select(effectiveId.value, 'message', ids, false);
+        }
+    }
+
+    function selectMessagesByFilter(filter: MessageFilter) {
+        const matchedIds: string[] = [];
+        logStore.documents.forEach((doc) => {
+            doc.chunks.forEach((chunk) => {
+                chunk.messages.forEach((msg) => {
+                    if (matchesMessageFilter(msg, filter))
+                        matchedIds.push(msg.messageId);
+                });
+            });
+        });
+        selectionStore.select(effectiveId.value, 'message', matchedIds, true);
+    }
+
+    return {
+        effectiveId,
+        selectedMessageIds,
+        selectedChunkIds,
+        lastSelectedMessageId,
+        hasSelection,
+        selectedMessagesCount,
+        selectedMessages,
+
+        handleMessageClickSelection,
+        setMessagesSelection,
+        clearMessageSelection,
+
+        handleChunkClickSelection,
+        setChunkSelection,
+        selectAllChunks,
+        clearChunkSelection,
+
+        selectAllInChunk,
+        selectMessagesByFilter,
+        clearSelection: () => selectionStore.clearSelection(effectiveId.value),
+    };
+}

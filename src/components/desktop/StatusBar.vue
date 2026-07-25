@@ -1,0 +1,311 @@
+<template>
+    <div class="status-bar">
+        <div class="status-left">
+            <div class="status-item" title="选中消息命中的自定义染色规则数">
+                <Palette class="ui-icon" />
+                {{ selectedCustomRuleCount }} 条自定义规则
+            </div>
+            <div
+                class="status-item"
+                :title="
+                    styleStore.viewSettings.hideOoc
+                        ? '已隐藏 OOC 消息'
+                        : '显示 OOC 消息'
+                "
+            >
+                <MessageCircle class="ui-icon" />
+                场外消息 {{ styleStore.viewSettings.hideOoc ? '隐藏' : '显示' }}
+            </div>
+            <div
+                class="status-item"
+                :title="
+                    styleStore.viewSettings.hideCommand
+                        ? '已隐藏指令消息'
+                        : '显示指令消息'
+                "
+            >
+                <Command class="ui-icon" />
+                指令消息
+                {{ styleStore.viewSettings.hideCommand ? '隐藏' : '显示' }}
+            </div>
+        </div>
+
+        <div v-if="activeChunk || activeExportFormat" class="status-right">
+            <template v-if="activeChunk">
+                <div
+                    v-if="currentDocumentName"
+                    class="status-item status-item-truncate status-item-document"
+                    title="当前文档"
+                >
+                    <FolderOpen class="ui-icon" />
+                    {{ currentDocumentName }}
+                </div>
+                <div
+                    class="status-item status-item-truncate"
+                    title="当前焦点分块"
+                >
+                    <FileText class="ui-icon" />
+                    {{ activeChunkName }}
+                </div>
+                <div class="status-item" title="当前分块消息数（可见/总数）">
+                    <MessagesSquare class="ui-icon" />
+                    {{ activeChunkVisibleMsgs }} /
+                    {{ activeChunkTotalMsgs }} 可见/总数
+                </div>
+                <div class="status-item" v-if="selectedCount > 0">
+                    已选中 {{ selectedCount }} 条
+                </div>
+                <div
+                    class="status-item"
+                    v-if="currentSelectedIndex !== null"
+                    title="选中位置"
+                >
+                    Ln {{ currentSelectedIndex + 1 }}
+                </div>
+            </template>
+
+            <template v-else-if="activeExportFormat">
+                <div
+                    class="status-item status-item-truncate status-item-export-template"
+                    title="当前导出模板"
+                >
+                    <Eye class="ui-icon" />
+                    当前模板: {{ activeExportFormat.formatName }}
+                </div>
+                <div class="status-item" title="当前导出预览项数">
+                    <MessagesSquare class="ui-icon" />
+                    {{ exportPreviewRowCount }} 项
+                </div>
+            </template>
+        </div>
+    </div>
+</template>
+
+<script setup lang="ts">
+import {
+    Command,
+    Eye,
+    FileText,
+    FolderOpen,
+    MessageCircle,
+    MessagesSquare,
+    Palette,
+} from '@lucide/vue';
+import { computed } from 'vue';
+import { flattenLogToRows } from '@/io/export/flattener';
+import { renderExportDocument } from '@/io/export/exportRender';
+import { useExportStore } from '@/stores/editor/exportStore';
+import { useLogStore } from '@/stores/project/logStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
+import { useStyleStore } from '@/stores/project/styleStore';
+import { useActiveContext } from '@/composables/application/useActiveContext';
+import { matchesMessageFilter } from '@/editor/filter';
+
+const logStore = useLogStore();
+const windowStore = useWindowStore();
+const styleStore = useStyleStore();
+const exportStore = useExportStore();
+const activeContext = useActiveContext();
+
+const activeChunk = computed(function () {
+    if (windowStore.currentActiveView.windowName === 'chunkView') {
+        return logStore.findChunkById(windowStore.currentActiveView.originalId);
+    } else return null;
+});
+
+const activeExportFormat = computed(function () {
+    if (windowStore.currentActiveView.windowName !== 'exportPreview') {
+        return null;
+    }
+
+    return (
+        exportStore.formatById(windowStore.currentActiveView.originalId) ||
+        exportStore.activeFormat
+    );
+});
+
+const exportPreviewRowCount = computed(function () {
+    if (!activeExportFormat.value) return 0;
+
+    const rawRows = flattenLogToRows(
+        logStore.documents,
+        styleStore.viewSettings,
+        styleStore.activeRules,
+    );
+
+    return renderExportDocument(rawRows, activeExportFormat.value).blocks
+        .length;
+});
+
+const activeChunkName = computed(function () {
+    return activeChunk.value ? activeChunk.value.chunkName : '';
+});
+
+const activeChunkTotalMsgs = computed(function () {
+    return activeChunk.value ? activeChunk.value.messages.length : 0;
+});
+
+const activeChunkVisibleMsgs = computed(function () {
+    if (!activeChunk.value) return 0;
+
+    const messages = activeChunk.value.messages;
+    const { hideOoc, hideCommand } = styleStore.viewSettings;
+
+    if (!hideOoc && !hideCommand) {
+        return messages.length;
+    }
+
+    let count = 0;
+    for (let i = 0; i < messages.length; i++) {
+        const msg = messages[i];
+        const shouldHide =
+            (hideOoc && msg.isOoc) || (hideCommand && msg.isCommand);
+        if (!shouldHide) {
+            count++;
+        }
+    }
+    return count;
+});
+
+const currentDocumentName = computed(function () {
+    if (!activeChunk.value) {
+        return '';
+    }
+
+    const document = logStore.findDocumentById(activeChunk.value.docId);
+    return document ? document.docName : '';
+});
+
+const selectedCount = computed(function () {
+    return activeContext.selectedMessagesCount.value;
+});
+
+const selectedCustomRuleCount = computed(function () {
+    const selectedMessages = activeContext.selectedMessages.value;
+    const customRules = styleStore.customRules;
+
+    if (selectedMessages.length === 0 || customRules.length === 0) {
+        return 0;
+    }
+
+    let count = 0;
+    for (let i = 0; i < customRules.length; i++) {
+        const rule = customRules[i];
+        for (let j = 0; j < selectedMessages.length; j++) {
+            if (matchesMessageFilter(selectedMessages[j], rule.filter)) {
+                count++;
+                break;
+            }
+        }
+    }
+
+    return count;
+});
+
+const currentSelectedIndex = computed<number | null>(function () {
+    if (activeContext.selectedMessageIds.value.size === 0) {
+        return null;
+    }
+
+    if (activeChunk.value && activeContext.lastSelectedMessageId.value) {
+        const targetId = activeContext.lastSelectedMessageId.value;
+        const msg = activeChunk.value.messages.find(function (message) {
+            return message.messageId === targetId;
+        });
+
+        if (msg) {
+            return msg.messageIndex;
+        }
+    }
+
+    return null;
+});
+</script>
+
+<style scoped>
+.status-bar {
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-statusbar);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    user-select: none;
+    overflow: hidden;
+}
+
+.status-left,
+.status-right {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    min-width: 0;
+}
+
+.status-left {
+    flex: 1 1 auto;
+    overflow: hidden;
+}
+
+.status-right {
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    min-width: 0;
+    padding: 0 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.status-item-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.status-item-document {
+    max-width: 220px;
+}
+
+.status-item-export-template {
+    max-width: 320px;
+}
+
+.status-left .status-item-truncate {
+    max-width: 180px;
+}
+
+.ui-icon {
+    margin-right: 4px;
+}
+
+@media (max-width: 1100px) {
+    .status-left .status-item:nth-last-child(-n + 2) {
+        display: none;
+    }
+}
+
+@media (max-width: 900px) {
+    .status-left {
+        flex: 0 1 auto;
+    }
+
+    .status-left .status-item:not(:first-child) {
+        display: none;
+    }
+
+    .status-item-document {
+        max-width: 160px;
+    }
+
+    .status-item-export-template {
+        max-width: 220px;
+    }
+}
+</style>

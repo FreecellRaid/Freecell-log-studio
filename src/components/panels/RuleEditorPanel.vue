@@ -351,14 +351,14 @@
 <script setup lang="ts">
 import { ChevronRight, Eye, EyeOff, Plus, Trash2 } from '@lucide/vue';
 import { ref, computed } from 'vue';
-import { useStyleStore } from '@/stores/styleStore';
-import { useLogStore } from '@/stores/logStore';
-import { useActiveContext } from '@/composables/useActiveContext';
-import { useDraftValues } from '@/composables/useDraftValues';
+import { useStyleStore } from '@/stores/project/styleStore';
+import { useLogStore } from '@/stores/project/logStore';
+import { useActiveContext } from '@/composables/application/useActiveContext';
+import { useDraftValues } from '@/composables/application/useDraftValues';
 import type { ColorRule } from '@/types/style';
 import type { MessageFilter } from '@/types/log';
 import { matchesMessageFilter } from '@/editor/filter';
-import { useWindowStore } from '@/stores/windowStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
 import { vClickOutside } from '@/directives/clickOutside';
 
 const styleStore = useStyleStore();
