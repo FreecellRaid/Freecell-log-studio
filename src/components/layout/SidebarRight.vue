@@ -38,11 +38,6 @@
                     </div>
 
                     <div class="property-grid">
-                        <div class="prop-item-time">
-                            <label>时间:</label>
-                            <div>{{ formatDate(message.time) }}</div>
-                        </div>
-
                         <MessageDetailEditor
                             :message="message"
                             :values="getMessageValues(message)"
