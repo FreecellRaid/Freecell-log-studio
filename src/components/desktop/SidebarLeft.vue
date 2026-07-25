@@ -152,7 +152,7 @@ import {
 } from '@lucide/vue';
 import { defineAsyncComponent, ref, onMounted, onUnmounted, watch } from 'vue';
 import { useStyleStore } from '@/stores/styleStore';
-import { usePanelResize } from '@/composables/usePanelResize';
+import { usePanelResize } from '@/composables/ui/usePanelResize';
 import { useUiStore } from '@/stores/uiStore';
 import { useWindowStore } from '@/stores/windowStore';
 import ChunkListPanel from '@/components/panels/ChunkListPanel.vue';

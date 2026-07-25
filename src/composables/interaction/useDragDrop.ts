@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue';
 import { useLogEditorStore } from '@/stores/editorStore';
-import { useActiveContext } from './useActiveContext';
+import { useActiveContext } from '@/composables/application/useActiveContext';
 
 //消息拖拽逻辑
 //变为全局状态，确保跨组件拖拽时状态一致

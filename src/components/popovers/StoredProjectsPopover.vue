@@ -46,7 +46,7 @@
 import { RefreshCcw, Trash2 } from '@lucide/vue';
 import { formatDate } from '@/utils/date';
 import type { ProjectFile } from '@/types/project';
-import { useProjectManager } from '@/composables/useProjectManager';
+import { useProjectManager } from '@/composables/application/useProjectManager';
 
 defineProps<{
     projects: ProjectFile[];

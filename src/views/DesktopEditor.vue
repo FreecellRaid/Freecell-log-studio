@@ -26,8 +26,8 @@
 <script setup lang="ts">
 import { defineAsyncComponent, onMounted } from 'vue';
 import { useWindowStore } from '@/stores/windowStore';
-import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
-import { useScrollbarVisibility } from '@/composables/useScrollbarVisibility';
+import { useKeyboardShortcuts } from '@/composables/interaction/useKeyboardShortcuts';
+import { useScrollbarVisibility } from '@/composables/ui/useScrollbarVisibility';
 import TopMenuBar from '@/components/desktop/TopMenuBar.vue';
 import SidebarLeft from '@/components/desktop/SidebarLeft.vue';
 import MainWorkspace from '@/components/desktop/MainWorkspace.vue';

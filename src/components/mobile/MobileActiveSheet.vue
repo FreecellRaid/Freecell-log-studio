@@ -81,7 +81,7 @@ import { useLogEditorStore } from '@/stores/editorStore';
 import { useLogStore } from '@/stores/logStore';
 import { useMobileUiStore } from '@/stores/mobileUiStore';
 import { useEditorSessionStore } from '@/stores/editorSessionStore';
-import { useSwipeGesture } from '@/composables/useSwipeGesture';
+import { useSwipeGesture } from '@/composables/interaction/useSwipeGesture';
 
 const MessageDetailEditor = defineAsyncComponent(
     () => import('@/components/common/MessageDetailEditor.vue'),

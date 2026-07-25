@@ -218,14 +218,14 @@
 <script setup lang="ts">
 import { ChevronRight, ChevronsDown, Trash2 } from '@lucide/vue';
 import { nextTick, reactive, ref, watch } from 'vue';
-import { useChunkDragDrop } from '@/composables/useDragDrop';
+import { useChunkDragDrop } from '@/composables/interaction/useDragDrop';
 import { useLogEditorStore } from '@/stores/editorStore';
 import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
 import { useWindowStore } from '@/stores/windowStore';
 import { useEditorSessionStore } from '@/stores/editorSessionStore';
 import type { Chunk, LogDocument } from '@/types/log';
-import { useActiveContext } from '@/composables/useActiveContext';
+import { useActiveContext } from '@/composables/application/useActiveContext';
 import { vClickOutside } from '@/directives/clickOutside';
 
 const logStore = useLogStore();

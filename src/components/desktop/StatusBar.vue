@@ -98,7 +98,7 @@ import { useExportStore } from '@/stores/exportStore';
 import { useLogStore } from '@/stores/logStore';
 import { useWindowStore } from '@/stores/windowStore';
 import { useStyleStore } from '@/stores/styleStore';
-import { useActiveContext } from '@/composables/useActiveContext';
+import { useActiveContext } from '@/composables/application/useActiveContext';
 import { matchesMessageFilter } from '@/editor/filter';
 
 const logStore = useLogStore();

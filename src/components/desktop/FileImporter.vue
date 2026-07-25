@@ -21,7 +21,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { FolderOpen } from '@lucide/vue';
-import { useFileImport } from '@/composables/useImporter';
+import { useFileImport } from '@/composables/application/useImporter';
 
 const { importAndApply } = useFileImport();
 const isFileDragging = ref(false);

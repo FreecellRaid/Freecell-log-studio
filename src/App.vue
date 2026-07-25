@@ -6,10 +6,10 @@
 </template>
 
 <script setup lang="ts">
-import Editor from './views/Editor.vue';
+import Editor from './views/DesktopEditor.vue';
 import MobileEditor from './views/MobileEditor.vue';
 import { useUiStore } from './stores/uiStore';
-import { useResponsiveMode } from '@/composables/useResponsiveMode';
+import { useResponsiveMode } from '@/composables/ui/useResponsiveMode.js';
 import { onMounted } from 'vue';
 
 const uiStore = useUiStore();

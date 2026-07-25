@@ -5,7 +5,7 @@ import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
 import { useWindowStore } from '@/stores/windowStore';
 import type { ProjectFile } from '@/types/project';
-import { useActiveContext } from './useActiveContext';
+import { useActiveContext } from '@/composables/application/useActiveContext';
 import {
     buildProjectFile,
     sanitizeProjectFilename,

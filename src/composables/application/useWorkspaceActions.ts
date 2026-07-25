@@ -1,4 +1,4 @@
-import { useProjectManager } from '@/composables/useProjectManager';
+import { useProjectManager } from '@/composables/application/useProjectManager';
 import { useClipboardStore } from '@/stores/clipboardStore';
 import { useHistoryStore } from '@/stores/historyStore';
 import { useLogStore } from '@/stores/logStore';

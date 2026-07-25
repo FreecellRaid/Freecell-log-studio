@@ -77,9 +77,9 @@ import type {
     MessageDetailTextField,
     MessageDetailValues,
 } from '@/components/common/MessageDetailEditor.vue';
-import { useActiveContext } from '@/composables/useActiveContext';
+import { useActiveContext } from '@/composables/application/useActiveContext';
 import { useDraftValues } from '@/composables/useDraftValues';
-import { usePanelResize } from '@/composables/usePanelResize';
+import { usePanelResize } from '@/composables/ui/usePanelResize';
 import { useLogStore } from '@/stores/logStore';
 import { useLogEditorStore } from '@/stores/editorStore';
 import { useEditorSessionStore } from '@/stores/editorSessionStore';

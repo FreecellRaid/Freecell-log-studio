@@ -11,8 +11,8 @@
     </div>
 </template>
 <script setup lang="ts">
-import { useExport } from '@/composables/useExporter';
-import { useProjectManager } from '@/composables/useProjectManager';
+import { useExport } from '@/composables/application/useExporter';
+import { useProjectManager } from '@/composables/application/useProjectManager';
 const projectManager = useProjectManager();
 
 const {

@@ -126,8 +126,8 @@ import { useMobileUiStore } from '@/stores/mobileUiStore';
 import { useEditorSessionStore } from '@/stores/editorSessionStore';
 import { useUiStore } from '@/stores/uiStore';
 import { useWindowStore } from '@/stores/windowStore';
-import { useWorkspaceActions } from '@/composables/useWorkspaceActions';
-import { useSwipeGesture } from '@/composables/useSwipeGesture';
+import { useWorkspaceActions } from '@/composables/application/useWorkspaceActions';
+import { useSwipeGesture } from '@/composables/interaction/useSwipeGesture';
 
 const logStore = useLogStore();
 const uiStore = useUiStore();

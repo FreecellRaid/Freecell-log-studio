@@ -18,7 +18,7 @@
 
 <script setup lang="ts">
 import { defineAsyncComponent, onUnmounted } from 'vue';
-import { useSwipeGesture } from '@/composables/useSwipeGesture';
+import { useSwipeGesture } from '@/composables/interaction/useSwipeGesture';
 import { useMobileUiStore } from '@/stores/mobileUiStore';
 import { useWindowStore } from '@/stores/windowStore';
 import type { MobileBottomPanelName } from '@/types/mobile';

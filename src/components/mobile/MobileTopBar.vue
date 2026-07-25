@@ -49,7 +49,7 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref } from 'vue';
 import { Download, PanelLeftOpen, Upload } from '@lucide/vue';
-import { useFileImportInput } from '@/composables/useImporter';
+import { useFileImportInput } from '@/composables/application/useImporter';
 import { useLogStore } from '@/stores/logStore';
 import { useMobileUiStore } from '@/stores/mobileUiStore';
 

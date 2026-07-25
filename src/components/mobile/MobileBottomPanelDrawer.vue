@@ -33,7 +33,7 @@
 
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue';
-import { useSwipeGesture } from '@/composables/useSwipeGesture';
+import { useSwipeGesture } from '@/composables/interaction/useSwipeGesture';
 import { useMobileUiStore } from '@/stores/mobileUiStore';
 import { useWindowStore } from '@/stores/windowStore';
 

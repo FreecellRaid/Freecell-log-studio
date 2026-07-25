@@ -103,7 +103,7 @@ import { Pencil } from '@lucide/vue';
 import { computeStyleForMessage } from '@/editor/styleEngine';
 import { useStyleStore } from '@/stores/styleStore';
 import { useUiStore } from '@/stores/uiStore';
-import { useActiveContext } from '@/composables/useActiveContext';
+import { useActiveContext } from '@/composables/application/useActiveContext';
 import type { Chunk, Message } from '@/types/log';
 import { formatDate } from '@/utils/date';
 

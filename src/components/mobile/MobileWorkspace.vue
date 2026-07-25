@@ -33,7 +33,7 @@ import { useLogEditorStore } from '@/stores/editorStore';
 import { useLogStore } from '@/stores/logStore';
 import { useMobileUiStore } from '@/stores/mobileUiStore';
 import { useEditorSessionStore } from '@/stores/editorSessionStore';
-import { useActiveContext } from '@/composables/useActiveContext';
+import { useActiveContext } from '@/composables/application/useActiveContext';
 import { useStyleStore } from '@/stores/styleStore';
 import { useUiStore } from '@/stores/uiStore';
 import { useWindowStore } from '@/stores/windowStore';

@@ -1,12 +1,12 @@
 import { useWindowStore } from '@/stores/windowStore';
-import { useActiveContext } from '@/composables/useActiveContext';
+import { useActiveContext } from '@/composables/application/useActiveContext';
 import { useHistoryStore } from '@/stores/historyStore';
 import { useClipboardStore } from '@/stores/clipboardStore';
 import { useLogEditorStore } from '@/stores/editorStore';
 import { useLogStore } from '@/stores/logStore';
 import { useExportStore } from '@/stores/exportStore';
 import { useSelectionStore } from '@/stores/selectionStore';
-import { useProjectManager } from '@/composables/useProjectManager';
+import { useProjectManager } from '@/composables/application/useProjectManager';
 import type { Chunk } from '@/types/log';
 import { useSearchStore } from '@/stores/searchStore';
 

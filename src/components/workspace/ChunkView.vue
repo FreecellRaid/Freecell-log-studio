@@ -115,9 +115,9 @@ import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 
 import MessageItem from '@/components/common/MessageItem.vue';
-import { useActiveContext } from '@/composables/useActiveContext';
-import { useCommandDispatcher } from '@/composables/useCommandDispatcher';
-import { useMessageDragDrop } from '@/composables/useDragDrop';
+import { useActiveContext } from '@/composables/application/useActiveContext';
+import { useCommandDispatcher } from '@/composables/application/useCommandDispatcher';
+import { useMessageDragDrop } from '@/composables/interaction/useDragDrop';
 import { useLogEditorStore } from '@/stores/editorStore';
 import { useEditorSessionStore } from '@/stores/editorSessionStore';
 import { useLogStore } from '@/stores/logStore';

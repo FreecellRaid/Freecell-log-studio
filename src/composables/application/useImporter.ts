@@ -9,7 +9,7 @@ import { dispatchAdapter } from '@/io/import/importAdapters';
 import { tryParseProjectFile } from '@/io/storage/project';
 import { stripFileExtension } from '@/utils/fileName';
 import { readFileAsText } from '@/io/import/textDecoder';
-import { useProjectManager } from './useProjectManager';
+import { useProjectManager } from '@/composables/application/useProjectManager';
 
 // 统一换行符并移除0宽字符，防止正则崩掉
 function preprocessText(text: string): string {

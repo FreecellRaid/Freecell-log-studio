@@ -1,5 +1,8 @@
 import { onMounted, onUnmounted } from 'vue';
-import { useCommandDispatcher, type CommandType } from './useCommandDispatcher';
+import {
+    useCommandDispatcher,
+    type CommandType,
+} from '@/composables/application/useCommandDispatcher';
 
 // event => shortcut => command, dispatcher执行分发
 export function useKeyboardShortcuts() {
