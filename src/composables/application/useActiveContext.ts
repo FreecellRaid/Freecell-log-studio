@@ -2,9 +2,9 @@ import { computed, toValue } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import type { Message, MessageFilter } from '@/types/log';
 import { matchesMessageFilter } from '@/editor/filter';
-import { useLogStore } from '@/stores/logStore';
-import { useWindowStore } from '@/stores/windowStore';
-import { useSelectionStore } from '@/stores/selectionStore';
+import { useLogStore } from '@/stores/project/logStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
+import { useSelectionStore } from '@/stores/editor/selectionStore';
 
 export function useActiveContext(
     ownerId?: MaybeRefOrGetter<string | undefined>,

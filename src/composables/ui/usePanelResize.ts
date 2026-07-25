@@ -1,4 +1,4 @@
-import { PANEL_MAX_WIDTH, PANEL_MIN_WIDTH } from '@/stores/uiStore';
+import { PANEL_MAX_WIDTH, PANEL_MIN_WIDTH } from '@/stores/ui/uiStore';
 
 type ResizeEdge = 'left' | 'right';
 

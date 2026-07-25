@@ -77,10 +77,10 @@ import type {
     MessageDetailTextField,
     MessageDetailValues,
 } from '@/components/common/MessageDetailEditor.vue';
-import { useLogEditorStore } from '@/stores/editorStore';
-import { useLogStore } from '@/stores/logStore';
-import { useMobileUiStore } from '@/stores/mobileUiStore';
-import { useEditorSessionStore } from '@/stores/editorSessionStore';
+import { useLogEditorStore } from '@/stores/project/logEditorStore';
+import { useLogStore } from '@/stores/project/logStore';
+import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
+import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
 import { useSwipeGesture } from '@/composables/interaction/useSwipeGesture';
 
 const MessageDetailEditor = defineAsyncComponent(

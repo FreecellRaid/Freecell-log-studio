@@ -1,11 +1,11 @@
 import { useProjectManager } from '@/composables/application/useProjectManager';
-import { useClipboardStore } from '@/stores/clipboardStore';
-import { useHistoryStore } from '@/stores/historyStore';
-import { useLogStore } from '@/stores/logStore';
-import { useStyleStore } from '@/stores/styleStore';
-import { useWindowStore } from '@/stores/windowStore';
-import { useSelectionStore } from '@/stores/selectionStore';
-import { useEditorSessionStore } from '@/stores/editorSessionStore';
+import { useClipboardStore } from '@/stores/editor/clipboardStore';
+import { useHistoryStore } from '@/stores/editor/historyStore';
+import { useLogStore } from '@/stores/project/logStore';
+import { useStyleStore } from '@/stores/project/styleStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
+import { useSelectionStore } from '@/stores/editor/selectionStore';
+import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
 
 export function useWorkspaceActions() {
     const logStore = useLogStore();

@@ -25,7 +25,7 @@
 
 <script setup lang="ts">
 import { defineAsyncComponent, onMounted } from 'vue';
-import { useWindowStore } from '@/stores/windowStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
 import { useKeyboardShortcuts } from '@/composables/interaction/useKeyboardShortcuts';
 import { useScrollbarVisibility } from '@/composables/ui/useScrollbarVisibility';
 import TopMenuBar from '@/components/desktop/TopMenuBar.vue';

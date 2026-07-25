@@ -25,8 +25,8 @@ import {
     TextInitial,
     UserRound,
 } from '@lucide/vue';
-import { useMobileUiStore } from '@/stores/mobileUiStore';
-import { useWindowStore } from '@/stores/windowStore';
+import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
 import type { WindowName } from '@/types/window';
 
 const mobileUiStore = useMobileUiStore();

@@ -94,10 +94,10 @@ import {
 import { computed } from 'vue';
 import { flattenLogToRows } from '@/io/export/flattener';
 import { renderExportDocument } from '@/io/export/exportRender';
-import { useExportStore } from '@/stores/exportStore';
-import { useLogStore } from '@/stores/logStore';
-import { useWindowStore } from '@/stores/windowStore';
-import { useStyleStore } from '@/stores/styleStore';
+import { useExportStore } from '@/stores/editor/exportStore';
+import { useLogStore } from '@/stores/project/logStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
+import { useStyleStore } from '@/stores/project/styleStore';
 import { useActiveContext } from '@/composables/application/useActiveContext';
 import { matchesMessageFilter } from '@/editor/filter';
 

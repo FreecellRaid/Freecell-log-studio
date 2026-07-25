@@ -1,8 +1,8 @@
 import { ref } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
-import { useLogStore } from '@/stores/logStore';
-import { useStyleStore } from '@/stores/styleStore';
-import { useWindowStore } from '@/stores/windowStore';
+import { useLogStore } from '@/stores/project/logStore';
+import { useStyleStore } from '@/stores/project/styleStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
 import type { Chunk, LogDocument } from '@/types/log';
 import { buildLogDocument } from '@/io/import/parser';
 import { dispatchAdapter } from '@/io/import/importAdapters';

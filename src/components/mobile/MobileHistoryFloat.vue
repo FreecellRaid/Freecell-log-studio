@@ -25,7 +25,7 @@
 
 <script setup lang="ts">
 import { Redo2, Undo2 } from '@lucide/vue';
-import { useHistoryStore } from '@/stores/historyStore';
+import { useHistoryStore } from '@/stores/editor/historyStore';
 
 const historyStore = useHistoryStore();
 </script>

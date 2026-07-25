@@ -101,8 +101,8 @@
 <script setup lang="ts">
 import { Pencil } from '@lucide/vue';
 import { computeStyleForMessage } from '@/editor/styleEngine';
-import { useStyleStore } from '@/stores/styleStore';
-import { useUiStore } from '@/stores/uiStore';
+import { useStyleStore } from '@/stores/project/styleStore';
+import { useUiStore } from '@/stores/ui/uiStore';
 import { useActiveContext } from '@/composables/application/useActiveContext';
 import type { Chunk, Message } from '@/types/log';
 import { formatDate } from '@/utils/date';

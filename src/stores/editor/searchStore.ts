@@ -1,6 +1,6 @@
 import { computed, reactive, ref } from 'vue';
 import { defineStore } from 'pinia';
-import { useLogStore } from '@/stores/logStore';
+import { useLogStore } from '@/stores/project/logStore';
 import { matchesMessageFilter } from '@/editor/filter';
 import type { MessageFilter } from '@/types/log';
 

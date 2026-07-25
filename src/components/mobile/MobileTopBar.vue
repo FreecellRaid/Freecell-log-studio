@@ -50,8 +50,8 @@
 import { defineAsyncComponent, ref } from 'vue';
 import { Download, PanelLeftOpen, Upload } from '@lucide/vue';
 import { useFileImportInput } from '@/composables/application/useImporter';
-import { useLogStore } from '@/stores/logStore';
-import { useMobileUiStore } from '@/stores/mobileUiStore';
+import { useLogStore } from '@/stores/project/logStore';
+import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
 
 const ExportPopover = defineAsyncComponent(
     () => import('@/components/popovers/ExportPopover.vue'),

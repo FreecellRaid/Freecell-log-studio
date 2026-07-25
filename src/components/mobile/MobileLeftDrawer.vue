@@ -121,11 +121,11 @@ import {
     SunMedium,
     Trash2,
 } from '@lucide/vue';
-import { useLogStore } from '@/stores/logStore';
-import { useMobileUiStore } from '@/stores/mobileUiStore';
-import { useEditorSessionStore } from '@/stores/editorSessionStore';
-import { useUiStore } from '@/stores/uiStore';
-import { useWindowStore } from '@/stores/windowStore';
+import { useLogStore } from '@/stores/project/logStore';
+import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
+import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
+import { useUiStore } from '@/stores/ui/uiStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
 import { useWorkspaceActions } from '@/composables/application/useWorkspaceActions';
 import { useSwipeGesture } from '@/composables/interaction/useSwipeGesture';
 

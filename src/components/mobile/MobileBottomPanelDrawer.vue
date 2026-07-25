@@ -34,8 +34,8 @@
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue';
 import { useSwipeGesture } from '@/composables/interaction/useSwipeGesture';
-import { useMobileUiStore } from '@/stores/mobileUiStore';
-import { useWindowStore } from '@/stores/windowStore';
+import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
 
 const ChunkListPanel = defineAsyncComponent(
     () => import('@/components/panels/ChunkListPanel.vue'),

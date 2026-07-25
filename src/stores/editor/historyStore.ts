@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
-import { useLogStore } from './logStore';
-import { useStyleStore } from './styleStore';
+import { useLogStore } from '@/stores/project/logStore';
+import { useStyleStore } from '../project/styleStore';
 import type { LogDocument, MessageFilter } from '@/types/log';
 import type { ColorRule } from '@/types/style';
 

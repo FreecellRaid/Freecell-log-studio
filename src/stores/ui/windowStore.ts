@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { useSelectionStore } from '@/stores/selectionStore';
+import { useSelectionStore } from '@/stores/editor/selectionStore';
 import type {
     WindowName,
     WindowInstance,

@@ -1,14 +1,14 @@
-import { useWindowStore } from '@/stores/windowStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
 import { useActiveContext } from '@/composables/application/useActiveContext';
-import { useHistoryStore } from '@/stores/historyStore';
-import { useClipboardStore } from '@/stores/clipboardStore';
-import { useLogEditorStore } from '@/stores/editorStore';
-import { useLogStore } from '@/stores/logStore';
-import { useExportStore } from '@/stores/exportStore';
-import { useSelectionStore } from '@/stores/selectionStore';
+import { useHistoryStore } from '@/stores/editor/historyStore';
+import { useClipboardStore } from '@/stores/editor/clipboardStore';
+import { useLogEditorStore } from '@/stores/project/logEditorStore';
+import { useLogStore } from '@/stores/project/logStore';
+import { useExportStore } from '@/stores/editor/exportStore';
+import { useSelectionStore } from '@/stores/editor/selectionStore';
 import { useProjectManager } from '@/composables/application/useProjectManager';
 import type { Chunk } from '@/types/log';
-import { useSearchStore } from '@/stores/searchStore';
+import { useSearchStore } from '@/stores/editor/searchStore';
 
 export type CommandType =
     | 'select'

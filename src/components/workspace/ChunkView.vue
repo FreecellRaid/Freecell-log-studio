@@ -118,12 +118,12 @@ import MessageItem from '@/components/common/MessageItem.vue';
 import { useActiveContext } from '@/composables/application/useActiveContext';
 import { useCommandDispatcher } from '@/composables/application/useCommandDispatcher';
 import { useMessageDragDrop } from '@/composables/interaction/useDragDrop';
-import { useLogEditorStore } from '@/stores/editorStore';
-import { useEditorSessionStore } from '@/stores/editorSessionStore';
-import { useLogStore } from '@/stores/logStore';
-import { useStyleStore } from '@/stores/styleStore';
-import { useUiStore } from '@/stores/uiStore';
-import { useWindowStore } from '@/stores/windowStore';
+import { useLogEditorStore } from '@/stores/project/logEditorStore';
+import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
+import { useLogStore } from '@/stores/project/logStore';
+import { useStyleStore } from '@/stores/project/styleStore';
+import { useUiStore } from '@/stores/ui/uiStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
 import type { Message } from '@/types/log';
 
 const props = defineProps<{

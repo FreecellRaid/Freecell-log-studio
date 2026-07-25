@@ -78,12 +78,12 @@ import type {
     MessageDetailValues,
 } from '@/components/common/MessageDetailEditor.vue';
 import { useActiveContext } from '@/composables/application/useActiveContext';
-import { useDraftValues } from '@/composables/useDraftValues';
+import { useDraftValues } from '@/composables/application/useDraftValues';
 import { usePanelResize } from '@/composables/ui/usePanelResize';
-import { useLogStore } from '@/stores/logStore';
-import { useLogEditorStore } from '@/stores/editorStore';
-import { useEditorSessionStore } from '@/stores/editorSessionStore';
-import { useUiStore } from '@/stores/uiStore';
+import { useLogStore } from '@/stores/project/logStore';
+import { useLogEditorStore } from '@/stores/project/logEditorStore';
+import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
+import { useUiStore } from '@/stores/ui/uiStore';
 import type { Message } from '@/types/log';
 
 const activeContext = useActiveContext();

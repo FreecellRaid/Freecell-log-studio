@@ -219,11 +219,11 @@
 import { ChevronRight, ChevronsDown, Trash2 } from '@lucide/vue';
 import { nextTick, reactive, ref, watch } from 'vue';
 import { useChunkDragDrop } from '@/composables/interaction/useDragDrop';
-import { useLogEditorStore } from '@/stores/editorStore';
-import { useLogStore } from '@/stores/logStore';
-import { useStyleStore } from '@/stores/styleStore';
-import { useWindowStore } from '@/stores/windowStore';
-import { useEditorSessionStore } from '@/stores/editorSessionStore';
+import { useLogEditorStore } from '@/stores/project/logEditorStore';
+import { useLogStore } from '@/stores/project/logStore';
+import { useStyleStore } from '@/stores/project/styleStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
+import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
 import type { Chunk, LogDocument } from '@/types/log';
 import { useActiveContext } from '@/composables/application/useActiveContext';
 import { vClickOutside } from '@/directives/clickOutside';

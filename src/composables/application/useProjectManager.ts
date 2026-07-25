@@ -1,9 +1,9 @@
 import { computed } from 'vue';
-import { useClipboardStore } from '@/stores/clipboardStore';
-import { useHistoryStore } from '@/stores/historyStore';
-import { useLogStore } from '@/stores/logStore';
-import { useStyleStore } from '@/stores/styleStore';
-import { useWindowStore } from '@/stores/windowStore';
+import { useClipboardStore } from '@/stores/editor/clipboardStore';
+import { useHistoryStore } from '@/stores/editor/historyStore';
+import { useLogStore } from '@/stores/project/logStore';
+import { useStyleStore } from '@/stores/project/styleStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
 import type { ProjectFile } from '@/types/project';
 import { useActiveContext } from '@/composables/application/useActiveContext';
 import {

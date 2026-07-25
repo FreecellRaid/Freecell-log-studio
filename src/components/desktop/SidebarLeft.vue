@@ -151,10 +151,10 @@ import {
     UserRound,
 } from '@lucide/vue';
 import { defineAsyncComponent, ref, onMounted, onUnmounted, watch } from 'vue';
-import { useStyleStore } from '@/stores/styleStore';
+import { useStyleStore } from '@/stores/project/styleStore';
 import { usePanelResize } from '@/composables/ui/usePanelResize';
-import { useUiStore } from '@/stores/uiStore';
-import { useWindowStore } from '@/stores/windowStore';
+import { useUiStore } from '@/stores/ui/uiStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
 import ChunkListPanel from '@/components/panels/ChunkListPanel.vue';
 
 const IdentityPanel = defineAsyncComponent(

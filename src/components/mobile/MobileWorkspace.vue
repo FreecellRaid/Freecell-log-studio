@@ -29,14 +29,14 @@
 import { computed } from 'vue';
 import { MessagesSquare } from '@lucide/vue';
 import MobileMessageList from '@/components/mobile/MobileMessageList.vue';
-import { useLogEditorStore } from '@/stores/editorStore';
-import { useLogStore } from '@/stores/logStore';
-import { useMobileUiStore } from '@/stores/mobileUiStore';
-import { useEditorSessionStore } from '@/stores/editorSessionStore';
+import { useLogEditorStore } from '@/stores/project/logEditorStore';
+import { useLogStore } from '@/stores/project/logStore';
+import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
+import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
 import { useActiveContext } from '@/composables/application/useActiveContext';
-import { useStyleStore } from '@/stores/styleStore';
-import { useUiStore } from '@/stores/uiStore';
-import { useWindowStore } from '@/stores/windowStore';
+import { useStyleStore } from '@/stores/project/styleStore';
+import { useUiStore } from '@/stores/ui/uiStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
 import type { Chunk, Message } from '@/types/log';
 
 const logStore = useLogStore();

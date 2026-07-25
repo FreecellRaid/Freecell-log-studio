@@ -40,7 +40,7 @@
 
 <script setup lang="ts">
 import { computed, defineAsyncComponent } from 'vue';
-import { useWindowStore } from '@/stores/windowStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
 import type { WindowInstance, WindowName } from '@/types/window';
 import FileImporter from '@/components/desktop/FileImporter.vue';
 import DefaultView from '@/components/workspace/DefaultView.vue';

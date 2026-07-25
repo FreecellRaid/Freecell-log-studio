@@ -1,7 +1,6 @@
 import { ref, watch } from 'vue';
 import { defineStore } from 'pinia';
-import { useLogStore } from '@/stores/logStore';
-
+import { useLogStore } from '@/stores/project/logStore';
 export type EditorTarget =
     | { kind: 'message'; chunkId: string; messageId: string }
     | { kind: 'chunkName'; chunkId: string }

@@ -214,8 +214,8 @@ import { useActiveContext } from '@/composables/application/useActiveContext';
 import type { Message } from '@/types/log';
 import { formatDate } from '@/utils/date';
 import { useCommandDispatcher } from '@/composables/application/useCommandDispatcher';
-import { useWindowStore } from '@/stores/windowStore';
-import { useSearchStore } from '@/stores/searchStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
+import { useSearchStore } from '@/stores/editor/searchStore';
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 

@@ -125,8 +125,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Download, Trash2, Save, FolderOpen, Upload } from '@lucide/vue';
-import { useLogStore } from '@/stores/logStore';
-import { useWindowStore } from '@/stores/windowStore';
+import { useLogStore } from '@/stores/project/logStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
 import { useFileImportInput } from '@/composables/application/useImporter';
 import { useProjectManager } from '@/composables/application/useProjectManager';
 import { useWorkspaceActions } from '@/composables/application/useWorkspaceActions';

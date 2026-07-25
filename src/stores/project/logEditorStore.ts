@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
-import { useLogStore } from '@/stores/logStore';
-import { useHistoryStore } from '@/stores/historyStore';
-import { useStyleStore } from '@/stores/styleStore';
+import { useLogStore } from '@/stores/project/logStore';
+import { useHistoryStore } from '@/stores/editor/historyStore';
+import { useStyleStore } from '@/stores/project/styleStore';
 import { generateId } from '@/utils/id';
 import type { Chunk, Message } from '@/types/log';
 

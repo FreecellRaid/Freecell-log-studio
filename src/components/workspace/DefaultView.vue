@@ -40,7 +40,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { FolderOpen, LayoutDashboard } from '@lucide/vue';
-import { useWindowStore } from '@/stores/windowStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
 
 const windowStore = useWindowStore();
 onMounted(() => {

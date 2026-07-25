@@ -80,7 +80,7 @@ import {
     CodeXml,
     Upload,
 } from '@lucide/vue';
-import { useWindowStore } from '@/stores/windowStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
 import helpDocumentJson from '@/data/helpDocument.json';
 
 type HelpIconName =

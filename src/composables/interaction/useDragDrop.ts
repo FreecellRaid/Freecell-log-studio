@@ -1,5 +1,5 @@
 import { computed, ref } from 'vue';
-import { useLogEditorStore } from '@/stores/editorStore';
+import { useLogEditorStore } from '@/stores/project/logEditorStore';
 import { useActiveContext } from '@/composables/application/useActiveContext';
 
 //消息拖拽逻辑

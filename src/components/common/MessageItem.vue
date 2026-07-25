@@ -91,8 +91,8 @@
 <script setup lang="ts">
 import { computed, ref, nextTick, watch } from 'vue';
 import type { Message } from '@/types/log';
-import { useStyleStore } from '@/stores/styleStore';
-import { useUiStore } from '@/stores/uiStore';
+import { useStyleStore } from '@/stores/project/styleStore';
+import { useUiStore } from '@/stores/ui/uiStore';
 import { formatDate } from '@/utils/date';
 import { computeStyleForMessage } from '@/editor/styleEngine';
 import { Trash2, Plus, Scissors, ChevronsDown } from '@lucide/vue';
