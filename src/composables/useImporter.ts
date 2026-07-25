@@ -6,7 +6,7 @@ import { useWindowStore } from '@/stores/windowStore';
 import type { Chunk, LogDocument } from '@/types/log';
 import { buildLogDocument } from '@/io/import/parser';
 import { dispatchAdapter } from '@/io/import/importAdapters';
-import { tryParseProjectFile } from '@/io/localStorage/project';
+import { tryParseProjectFile } from '@/io/storage/project';
 import { stripFileExtension } from '@/utils/fileName';
 import { readFileAsText } from '@/io/import/textDecoder';
 import { useProjectManager } from './useProjectManager';

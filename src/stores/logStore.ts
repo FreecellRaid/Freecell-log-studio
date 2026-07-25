@@ -3,7 +3,7 @@ import { ref, computed } from 'vue';
 import type { Chunk, LogDocument, Message } from '@/types/log';
 import { useHistoryStore } from './historyStore';
 import { generateId } from '@/utils/id';
-import { deriveDefaultProjectName } from '@/io/localStorage/project';
+import { deriveDefaultProjectName } from '@/io/storage/project';
 
 export function newlogStore() {
     const documents = ref<LogDocument[]>([]);

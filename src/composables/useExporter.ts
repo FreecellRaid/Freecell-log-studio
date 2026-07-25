@@ -2,7 +2,7 @@ import { useLogStore } from '@/stores/logStore';
 import { useStyleStore } from '@/stores/styleStore';
 import { useExportStore } from '@/stores/exportStore';
 import { flattenLogToRows } from '@/io/export/flattener';
-import { sanitizeProjectFilename } from '@/io/localStorage/project';
+import { sanitizeProjectFilename } from '@/io/storage/project';
 import {
     textAdapter,
     htmlAdapter,

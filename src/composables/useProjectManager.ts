@@ -9,12 +9,12 @@ import { useActiveContext } from './useActiveContext';
 import {
     buildProjectFile,
     sanitizeProjectFilename,
-} from '@/io/localStorage/project';
+} from '@/io/storage/project';
 import {
     deleteProjectFromLocalStorage,
     loadStoredProjects,
     saveProjectToLocalStorage,
-} from '@/io/localStorage/projectStorage';
+} from '@/io/storage/projectStorage';
 
 function downloadProjectJson(project: ProjectFile) {
     const blob = new Blob([JSON.stringify(project, null, 2)], {

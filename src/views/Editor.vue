@@ -28,16 +28,16 @@ import { defineAsyncComponent, onMounted } from 'vue';
 import { useWindowStore } from '@/stores/windowStore';
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
 import { useScrollbarVisibility } from '@/composables/useScrollbarVisibility';
-import TopMenuBar from '@/components/layout/TopMenuBar.vue';
-import SidebarLeft from '@/components/layout/SidebarLeft.vue';
-import MainWorkspace from '@/components/workspace/MainWorkspace.vue';
-import StatusBar from '@/components/layout/StatusBar.vue';
+import TopMenuBar from '@/components/desktop/TopMenuBar.vue';
+import SidebarLeft from '@/components/desktop/SidebarLeft.vue';
+import MainWorkspace from '@/components/desktop/MainWorkspace.vue';
+import StatusBar from '@/components/desktop/StatusBar.vue';
 
 const HelpDocument = defineAsyncComponent(
     () => import('@/components/common/HelpDocument.vue'),
 );
 const SidebarRight = defineAsyncComponent(
-    () => import('@/components/layout/SidebarRight.vue'),
+    () => import('@/components/desktop/SidebarRight.vue'),
 );
 
 const windowStore = useWindowStore();

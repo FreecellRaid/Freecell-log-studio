@@ -42,11 +42,15 @@
 import { computed, defineAsyncComponent } from 'vue';
 import { useWindowStore } from '@/stores/windowStore';
 import type { WindowInstance, WindowName } from '@/types/window';
-import FileImporter from '@/components/common/FileImporter.vue';
-import DefaultView from './DefaultView.vue';
+import FileImporter from '@/components/desktop/FileImporter.vue';
+import DefaultView from '@/components/workSpaceViews/DefaultView.vue';
 
-const ChunkView = defineAsyncComponent(() => import('./ChunkView.vue'));
-const ExportPreview = defineAsyncComponent(() => import('./ExportPreview.vue'));
+const ChunkView = defineAsyncComponent(
+    () => import('@/components/workSpaceViews/ChunkView.vue'),
+);
+const ExportPreview = defineAsyncComponent(
+    () => import('@/components/workSpaceViews/ExportPreview.vue'),
+);
 
 const windowStore = useWindowStore();
 const workspacePanes = computed(() => windowStore.workspacePanes);
