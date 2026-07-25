@@ -2,8 +2,11 @@
     <main class="mobile-main">
         <div v-if="!activeChunk" class="mobile-empty">
             <MessagesSquare class="mobile-empty-icon" />
-            <p>选择一个场景开始编辑</p>
-            <p>完整功能建议使用网页端～</p>
+            <div class="mobile-empty-hint">
+                选择一个场景开始编辑
+                <br />
+                完整功能建议使用 pc 端～
+            </div>
             <button
                 class="mobile-primary-button"
                 type="button"
@@ -136,12 +139,21 @@ function startChunkRename() {
     justify-content: center;
     gap: 14px;
     text-align: center;
-    color: var(--text-secondary);
+}
+
+.mobile-empty button {
+    color: var(--text-primary);
 }
 
 .mobile-empty-icon {
     width: 56px;
     height: 56px;
     color: var(--icon-color);
+}
+
+.mobile-empty-hint {
+    line-height: 1.6;
+    margin-bottom: 12px;
+    color: var(--text-secondary);
 }
 </style>
