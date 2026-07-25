@@ -10,7 +10,7 @@ UI 风格参考 VSCode。
 
 ---
 
-## Preview
+## 预览图
 
 示例日志处理效果：
 
@@ -20,7 +20,7 @@ UI 风格参考 VSCode。
 
 ---
 
-## Features
+## 特性
 
 ### 核心功能
 
@@ -52,7 +52,7 @@ UI 风格参考 VSCode。
 
 ---
 
-## Tech Stack
+## 技术栈
 
 - **框架**：Vue 3
 - **状态管理**：Pinia
@@ -61,11 +61,11 @@ UI 风格参考 VSCode。
 
 ---
 
-## Getting Started
+## 开发指南
 
 ### 安装与运行
 
-本项目使用 pnpm 作为包管理器，在运行项目前，请确保你已安装 pnpm
+本项目使用 pnpm 作为包管理器，在运行项目前，请确保已安装 pnpm，如果你不知道什么是 pnpm，请忽略这一部分的内容
 
 ```bash
 # 如果没有安装 pnpm，可通过 npm 全局安装
@@ -86,15 +86,20 @@ pnpm build:single
 
 ---
 
-## Project Structure
+## 项目结构
 
-- `editor/`：核心逻辑（过滤、样式、身份处理等）
-- `io/`：导入 / 导出 / 本地存储
-- `composables/`：Vue 逻辑封装
-- `stores/`：状态管理
-- `components/`：UI 组件
-- `utils/`：通用工具函数
-- `directives/`：自定义模板指令
+```text
+src/
+├── components/     Vue 组件
+├── views/          桌面端与移动端页面入口
+├── composables/    应用流程、交互与 UI 行为
+├── stores/         状态管理
+├── editor/         过滤、身份与样式编辑逻辑
+├── io/             导入、导出与工程存储
+├── types/          共享类型
+├── utils/          通用工具
+└── data/           静态数据
+```
 
 ---
 
