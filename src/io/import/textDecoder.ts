@@ -45,7 +45,9 @@ function detectBom(bytes: Uint8Array): string | null {
             bytes[2] === 0xfe &&
             bytes[3] === 0xff)
     ) {
-        throw new Error('暂不支持转换 UTF-32 编码文件，请先另存为 UTF-8。');
+        throw new Error(
+            '暂不支持转换 UTF-32 编码文件，请另存为 UTF-8 或使用剪切板导入',
+        );
     }
     if (bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) {
         return 'utf-8';

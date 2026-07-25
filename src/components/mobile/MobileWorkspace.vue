@@ -3,6 +3,7 @@
         <div v-if="!activeChunk" class="mobile-empty">
             <MessagesSquare class="mobile-empty-icon" />
             <p>选择一个场景开始编辑</p>
+            <p>完整功能建议使用网页端～</p>
             <button
                 class="mobile-primary-button"
                 type="button"
