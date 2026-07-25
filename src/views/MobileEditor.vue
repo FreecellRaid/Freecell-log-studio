@@ -1,9 +1,9 @@
 <template>
     <div
         class="mobile-editor"
-        @touchstart="handleTouchStart"
-        @touchend="handleTouchEnd"
-        @touchcancel="handleTouchCancel"
+        @touchstart="editorGesture.onTouchStart"
+        @touchend="editorGesture.onTouchEnd"
+        @touchcancel="editorGesture.onTouchCancel"
     >
         <HelpDocument v-if="windowStore.isHelpOpen" />
         <MobileTopBar />
@@ -59,45 +59,33 @@ const bottomPanelNames: MobileBottomPanelName[] = [
     'exportFormat',
 ];
 
-const openLeftDrawerGesture = useSwipeGesture({
-    direction: 'right',
-    canStart: (event) => !hasOpenOverlay() && event.touches[0].clientX <= 24,
-    onSwipe: mobileUiStore.openLeftDrawer,
-});
-const openBottomDrawerGesture = useSwipeGesture({
-    direction: 'up',
-    canStart: (event) =>
-        !hasOpenOverlay() &&
-        event.touches[0].clientY >= window.innerHeight - 72,
-    onSwipe: () => {
-        const activePanel = windowStore.activeLeftPanelName;
-        const panel = bottomPanelNames.includes(
-            activePanel as MobileBottomPanelName,
-        )
-            ? (activePanel as MobileBottomPanelName)
-            : 'chunkList';
-        windowStore.setLeftPanel(panel, { revealSidebar: false });
-        mobileUiStore.openBottomPanel();
+const editorGesture = useSwipeGesture([
+    {
+        direction: 'right',
+        canStart: (event) =>
+            !hasOpenOverlay() && event.touches[0].clientX <= 24,
+        onSwipe: mobileUiStore.openLeftDrawer,
     },
-});
+    {
+        direction: 'up',
+        canStart: (event) =>
+            !hasOpenOverlay() &&
+            event.touches[0].clientY >= window.innerHeight - 72,
+        onSwipe: () => {
+            const activePanel = windowStore.activeLeftPanelName;
+            const panel = bottomPanelNames.includes(
+                activePanel as MobileBottomPanelName,
+            )
+                ? (activePanel as MobileBottomPanelName)
+                : 'chunkList';
+            windowStore.setLeftPanel(panel, { revealSidebar: false });
+            mobileUiStore.openBottomPanel();
+        },
+    },
+]);
 
 function hasOpenOverlay() {
     return Boolean(mobileUiStore.activeOverlay || windowStore.isHelpOpen);
-}
-
-function handleTouchStart(event: TouchEvent) {
-    openLeftDrawerGesture.onTouchStart(event);
-    openBottomDrawerGesture.onTouchStart(event);
-}
-
-function handleTouchEnd(event: TouchEvent) {
-    openLeftDrawerGesture.onTouchEnd(event);
-    openBottomDrawerGesture.onTouchEnd(event);
-}
-
-function handleTouchCancel() {
-    openLeftDrawerGesture.onTouchCancel();
-    openBottomDrawerGesture.onTouchCancel();
 }
 
 onUnmounted(mobileUiStore.reset);
