@@ -57,3 +57,11 @@ export interface LogDocument {
     chunks: Chunk[];
     isExpanded?: boolean;
 }
+
+export type MessageUpdates = Partial<
+    Omit<Message, 'messageId' | 'chunkId' | 'messageIndex'>
+>;
+
+export type ChunkUpdates = Partial<
+    Omit<Chunk, 'chunkId' | 'docId' | 'chunkIndex' | 'messages'>
+>;

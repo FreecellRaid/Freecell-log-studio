@@ -1,5 +1,5 @@
 import { computed, ref } from 'vue';
-import { useLogEditorStore } from '@/stores/project/logEditorStore';
+import { useLogCommands } from '@/stores/project/logCommands';
 import { useActiveContext } from '@/composables/application/useActiveContext';
 
 //消息拖拽逻辑
@@ -12,7 +12,7 @@ const globalDraggedMessage = ref<DraggedMessageInfo | null>(null);
 const globalDraggedChunk = ref<string | null>(null);
 
 export function useMessageDragDrop() {
-    const logEditorStore = useLogEditorStore();
+    const logEditorStore = useLogCommands();
     const activeContext = useActiveContext();
 
     function onDragOver(event: DragEvent) {
@@ -74,7 +74,7 @@ export function useMessageDragDrop() {
 
 //块拖拽
 export function useChunkDragDrop() {
-    const logEditorStore = useLogEditorStore();
+    const logCommands = useLogCommands();
 
     function onDragStart(event: DragEvent, chunkId: string) {
         globalDraggedChunk.value = chunkId;
@@ -97,7 +97,7 @@ export function useChunkDragDrop() {
         const chunkId = globalDraggedChunk.value;
         if (!chunkId) return;
 
-        logEditorStore.moveChunk(chunkId, targetDocId, targetIndex);
+        logCommands.moveChunk(chunkId, targetDocId, targetIndex);
         globalDraggedChunk.value = null;
     }
 

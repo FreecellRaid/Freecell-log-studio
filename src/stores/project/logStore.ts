@@ -1,46 +1,17 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { Chunk, LogDocument, Message } from '@/types/log';
-import { useHistoryStore } from '@/stores/editor/historyStore';
+import type { LogDocument, Message } from '@/types/log';
 import { generateId } from '@/utils/id';
 import { deriveDefaultProjectName } from '@/io/storage/project';
+import { normalizeDocuments } from '@/editor/normalize';
 
 export function newlogStore() {
     const documents = ref<LogDocument[]>([]);
-    const isImported = ref<boolean>(false);
+    const isImported = computed(() => documents.value.length > 0);
     const projectId = ref<string>(generateId());
     const projectName = ref<string>('');
     const projectTime = ref<string>('');
     const isProjectNameCustomized = ref<boolean>(false);
-
-    function normalizeMessages(chunk: Chunk) {
-        chunk.messages.forEach((message, messageIndex) => {
-            message.chunkId = chunk.chunkId;
-            message.messageIndex = messageIndex;
-        });
-    }
-
-    function normalizeChunk(chunk: Chunk, docId: string, chunkIndex: number) {
-        chunk.docId = docId;
-        chunk.chunkIndex = chunkIndex;
-        normalizeMessages(chunk);
-    }
-
-    function normalizeDocument(
-        doc: LogDocument,
-        docIndex: number = doc.docIndex,
-    ) {
-        doc.docIndex = docIndex;
-        doc.chunks.forEach((chunk, chunkIndex) => {
-            normalizeChunk(chunk, doc.docId, chunkIndex);
-        });
-    }
-
-    function normalizeDocuments(targetDocs: LogDocument[]) {
-        targetDocs.forEach((doc, docIndex) => {
-            normalizeDocument(doc, docIndex);
-        });
-    }
 
     const totalMessages = computed(() => {
         return documents.value.reduce((total, doc) => {
@@ -82,46 +53,27 @@ export function newlogStore() {
     function appendDocuments(newDocs: LogDocument[]) {
         documents.value.push(...newDocs);
         normalizeDocuments(documents.value);
-        isImported.value = documents.value.length > 0;
-        syncProjectNameFromDocuments();
-        useHistoryStore().clearHistory();
-    }
-
-    function removeDocument(docId: string) {
-        const index = documents.value.findIndex((d) => d.docId === docId);
-        if (index === -1) {
-            return;
-        }
-
-        useHistoryStore().captureSnapshot();
-        documents.value.splice(index, 1);
-        normalizeDocuments(documents.value);
-        isImported.value = documents.value.length > 0;
         syncProjectNameFromDocuments();
     }
 
-    function updateDocument(docId: string, updates: Partial<LogDocument>) {
+    function setDocumentExpanded(docId: string, isExpanded: boolean) {
         const doc = documents.value.find((d) => d.docId === docId);
         if (doc) {
-            Object.assign(doc, updates);
-            syncProjectNameFromDocuments();
+            doc.isExpanded = isExpanded;
         }
     }
 
     function clearData() {
         documents.value = [];
-        isImported.value = false;
         projectId.value = generateId();
         projectName.value = '';
         projectTime.value = '';
         isProjectNameCustomized.value = false;
-        useHistoryStore().clearHistory();
     }
 
     function replaceDocuments(newDocuments: LogDocument[]) {
         normalizeDocuments(newDocuments);
         documents.value = newDocuments;
-        isImported.value = documents.value.length > 0;
         syncProjectNameFromDocuments();
     }
 
@@ -206,23 +158,16 @@ export function newlogStore() {
         allChunks,
 
         appendDocuments,
-        removeDocument,
-        updateDocument,
+        setDocumentExpanded,
         clearData,
         replaceDocuments,
 
-        syncProjectNameFromDocuments,
         setProjectName,
         setProjectTime,
         setProjectMeta,
 
         findDocumentById,
         findChunkById,
-
-        normalizeDocuments,
-        normalizeDocument,
-        normalizeChunk,
-        normalizeMessages,
     };
 }
 

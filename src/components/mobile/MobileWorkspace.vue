@@ -33,7 +33,7 @@
 import { computed } from 'vue';
 import { MessagesSquare } from '@lucide/vue';
 import MobileMessageList from '@/components/mobile/MobileMessageList.vue';
-import { useLogEditorStore } from '@/stores/project/logEditorStore';
+import { useLogCommands } from '@/stores/project/logCommands';
 import { useLogStore } from '@/stores/project/logStore';
 import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
 import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
@@ -47,7 +47,7 @@ const logStore = useLogStore();
 const uiStore = useUiStore();
 const styleStore = useStyleStore();
 const windowStore = useWindowStore();
-const editorStore = useLogEditorStore();
+const logCommands = useLogCommands();
 const mobileUiStore = useMobileUiStore();
 const editorSessionStore = useEditorSessionStore();
 
@@ -85,7 +85,7 @@ function startMessageEdit(message: Message) {
 
 function insertAfter(message: Message, index: number) {
     if (!activeChunk.value) return;
-    editorStore.insertNewMessageAfter(
+    logCommands.insertNewMessageAfter(
         activeChunk.value.chunkId,
         message,
         index,
@@ -94,13 +94,13 @@ function insertAfter(message: Message, index: number) {
 
 function mergeWithNext(messageId: string) {
     if (!activeChunk.value) return;
-    editorStore.mergeWithNextMessage(activeChunk.value.chunkId, messageId);
+    logCommands.mergeWithNextMessage(activeChunk.value.chunkId, messageId);
 }
 
 function deleteMessage(messageId: string) {
     if (!activeChunk.value) return;
     if (!window.confirm('确定要删除这条消息吗？')) return;
-    editorStore.deleteMessage(activeChunk.value.chunkId, messageId);
+    logCommands.deleteMessage(activeChunk.value.chunkId, messageId);
     if (activeContext.selectedMessageIds.value.has(messageId)) {
         activeContext.clearMessageSelection();
     }

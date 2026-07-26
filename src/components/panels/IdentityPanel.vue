@@ -94,15 +94,13 @@ import { ref, computed } from 'vue';
 import { IdCard, UserRound } from '@lucide/vue';
 import { useStyleStore } from '@/stores/project/styleStore';
 import { useLogStore } from '@/stores/project/logStore';
-import { useHistoryStore } from '@/stores/editor/historyStore';
-import { useLogEditorStore } from '@/stores/project/logEditorStore';
+import { useLogCommands } from '@/stores/project/logCommands';
 import type { RoleType } from '@/types/log';
 import type { ColorMode, ColorRule } from '@/types/style';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import {
     buildIdentityStats,
     collectMessageIdsByIdentity,
-    findFirstRoleByIdentity,
 } from '@/editor/identity';
 import { vClickOutside } from '@/directives/clickOutside';
 
@@ -115,8 +113,7 @@ interface IdentityListItem {
 
 const styleStore = useStyleStore();
 const logStore = useLogStore();
-const historyStore = useHistoryStore();
-const logEditorStore = useLogEditorStore();
+const logCommands = useLogCommands();
 const windowStore = useWindowStore();
 const localDisplayMode = ref<ColorMode>(styleStore.viewSettings.colorMode);
 const editingId = ref<string | null>(null);
@@ -163,44 +160,14 @@ function saveRename(oldVal: string) {
     }
 
     const mode = localDisplayMode.value;
-    const sourceIds = getMessageIdsForIdentity(oldVal);
-    const existingTargetIds = getMessageIdsForIdentity(newVal);
-
-    const mergedRole =
-        existingTargetIds.size > 0
-            ? (getRoleForIdentity(newVal) ?? getRoleForIdentity(oldVal))
-            : null;
-
-    if (sourceIds.size > 0) {
-        historyStore.captureSnapshot();
-        historyStore.runWithoutCapture(() => {
-            logEditorStore.batchUpdateMessages(
-                sourceIds,
-                buildRenameUpdate(mode, newVal),
-            );
-            const isMerged = styleStore.updateSystemRuleTarget(
-                mode,
-                oldVal,
-                newVal,
-            );
-            if (isMerged && mergedRole) {
-                const mergedIds = new Set<string>([
-                    ...sourceIds,
-                    ...existingTargetIds,
-                ]);
-                logEditorStore.batchUpdateMessages(mergedIds, {
-                    role: mergedRole,
-                });
-            }
-        });
-    }
+    logCommands.renameIdentity(mode, oldVal, newVal);
     editingId.value = null;
 }
 
 function updateRole(id: string, newRole: RoleType) {
     const targetIds = getMessageIdsForIdentity(id);
     if (targetIds.size > 0) {
-        logEditorStore.batchUpdateMessages(targetIds, { role: newRole });
+        logCommands.batchUpdateMessages(targetIds, { role: newRole });
     }
 }
 
@@ -214,16 +181,6 @@ function getMessageIdsForIdentity(id: string) {
         localDisplayMode.value,
         id,
     );
-}
-function getRoleForIdentity(id: string): RoleType | null {
-    return findFirstRoleByIdentity(
-        logStore.allMessages,
-        localDisplayMode.value,
-        id,
-    );
-}
-function buildRenameUpdate(mode: ColorMode, value: string) {
-    return mode === 'playerName' ? { playerName: value } : { account: value };
 }
 function getRoleFromSelectEvent(event: Event): RoleType {
     const value = (event.target as HTMLSelectElement).value;

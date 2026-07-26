@@ -3,25 +3,35 @@ import { useLogStore } from '@/stores/project/logStore';
 import { useHistoryStore } from '@/stores/editor/historyStore';
 import { useStyleStore } from '@/stores/project/styleStore';
 import { generateId } from '@/utils/id';
-import type { Chunk, Message } from '@/types/log';
+import type {
+    Chunk,
+    ChunkUpdates,
+    Message,
+    MessageUpdates,
+    RoleType,
+} from '@/types/log';
+import type { ColorMode } from '@/types/style';
+import { normalizeDocuments } from '@/editor/normalize';
+import { deriveDefaultProjectName } from '@/io/storage/project';
 
-function hasKeys<T extends object>(value: Partial<T>) {
+function hasKeys<T extends object>(value: T) {
     return Object.keys(value).length > 0;
 }
 
-export const useLogEditorStore = defineStore('logEditor', () => {
+export const useLogCommands = defineStore('logCommands', () => {
     const logStore = useLogStore();
     const historyStore = useHistoryStore();
     const styleStore = useStyleStore();
 
-    function runEdit(
+    function executeEdit(
         hasChange: boolean | (() => boolean),
         mutate: () => void,
         options?: {
-            normalize?: () => void;
             syncProjectName?: boolean;
+            syncSystemRules?: boolean;
+            afterMutate?: () => void;
         },
-    ) {
+    ): boolean {
         const shouldRun =
             typeof hasChange === 'function' ? hasChange() : hasChange;
         if (!shouldRun) {
@@ -30,30 +40,21 @@ export const useLogEditorStore = defineStore('logEditor', () => {
 
         historyStore.captureSnapshot();
         mutate();
-        options?.normalize?.();
+        normalizeDocuments(logStore.documents);
+        options?.afterMutate?.();
         if (options?.syncProjectName) {
-            logStore.syncProjectNameFromDocuments();
+            if (!logStore.isProjectNameCustomized) {
+                logStore.setProjectName(
+                    deriveDefaultProjectName(logStore.documents),
+                    false,
+                );
+            }
+        }
+        if (options?.syncSystemRules !== false) {
+            styleStore.syncSystemRulesFromMessages(logStore.allMessages);
         }
 
         return true;
-    }
-
-    function sanitizeChunkUpdates(updates: Partial<Chunk>) {
-        const { chunkId, docId, chunkIndex, messages, ...safeUpdates } =
-            updates;
-        void chunkId;
-        void docId;
-        void chunkIndex;
-        void messages;
-        return safeUpdates;
-    }
-
-    function sanitizeMessageUpdates(updates: Partial<Message>) {
-        const { messageId, chunkId, messageIndex, ...safeUpdates } = updates;
-        void messageId;
-        void chunkId;
-        void messageIndex;
-        return safeUpdates;
     }
 
     function hasEntityUpdates<T extends object>(
@@ -69,7 +70,7 @@ export const useLogEditorStore = defineStore('logEditor', () => {
         message: Message,
         insertIndex: number,
     ) {
-        insertMessages(chunkId, [message], insertIndex);
+        return insertMessages(chunkId, [message], insertIndex);
     }
 
     function insertMessages(
@@ -78,21 +79,15 @@ export const useLogEditorStore = defineStore('logEditor', () => {
         insertIndex: number,
     ) {
         const chunk = logStore.findChunkById(chunkId);
-        if (!chunk || messages.length === 0) return;
+        if (!chunk || messages.length === 0) return false;
 
-        runEdit(
-            true,
-            () => {
-                const clampedIndex = Math.max(
-                    0,
-                    Math.min(insertIndex, chunk.messages.length),
-                );
-                chunk.messages.splice(clampedIndex, 0, ...messages);
-            },
-            {
-                normalize: () => logStore.normalizeMessages(chunk),
-            },
-        );
+        return executeEdit(true, () => {
+            const clampedIndex = Math.max(
+                0,
+                Math.min(insertIndex, chunk.messages.length),
+            );
+            chunk.messages.splice(clampedIndex, 0, ...messages);
+        });
     }
 
     function insertNewMessageAfter(
@@ -114,59 +109,36 @@ export const useLogEditorStore = defineStore('logEditor', () => {
             note: '',
         };
 
-        insertMessages(chunkId, [newMessage], index + 1);
+        return insertMessages(chunkId, [newMessage], index + 1);
     }
 
     function deleteMessage(chunkId: string, messageId: string) {
         const chunk = logStore.findChunkById(chunkId);
-        if (!chunk) return;
+        if (!chunk) return false;
 
         const index = chunk.messages.findIndex(
             (m) => m.messageId === messageId,
         );
-        runEdit(
-            index !== -1,
-            () => {
-                chunk.messages.splice(index, 1);
-            },
-            {
-                normalize: () => logStore.normalizeMessages(chunk),
-            },
-        );
+        return executeEdit(index !== -1, () => {
+            chunk.messages.splice(index, 1);
+        });
     }
 
     function updateMessage(
         chunkId: string,
         messageId: string,
-        updates: Partial<Message>,
+        updates: MessageUpdates,
     ) {
         const chunk = logStore.findChunkById(chunkId);
-        if (!chunk) return;
+        if (!chunk) return false;
 
         const message = chunk.messages.find((m) => m.messageId === messageId);
-        if (!message) return;
+        if (!message) return false;
 
-        const safeUpdates = sanitizeMessageUpdates(updates);
-        const shouldSyncIdentities =
-            ('playerName' in safeUpdates &&
-                !Object.is(message.playerName, safeUpdates.playerName)) ||
-            ('account' in safeUpdates &&
-                !Object.is(message.account, safeUpdates.account));
-
-        runEdit(
-            hasKeys(safeUpdates) && hasEntityUpdates(message, safeUpdates),
+        return executeEdit(
+            hasKeys(updates) && hasEntityUpdates(message, updates),
             () => {
-                Object.assign(message, safeUpdates);
-            },
-            {
-                normalize: () => {
-                    logStore.normalizeMessages(chunk);
-                    if (shouldSyncIdentities) {
-                        styleStore.syncSystemRulesFromMessages(
-                            logStore.allMessages,
-                        );
-                    }
-                },
+                Object.assign(message, updates);
             },
         );
     }
@@ -177,17 +149,17 @@ export const useLogEditorStore = defineStore('logEditor', () => {
         targetChunkId: string,
         targetIndex: number,
     ) {
-        if (messageIds.length === 0) return;
+        if (messageIds.length === 0) return false;
 
         const sourceChunk = logStore.findChunkById(sourceChunkId);
         const targetChunk = logStore.findChunkById(targetChunkId);
-        if (!sourceChunk || !targetChunk) return;
+        if (!sourceChunk || !targetChunk) return false;
 
         const idSet = new Set(messageIds);
         const movingMessages = sourceChunk.messages.filter((m) =>
             idSet.has(m.messageId),
         );
-        if (movingMessages.length === 0) return;
+        if (movingMessages.length === 0) return false;
 
         const sourcePositions = sourceChunk.messages
             .map((message, index) =>
@@ -207,27 +179,16 @@ export const useLogEditorStore = defineStore('logEditor', () => {
             normalizedTargetIndex >= currentStartIndex &&
             normalizedTargetIndex <= currentEndIndex + 1;
 
-        runEdit(
-            !isNoopMove,
-            () => {
-                sourceChunk.messages = sourceChunk.messages.filter(
-                    (m) => !idSet.has(m.messageId),
-                );
-                const clampedIndex = Math.max(
-                    0,
-                    Math.min(targetIndex, targetChunk.messages.length),
-                );
-                targetChunk.messages.splice(clampedIndex, 0, ...movingMessages);
-            },
-            {
-                normalize: () => {
-                    logStore.normalizeMessages(sourceChunk);
-                    if (sourceChunkId !== targetChunkId) {
-                        logStore.normalizeMessages(targetChunk);
-                    }
-                },
-            },
-        );
+        return executeEdit(!isNoopMove, () => {
+            sourceChunk.messages = sourceChunk.messages.filter(
+                (m) => !idSet.has(m.messageId),
+            );
+            const clampedIndex = Math.max(
+                0,
+                Math.min(targetIndex, targetChunk.messages.length),
+            );
+            targetChunk.messages.splice(clampedIndex, 0, ...movingMessages);
+        });
     }
 
     function reorderMessageInChunk(
@@ -244,27 +205,21 @@ export const useLogEditorStore = defineStore('logEditor', () => {
             newIndex < 0 ||
             newIndex >= chunk.messages.length
         ) {
-            return;
+            return false;
         }
 
-        runEdit(
-            true,
-            () => {
-                const [message] = chunk.messages.splice(oldIndex, 1);
-                if (message) {
-                    chunk.messages.splice(newIndex, 0, message);
-                }
-            },
-            {
-                normalize: () => logStore.normalizeMessages(chunk),
-            },
-        );
+        return executeEdit(true, () => {
+            const [message] = chunk.messages.splice(oldIndex, 1);
+            if (message) {
+                chunk.messages.splice(newIndex, 0, message);
+            }
+        });
     }
 
     function batchDeleteMessages(targetIds: Set<string>) {
-        if (targetIds.size === 0) return;
+        if (targetIds.size === 0) return false;
 
-        runEdit(
+        return executeEdit(
             () =>
                 logStore.documents.some((doc) =>
                     doc.chunks.some((chunk) =>
@@ -280,30 +235,23 @@ export const useLogEditorStore = defineStore('logEditor', () => {
                     });
                 });
             },
-            {
-                normalize: () =>
-                    logStore.normalizeDocuments(logStore.documents),
-            },
         );
     }
 
     function batchUpdateMessages(
         targetIds: Set<string>,
-        updates: Partial<Message>,
+        updates: MessageUpdates,
     ) {
-        if (targetIds.size === 0) return;
+        if (targetIds.size === 0 || !hasKeys(updates)) return false;
 
-        const safeUpdates = sanitizeMessageUpdates(updates);
-        if (!hasKeys(safeUpdates)) return;
-
-        runEdit(
+        return executeEdit(
             () =>
                 logStore.documents.some((doc) =>
                     doc.chunks.some((chunk) =>
                         chunk.messages.some(
                             (message) =>
                                 targetIds.has(message.messageId) &&
-                                hasEntityUpdates(message, safeUpdates),
+                                hasEntityUpdates(message, updates),
                         ),
                     ),
                 ),
@@ -312,17 +260,49 @@ export const useLogEditorStore = defineStore('logEditor', () => {
                     doc.chunks.forEach((chunk) => {
                         chunk.messages.forEach((message) => {
                             if (targetIds.has(message.messageId)) {
-                                Object.assign(message, safeUpdates);
+                                Object.assign(message, updates);
                             }
                         });
                     });
                 });
             },
-            {
-                normalize: () =>
-                    logStore.normalizeDocuments(logStore.documents),
-            },
         );
+    }
+
+    function renameIdentity(
+        mode: ColorMode,
+        oldValue: string,
+        newValue: string,
+    ) {
+        const normalizedValue = newValue.trim();
+        if (!normalizedValue || normalizedValue === oldValue) return false;
+
+        const sourceMessages = logStore.allMessages.filter(
+            (message) => message[mode] === oldValue,
+        );
+        if (sourceMessages.length === 0) return false;
+
+        const targetMessages = logStore.allMessages.filter(
+            (message) => message[mode] === normalizedValue,
+        );
+        const mergedRole: RoleType =
+            targetMessages[0]?.role ?? sourceMessages[0]?.role ?? 'unknown';
+
+        return executeEdit(true, () => {
+            sourceMessages.forEach((message) => {
+                message[mode] = normalizedValue;
+            });
+            const didMergeRule = styleStore.updateSystemRuleTarget(
+                mode,
+                oldValue,
+                normalizedValue,
+            );
+            if (didMergeRule) {
+                [...sourceMessages, ...targetMessages].forEach((message) => {
+                    message.role = mergedRole;
+                });
+            }
+        });
     }
 
     function mergeMessages(
@@ -331,12 +311,12 @@ export const useLogEditorStore = defineStore('logEditor', () => {
         targetMessageId?: string,
     ) {
         const chunk = logStore.findChunkById(chunkId);
-        if (!chunk || messageIds.length < 2) return;
+        if (!chunk || messageIds.length < 2) return false;
 
         const toMerge = chunk.messages
             .filter((m) => messageIds.includes(m.messageId))
             .sort((a, b) => a.messageIndex - b.messageIndex);
-        if (toMerge.length < 2) return;
+        if (toMerge.length < 2) return false;
 
         const target =
             toMerge.find((m) => m.messageId === targetMessageId) || toMerge[0];
@@ -347,7 +327,7 @@ export const useLogEditorStore = defineStore('logEditor', () => {
                 .filter((id) => id !== target.messageId),
         );
 
-        runEdit(
+        return executeEdit(
             target.content !== mergedContent || removeIds.size > 0,
             () => {
                 target.content = mergedContent;
@@ -355,29 +335,30 @@ export const useLogEditorStore = defineStore('logEditor', () => {
                     (m) => !removeIds.has(m.messageId),
                 );
             },
-            {
-                normalize: () => logStore.normalizeMessages(chunk),
-            },
         );
     }
 
     function mergeWithNextMessage(chunkId: string, messageId: string) {
         const chunk = logStore.findChunkById(chunkId);
-        if (!chunk) return;
+        if (!chunk) return false;
 
         const index = chunk.messages.findIndex(
             (m) => m.messageId === messageId,
         );
-        if (index === -1 || index >= chunk.messages.length - 1) return;
+        if (index === -1 || index >= chunk.messages.length - 1) return false;
 
         const nextMessage = chunk.messages[index + 1];
-        mergeMessages(chunkId, [messageId, nextMessage.messageId], messageId);
+        return mergeMessages(
+            chunkId,
+            [messageId, nextMessage.messageId],
+            messageId,
+        );
     }
 
     function toggleOoc(targetIds: Set<string>) {
-        if (targetIds.size === 0) return;
+        if (targetIds.size === 0) return false;
 
-        runEdit(
+        return executeEdit(
             () =>
                 logStore.documents.some((doc) =>
                     doc.chunks.some((chunk) =>
@@ -395,17 +376,14 @@ export const useLogEditorStore = defineStore('logEditor', () => {
                     });
                 });
             },
-            {
-                normalize: () =>
-                    logStore.normalizeDocuments(logStore.documents),
-            },
+            { syncSystemRules: false },
         );
     }
 
     function toggleCommand(targetIds: Set<string>) {
-        if (targetIds.size === 0) return;
+        if (targetIds.size === 0) return false;
 
-        runEdit(
+        return executeEdit(
             () =>
                 logStore.documents.some((doc) =>
                     doc.chunks.some((chunk) =>
@@ -423,63 +401,73 @@ export const useLogEditorStore = defineStore('logEditor', () => {
                     });
                 });
             },
-            {
-                normalize: () =>
-                    logStore.normalizeDocuments(logStore.documents),
-            },
+            { syncSystemRules: false },
         );
     }
 
-    function updateChunk(chunkId: string, updates: Partial<Chunk>) {
+    function updateChunk(chunkId: string, updates: ChunkUpdates) {
         const chunk = logStore.findChunkById(chunkId);
-        if (!chunk) return;
+        if (!chunk) return false;
 
-        const safeUpdates = sanitizeChunkUpdates(updates);
         const doc = logStore.findDocumentById(chunk.docId);
-        if (!doc) return;
+        if (!doc) return false;
 
-        runEdit(
-            hasKeys(safeUpdates) && hasEntityUpdates(chunk, safeUpdates),
+        return executeEdit(
+            hasKeys(updates) && hasEntityUpdates(chunk, updates),
             () => {
-                Object.assign(chunk, safeUpdates);
+                Object.assign(chunk, updates);
             },
-            {
-                normalize: () => logStore.normalizeDocument(doc),
-            },
+            { syncSystemRules: false },
         );
     }
 
     function renameDocument(docId: string, docName: string) {
         const doc = logStore.findDocumentById(docId);
-        if (!doc) return;
+        if (!doc) return false;
 
         const normalizedName = docName.trim();
-        runEdit(
+        return executeEdit(
             normalizedName.length > 0 && normalizedName !== doc.docName,
             () => {
                 doc.docName = normalizedName;
             },
-            {
-                normalize: () => logStore.normalizeDocument(doc),
-                syncProjectName: true,
+            { syncProjectName: true, syncSystemRules: false },
+        );
+    }
+
+    function setDocumentExpanded(docId: string, isExpanded: boolean) {
+        const doc = logStore.findDocumentById(docId);
+        if (!doc || doc.isExpanded === isExpanded) return false;
+        logStore.setDocumentExpanded(docId, isExpanded);
+        return true;
+    }
+
+    function deleteDocument(docId: string) {
+        const index = logStore.documents.findIndex(
+            (doc) => doc.docId === docId,
+        );
+        if (index === -1) return false;
+
+        return executeEdit(
+            true,
+            () => {
+                logStore.documents.splice(index, 1);
             },
+            { syncProjectName: true },
         );
     }
 
     function deleteChunk(chunkId: string) {
         const chunk = logStore.findChunkById(chunkId);
-        if (!chunk) return;
+        if (!chunk) return false;
 
         const doc = logStore.findDocumentById(chunk.docId);
-        if (!doc) return;
+        if (!doc) return false;
 
-        runEdit(
+        return executeEdit(
             doc.chunks.some((c) => c.chunkId === chunkId),
             () => {
                 doc.chunks = doc.chunks.filter((c) => c.chunkId !== chunkId);
-            },
-            {
-                normalize: () => logStore.normalizeDocument(doc),
             },
         );
     }
@@ -490,16 +478,16 @@ export const useLogEditorStore = defineStore('logEditor', () => {
         targetIndex: number,
     ) {
         const chunk = logStore.findChunkById(chunkId);
-        if (!chunk) return;
+        if (!chunk) return false;
 
         const sourceDoc = logStore.findDocumentById(chunk.docId);
         const targetDoc = logStore.findDocumentById(targetDocId);
-        if (!sourceDoc || !targetDoc) return;
+        if (!sourceDoc || !targetDoc) return false;
 
         const sourceIndex = sourceDoc.chunks.findIndex(
             (c) => c.chunkId === chunkId,
         );
-        if (sourceIndex === -1) return;
+        if (sourceIndex === -1) return false;
 
         const normalizedTargetIndex = Math.max(
             0,
@@ -510,25 +498,14 @@ export const useLogEditorStore = defineStore('logEditor', () => {
             normalizedTargetIndex >= sourceIndex &&
             normalizedTargetIndex <= sourceIndex + 1;
 
-        runEdit(
-            !isNoopMove,
-            () => {
-                sourceDoc.chunks.splice(sourceIndex, 1);
-                const clampedIndex = Math.max(
-                    0,
-                    Math.min(targetIndex, targetDoc.chunks.length),
-                );
-                targetDoc.chunks.splice(clampedIndex, 0, chunk);
-            },
-            {
-                normalize: () => {
-                    logStore.normalizeDocument(sourceDoc);
-                    if (sourceDoc.docId !== targetDoc.docId) {
-                        logStore.normalizeDocument(targetDoc);
-                    }
-                },
-            },
-        );
+        return executeEdit(!isNoopMove, () => {
+            sourceDoc.chunks.splice(sourceIndex, 1);
+            const clampedIndex = Math.max(
+                0,
+                Math.min(targetIndex, targetDoc.chunks.length),
+            );
+            targetDoc.chunks.splice(clampedIndex, 0, chunk);
+        });
     }
 
     function reorderChunk(oldIndex: number, newIndex: number) {
@@ -539,14 +516,14 @@ export const useLogEditorStore = defineStore('logEditor', () => {
             newIndex < 0 ||
             newIndex >= chunks.length
         ) {
-            return;
+            return false;
         }
 
         const sourceChunk = chunks[oldIndex];
         const targetChunk = chunks[newIndex];
-        if (!sourceChunk || !targetChunk) return;
+        if (!sourceChunk || !targetChunk) return false;
 
-        moveChunk(
+        return moveChunk(
             sourceChunk.chunkId,
             targetChunk.docId,
             targetChunk.chunkIndex,
@@ -554,91 +531,73 @@ export const useLogEditorStore = defineStore('logEditor', () => {
     }
 
     function mergeChunks(chunkIds: string[]) {
-        if (chunkIds.length < 2) return;
+        if (chunkIds.length < 2) return false;
 
         const chunks = chunkIds
             .map((id) => logStore.findChunkById(id))
             .filter((chunk): chunk is Chunk => !!chunk)
             .sort((a, b) => a.chunkIndex - b.chunkIndex);
-        if (chunks.length < 2) return;
-        if (chunks.some((chunk) => chunk.docId !== chunks[0].docId)) return;
+        if (chunks.length < 2) return false;
+        if (chunks.some((chunk) => chunk.docId !== chunks[0].docId))
+            return false;
 
         const targetChunk = chunks[0];
         const doc = logStore.findDocumentById(targetChunk.docId);
-        if (!doc) return;
+        if (!doc) return false;
 
         const otherIds = new Set(chunks.slice(1).map((chunk) => chunk.chunkId));
-        runEdit(
-            otherIds.size > 0,
-            () => {
-                targetChunk.messages = chunks.flatMap(
-                    (chunk) => chunk.messages,
-                );
-                targetChunk.chunkName = targetChunk.chunkName || '合并后的分块';
-                doc.chunks = doc.chunks.filter(
-                    (chunk) => !otherIds.has(chunk.chunkId),
-                );
-            },
-            {
-                normalize: () => logStore.normalizeDocument(doc),
-            },
-        );
+        return executeEdit(otherIds.size > 0, () => {
+            targetChunk.messages = chunks.flatMap((chunk) => chunk.messages);
+            targetChunk.chunkName = targetChunk.chunkName || '合并后的分块';
+            doc.chunks = doc.chunks.filter(
+                (chunk) => !otherIds.has(chunk.chunkId),
+            );
+        });
     }
 
     function mergeWithNextChunk(chunkId: string) {
         const currentChunk = logStore.findChunkById(chunkId);
-        if (!currentChunk) return;
+        if (!currentChunk) return false;
 
         const doc = logStore.findDocumentById(currentChunk.docId);
-        if (!doc) return;
+        if (!doc) return false;
 
         const chunkIndex = doc.chunks.findIndex(
             (chunk) => chunk.chunkId === chunkId,
         );
-        if (chunkIndex === -1 || chunkIndex >= doc.chunks.length - 1) return;
+        if (chunkIndex === -1 || chunkIndex >= doc.chunks.length - 1)
+            return false;
 
         const nextChunk = doc.chunks[chunkIndex + 1];
-        runEdit(
-            true,
-            () => {
-                currentChunk.messages.push(...nextChunk.messages);
-                doc.chunks.splice(chunkIndex + 1, 1);
-            },
-            {
-                normalize: () => logStore.normalizeDocument(doc),
-            },
-        );
+        return executeEdit(true, () => {
+            currentChunk.messages.push(...nextChunk.messages);
+            doc.chunks.splice(chunkIndex + 1, 1);
+        });
     }
 
     function splitChunk(chunkId: string, messageId: string) {
         const chunk = logStore.findChunkById(chunkId);
-        if (!chunk) return;
+        if (!chunk) return false;
 
         const doc = logStore.findDocumentById(chunk.docId);
-        if (!doc) return;
+        if (!doc) return false;
 
         const msgIndex = chunk.messages.findIndex(
             (m) => m.messageId === messageId,
         );
-        if (msgIndex === -1 || msgIndex === 0) return;
+        if (msgIndex === -1 || msgIndex === 0) return false;
 
-        runEdit(
-            true,
-            () => {
-                const remainingMessages = chunk.messages.splice(msgIndex);
-                const newChunk: Chunk = {
-                    chunkId: generateId(),
-                    docId: doc.docId,
-                    chunkName: `${chunk.chunkName} (拆分)`,
-                    chunkIndex: chunk.chunkIndex + 1,
-                    messages: remainingMessages,
-                };
-                doc.chunks.splice(chunk.chunkIndex + 1, 0, newChunk);
-            },
-            {
-                normalize: () => logStore.normalizeDocument(doc),
-            },
-        );
+        return executeEdit(true, () => {
+            const remainingMessages = chunk.messages.splice(msgIndex);
+            const newChunk: Chunk = {
+                chunkId: generateId(),
+                docId: doc.docId,
+                chunkName: `${chunk.chunkName} (拆分)`,
+                chunkIndex: chunk.chunkIndex + 1,
+                messages: remainingMessages,
+            };
+            doc.chunks.splice(chunk.chunkIndex + 1, 0, newChunk);
+        });
     }
 
     function insertChunks(
@@ -647,21 +606,15 @@ export const useLogEditorStore = defineStore('logEditor', () => {
         insertIndex: number,
     ) {
         const doc = logStore.findDocumentById(targetDocId);
-        if (!doc || chunks.length === 0) return;
+        if (!doc || chunks.length === 0) return false;
 
-        runEdit(
-            true,
-            () => {
-                const clampedIndex = Math.max(
-                    0,
-                    Math.min(insertIndex, doc.chunks.length),
-                );
-                doc.chunks.splice(clampedIndex, 0, ...chunks);
-            },
-            {
-                normalize: () => logStore.normalizeDocument(doc),
-            },
-        );
+        return executeEdit(true, () => {
+            const clampedIndex = Math.max(
+                0,
+                Math.min(insertIndex, doc.chunks.length),
+            );
+            doc.chunks.splice(clampedIndex, 0, ...chunks);
+        });
     }
 
     return {
@@ -674,6 +627,7 @@ export const useLogEditorStore = defineStore('logEditor', () => {
         reorderMessageInChunk,
         batchDeleteMessages,
         batchUpdateMessages,
+        renameIdentity,
         mergeMessages,
         mergeWithNextMessage,
         toggleOoc,
@@ -681,6 +635,8 @@ export const useLogEditorStore = defineStore('logEditor', () => {
 
         updateChunk,
         renameDocument,
+        setDocumentExpanded,
+        deleteDocument,
         deleteChunk,
         moveChunk,
         reorderChunk,

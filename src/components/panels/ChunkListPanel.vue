@@ -219,9 +219,8 @@
 import { ChevronRight, ChevronsDown, Trash2 } from '@lucide/vue';
 import { nextTick, reactive, ref, watch } from 'vue';
 import { useChunkDragDrop } from '@/composables/interaction/useDragDrop';
-import { useLogEditorStore } from '@/stores/project/logEditorStore';
+import { useLogCommands } from '@/stores/project/logCommands';
 import { useLogStore } from '@/stores/project/logStore';
-import { useStyleStore } from '@/stores/project/styleStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
 import type { Chunk, LogDocument } from '@/types/log';
@@ -229,9 +228,8 @@ import { useActiveContext } from '@/composables/application/useActiveContext';
 import { vClickOutside } from '@/directives/clickOutside';
 
 const logStore = useLogStore();
-const styleStore = useStyleStore();
 const windowStore = useWindowStore();
-const logEditorStore = useLogEditorStore();
+const logCommands = useLogCommands();
 const editorSessionStore = useEditorSessionStore();
 const chunkDrag = useChunkDragDrop();
 const activeContext = useActiveContext('chunkList');
@@ -283,13 +281,12 @@ function resetProjectNameDraft() {
 }
 
 function handleToggleExpand(doc: LogDocument) {
-    logStore.updateDocument(doc.docId, { isExpanded: !doc.isExpanded });
+    logCommands.setDocumentExpanded(doc.docId, !doc.isExpanded);
 }
 
 function handleRemoveDoc(docId: string) {
     if (confirm('确定要删除这个文档及其所有消息吗？这不会删除原始文件。')) {
-        logStore.removeDocument(docId);
-        styleStore.syncSystemRulesFromMessages(logStore.allMessages);
+        logCommands.deleteDocument(docId);
     }
 }
 
@@ -331,9 +328,9 @@ function submitRename(kind: 'document' | 'chunk', id: string) {
     }
 
     if (kind === 'document') {
-        logEditorStore.renameDocument(id, nextName);
+        logCommands.renameDocument(id, nextName);
     } else {
-        logEditorStore.updateChunk(id, { chunkName: nextName });
+        logCommands.updateChunk(id, { chunkName: nextName });
     }
 
     cancelRename();
@@ -355,7 +352,7 @@ function isRenamingChunk(chunk: Chunk) {
 
 function handleMerge(currentChunkId: string, nextChunkId: string) {
     withScrollAnchor(() => {
-        logEditorStore.mergeChunks([currentChunkId, nextChunkId]);
+        logCommands.mergeChunks([currentChunkId, nextChunkId]);
     });
 }
 
@@ -390,7 +387,7 @@ function handleDelete(chunkId: string) {
         )
     ) {
         targets.forEach((id) => {
-            logEditorStore.deleteChunk(id);
+            logCommands.deleteChunk(id);
             if (windowStore.isWindowOpen(id)) {
                 windowStore.unregisterWindow(id);
             }

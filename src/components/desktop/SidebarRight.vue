@@ -81,14 +81,14 @@ import { useActiveContext } from '@/composables/application/useActiveContext';
 import { useDraftValues } from '@/composables/application/useDraftValues';
 import { usePanelResize } from '@/composables/ui/usePanelResize';
 import { useLogStore } from '@/stores/project/logStore';
-import { useLogEditorStore } from '@/stores/project/logEditorStore';
+import { useLogCommands } from '@/stores/project/logCommands';
 import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
 import { useUiStore } from '@/stores/ui/uiStore';
 import type { Message } from '@/types/log';
 
 const activeContext = useActiveContext();
 const logStore = useLogStore();
-const logEditorStore = useLogEditorStore();
+const logCommands = useLogCommands();
 const editorSessionStore = useEditorSessionStore();
 const uiStore = useUiStore();
 const { startResize } = usePanelResize({
@@ -156,7 +156,7 @@ function commitDraft(
     field: MessageDetailTextField,
 ) {
     messageDrafts.commit(messageId, field, (value) => {
-        logEditorStore.updateMessage(chunkId, messageId, {
+        logCommands.updateMessage(chunkId, messageId, {
             [field]: value,
         });
     });
@@ -170,7 +170,7 @@ function updateField(
     value: unknown,
 ) {
     editorSessionStore.startEditing({ kind: 'message', chunkId, messageId });
-    logEditorStore.updateMessage(chunkId, messageId, {
+    logCommands.updateMessage(chunkId, messageId, {
         [field]: value,
     });
 }

@@ -77,7 +77,7 @@ import type {
     MessageDetailTextField,
     MessageDetailValues,
 } from '@/components/common/MessageDetailEditor.vue';
-import { useLogEditorStore } from '@/stores/project/logEditorStore';
+import { useLogCommands } from '@/stores/project/logCommands';
 import { useLogStore } from '@/stores/project/logStore';
 import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
 import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
@@ -90,7 +90,7 @@ const MessageDetailEditor = defineAsyncComponent(
 const mobileUiStore = useMobileUiStore();
 const editorSessionStore = useEditorSessionStore();
 const logStore = useLogStore();
-const editorStore = useLogEditorStore();
+const logCommands = useLogCommands();
 const editingMessage = computed(() => {
     const target = editorSessionStore.activeTarget;
     if (target?.kind !== 'message') return null;
@@ -147,7 +147,7 @@ function updateMessageDraftText(field: MessageDetailTextField, value: string) {
 function commitMessageDraftText(field: MessageDetailTextField) {
     const target = editorSessionStore.activeTarget;
     if (target?.kind !== 'message') return;
-    editorStore.updateMessage(target.chunkId, target.messageId, {
+    logCommands.updateMessage(target.chunkId, target.messageId, {
         [field]: messageDraft[field],
     });
 }
@@ -159,7 +159,7 @@ function updateMessageDraftField<K extends keyof MessageDetailValues>(
     messageDraft[field] = value;
     const target = editorSessionStore.activeTarget;
     if (target?.kind !== 'message') return;
-    editorStore.updateMessage(target.chunkId, target.messageId, {
+    logCommands.updateMessage(target.chunkId, target.messageId, {
         [field]: value,
     });
 }
@@ -171,7 +171,7 @@ function commitProjectName() {
 function commitChunkName() {
     const target = editorSessionStore.activeTarget;
     if (target?.kind !== 'chunkName') return;
-    editorStore.updateChunk(target.chunkId, {
+    logCommands.updateChunk(target.chunkId, {
         chunkName: chunkNameDraft.value.trim() || '未命名场景',
     });
 }
