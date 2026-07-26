@@ -9,6 +9,7 @@
         "dev": "vite",
         "build": "vue-tsc -b && vite build",
         "build:single": "export VITE_SINGLE_FILE=true && vue-tsc -b && vite build",
+        "test": "vitest run",
         "preview": "vite preview",
         "format": "prettier --write ."
     },
@@ -29,6 +30,7 @@
         "typescript": "~5.9.3",
         "vite": "^8.0.1",
         "vite-plugin-singlefile": "^2.3.3",
+        "vitest": "^3.2.4",
         "vue-tsc": "^3.2.5"
     }
 }
