@@ -35,7 +35,8 @@ function ruleStore() {
         enableMarkdown: false,
         colorMode: 'playerName',
     });
-    const rules = ref<StyleRule[]>(createDefaultStyleRules());
+    const rules = ref<StyleRule[]>([]);
+    let hasInitializedDefaultRules = false;
 
     // 获取所有系统基础规则 (Priority 0)
     const systemRules = computed(() => {
@@ -81,6 +82,12 @@ function ruleStore() {
     // 基于当前消息全集重建系统规则，保留自定义规则以及已有系统规则的颜色和 ruleId
     function syncSystemRulesFromMessages(messages: Message[]) {
         const customRules = rules.value.filter((r) => r.priority > 0);
+
+        // 首次创建项目时增加系统规则，打开已有项目时不创建
+        if (!hasInitializedDefaultRules) {
+            customRules.unshift(...createDefaultStyleRules());
+            hasInitializedDefaultRules = true;
+        }
         const existingNameRules = new Map<string, StyleRule>();
         const existingAccountRules = new Map<string, StyleRule>();
 
@@ -215,10 +222,12 @@ function ruleStore() {
 
     function clearRules() {
         rules.value = [];
+        hasInitializedDefaultRules = false;
     }
 
     function replaceRules(newRules: StyleRule[]) {
         rules.value = newRules;
+        hasInitializedDefaultRules = true;
     }
 
     function replaceViewSettings(newSettings: ViewSettings) {
