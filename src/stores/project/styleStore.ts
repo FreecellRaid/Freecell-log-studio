@@ -5,6 +5,29 @@ import type { Message } from '@/types/log';
 import { generateId } from '@/utils/id';
 import { collectIdentityValues } from '@/editor/identity';
 
+function createDefaultStyleRules(): StyleRule[] {
+    return [
+        {
+            ruleId: generateId(),
+            ruleName: '角色名加粗',
+            filter: {},
+            style: { bold: true },
+            area: 'playerName',
+            priority: 1,
+            isActive: false,
+        },
+        {
+            ruleId: generateId(),
+            ruleName: '场外消息斜体',
+            filter: { isOoc: true },
+            style: { italic: true },
+            area: 'content',
+            priority: 1,
+            isActive: false,
+        },
+    ];
+}
+
 function ruleStore() {
     const viewSettings = ref<ViewSettings>({
         hideOoc: false,
@@ -12,7 +35,7 @@ function ruleStore() {
         enableMarkdown: false,
         colorMode: 'playerName',
     });
-    const rules = ref<StyleRule[]>([]);
+    const rules = ref<StyleRule[]>(createDefaultStyleRules());
 
     // 获取所有系统基础规则 (Priority 0)
     const systemRules = computed(() => {
