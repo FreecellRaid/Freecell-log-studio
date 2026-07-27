@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { ExportFormat, ExportRow } from '@/types/export';
-import { htmlAdapter, textAdapter } from './exportAdapters';
+import {
+    htmlAdapter,
+    textAdapter,
+} from '@/io/export/adapters/exportAdapters';
 
 const format: ExportFormat = {
     formatId: 'format',

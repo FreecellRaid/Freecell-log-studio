@@ -41,7 +41,7 @@ function document(id: string, chunks: Chunk[]): LogDocument {
     };
 }
 
-describe('log commands', () => {
+describe('project log commands', () => {
     beforeEach(() => {
         setActivePinia(createPinia());
     });

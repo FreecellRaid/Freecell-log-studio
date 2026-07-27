@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeStyleForMessage } from './styleEngine';
+import { computeStyleForMessage } from '@/editor/styleEngine';
 import type { Message } from '@/types/log';
 import type { StyleRule } from '@/types/style';
 
