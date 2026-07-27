@@ -1,5 +1,5 @@
 import type { LogDocument, Message } from '@/types/log';
-import type { ViewSettings, ColorRule } from '@/types/style';
+import type { ViewSettings, StyleRule } from '@/types/style';
 import type { ExportRow, ExportStyle } from '@/types/export';
 import { computeStyleForMessage } from '@/editor/styleEngine';
 import { normalizeExportContentNewlines } from './templateParser';
@@ -35,7 +35,7 @@ function mapCssToExportStyle(css: CSSProperties): ExportStyle {
 export function flattenLogToRows(
     documents: LogDocument[],
     viewSettings: ViewSettings,
-    activeRules: ColorRule[],
+    activeRules: StyleRule[],
 ): ExportRow[] {
     const rows: ExportRow[] = [];
 

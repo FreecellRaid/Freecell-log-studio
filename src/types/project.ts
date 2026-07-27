@@ -1,13 +1,13 @@
-import type { ViewSettings, ColorRule } from './style';
+import type { ViewSettings, StyleRule } from './style';
 import type { LogDocument } from './log';
 
 export interface ProjectFile {
-    version: 1;
+    version: 2;
     projectId: string;
     projectName: string;
     time: string;
     documents: LogDocument[];
-    colorRules: ColorRule[];
+    styleRules: StyleRule[];
     viewSettings: ViewSettings;
 }
 

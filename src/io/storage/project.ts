@@ -1,11 +1,11 @@
-import type { ColorRule, ViewSettings } from '@/types/style';
+import type { RuleStyle, StyleArea, StyleRule, ViewSettings } from '@/types/style';
 import type { LogDocument, MessageFilter } from '@/types/log';
 import { isRoleType } from '@/types/log';
 import type { ProjectFile } from '@/types/project';
 import { stripFileExtension } from '@/utils/fileName';
 import { generateId } from '@/utils/id';
 
-export const PROJECT_FILE_VERSION = 1 as const;
+export const PROJECT_FILE_VERSION = 2 as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -94,13 +94,13 @@ export function cloneDocuments(documents: LogDocument[]): LogDocument[] {
     }));
 }
 
-export function cloneRules(rules: ColorRule[]): ColorRule[] {
+export function cloneRules(rules: StyleRule[]): StyleRule[] {
     return rules.map((rule) => ({
         ruleId: rule.ruleId,
         ruleName: rule.ruleName,
         filter: cloneMessageFilter(rule.filter),
-        color: rule.color,
-        colorArea: rule.colorArea,
+        style: { ...rule.style },
+        area: rule.area,
         priority: rule.priority,
         isActive: rule.isActive,
     }));
@@ -131,7 +131,7 @@ export function buildProjectFile(params: {
     projectName: string;
     time?: string;
     documents: LogDocument[];
-    colorRules: ColorRule[];
+    styleRules: StyleRule[];
     viewSettings: ViewSettings;
 }): ProjectFile {
     const documents = cloneDocuments(params.documents);
@@ -144,7 +144,7 @@ export function buildProjectFile(params: {
         projectName,
         time: params.time || new Date().toISOString(),
         documents,
-        colorRules: cloneRules(params.colorRules),
+        styleRules: cloneRules(params.styleRules),
         viewSettings: cloneViewSettings(params.viewSettings),
     };
 }
@@ -327,7 +327,30 @@ function normalizeDocuments(rawDocuments: unknown): LogDocument[] {
     });
 }
 
-function normalizeRules(rawRules: unknown): ColorRule[] {
+function normalizeRuleStyle(rule: Record<string, unknown>): RuleStyle {
+    const rawStyle = isRecord(rule.style) ? rule.style : {};
+    const style: RuleStyle = {};
+    const color =
+        typeof rawStyle.color === 'string'
+            ? rawStyle.color
+            : typeof rule.color === 'string'
+              ? rule.color
+              : undefined;
+
+    if (color !== undefined) style.color = color;
+    if (rawStyle.bold === true) style.bold = true;
+    if (rawStyle.italic === true) style.italic = true;
+    return style;
+}
+
+function normalizeRuleArea(rule: Record<string, unknown>): StyleArea {
+    const area = rule.area ?? rule.colorArea;
+    return area === 'all' || area === 'playerName' || area === 'content'
+        ? area
+        : 'all';
+}
+
+function normalizeRules(rawRules: unknown): StyleRule[] {
     if (!Array.isArray(rawRules)) {
         return [];
     }
@@ -342,13 +365,8 @@ function normalizeRules(rawRules: unknown): ColorRule[] {
                     ? rule.ruleName
                     : '未命名规则',
             filter: normalizeFilter(rule.filter),
-            color: typeof rule.color === 'string' ? rule.color : '#1976D2',
-            colorArea:
-                rule.colorArea === 'all' ||
-                rule.colorArea === 'playerName' ||
-                rule.colorArea === 'content'
-                    ? rule.colorArea
-                    : 'all',
+            style: normalizeRuleStyle(rule),
+            area: normalizeRuleArea(rule),
             priority: typeof rule.priority === 'number' ? rule.priority : 0,
             isActive:
                 typeof rule.isActive === 'boolean' ? rule.isActive : false,
@@ -417,7 +435,11 @@ export function normalizeProjectFile(
         projectName: projectName || deriveDefaultProjectName(documents),
         time,
         documents,
-        colorRules: normalizeRules(rawProject.colorRules),
+        styleRules: normalizeRules(
+            Array.isArray(rawProject.styleRules)
+                ? rawProject.styleRules
+                : rawProject.colorRules,
+        ),
         viewSettings: normalizeViewSettings(rawProject.viewSettings),
     };
 }

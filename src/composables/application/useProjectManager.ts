@@ -57,7 +57,7 @@ export function useProjectManager() {
             projectName: logStore.projectName,
             time,
             documents: logStore.documents,
-            colorRules: styleStore.rules,
+            styleRules: styleStore.rules,
             viewSettings: styleStore.viewSettings,
         });
 
@@ -88,7 +88,7 @@ export function useProjectManager() {
             projectTime: project.time,
             isProjectNameCustomized: true,
         });
-        styleStore.replaceRules(project.colorRules);
+        styleStore.replaceRules(project.styleRules);
         styleStore.replaceViewSettings(project.viewSettings);
         clipboardStore.clearClipboard();
         activeContext.clearSelection();

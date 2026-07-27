@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { ColorRule, ColorMode, ViewSettings } from '@/types/style';
+import type { StyleRule, ColorMode, ViewSettings } from '@/types/style';
 import type { Message } from '@/types/log';
 import { generateId } from '@/utils/id';
 import { collectIdentityValues } from '@/editor/identity';
@@ -12,7 +12,7 @@ function ruleStore() {
         enableMarkdown: false,
         colorMode: 'playerName',
     });
-    const rules = ref<ColorRule[]>([]);
+    const rules = ref<StyleRule[]>([]);
 
     // 获取所有系统基础规则 (Priority 0)
     const systemRules = computed(() => {
@@ -42,14 +42,14 @@ function ruleStore() {
         type: 'playerName' | 'account',
         value: string,
         color: string,
-        existingRule?: ColorRule,
-    ): ColorRule {
+        existingRule?: StyleRule,
+    ): StyleRule {
         return {
             ruleId: existingRule?.ruleId ?? generateId(),
             ruleName: `${type === 'playerName' ? '角色' : '账号'}: ${value}`,
             filter: { [type]: value },
-            color: existingRule?.color ?? color,
-            colorArea: 'all',
+            style: { color: existingRule?.style.color ?? color },
+            area: 'all',
             priority: 0,
             isActive: viewSettings.value.colorMode === type,
         };
@@ -58,8 +58,8 @@ function ruleStore() {
     // 基于当前消息全集重建系统规则，保留自定义规则以及已有系统规则的颜色和 ruleId
     function syncSystemRulesFromMessages(messages: Message[]) {
         const customRules = rules.value.filter((r) => r.priority > 0);
-        const existingNameRules = new Map<string, ColorRule>();
-        const existingAccountRules = new Map<string, ColorRule>();
+        const existingNameRules = new Map<string, StyleRule>();
+        const existingAccountRules = new Map<string, StyleRule>();
 
         for (let i = 0; i < rules.value.length; i++) {
             const rule = rules.value[i];
@@ -76,7 +76,7 @@ function ruleStore() {
             }
         }
 
-        const nextSystemRules: ColorRule[] = [];
+        const nextSystemRules: StyleRule[] = [];
         const playerNames = collectIdentityValues(messages, 'playerName');
         const accounts = collectIdentityValues(messages, 'account');
         let colorIndex = 0;
@@ -160,19 +160,19 @@ function ruleStore() {
         // 默认为最高优先级 + 1
         const newPriority = maxPriority > 0 ? maxPriority + 1 : 1;
 
-        const newRule: ColorRule = {
+        const newRule: StyleRule = {
             ruleId: generateId(),
             ruleName: name,
             filter: {},
-            color: color,
-            colorArea: 'all',
+            style: { color },
+            area: 'all',
             priority: newPriority,
             isActive: false,
         };
         rules.value.push(newRule);
     }
 
-    function updateRule(ruleId: string, updates: Partial<ColorRule>) {
+    function updateRule(ruleId: string, updates: Partial<StyleRule>) {
         const rule = rules.value.find(function (r) {
             return r.ruleId === ruleId;
         });
@@ -194,7 +194,7 @@ function ruleStore() {
         rules.value = [];
     }
 
-    function replaceRules(newRules: ColorRule[]) {
+    function replaceRules(newRules: StyleRule[]) {
         rules.value = newRules;
     }
 

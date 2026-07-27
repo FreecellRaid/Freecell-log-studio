@@ -3,11 +3,11 @@ import { computed, ref } from 'vue';
 import { useLogStore } from '@/stores/project/logStore';
 import { useStyleStore } from '../project/styleStore';
 import type { LogDocument, MessageFilter } from '@/types/log';
-import type { ColorRule } from '@/types/style';
+import type { StyleRule } from '@/types/style';
 
 interface HistorySnapshot {
     documents: LogDocument[];
-    rules: ColorRule[];
+    rules: StyleRule[];
 }
 
 export const useHistoryStore = defineStore('history', () => {
@@ -90,13 +90,13 @@ export const useHistoryStore = defineStore('history', () => {
         }));
     }
 
-    function cloneRules(rules: ColorRule[]): ColorRule[] {
+    function cloneRules(rules: StyleRule[]): StyleRule[] {
         return rules.map((rule) => ({
             ruleId: rule.ruleId,
             ruleName: rule.ruleName,
             filter: cloneMessageFilter(rule.filter),
-            color: rule.color,
-            colorArea: rule.colorArea,
+            style: { ...rule.style },
+            area: rule.area,
             priority: rule.priority,
             isActive: rule.isActive,
         }));
