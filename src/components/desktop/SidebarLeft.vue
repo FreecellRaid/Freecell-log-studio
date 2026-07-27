@@ -36,7 +36,7 @@
                             windowStore.activeLeftPanelName === 'ruleEditor' &&
                             windowStore.leftSidebarVisible,
                     }"
-                    title="染色规则"
+                    title="样式规则"
                     @click="handleNavClick('ruleEditor')"
                 >
                     <Palette class="ui-icon" />

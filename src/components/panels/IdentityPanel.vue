@@ -65,11 +65,11 @@
                 <div class="col-color">
                     <div
                         class="color-picker-wrapper"
-                        :style="{ backgroundColor: item.rule.color }"
+                        :style="{ backgroundColor: item.rule.style.color }"
                     >
                         <input
                             type="color"
-                            :value="item.rule.color"
+                            :value="item.rule.style.color"
                             @input="
                                 (e) =>
                                     updateColor(
@@ -96,7 +96,7 @@ import { useStyleStore } from '@/stores/project/styleStore';
 import { useLogStore } from '@/stores/project/logStore';
 import { useLogCommands } from '@/stores/project/logCommands';
 import type { RoleType } from '@/types/log';
-import type { ColorMode, ColorRule } from '@/types/style';
+import type { ColorMode, StyleRule } from '@/types/style';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import {
     buildIdentityStats,
@@ -108,7 +108,7 @@ interface IdentityListItem {
     id: string;
     msgCount: number;
     role: RoleType;
-    rule: ColorRule;
+    rule: StyleRule;
 }
 
 const styleStore = useStyleStore();
@@ -172,7 +172,11 @@ function updateRole(id: string, newRole: RoleType) {
 }
 
 function updateColor(ruleId: string, newColor: string) {
-    styleStore.updateRule(ruleId, { color: newColor });
+    const rule = styleStore.rules.find((item) => item.ruleId === ruleId);
+    if (!rule) return;
+    styleStore.updateRule(ruleId, {
+        style: { ...rule.style, color: newColor },
+    });
 }
 
 function getMessageIdsForIdentity(id: string) {

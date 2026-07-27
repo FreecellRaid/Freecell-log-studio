@@ -1,7 +1,7 @@
 <template>
     <div class="status-bar">
         <div class="status-left">
-            <div class="status-item" title="选中消息命中的自定义染色规则数">
+            <div class="status-item" title="选中消息命中的自定义样式规则数">
                 <Palette class="ui-icon" />
                 {{ selectedCustomRuleCount }} 条自定义规则
             </div>
