@@ -2,7 +2,7 @@
     <div class="panel" @pointerdown="windowStore.setFocus('ruleEditor')">
         <div class="panel-header">
             <div class="header-title">
-                <h3>自定义染色规则</h3>
+                <h3>自定义样式规则</h3>
             </div>
             <button
                 class="panel-header-action-button icon-interactive"
@@ -64,12 +64,13 @@
                         />
                     </button>
                     <div
+                        v-if="rule.style.color"
                         class="color-picker-wrapper"
-                        :style="{ backgroundColor: rule.color }"
+                        :style="{ backgroundColor: rule.style.color }"
                     >
                         <input
                             type="color"
-                            :value="rule.color"
+                            :value="rule.style.color"
                             @input="updateColor(rule, $event)"
                             @click.stop
                         />
@@ -101,6 +102,47 @@
                         />
                     </div>
 
+                    <div class="form-group">
+                        <div class="style-effect-controls">
+                            <ToggleButton
+                                :model-value="rule.style.color !== undefined"
+                                @update:model-value="
+                                    setStyleEffect(
+                                        rule,
+                                        'color',
+                                        Boolean($event),
+                                    )
+                                "
+                            >
+                                颜色
+                            </ToggleButton>
+                            <ToggleButton
+                                :model-value="rule.style.bold === true"
+                                @update:model-value="
+                                    setStyleEffect(
+                                        rule,
+                                        'bold',
+                                        Boolean($event),
+                                    )
+                                "
+                            >
+                                加粗
+                            </ToggleButton>
+                            <ToggleButton
+                                :model-value="rule.style.italic === true"
+                                @update:model-value="
+                                    setStyleEffect(
+                                        rule,
+                                        'italic',
+                                        Boolean($event),
+                                    )
+                                "
+                            >
+                                斜体
+                            </ToggleButton>
+                        </div>
+                    </div>
+
                     <div class="form-row two-col">
                         <div class="form-group">
                             <label>优先级</label>
@@ -129,18 +171,18 @@
                             />
                         </div>
                         <div class="form-group">
-                            <label>染色范围</label>
+                            <label>作用范围</label>
                             <select
                                 class="form-control"
-                                v-model="rule.colorArea"
+                                v-model="rule.area"
                                 @change="
                                     handleUpdate(rule.ruleId, {
-                                        colorArea: rule.colorArea,
+                                        area: rule.area,
                                     })
                                 "
                             >
                                 <option value="all">全部</option>
-                                <option value="name">仅名字</option>
+                                <option value="playerName">仅名字</option>
                                 <option value="content">仅内容</option>
                             </select>
                         </div>
@@ -355,11 +397,12 @@ import { useStyleStore } from '@/stores/project/styleStore';
 import { useLogStore } from '@/stores/project/logStore';
 import { useActiveContext } from '@/composables/application/useActiveContext';
 import { useDraftValues } from '@/composables/application/useDraftValues';
-import type { ColorRule } from '@/types/style';
+import type { StyleRule } from '@/types/style';
 import type { MessageFilter } from '@/types/log';
 import { matchesMessageFilter } from '@/editor/filter';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import { vClickOutside } from '@/directives/clickOutside';
+import ToggleButton from '@/components/common/ToggleButton.vue';
 
 const styleStore = useStyleStore();
 const logStore = useLogStore();
@@ -401,7 +444,7 @@ function handleCreateRule() {
     }, 0);
 }
 
-function handleDeleteRule(rule: ColorRule) {
+function handleDeleteRule(rule: StyleRule) {
     const confirmed = window.confirm(
         `确定要删除规则“${rule.ruleName || '未命名规则'}”吗？本操作不可撤销`,
     );
@@ -411,7 +454,7 @@ function handleDeleteRule(rule: ColorRule) {
     expandedRules.value.delete(rule.ruleId);
 }
 
-function handleUpdate(ruleId: string, updates: Partial<ColorRule>) {
+function handleUpdate(ruleId: string, updates: Partial<StyleRule>) {
     styleStore.updateRule(ruleId, updates);
 }
 
@@ -427,13 +470,13 @@ function updateRuleDraft(ruleId: string, field: RuleDraftField, event: Event) {
     ruleDrafts.update(ruleId, field, event);
 }
 
-function commitRuleName(rule: ColorRule) {
+function commitRuleName(rule: StyleRule) {
     ruleDrafts.commit(rule.ruleId, 'ruleName', (value) => {
         handleUpdate(rule.ruleId, { ruleName: value });
     });
 }
 
-function commitRulePriority(rule: ColorRule) {
+function commitRulePriority(rule: StyleRule) {
     ruleDrafts.commit(rule.ruleId, 'priority', (value) => {
         const priority = Math.max(1, parseInt(value, 10) || 1);
         handleUpdate(rule.ruleId, { priority });
@@ -441,12 +484,29 @@ function commitRulePriority(rule: ColorRule) {
 }
 
 // 更新顶层属性
-function updateColor(rule: ColorRule, event: Event) {
+function updateColor(rule: StyleRule, event: Event) {
     const color = (event.target as HTMLInputElement).value;
-    handleUpdate(rule.ruleId, { color });
+    handleUpdate(rule.ruleId, { style: { ...rule.style, color } });
 }
 
-function toggleRuleActive(rule: ColorRule) {
+function setStyleEffect(
+    rule: StyleRule,
+    effect: 'color' | 'bold' | 'italic',
+    enabled: boolean,
+) {
+    const style = { ...rule.style };
+    if (effect === 'color') {
+        if (enabled) style.color ??= '#1976D2';
+        else delete style.color;
+    } else if (enabled) {
+        style[effect] = true;
+    } else {
+        delete style[effect];
+    }
+    handleUpdate(rule.ruleId, { style });
+}
+
+function toggleRuleActive(rule: StyleRule) {
     handleUpdate(rule.ruleId, { isActive: !rule.isActive });
 }
 
@@ -458,8 +518,8 @@ function formatArray(val: any): string {
 }
 
 function updateFilter(
-    rule: ColorRule,
-    key: keyof ColorRule['filter'],
+    rule: StyleRule,
+    key: keyof StyleRule['filter'],
     event: Event,
     isBoolean = false,
 ) {
@@ -470,9 +530,9 @@ function updateFilter(
 }
 
 function commitFilterDraft(
-    rule: ColorRule,
+    rule: StyleRule,
     key: Extract<
-        keyof ColorRule['filter'],
+        keyof StyleRule['filter'],
         'playerName' | 'account' | 'content' | 'note'
     >,
 ) {
@@ -482,8 +542,8 @@ function commitFilterDraft(
 }
 
 function updateFilterValue(
-    rule: ColorRule,
-    key: keyof ColorRule['filter'],
+    rule: StyleRule,
+    key: keyof StyleRule['filter'],
     value: string,
     isBoolean = false,
 ) {
@@ -508,13 +568,13 @@ function updateFilterValue(
     handleUpdate(rule.ruleId, { filter: newFilter });
 }
 
-function getAffectedMessageCount(rule: ColorRule) {
+function getAffectedMessageCount(rule: StyleRule) {
     return logStore.allMessages.filter((message) =>
         matchesMessageFilter(message, rule.filter),
     ).length;
 }
 
-function bindSelectedIds(rule: ColorRule) {
+function bindSelectedIds(rule: StyleRule) {
     const selectedMsgs = activeContext.selectedMessages.value;
     if (selectedMsgs.length === 0) return;
 
@@ -529,7 +589,7 @@ function bindSelectedIds(rule: ColorRule) {
 const getBindingCount = (val: any) => (Array.isArray(val) ? val.length : 1);
 
 // 清除特定字段
-const clearIds = (rule: ColorRule) => {
+const clearIds = (rule: StyleRule) => {
     const newFilter = { ...rule.filter };
     delete newFilter.messageId;
     styleStore.updateRule(rule.ruleId, { filter: newFilter });
@@ -561,6 +621,14 @@ const clearIds = (rule: ColorRule) => {
     position: relative;
     overflow: hidden;
     margin-left: 8px;
+}
+
+.style-effect-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 14px;
 }
 
 .color-picker-wrapper input[type='color'] {
@@ -628,6 +696,7 @@ const clearIds = (rule: ColorRule) => {
     display: flex;
     flex-direction: column;
     padding: 12px;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .rule-impact {
