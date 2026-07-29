@@ -423,11 +423,20 @@ export const useLogCommands = defineStore('logCommands', () => {
 
     function createDocument(docName = '未命名文档') {
         const docId = generateId();
+        const chunkId = generateId();
         const document = {
             docId,
             docName: docName.trim() || '未命名文档',
             docIndex: logStore.documents.length,
-            chunks: [],
+            chunks: [
+                {
+                    chunkId,
+                    docId,
+                    chunkName: '未命名场景',
+                    chunkIndex: 0,
+                    messages: [],
+                },
+            ],
             isExpanded: true,
         };
 
@@ -441,23 +450,31 @@ export const useLogCommands = defineStore('logCommands', () => {
         return docId;
     }
 
-    function createChunk(docId: string, chunkName = '未命名场景') {
+    function createChunk(
+        docId: string,
+        chunkName = '未命名场景',
+        insertIndex?: number,
+    ) {
         const doc = logStore.findDocumentById(docId);
         if (!doc) return null;
 
+        const targetIndex =
+            insertIndex === undefined
+                ? doc.chunks.length
+                : Math.max(0, Math.min(insertIndex, doc.chunks.length));
         const chunkId = generateId();
         const chunk: Chunk = {
             chunkId,
             docId,
             chunkName: chunkName.trim() || '未命名场景',
-            chunkIndex: doc.chunks.length,
+            chunkIndex: targetIndex,
             messages: [],
         };
 
         executeEdit(
             true,
             () => {
-                doc.chunks.push(chunk);
+                doc.chunks.splice(targetIndex, 0, chunk);
                 doc.isExpanded = true;
             },
             { syncSystemRules: false },

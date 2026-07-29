@@ -19,191 +19,258 @@
                     </h3>
                 </template>
             </div>
+            <button
+                class="header-action-button"
+                title="新建文档"
+                @click="handleCreateDocument"
+            >
+                <Plus class="ui-icon" />
+            </button>
         </div>
 
         <div ref="scrollContainerRef" class="chunk-list-scroll">
-            <div
-                v-for="doc in logStore.documents"
+            <template
+                v-for="(doc, docIndex) in logStore.documents"
                 :key="doc.docId"
-                class="document-group"
             >
                 <div
-                    class="doc-header"
-                    @click="handleToggleExpand(doc)"
-                    @dragover="
-                        handleDocHeaderDragOver(
-                            $event,
-                            doc.docId,
-                            doc.chunks.length,
-                        )
-                    "
-                    @drop="
-                        handleChunkDrop($event, doc.docId, doc.chunks.length)
-                    "
-                >
-                    <span
-                        class="expand-icon"
-                        :class="{ 'is-expanded': doc.isExpanded }"
-                    >
-                        <ChevronRight class="ui-icon" />
-                    </span>
-
-                    <input
-                        v-if="isRenamingDocument(doc)"
-                        ref="renameInputRef"
-                        v-model="renameDraft"
-                        class="rename-input doc-name"
-                        type="text"
-                        @click.stop
-                        @dblclick.stop
-                        v-click-outside="
-                            () => submitRename('document', doc.docId)
-                        "
-                        @keydown.enter.exact.prevent="
-                            submitRename('document', doc.docId)
-                        "
-                        @keydown.esc.prevent="cancelRename"
-                    />
-                    <span
-                        v-else
-                        class="doc-name"
-                        @dblclick.stop="
-                            startRename('document', doc.docId, doc.docName)
-                        "
-                    >
-                        {{ doc.docName }}
-                    </span>
-                    <span class="doc-count">({{ doc.chunks.length }})</span>
-
-                    <div class="doc-actions">
-                        <button
-                            class="action-button action-button-warning icon-interactive is-warning"
-                            title="移除文档"
-                            @click.stop="handleRemoveDoc(doc.docId)"
-                        >
-                            <Trash2 class="ui-icon" />
-                        </button>
-                    </div>
-                </div>
-
-                <div v-if="doc.isExpanded" class="chunk-items-container">
+                    class="document-drop-zone"
+                    :class="{
+                        'is-active':
+                            documentDropIndex === docIndex &&
+                            documentDrag.isDragging.value,
+                    }"
+                    @dragover="handleDocumentDragOver($event, docIndex)"
+                    @drop="handleDocumentDrop($event, docIndex)"
+                ></div>
+                <div class="document-group">
                     <div
-                        class="drop-zone"
+                        class="doc-header"
+                        draggable="true"
+                        @click="handleToggleExpand(doc)"
+                        @dragstart="handleDocumentDragStart($event, doc.docId)"
+                        @dragover="
+                            handleDocHeaderDragOver(
+                                $event,
+                                doc.docId,
+                                doc.chunks.length,
+                            )
+                        "
+                        @drop="
+                            handleChunkDrop(
+                                $event,
+                                doc.docId,
+                                doc.chunks.length,
+                            )
+                        "
+                        @dragend="handleDocumentDragEnd"
+                    >
+                        <span
+                            class="expand-icon"
+                            :class="{ 'is-expanded': doc.isExpanded }"
+                        >
+                            <ChevronRight class="ui-icon" />
+                        </span>
+
+                        <input
+                            v-if="isRenamingDocument(doc)"
+                            ref="renameInputRef"
+                            v-model="renameDraft"
+                            class="rename-input doc-name"
+                            type="text"
+                            @click.stop
+                            @dblclick.stop
+                            v-click-outside="
+                                () => submitRename('document', doc.docId)
+                            "
+                            @keydown.enter.exact.prevent="
+                                submitRename('document', doc.docId)
+                            "
+                            @keydown.esc.prevent="cancelRename"
+                        />
+                        <span
+                            v-else
+                            class="doc-name"
+                            @dblclick.stop="
+                                startRename('document', doc.docId, doc.docName)
+                            "
+                        >
+                            {{ doc.docName }}
+                        </span>
+                        <span class="doc-count">({{ doc.chunks.length }})</span>
+
+                        <div class="doc-actions">
+                            <button
+                                v-if="doc.chunks.length === 0"
+                                class="action-button"
+                                title="新建场景"
+                                @click.stop="handleCreateChunk(doc.docId, 0)"
+                            >
+                                <Plus class="ui-icon" />
+                            </button>
+                            <button
+                                class="action-button action-button-warning icon-interactive is-warning"
+                                title="移除文档"
+                                @click.stop="handleRemoveDoc(doc.docId)"
+                            >
+                                <Trash2 class="ui-icon" />
+                            </button>
+                        </div>
+                    </div>
+
+                    <div
+                        v-if="doc.isExpanded"
+                        class="chunk-items-container"
                         :class="{
-                            'is-active':
+                            'is-drop-at-start':
                                 dropIndicator.docId === doc.docId &&
                                 dropIndicator.index === 0 &&
                                 chunkDrag.isDragging.value,
                         }"
-                        @dragover="handleChunkDragOver($event, doc.docId, 0)"
-                        @drop="handleChunkDrop($event, doc.docId, 0)"
-                    ></div>
-
-                    <div
-                        v-for="(chunk, chunkIndex) in doc.chunks"
-                        :key="chunk.chunkId"
-                        class="chunk-slot"
-                        :class="{
-                            'is-drop-target':
-                                dropIndicator.docId === doc.docId &&
-                                dropIndicator.index === chunkIndex + 1 &&
-                                chunkDrag.isDragging.value,
-                        }"
+                        @dragover.self="
+                            handleChunkDragOver($event, doc.docId, 0)
+                        "
+                        @drop.self="handleChunkDrop($event, doc.docId, 0)"
                     >
                         <div
-                            class="chunk-item"
+                            v-for="(chunk, chunkIndex) in doc.chunks"
+                            :key="chunk.chunkId"
+                            class="chunk-slot"
                             :class="{
-                                // 对自身的焦点判断
-                                'is-active':
-                                    windowStore.currentActiveWindow.windowId ===
-                                    'chunkList',
-                                // 对view的焦点判断
-                                'is-active-chunk':
-                                    windowStore.currentActiveView.originalId ===
-                                    chunk.chunkId,
-                                // 选中判断
-                                'is-selected':
-                                    activeContext.selectedChunkIds.value.has(
-                                        chunk.chunkId,
-                                    ),
+                                'is-drop-target':
+                                    dropIndicator.docId === doc.docId &&
+                                    dropIndicator.index === chunkIndex + 1 &&
+                                    chunkDrag.isDragging.value,
                             }"
-                            draggable="true"
-                            @click="handleChunkSelect(chunk.chunkId, $event)"
-                            @dragstart="
-                                handleChunkDragStart($event, chunk.chunkId)
-                            "
-                            @dragover="
-                                handleChunkDragOver(
-                                    $event,
-                                    doc.docId,
-                                    chunkIndex + 1,
-                                )
-                            "
-                            @drop="
-                                handleChunkDrop(
-                                    $event,
-                                    doc.docId,
-                                    chunkIndex + 1,
-                                )
-                            "
-                            @dragend="handleChunkDragEnd"
                         >
-                            <input
-                                v-if="isRenamingChunk(chunk)"
-                                ref="renameInputRef"
-                                v-model="renameDraft"
-                                class="rename-input chunk-name"
-                                type="text"
-                                @click.stop
-                                @dblclick.stop
-                                v-click-outside="
-                                    () => submitRename('chunk', chunk.chunkId)
+                            <div
+                                class="chunk-item"
+                                :class="{
+                                    // 对自身的焦点判断
+                                    'is-active':
+                                        windowStore.currentActiveWindow
+                                            .windowId === 'chunkList',
+                                    // 对view的焦点判断
+                                    'is-active-chunk':
+                                        windowStore.currentActiveView
+                                            .originalId === chunk.chunkId,
+                                    // 选中判断
+                                    'is-selected':
+                                        activeContext.selectedChunkIds.value.has(
+                                            chunk.chunkId,
+                                        ),
+                                }"
+                                draggable="true"
+                                @click="
+                                    handleChunkSelect(chunk.chunkId, $event)
                                 "
-                                @keydown.enter.exact.prevent="
-                                    submitRename('chunk', chunk.chunkId)
+                                @dragstart="
+                                    handleChunkDragStart($event, chunk.chunkId)
                                 "
-                                @keydown.esc.prevent="cancelRename"
-                            />
-                            <span
-                                v-else
-                                class="chunk-name"
-                                @dblclick.stop="
-                                    startRename(
-                                        'chunk',
-                                        chunk.chunkId,
-                                        chunk.chunkName,
+                                @dragover="
+                                    handleChunkDragOver(
+                                        $event,
+                                        doc.docId,
+                                        chunkIndex + 1,
                                     )
                                 "
+                                @drop="
+                                    handleChunkDrop(
+                                        $event,
+                                        doc.docId,
+                                        chunkIndex + 1,
+                                    )
+                                "
+                                @dragend="handleChunkDragEnd"
                             >
-                                {{ chunk.chunkName || '未命名分块' }}
-                            </span>
-
-                            <div class="chunk-actions">
-                                <button
-                                    v-if="chunkIndex < doc.chunks.length - 1"
-                                    class="action-button"
-                                    title="向下合并"
-                                    @click.stop="
-                                        handleMerge(
+                                <input
+                                    v-if="isRenamingChunk(chunk)"
+                                    ref="renameInputRef"
+                                    v-model="renameDraft"
+                                    class="rename-input chunk-name"
+                                    type="text"
+                                    @click.stop
+                                    @dblclick.stop
+                                    v-click-outside="
+                                        () =>
+                                            submitRename('chunk', chunk.chunkId)
+                                    "
+                                    @keydown.enter.exact.prevent="
+                                        submitRename('chunk', chunk.chunkId)
+                                    "
+                                    @keydown.esc.prevent="cancelRename"
+                                />
+                                <span
+                                    v-else
+                                    class="chunk-name"
+                                    @dblclick.stop="
+                                        startRename(
+                                            'chunk',
                                             chunk.chunkId,
-                                            doc.chunks[chunkIndex + 1].chunkId,
+                                            chunk.chunkName,
                                         )
                                     "
                                 >
-                                    <ChevronsDown class="ui-icon" />
-                                </button>
-                                <button
-                                    class="action-button action-button-warning"
-                                    title="删除分块"
-                                    @click.stop="handleDelete(chunk.chunkId)"
-                                >
-                                    <Trash2 class="ui-icon" />
-                                </button>
+                                    {{ chunk.chunkName || '未命名分块' }}
+                                </span>
+
+                                <div class="chunk-actions">
+                                    <button
+                                        v-if="
+                                            chunkIndex < doc.chunks.length - 1
+                                        "
+                                        class="action-button"
+                                        title="向下合并"
+                                        @click.stop="
+                                            handleMerge(
+                                                chunk.chunkId,
+                                                doc.chunks[chunkIndex + 1]
+                                                    .chunkId,
+                                            )
+                                        "
+                                    >
+                                        <ChevronsDown class="ui-icon" />
+                                    </button>
+                                    <button
+                                        class="action-button"
+                                        title="在下方新建场景"
+                                        @click.stop="
+                                            handleCreateChunk(
+                                                doc.docId,
+                                                chunkIndex + 1,
+                                            )
+                                        "
+                                    >
+                                        <Plus class="ui-icon" />
+                                    </button>
+
+                                    <button
+                                        class="action-button action-button-warning"
+                                        title="删除分块"
+                                        @click.stop="
+                                            handleDelete(chunk.chunkId)
+                                        "
+                                    >
+                                        <Trash2 class="ui-icon" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </template>
+            <div
+                class="document-drop-zone"
+                :class="{
+                    'is-active':
+                        documentDropIndex === logStore.documents.length &&
+                        documentDrag.isDragging.value,
+                }"
+                @dragover="
+                    handleDocumentDragOver($event, logStore.documents.length)
+                "
+                @drop="handleDocumentDrop($event, logStore.documents.length)"
+            ></div>
 
             <div
                 v-if="logStore.documents.length === 0"
@@ -216,9 +283,12 @@
 </template>
 
 <script setup lang="ts">
-import { ChevronRight, ChevronsDown, Trash2 } from '@lucide/vue';
+import { ChevronRight, ChevronsDown, Plus, Trash2 } from '@lucide/vue';
 import { nextTick, reactive, ref, watch } from 'vue';
-import { useChunkDragDrop } from '@/composables/interaction/useDragDrop';
+import {
+    useChunkDragDrop,
+    useDocumentDragDrop,
+} from '@/composables/interaction/useDragDrop';
 import { useLogCommands } from '@/stores/project/logCommands';
 import { useLogStore } from '@/stores/project/logStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
@@ -232,6 +302,7 @@ const windowStore = useWindowStore();
 const logCommands = useLogCommands();
 const editorSessionStore = useEditorSessionStore();
 const chunkDrag = useChunkDragDrop();
+const documentDrag = useDocumentDragDrop();
 const activeContext = useActiveContext('chunkList');
 
 const renameTarget = ref<{ kind: 'document' | 'chunk'; id: string } | null>(
@@ -243,6 +314,7 @@ const projectNameDraft = ref('');
 const isEditingProjectName = ref(false);
 const projectNameInputRef = ref<HTMLInputElement | null>(null);
 const scrollContainerRef = ref<HTMLElement | null>(null);
+const documentDropIndex = ref<number | null>(null);
 
 const dropIndicator = reactive<{ docId: string; index: number | null }>({
     docId: '',
@@ -287,6 +359,18 @@ function handleToggleExpand(doc: LogDocument) {
 function handleRemoveDoc(docId: string) {
     if (confirm('确定要删除这个文档及其所有消息吗？这不会删除原始文件。')) {
         logCommands.deleteDocument(docId);
+    }
+}
+
+function handleCreateDocument() {
+    const docId = logCommands.createDocument();
+    startRename('document', docId, '未命名文档');
+}
+
+function handleCreateChunk(docId: string, insertIndex: number) {
+    const chunkId = logCommands.createChunk(docId, '未命名场景', insertIndex);
+    if (chunkId) {
+        startRename('chunk', chunkId, '未命名场景');
     }
 }
 
@@ -410,6 +494,7 @@ function clearDropIndicator() {
 }
 
 function handleChunkDragStart(event: DragEvent, chunkId: string) {
+    event.stopPropagation();
     clearDropIndicator();
     chunkDrag.onDragStart(event, chunkId);
 }
@@ -424,11 +509,13 @@ function handleDocHeaderDragOver(
     docId: string,
     index: number,
 ) {
+    if (documentDrag.isDragging.value) return;
     setDropIndicator(docId, index);
     chunkDrag.onDragOver(event);
 }
 
 function handleChunkDrop(event: DragEvent, docId: string, index: number) {
+    if (documentDrag.isDragging.value) return;
     clearDropIndicator();
     chunkDrag.onDrop(event, docId, index);
 }
@@ -436,6 +523,28 @@ function handleChunkDrop(event: DragEvent, docId: string, index: number) {
 function handleChunkDragEnd() {
     clearDropIndicator();
     chunkDrag.onDragEnd();
+}
+
+function handleDocumentDragStart(event: DragEvent, docId: string) {
+    clearDropIndicator();
+    documentDrag.onDragStart(event, docId);
+}
+
+function handleDocumentDragOver(event: DragEvent, index: number) {
+    if (!documentDrag.isDragging.value) return;
+    documentDropIndex.value = index;
+    documentDrag.onDragOver(event);
+}
+
+function handleDocumentDrop(event: DragEvent, index: number) {
+    if (!documentDrag.isDragging.value) return;
+    documentDropIndex.value = null;
+    documentDrag.onDrop(event, index);
+}
+
+function handleDocumentDragEnd() {
+    documentDropIndex.value = null;
+    documentDrag.onDragEnd();
 }
 
 function captureScrollAnchor() {
@@ -476,6 +585,28 @@ function withScrollAnchor(action: () => void) {
     box-sizing: border-box;
 }
 
+.header-action-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    padding: 4px;
+    color: var(--icon-color);
+    background: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.header-action-button:hover {
+    background: var(--hover-bg);
+}
+
+.header-action-button :deep(.ui-icon) {
+    width: 16px;
+    height: 16px;
+}
+
 .project-name-input {
     width: 100%;
     min-width: 0;
@@ -505,15 +636,33 @@ function withScrollAnchor(action: () => void) {
     margin-bottom: 2px;
 }
 
+.document-drop-zone {
+    height: 4px;
+    position: relative;
+}
+
+.document-drop-zone.is-active::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 1px;
+    border-top: 2px solid var(--active-accent);
+}
+
 .doc-header {
     display: flex;
     align-items: center;
     padding: 8px 12px;
     background-color: var(--bg-secondary);
-    cursor: pointer;
+    cursor: grab;
     user-select: none;
     font-weight: 600;
     border-bottom: none;
+}
+
+.doc-header:active {
+    cursor: grabbing;
 }
 
 .doc-header:hover {
@@ -537,6 +686,21 @@ function withScrollAnchor(action: () => void) {
 .chunk-items-container {
     background-color: var(--bg-primary);
     position: relative;
+}
+
+.chunk-items-container::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -2px;
+    height: 4px;
+    pointer-events: auto;
+    z-index: 1;
+}
+
+.chunk-items-container.is-drop-at-start::before {
+    border-top: 2px solid var(--active-accent);
 }
 
 .chunk-item {
@@ -593,17 +757,6 @@ function withScrollAnchor(action: () => void) {
     outline: none;
 }
 
-.drop-zone {
-    height: 4px;
-    position: relative;
-    transition: background-color 0.2s;
-}
-
-.drop-zone:hover {
-    background-color: var(--active-accent);
-}
-
-.drop-zone.is-active::after,
 .chunk-slot.is-drop-target::before {
     content: '';
     position: absolute;

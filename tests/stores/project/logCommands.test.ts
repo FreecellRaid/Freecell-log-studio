@@ -207,19 +207,41 @@ describe('project log commands', () => {
             docIndex: 0,
             isExpanded: true,
         });
-
-        const chunkId = commands.createChunk(docId);
+        const defaultChunkId = log.documents[0].chunks[0].chunkId;
         expect(log.documents[0].chunks[0]).toMatchObject({
-            chunkId,
             docId,
             chunkName: '未命名场景',
             chunkIndex: 0,
             messages: [],
         });
+
+        const chunkId = commands.createChunk(docId);
+        expect(log.documents[0].chunks[1]).toMatchObject({
+            chunkId,
+            docId,
+            chunkName: '未命名场景',
+            chunkIndex: 1,
+            messages: [],
+        });
         expect(history.undoStack).toHaveLength(2);
 
+        const firstChunkId = commands.createChunk(docId, '插入的场景', 0);
+        expect(log.documents[0].chunks.map((chunk) => chunk.chunkId)).toEqual([
+            firstChunkId,
+            defaultChunkId,
+            chunkId,
+        ]);
+        expect(
+            log.documents[0].chunks.map((chunk) => chunk.chunkIndex),
+        ).toEqual([0, 1, 2]);
+
         history.undo();
-        expect(log.documents[0].chunks).toHaveLength(0);
+        expect(log.documents[0].chunks.map((chunk) => chunk.chunkId)).toEqual([
+            defaultChunkId,
+            chunkId,
+        ]);
+        history.undo();
+        expect(log.documents[0].chunks).toHaveLength(1);
         history.undo();
         expect(log.documents).toHaveLength(0);
     });
