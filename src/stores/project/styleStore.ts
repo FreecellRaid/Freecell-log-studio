@@ -5,6 +5,13 @@ import type { Message } from '@/types/log';
 import { generateId } from '@/utils/id';
 import { collectIdentityValues } from '@/editor/identity';
 
+function generateRandomColor(): string {
+    return `#${Math.floor(Math.random() * 0x1000000)
+        .toString(16)
+        .padStart(6, '0')
+        .toUpperCase()}`;
+}
+
 function createDefaultStyleRules(): StyleRule[] {
     return [
         {
@@ -114,7 +121,7 @@ function ruleStore() {
         for (let i = 0; i < playerNames.length; i++) {
             const value = playerNames[i];
             const existingRule = existingNameRules.get(value);
-            const color = PRESET_COLORS[colorIndex % PRESET_COLORS.length];
+            const color = PRESET_COLORS[colorIndex] ?? generateRandomColor();
             nextSystemRules.push(
                 buildSystemRule('playerName', value, color, existingRule),
             );
@@ -126,7 +133,7 @@ function ruleStore() {
         for (let i = 0; i < accounts.length; i++) {
             const value = accounts[i];
             const existingRule = existingAccountRules.get(value);
-            const color = PRESET_COLORS[colorIndex % PRESET_COLORS.length];
+            const color = PRESET_COLORS[colorIndex] ?? generateRandomColor();
             nextSystemRules.push(
                 buildSystemRule('account', value, color, existingRule),
             );
@@ -180,7 +187,7 @@ function ruleStore() {
     }
 
     // Action: CRUD
-    function addCustomRule(name: string, color: string = '#1976D2') {
+    function addCustomRule(name: string, color = generateRandomColor()) {
         let maxPriority = 0;
         for (const rule of rules.value) {
             if (rule.priority > maxPriority) {
@@ -258,26 +265,14 @@ function ruleStore() {
 }
 
 const PRESET_COLORS = [
-    '#FF5733',
+    '#FF4081',
     '#D32F2F',
     '#FF8F00',
     '#FBC02D',
-    '#C2185B',
-    '#7B1FA2',
-    '#1976D2',
-    '#00695C',
-    '#00796B',
-    '#388E3C',
     '#689F38',
-    '#8E24AA',
-    '#424242',
-    '#616161',
-    '#546E7A',
-    '#795548',
-    '#0097A7',
-    '#E91E63',
-    '#FF4081',
+    '#00695C',
     '#00B0FF',
-    '#7C4DFF',
+    '#1976D2',
+    '#8E24AA',
 ];
 export const useStyleStore = defineStore('rule', ruleStore);
