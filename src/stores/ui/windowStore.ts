@@ -36,6 +36,7 @@ function windowStore() {
     ]);
     const paneSizes = ref<[number, number]>([50, 50]);
     const paneDirection = ref<PaneDirection>('horizontal');
+    const activePaneIndex = ref<0 | 1>(0);
 
     // 聚焦到一个目标
     function setFocus(target: string) {
@@ -49,6 +50,13 @@ function windowStore() {
         focusStack.value.push(target);
         if (focusStack.value.length > 5) {
             focusStack.value.shift();
+        }
+
+        const paneIndex = workspaceViewPanes.value.findIndex(
+            (pane) => pane?.windowId === target,
+        );
+        if (paneIndex === 0 || paneIndex === 1) {
+            activePaneIndex.value = paneIndex;
         }
     }
 
@@ -172,11 +180,7 @@ function windowStore() {
         // 如果当前活跃窗口本身就是预览窗口，直接在当前位置切换模板
         if (currentView.windowName === 'exportPreview') {
             if (hasSplitView.value) {
-                setPaneView(
-                    getActivePaneIndex() ?? 0,
-                    'exportPreview',
-                    formatId,
-                );
+                setPaneView(getActivePaneIndex(), 'exportPreview', formatId);
             } else {
                 // 单屏模式下的预览切换
                 const newWindowId = generateId();
@@ -193,8 +197,8 @@ function windowStore() {
         }
         if (hasSplitView.value) {
             // 已在双屏：找到不活跃的那一侧并替换
-            const activePaneIndex = getActivePaneIndex() ?? 0;
-            const targetPaneIndex = activePaneIndex === 0 ? 1 : 0;
+            const currentPaneIndex = getActivePaneIndex();
+            const targetPaneIndex = currentPaneIndex === 0 ? 1 : 0;
             setPaneView(targetPaneIndex, 'exportPreview', formatId);
         } else {
             // 单屏模式：直接开启分屏预览
@@ -263,7 +267,7 @@ function windowStore() {
                 return {
                     paneIndex,
                     instance,
-                    isActive: instance?.windowId === activeFocus.value,
+                    isActive: paneIndex === activePaneIndex.value,
                 };
             });
         }
@@ -273,16 +277,15 @@ function windowStore() {
             {
                 paneIndex: 0,
                 instance,
-                isActive: instance.windowId === activeFocus.value,
+                isActive: true,
             },
         ];
     });
 
     const hasSplitView = computed(() => workspaceViewPanes.value[1] !== null);
 
-    function getActivePaneIndex(): 0 | 1 | null {
-        const activePane = workspacePanes.value.find((pane) => pane.isActive);
-        return activePane?.paneIndex ?? null;
+    function getActivePaneIndex(): 0 | 1 {
+        return activePaneIndex.value;
     }
 
     // 打开帮助弹窗
@@ -332,6 +335,7 @@ function windowStore() {
         registerWindow(rightPane);
 
         workspaceViewPanes.value = [leftPane, rightPane];
+        activePaneIndex.value = 1;
         return true;
     }
 
@@ -342,8 +346,10 @@ function windowStore() {
         const [leftPane, rightPane] = workspaceViewPanes.value;
         if (!rightPane) return;
 
-        // 如果没指定保留哪个，则按焦点判断
-        const targetId = keepWindowId || activeFocus.value;
+        // 如果没指定保留哪个，则保留最后活动的 pane
+        const targetId =
+            keepWindowId ||
+            workspaceViewPanes.value[activePaneIndex.value]?.windowId;
 
         const activePane =
             [leftPane, rightPane].find((p) => p.windowId === targetId) ||
@@ -358,6 +364,7 @@ function windowStore() {
             registerWindow(activePane);
         }
         workspaceViewPanes.value = [{ ...activePane }, null];
+        activePaneIndex.value = 0;
     }
 
     // 切换指定 pane 显示的视图
@@ -381,6 +388,7 @@ function windowStore() {
 
         registerWindow(newWindow);
         workspaceViewPanes.value[paneIndex] = newWindow;
+        activePaneIndex.value = paneIndex;
     }
 
     function requestMessageReveal(chunkId: string, messageId: string) {
@@ -417,6 +425,7 @@ function windowStore() {
         hasSplitView,
         paneDirection,
         paneSizes,
+        activePaneIndex,
         pendingMessageReveal,
 
         setFocus,

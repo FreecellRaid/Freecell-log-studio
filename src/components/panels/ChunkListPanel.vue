@@ -445,7 +445,7 @@ function handleChunkSelect(chunkId: string, event: MouseEvent) {
 
     if (!event.ctrlKey && !event.metaKey && !event.shiftKey) {
         if (windowStore.hasSplitView) {
-            const activePaneIndex = windowStore.getActivePaneIndex() ?? 0;
+            const activePaneIndex = windowStore.getActivePaneIndex();
             windowStore.setPaneView(activePaneIndex, 'chunkView', chunkId);
         } else {
             // 单窗口模式，直接使用 setActiveChunk 切换视图

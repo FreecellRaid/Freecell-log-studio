@@ -335,7 +335,7 @@ export function useCommandDispatcher() {
             windowStore.requestMessageReveal(chunkId, target.messageId);
 
             if (windowStore.hasSplitView) {
-                const activePaneIndex = windowStore.getActivePaneIndex() ?? 0;
+                const activePaneIndex = windowStore.getActivePaneIndex();
                 windowStore.setPaneView(activePaneIndex, 'chunkView', chunkId);
                 return;
             }
