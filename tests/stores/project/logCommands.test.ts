@@ -193,4 +193,55 @@ describe('project log commands', () => {
         expect(log.isImported).toBe(false);
         expect(commands.deleteDocument('missing')).toBe(false);
     });
+
+    it('creates documents and chunks as undoable edits', () => {
+        const log = useLogStore();
+        const commands = useLogCommands();
+        const history = useHistoryStore();
+
+        const docId = commands.createDocument();
+        expect(log.documents).toHaveLength(1);
+        expect(log.documents[0]).toMatchObject({
+            docId,
+            docName: '未命名文档',
+            docIndex: 0,
+            isExpanded: true,
+        });
+
+        const chunkId = commands.createChunk(docId);
+        expect(log.documents[0].chunks[0]).toMatchObject({
+            chunkId,
+            docId,
+            chunkName: '未命名场景',
+            chunkIndex: 0,
+            messages: [],
+        });
+        expect(history.undoStack).toHaveLength(2);
+
+        history.undo();
+        expect(log.documents[0].chunks).toHaveLength(0);
+        history.undo();
+        expect(log.documents).toHaveLength(0);
+    });
+
+    it('moves documents and normalizes their indexes', () => {
+        const log = useLogStore();
+        const commands = useLogCommands();
+        const history = useHistoryStore();
+        log.replaceDocuments([
+            document('doc-a', []),
+            document('doc-b', []),
+            document('doc-c', []),
+        ]);
+
+        expect(commands.moveDocument('doc-a', 3)).toBe(true);
+        expect(log.documents.map((doc) => doc.docId)).toEqual([
+            'doc-b',
+            'doc-c',
+            'doc-a',
+        ]);
+        expect(log.documents.map((doc) => doc.docIndex)).toEqual([0, 1, 2]);
+        expect(commands.moveDocument('doc-c', 1)).toBe(false);
+        expect(history.undoStack).toHaveLength(1);
+    });
 });

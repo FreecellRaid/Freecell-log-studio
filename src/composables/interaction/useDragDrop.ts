@@ -10,6 +10,7 @@ interface DraggedMessageInfo {
 }
 const globalDraggedMessage = ref<DraggedMessageInfo | null>(null);
 const globalDraggedChunk = ref<string | null>(null);
+const globalDraggedDocument = ref<string | null>(null);
 
 export function useMessageDragDrop() {
     const logEditorStore = useLogCommands();
@@ -111,5 +112,42 @@ export function useChunkDragDrop() {
         onDrop,
         onDragEnd,
         isDragging: computed(() => globalDraggedChunk.value !== null),
+    };
+}
+
+export function useDocumentDragDrop() {
+    const logCommands = useLogCommands();
+
+    function onDragStart(event: DragEvent, docId: string) {
+        globalDraggedDocument.value = docId;
+        if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', docId);
+        }
+    }
+
+    function onDragOver(event: DragEvent) {
+        event.preventDefault();
+    }
+
+    function onDrop(event: DragEvent, targetIndex: number) {
+        event.preventDefault();
+        const docId = globalDraggedDocument.value;
+        if (!docId) return;
+
+        logCommands.moveDocument(docId, targetIndex);
+        globalDraggedDocument.value = null;
+    }
+
+    function onDragEnd() {
+        globalDraggedDocument.value = null;
+    }
+
+    return {
+        onDragStart,
+        onDragOver,
+        onDrop,
+        onDragEnd,
+        isDragging: computed(() => globalDraggedDocument.value !== null),
     };
 }

@@ -421,6 +421,50 @@ export const useLogCommands = defineStore('logCommands', () => {
         );
     }
 
+    function createDocument(docName = '未命名文档') {
+        const docId = generateId();
+        const document = {
+            docId,
+            docName: docName.trim() || '未命名文档',
+            docIndex: logStore.documents.length,
+            chunks: [],
+            isExpanded: true,
+        };
+
+        executeEdit(
+            true,
+            () => {
+                logStore.documents.push(document);
+            },
+            { syncProjectName: true, syncSystemRules: false },
+        );
+        return docId;
+    }
+
+    function createChunk(docId: string, chunkName = '未命名场景') {
+        const doc = logStore.findDocumentById(docId);
+        if (!doc) return null;
+
+        const chunkId = generateId();
+        const chunk: Chunk = {
+            chunkId,
+            docId,
+            chunkName: chunkName.trim() || '未命名场景',
+            chunkIndex: doc.chunks.length,
+            messages: [],
+        };
+
+        executeEdit(
+            true,
+            () => {
+                doc.chunks.push(chunk);
+                doc.isExpanded = true;
+            },
+            { syncSystemRules: false },
+        );
+        return chunkId;
+    }
+
     function renameDocument(docId: string, docName: string) {
         const doc = logStore.findDocumentById(docId);
         if (!doc) return false;
@@ -454,6 +498,34 @@ export const useLogCommands = defineStore('logCommands', () => {
                 logStore.documents.splice(index, 1);
             },
             { syncProjectName: true },
+        );
+    }
+
+    function moveDocument(docId: string, targetIndex: number) {
+        const sourceIndex = logStore.documents.findIndex(
+            (doc) => doc.docId === docId,
+        );
+        if (sourceIndex === -1) return false;
+
+        const normalizedTargetIndex = Math.max(
+            0,
+            Math.min(targetIndex, logStore.documents.length),
+        );
+        const isNoopMove =
+            normalizedTargetIndex >= sourceIndex &&
+            normalizedTargetIndex <= sourceIndex + 1;
+
+        return executeEdit(
+            !isNoopMove,
+            () => {
+                const [document] = logStore.documents.splice(sourceIndex, 1);
+                const clampedIndex = Math.max(
+                    0,
+                    Math.min(targetIndex, logStore.documents.length),
+                );
+                logStore.documents.splice(clampedIndex, 0, document);
+            },
+            { syncProjectName: true, syncSystemRules: false },
         );
     }
 
@@ -633,10 +705,13 @@ export const useLogCommands = defineStore('logCommands', () => {
         toggleOoc,
         toggleCommand,
 
+        createDocument,
+        createChunk,
         updateChunk,
         renameDocument,
         setDocumentExpanded,
         deleteDocument,
+        moveDocument,
         deleteChunk,
         moveChunk,
         reorderChunk,
