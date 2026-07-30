@@ -285,7 +285,7 @@ function handleClearAll() {
 }
 
 .stored-projects-popover {
-    top: 36px;
+    top: 35px;
     right: -80px;
 }
 
@@ -295,7 +295,7 @@ function handleClearAll() {
 }
 
 .import-popover {
-    top: 36px;
+    top: 35px;
     right: -10px;
 }
 </style>

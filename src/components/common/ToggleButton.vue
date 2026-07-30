@@ -89,7 +89,7 @@ function toggle() {
 .toggle-button-track {
     position: relative;
     width: 30px;
-    height: 16px;
+    height: 18px;
     flex: 0 0 auto;
     border: 1px solid var(--border-color);
     border-radius: 999px;
@@ -119,7 +119,7 @@ function toggle() {
 }
 
 .toggle-button.is-checked .toggle-button-thumb {
-    transform: translateX(14px);
+    transform: translateX(13px);
 }
 
 .toggle-button:focus-visible {

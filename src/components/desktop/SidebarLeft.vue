@@ -311,8 +311,8 @@ function handleNavClick(panelName: typeof windowStore.activeLeftPanelName) {
 /* 设置弹出框样式 */
 .settings-popover {
     position: absolute;
-    left: 49px;
-    bottom: -1px;
+    left: 48px;
+    bottom: 0px;
     z-index: 10;
 }
 </style>
