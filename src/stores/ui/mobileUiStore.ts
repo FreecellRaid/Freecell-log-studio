@@ -1,15 +1,17 @@
 import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 import type { MobileOverlay, MobileSheetName } from '@/types/mobile';
+import { useWindowStore } from '@/stores/ui/windowStore';
 
 export const useMobileUiStore = defineStore('mobileUi', () => {
+    const windowStore = useWindowStore();
     const activeOverlay = ref<MobileOverlay>(null);
 
     const leftDrawerOpen = computed(
         () => activeOverlay.value?.kind === 'leftDrawer',
     );
-    const bottomPanelOpen = computed(
-        () => activeOverlay.value?.kind === 'bottomPanel',
+    const bottomPanelOpen = computed(() =>
+        windowStore.isWindowOpen(windowStore.selectedLeftPanel),
     );
     const activeSheet = computed<MobileSheetName>(() =>
         activeOverlay.value?.kind === 'sheet'
@@ -18,25 +20,28 @@ export const useMobileUiStore = defineStore('mobileUi', () => {
     );
 
     function openLeftDrawer() {
+        windowStore.closeLeftPanel();
         activeOverlay.value = { kind: 'leftDrawer' };
     }
 
     function openBottomPanel() {
-        activeOverlay.value = { kind: 'bottomPanel' };
+        activeOverlay.value = null;
+        windowStore.openLeftPanel();
     }
 
     function toggleBottomPanel() {
-        activeOverlay.value = bottomPanelOpen.value
-            ? null
-            : { kind: 'bottomPanel' };
+        if (bottomPanelOpen.value) windowStore.closeLeftPanel();
+        else openBottomPanel();
     }
 
     function openSheet(sheet: Exclude<MobileSheetName, null>) {
+        windowStore.closeLeftPanel();
         activeOverlay.value = { kind: 'sheet', sheet };
     }
 
     function closeOverlay() {
-        activeOverlay.value = null;
+        if (activeOverlay.value) activeOverlay.value = null;
+        else windowStore.closeLeftPanel();
     }
 
     function reset() {

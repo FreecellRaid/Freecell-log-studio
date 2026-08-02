@@ -5,7 +5,7 @@
         @touchend="editorGesture.onTouchEnd"
         @touchcancel="editorGesture.onTouchCancel"
     >
-        <HelpDocument v-if="windowStore.isHelpOpen" />
+        <HelpDocument v-if="windowStore.isWindowOpen('help')" />
         <MobileTopBar />
         <MobileWorkspace />
         <MobileHistoryFloat />
@@ -72,20 +72,22 @@ const editorGesture = useSwipeGesture([
             !hasOpenOverlay() &&
             event.touches[0].clientY >= window.innerHeight - 72,
         onSwipe: () => {
-            const activePanel = windowStore.activeLeftPanelName;
+            const activePanel = windowStore.selectedLeftPanel;
             const panel = bottomPanelNames.includes(
                 activePanel as MobileBottomPanelName,
             )
                 ? (activePanel as MobileBottomPanelName)
                 : 'chunkList';
-            windowStore.setLeftPanel(panel, { revealSidebar: false });
+            windowStore.selectLeftPanel(panel);
             mobileUiStore.openBottomPanel();
         },
     },
 ]);
 
 function hasOpenOverlay() {
-    return Boolean(mobileUiStore.activeOverlay || windowStore.isHelpOpen);
+    return Boolean(
+        mobileUiStore.activeOverlay || windowStore.isWindowOpen('help'),
+    );
 }
 
 onUnmounted(mobileUiStore.reset);

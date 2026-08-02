@@ -10,21 +10,19 @@
         <section class="mobile-bottom-drawer">
             <div class="mobile-drawer-body">
                 <ChunkListPanel
-                    v-if="windowStore.activeLeftPanelName === 'chunkList'"
+                    v-if="windowStore.selectedLeftPanel === 'chunkList'"
                 />
                 <IdentityPanel
-                    v-else-if="windowStore.activeLeftPanelName === 'identity'"
+                    v-else-if="windowStore.selectedLeftPanel === 'identity'"
                 />
                 <RuleEditorPanel
-                    v-else-if="windowStore.activeLeftPanelName === 'ruleEditor'"
+                    v-else-if="windowStore.selectedLeftPanel === 'ruleEditor'"
                 />
                 <SearchPanel
-                    v-else-if="windowStore.activeLeftPanelName === 'search'"
+                    v-else-if="windowStore.selectedLeftPanel === 'search'"
                 />
                 <ExportFormatPanel
-                    v-else-if="
-                        windowStore.activeLeftPanelName === 'exportFormat'
-                    "
+                    v-else-if="windowStore.selectedLeftPanel === 'exportFormat'"
                 />
             </div>
         </section>

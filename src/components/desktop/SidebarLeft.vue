@@ -1,7 +1,11 @@
 <template>
     <div
         class="sidebar-left-container"
-        :class="{ 'is-collapsed': !windowStore.leftSidebarVisible }"
+        :class="{
+            'is-collapsed': !windowStore.isWindowOpen(
+                windowStore.selectedLeftPanel,
+            ),
+        }"
     >
         <nav class="activity-bar">
             <div class="nav-top">
@@ -9,8 +13,8 @@
                     class="nav-item"
                     :class="{
                         active:
-                            windowStore.activeLeftPanelName === 'chunkList' &&
-                            windowStore.leftSidebarVisible,
+                            windowStore.selectedLeftPanel === 'chunkList' &&
+                            windowStore.isWindowOpen('chunkList'),
                     }"
                     title="文件列表"
                     @click="handleNavClick('chunkList')"
@@ -21,8 +25,8 @@
                     class="nav-item"
                     :class="{
                         active:
-                            windowStore.activeLeftPanelName === 'identity' &&
-                            windowStore.leftSidebarVisible,
+                            windowStore.selectedLeftPanel === 'identity' &&
+                            windowStore.isWindowOpen('identity'),
                     }"
                     title="身份管理"
                     @click="handleNavClick('identity')"
@@ -33,8 +37,8 @@
                     class="nav-item"
                     :class="{
                         active:
-                            windowStore.activeLeftPanelName === 'ruleEditor' &&
-                            windowStore.leftSidebarVisible,
+                            windowStore.selectedLeftPanel === 'ruleEditor' &&
+                            windowStore.isWindowOpen('ruleEditor'),
                     }"
                     title="样式规则"
                     @click="handleNavClick('ruleEditor')"
@@ -45,8 +49,8 @@
                     class="nav-item"
                     :class="{
                         active:
-                            windowStore.activeLeftPanelName === 'search' &&
-                            windowStore.leftSidebarVisible,
+                            windowStore.selectedLeftPanel === 'search' &&
+                            windowStore.isWindowOpen('search'),
                     }"
                     title="搜索过滤"
                     @click="handleNavClick('search')"
@@ -57,9 +61,8 @@
                     class="nav-item"
                     :class="{
                         active:
-                            windowStore.activeLeftPanelName ===
-                                'exportFormat' &&
-                            windowStore.leftSidebarVisible,
+                            windowStore.selectedLeftPanel === 'exportFormat' &&
+                            windowStore.isWindowOpen('exportFormat'),
                     }"
                     title="导出模板"
                     @click="handleNavClick('exportFormat')"
@@ -91,39 +94,37 @@
         </nav>
 
         <aside
-            v-if="windowStore.leftSidebarVisible"
+            v-if="windowStore.isWindowOpen(windowStore.selectedLeftPanel)"
             class="side-panel"
             :style="{ width: uiStore.leftPanelWidth + 'px' }"
         >
             <div class="panel-content">
                 <div
-                    v-if="windowStore.activeLeftPanelName === 'chunkList'"
+                    v-if="windowStore.selectedLeftPanel === 'chunkList'"
                     class="panel-slot"
                 >
                     <ChunkListPanel />
                 </div>
                 <div
-                    v-else-if="windowStore.activeLeftPanelName === 'identity'"
+                    v-else-if="windowStore.selectedLeftPanel === 'identity'"
                     class="panel-slot"
                 >
                     <IdentityPanel />
                 </div>
                 <div
-                    v-else-if="windowStore.activeLeftPanelName === 'ruleEditor'"
+                    v-else-if="windowStore.selectedLeftPanel === 'ruleEditor'"
                     class="panel-slot"
                 >
                     <RuleEditorPanel />
                 </div>
                 <div
-                    v-else-if="windowStore.activeLeftPanelName === 'search'"
+                    v-else-if="windowStore.selectedLeftPanel === 'search'"
                     class="panel-slot"
                 >
                     <SearchPanel />
                 </div>
                 <div
-                    v-else-if="
-                        windowStore.activeLeftPanelName === 'exportFormat'
-                    "
+                    v-else-if="windowStore.selectedLeftPanel === 'exportFormat'"
                     class="panel-slot"
                 >
                     <ExportFormatPanel />
@@ -132,7 +133,7 @@
         </aside>
 
         <div
-            v-if="windowStore.leftSidebarVisible"
+            v-if="windowStore.isWindowOpen(windowStore.selectedLeftPanel)"
             class="resize-handle resize-handle-x resize-handle-overlay resize-handle-right-edge"
             @mousedown="startResize"
         ></div>
@@ -190,10 +191,6 @@ const { startResize } = usePanelResize({
 
 onMounted(() => {
     window.addEventListener('click', closeSettings);
-    // 初始化左侧边栏面板注册
-    if (windowStore.leftSidebarVisible && windowStore.activeLeftPanelName) {
-        windowStore.setLeftPanel(windowStore.activeLeftPanelName);
-    }
 });
 onUnmounted(() => {
     window.removeEventListener('click', closeSettings);
@@ -213,14 +210,14 @@ watch(
     { immediate: true }, // 立即执行一次以确保初始状态正确
 );
 
-function handleNavClick(panelName: typeof windowStore.activeLeftPanelName) {
+function handleNavClick(panelName: typeof windowStore.selectedLeftPanel) {
     if (
-        windowStore.leftSidebarVisible &&
-        windowStore.activeLeftPanelName === panelName
+        windowStore.isWindowOpen(windowStore.selectedLeftPanel) &&
+        windowStore.selectedLeftPanel === panelName
     ) {
-        windowStore.toggleLeftSidebar();
+        windowStore.toggleLeftPanel();
     } else {
-        windowStore.setLeftPanel(panelName);
+        windowStore.openLeftPanel(panelName);
     }
 }
 </script>

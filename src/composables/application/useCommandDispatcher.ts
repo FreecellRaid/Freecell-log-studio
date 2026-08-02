@@ -58,8 +58,8 @@ export function useCommandDispatcher() {
 
         // P1 全局级命令
         const globalActions: Partial<Record<CommandType, () => void>> = {
-            toggleLeft: () => windowStore.toggleLeftSidebar(),
-            toggleRight: () => windowStore.toggleRightSidebar(),
+            toggleLeft: () => windowStore.toggleLeftPanel(),
+            toggleRight: () => windowStore.toggleInspector(),
             openHelp: () => windowStore.openHelpDocument(),
             undo: () => history.undo(),
             redo: () => history.redo(),

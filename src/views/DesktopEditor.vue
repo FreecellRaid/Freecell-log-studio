@@ -1,7 +1,7 @@
 <template>
     <div class="ide-container">
         <TopMenuBar />
-        <HelpDocument v-if="windowStore.isHelpOpen" />
+        <HelpDocument v-if="windowStore.isWindowOpen('help')" />
 
         <main class="middle-section">
             <aside class="sidebar-left">
@@ -12,7 +12,10 @@
                 <MainWorkspace />
             </section>
 
-            <aside v-if="windowStore.rightSidebarVisible" class="sidebar-right">
+            <aside
+                v-if="windowStore.isWindowOpen('inspector')"
+                class="sidebar-right"
+            >
                 <SidebarRight />
             </aside>
         </main>

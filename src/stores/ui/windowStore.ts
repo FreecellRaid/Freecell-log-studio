@@ -20,10 +20,9 @@ function windowStore() {
     const activeFocus = computed(() => {
         return focusStack.value[focusStack.value.length - 1] || 'defaultView';
     });
-    const activeLeftPanelName = ref<WindowName>('chunkList');
-    const leftSidebarVisible = ref(true);
-    const rightSidebarVisible = ref(false);
-    const isHelpOpen = ref(false);
+    const selectedLeftPanel = ref<WindowName>('chunkList');
+    const layoutInitialized = ref(false);
+    const openWindowIds = computed(() => new Set(openWindows.value.keys()));
 
     const workspaceViewPanes = ref<[WindowInstance, WindowInstance | null]>([
         {
@@ -88,19 +87,7 @@ function windowStore() {
         }
     }
 
-    // 切换左侧面板内容
-    function setLeftPanel(
-        name: WindowName,
-        options: { revealSidebar?: boolean } = {},
-    ) {
-        if (activeLeftPanelName.value && activeLeftPanelName.value !== name) {
-            unregisterWindow(activeLeftPanelName.value);
-        }
-
-        activeLeftPanelName.value = name;
-        if (options.revealSidebar !== false) {
-            leftSidebarVisible.value = true;
-        }
+    function registerPanel(name: WindowName) {
         registerWindow({
             windowId: name,
             windowName: name,
@@ -109,35 +96,52 @@ function windowStore() {
         });
     }
 
-    // 折叠/展开左侧边栏
-    function toggleLeftSidebar() {
-        leftSidebarVisible.value = !leftSidebarVisible.value;
+    // 选择左侧面板；若当前面板已打开，则在原位置切换内容
+    function selectLeftPanel(name: WindowName) {
+        const previousPanel = selectedLeftPanel.value;
+        const wasOpen = isWindowOpen(previousPanel);
 
-        if (leftSidebarVisible.value) {
-            registerWindow({
-                windowId: activeLeftPanelName.value,
-                windowName: activeLeftPanelName.value,
-                windowType: 'panel',
-                originalId: activeLeftPanelName.value,
-            });
-        } else {
-            unregisterWindow(activeLeftPanelName.value);
+        if (previousPanel !== name && wasOpen) {
+            unregisterWindow(previousPanel);
+        }
+
+        selectedLeftPanel.value = name;
+        if (wasOpen) registerPanel(name);
+    }
+
+    function openLeftPanel(name: WindowName = selectedLeftPanel.value) {
+        if (name !== selectedLeftPanel.value) selectLeftPanel(name);
+        if (!isWindowOpen(name)) registerPanel(name);
+    }
+
+    function closeLeftPanel() {
+        if (isWindowOpen(selectedLeftPanel.value)) {
+            unregisterWindow(selectedLeftPanel.value);
         }
     }
 
-    // 折叠/展开右侧边栏 (Inspector)
-    function toggleRightSidebar() {
-        rightSidebarVisible.value = !rightSidebarVisible.value;
-        if (rightSidebarVisible.value) {
-            registerWindow({
-                windowId: 'inspector',
-                windowName: 'inspector',
-                windowType: 'panel',
-                originalId: 'inspector',
-            });
-        } else {
-            unregisterWindow('inspector');
-        }
+    function toggleLeftPanel() {
+        if (isWindowOpen(selectedLeftPanel.value)) closeLeftPanel();
+        else openLeftPanel();
+    }
+
+    function initializeLayout(isMobile: boolean) {
+        if (layoutInitialized.value) return;
+        layoutInitialized.value = true;
+        if (!isMobile) openLeftPanel();
+    }
+
+    function openInspector() {
+        registerPanel('inspector');
+    }
+
+    function closeInspector() {
+        if (isWindowOpen('inspector')) unregisterWindow('inspector');
+    }
+
+    function toggleInspector() {
+        if (isWindowOpen('inspector')) closeInspector();
+        else openInspector();
     }
 
     // 切换到场景编辑视图
@@ -290,7 +294,6 @@ function windowStore() {
 
     // 打开帮助弹窗
     function openHelpDocument() {
-        isHelpOpen.value = true;
         registerWindow({
             windowId: 'help',
             windowName: 'help',
@@ -299,11 +302,11 @@ function windowStore() {
         });
     }
     function closeHelpDocument() {
-        isHelpOpen.value = false;
-        unregisterWindow('help');
+        if (isWindowOpen('help')) unregisterWindow('help');
     }
 
-    const isWindowOpen = (windowId: string) => openWindows.value.has(windowId);
+    const isWindowOpen = (windowId: string) =>
+        openWindowIds.value.has(windowId);
     const isWindowFocused = (windowId: string) =>
         activeFocus.value === windowId;
 
@@ -415,13 +418,10 @@ function windowStore() {
         openWindows,
         focusStack,
         activeFocus,
-        activeLeftPanelName,
-        leftSidebarVisible,
-        rightSidebarVisible,
+        selectedLeftPanel,
         currentActiveWindow,
         currentActiveView,
         workspacePanes,
-        isHelpOpen,
         hasSplitView,
         paneDirection,
         paneSizes,
@@ -431,9 +431,14 @@ function windowStore() {
         setFocus,
         registerWindow,
         unregisterWindow,
-        setLeftPanel,
-        toggleLeftSidebar,
-        toggleRightSidebar,
+        selectLeftPanel,
+        openLeftPanel,
+        closeLeftPanel,
+        toggleLeftPanel,
+        initializeLayout,
+        openInspector,
+        closeInspector,
+        toggleInspector,
         isWindowOpen,
         isWindowFocused,
         setActiveChunk,

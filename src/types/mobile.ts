@@ -9,6 +9,5 @@ export type MobileBottomPanelName =
 
 export type MobileOverlay =
     | { kind: 'leftDrawer' }
-    | { kind: 'bottomPanel' }
     | { kind: 'sheet'; sheet: Exclude<MobileSheetName, null> }
     | null;

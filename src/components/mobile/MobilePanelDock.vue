@@ -7,7 +7,7 @@
             :class="{
                 'is-active':
                     mobileUiStore.bottomPanelOpen &&
-                    windowStore.activeLeftPanelName === item.name,
+                    windowStore.selectedLeftPanel === item.name,
             }"
             @click="togglePanel(item.name)"
         >
@@ -47,12 +47,12 @@ const bottomPanels: Array<{
 function togglePanel(panelName: WindowName) {
     const isCurrentOpen =
         mobileUiStore.bottomPanelOpen &&
-        windowStore.activeLeftPanelName === panelName;
+        windowStore.selectedLeftPanel === panelName;
     if (isCurrentOpen) {
         mobileUiStore.closeOverlay();
         return;
     }
-    windowStore.setLeftPanel(panelName, { revealSidebar: false });
+    windowStore.selectLeftPanel(panelName);
     mobileUiStore.openBottomPanel();
 }
 </script>

@@ -107,7 +107,7 @@ function deleteMessage(messageId: string) {
 }
 
 function openChunkList() {
-    windowStore.setLeftPanel('chunkList', { revealSidebar: false });
+    windowStore.selectLeftPanel('chunkList');
     mobileUiStore.openBottomPanel();
 }
 
