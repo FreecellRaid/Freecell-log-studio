@@ -10,6 +10,10 @@ export interface ExportStyle {
     italic?: boolean;
 }
 
+export interface ExportAdapterOptions {
+    enableMarkdown?: boolean;
+}
+
 export interface ExportRow {
     type: ExportRowType;
 

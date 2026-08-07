@@ -8,7 +8,11 @@ import {
     htmlAdapter,
     docAdapter,
 } from '@/io/export/adapters/exportAdapters';
-import type { ExportFormat, ExportRow } from '@/types/export';
+import type {
+    ExportAdapterOptions,
+    ExportFormat,
+    ExportRow,
+} from '@/types/export';
 
 export function useExport() {
     const logStore = useLogStore();
@@ -26,13 +30,16 @@ export function useExport() {
         adapter: (
             rows: ExportRow[],
             format: ExportFormat,
+            options?: ExportAdapterOptions,
         ) => string | Blob | Promise<string | Blob>,
         format: ExportFormat,
         fileExtension: string,
         mimeType: string,
     ) {
         const rows = buildRows();
-        const content = await adapter(rows, format);
+        const content = await adapter(rows, format, {
+            enableMarkdown: styleStore.viewSettings.enableMarkdown,
+        });
 
         const rawFileName = logStore.projectName || 'export_log';
         const finalFileName = `${sanitizeProjectFilename(rawFileName)}${fileExtension}`;
@@ -48,7 +55,9 @@ export function useExport() {
         const rows = buildRows();
         return {
             text: textAdapter(rows, format),
-            html: htmlAdapter(rows, format),
+            html: htmlAdapter(rows, format, {
+                enableMarkdown: styleStore.viewSettings.enableMarkdown,
+            }),
         };
     }
 

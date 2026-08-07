@@ -1,4 +1,10 @@
-import type { ExportFormat, ExportRow, ExportStyle } from '@/types/export';
+import type {
+    ExportAdapterOptions,
+    ExportFormat,
+    ExportRow,
+    ExportStyle,
+} from '@/types/export';
+import { renderMarkdownToHtml } from '@/editor/markdown';
 import {
     renderExportDocument,
     type RenderedExportSegment,
@@ -75,14 +81,43 @@ function renderSegmentsToHtml(segments: RenderedExportSegment[]): string {
         .join('');
 }
 
-function renderHtmlBody(rows: ExportRow[], format: ExportFormat): string {
+function renderSegmentsToHtmlWithOptions(
+    segments: RenderedExportSegment[],
+    options: ExportAdapterOptions,
+): string {
+    return segments
+        .map((segment) => {
+            if (segment.type !== 'content' || !options.enableMarkdown) {
+                return renderSegmentsToHtml([segment]);
+            }
+
+            const css = styleToCss(segment.style);
+            const styleAttribute = css ? ` style="${css}"` : '';
+            const html = renderMarkdownToHtml(segment.value).trimEnd();
+            const inlineMatch = html.match(/^<p>([\s\S]*)<\/p>$/);
+            if (inlineMatch) {
+                return `<span class="markdown-content"${styleAttribute}>${inlineMatch[1]}</span>`;
+            }
+            return `<div class="markdown-content"${styleAttribute}>${html}</div>`;
+        })
+        .join('');
+}
+
+function renderHtmlBody(
+    rows: ExportRow[],
+    format: ExportFormat,
+    options: ExportAdapterOptions = {},
+): string {
     const rendered = renderExportDocument(rows, format);
 
     return rendered.blocks
         .map((block) => {
             const htmlContent =
-                renderSegmentsToHtml(block.segments) +
-                renderSegmentsToHtml(block.trailingSegments);
+                renderSegmentsToHtmlWithOptions(block.segments, options) +
+                renderSegmentsToHtmlWithOptions(
+                    block.trailingSegments,
+                    options,
+                );
 
             if (block.type === 'documentSeparator') {
                 return `<div class="doc"><h3>${htmlContent}</h3></div>`;
@@ -97,8 +132,12 @@ function renderHtmlBody(rows: ExportRow[], format: ExportFormat): string {
         .join('\n');
 }
 
-export function htmlAdapter(rows: ExportRow[], format: ExportFormat): string {
-    const body = renderHtmlBody(rows, format);
+export function htmlAdapter(
+    rows: ExportRow[],
+    format: ExportFormat,
+    options: ExportAdapterOptions = {},
+): string {
+    const body = renderHtmlBody(rows, format, options);
 
     return `<!DOCTYPE html>
     <html><head><meta charset="utf-8">
@@ -108,6 +147,12 @@ export function htmlAdapter(rows: ExportRow[], format: ExportFormat): string {
     font-family:sans-serif;
     padding:20px}
     .msg{margin-bottom:8px}
+    .markdown-content{white-space:normal}
+    .markdown-content>:first-child{margin-top:0}
+    .markdown-content>:last-child{margin-bottom:0}
+    .markdown-content pre,.markdown-content table{overflow-x:auto}
+    .markdown-content table{border-collapse:collapse}
+    .markdown-content th,.markdown-content td{border:1px solid #ddd;padding:4px 8px}
     .doc{text-align:center}
     </style>
     </head>
@@ -117,8 +162,12 @@ export function htmlAdapter(rows: ExportRow[], format: ExportFormat): string {
 
 // ===== DOC ADAPTER (Word 兼容 HTML) =====
 
-export function docAdapter(rows: ExportRow[], format: ExportFormat): string {
-    const body = renderHtmlBody(rows, format);
+export function docAdapter(
+    rows: ExportRow[],
+    format: ExportFormat,
+    options: ExportAdapterOptions = {},
+): string {
+    const body = renderHtmlBody(rows, format, options);
     // 复用 HTML Adapter，但添加特定的 Word 命名空间
     return `\ufeff<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
     <head><meta charset="utf-8"></head><body>${body}</body></html>`;

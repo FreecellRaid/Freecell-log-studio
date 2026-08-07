@@ -1,6 +1,15 @@
 <template>
-    <div v-if="enabled" class="markdown-content" v-html="renderedContent"></div>
-    <div v-else class="plain-content">{{ content }}</div>
+    <span
+        v-if="enabled && inlineContent !== null"
+        class="markdown-content"
+        v-html="inlineContent"
+    ></span>
+    <div
+        v-else-if="enabled"
+        class="markdown-content"
+        v-html="renderedContent"
+    ></div>
+    <span v-else class="plain-content">{{ content }}</span>
 </template>
 
 <script setup lang="ts">
@@ -12,7 +21,13 @@ const props = defineProps<{
     enabled: boolean;
 }>();
 
-const renderedContent = computed(() => renderMarkdownToHtml(props.content));
+const renderedContent = computed(() =>
+    renderMarkdownToHtml(props.content).trimEnd(),
+);
+const inlineContent = computed(() => {
+    const match = renderedContent.value.match(/^<p>([\s\S]*)<\/p>$/);
+    return match?.[1] ?? null;
+});
 </script>
 
 <style scoped>

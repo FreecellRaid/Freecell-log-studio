@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ExportFormat, ExportRow } from '@/types/export';
-import {
-    htmlAdapter,
-    textAdapter,
-} from '@/io/export/adapters/exportAdapters';
+import { htmlAdapter, textAdapter } from '@/io/export/adapters/exportAdapters';
 
 const format: ExportFormat = {
     formatId: 'format',
@@ -37,5 +34,57 @@ describe('styled export adapters', () => {
 
     it('keeps text output free of style markup', () => {
         expect(textAdapter(rows, format)).toBe('Alice: hello\n');
+    });
+
+    it('renders only message content as Markdown when enabled', () => {
+        const markdownRows: ExportRow[] = [
+            {
+                type: 'message',
+                playerName: '**Alice**',
+                content: '**hello**',
+            },
+        ];
+
+        const html = htmlAdapter(markdownRows, format, {
+            enableMarkdown: true,
+        });
+
+        expect(html).toContain('**Alice**');
+        expect(html).toContain('<strong>hello</strong>');
+        expect(textAdapter(markdownRows, format)).toBe(
+            '**Alice**: **hello**\n',
+        );
+    });
+
+    it('keeps Markdown source in non-text adapters when disabled', () => {
+        const markdownRows: ExportRow[] = [
+            { type: 'message', playerName: 'Alice', content: '**hello**' },
+        ];
+
+        const html = htmlAdapter(markdownRows, format, {
+            enableMarkdown: false,
+        });
+
+        expect(html).toContain('**hello**');
+        expect(html).not.toContain('<strong>hello</strong>');
+    });
+
+    it('allows DOCX export with parsed Markdown content', async () => {
+        const { docxAdapter } =
+            await import('@/io/export/adapters/docxAdapter');
+        const markdownRows: ExportRow[] = [
+            {
+                type: 'message',
+                playerName: 'Alice',
+                content: '# Heading\n\n**bold** and `code`',
+            },
+        ];
+
+        const result = await docxAdapter(markdownRows, format, {
+            enableMarkdown: true,
+        });
+
+        expect(result).toBeInstanceOf(Blob);
+        expect(result.size).toBeGreaterThan(0);
     });
 });

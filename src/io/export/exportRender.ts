@@ -13,6 +13,11 @@ export type RenderedExportSegment =
           style?: ExportStyle;
       }
     | {
+          type: 'content';
+          value: string;
+          style?: ExportStyle;
+      }
+    | {
           type: 'newline';
       }
     | {
@@ -90,13 +95,9 @@ function renderPlaceholderSegments(
         row.type === 'message' ? getMessageTokenStyle(key, row) : undefined;
 
     if (key === 'content') {
-        value.split('\n').forEach((segment, index) => {
-            if (index > 0) {
-                segments.push({ type: 'newline' });
-            }
-
-            pushTextSegment(segments, segment, style);
-        });
+        if (value) {
+            segments.push({ type: 'content', value, style });
+        }
         return;
     }
 

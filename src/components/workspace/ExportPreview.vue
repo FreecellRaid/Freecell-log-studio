@@ -78,7 +78,10 @@
                                         :key="'block-' + tIdx"
                                     >
                                         <template
-                                            v-if="segment.type === 'text'"
+                                            v-if="
+                                                segment.type === 'text' ||
+                                                segment.type === 'content'
+                                            "
                                         >
                                             <span
                                                 :style="
@@ -101,12 +104,21 @@
                                 </div>
 
                                 <div v-else class="message-preview">
-                                    <span
+                                    <template
                                         v-for="(segment, tIdx) in row.segments"
                                         :key="'msg-' + tIdx"
                                     >
+                                        <MarkdownContent
+                                            v-if="segment.type === 'content'"
+                                            :content="segment.value"
+                                            :enabled="
+                                                styleStore.viewSettings
+                                                    .enableMarkdown
+                                            "
+                                            :style="getSegmentStyle(segment)"
+                                        />
                                         <template
-                                            v-if="segment.type === 'text'"
+                                            v-else-if="segment.type === 'text'"
                                         >
                                             <span
                                                 :style="
@@ -125,7 +137,7 @@
                                             v-else-if="segment.type === 'tab'"
                                             class="tab-space"
                                         ></span>
-                                    </span>
+                                    </template>
 
                                     <span class="message-separator">
                                         <span
@@ -135,7 +147,10 @@
                                             :key="'sep-' + tIdx"
                                         >
                                             <template
-                                                v-if="segment.type === 'text'"
+                                                v-if="
+                                                    segment.type === 'text' ||
+                                                    segment.type === 'content'
+                                                "
                                             >
                                                 <span
                                                     :style="
@@ -183,6 +198,7 @@ import { useExportStore } from '@/stores/editor/exportStore';
 import { useLogStore } from '@/stores/project/logStore';
 import { useStyleStore } from '@/stores/project/styleStore';
 import { useUiStore } from '@/stores/ui/uiStore';
+import MarkdownContent from '@/components/common/MarkdownContent.vue';
 import { useWindowStore } from '@/stores/ui/windowStore';
 
 const logStore = useLogStore();
@@ -245,7 +261,11 @@ function handleClose() {
 function getSegmentStyle(
     segment: RenderedExportSegment,
 ): Record<string, string> {
-    if (segment.type !== 'text' || !segment.style) return {};
+    if (
+        (segment.type !== 'text' && segment.type !== 'content') ||
+        !segment.style
+    )
+        return {};
 
     const css: Record<string, string> = {};
     if (segment.style.color) css.color = segment.style.color;
