@@ -43,12 +43,15 @@
                     </time>
                 </header>
 
-                <p
+                <div
                     class="mobile-message-content"
                     :style="getMessageStyle(message).contentStyle"
                 >
-                    {{ message.content || '空消息' }}
-                </p>
+                    <MarkdownContent
+                        :content="message.content || '空消息'"
+                        :enabled="styleStore.viewSettings.enableMarkdown"
+                    />
+                </div>
 
                 <footer class="mobile-message-tags">
                     <span v-if="message.isOoc">场外</span>
@@ -106,6 +109,7 @@ import { useUiStore } from '@/stores/ui/uiStore';
 import { useActiveContext } from '@/composables/application/useActiveContext';
 import type { Chunk, Message } from '@/types/log';
 import { formatDate } from '@/utils/date';
+import MarkdownContent from '@/components/common/MarkdownContent.vue';
 
 const props = defineProps<{
     activeChunk: Chunk | null;

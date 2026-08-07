@@ -25,6 +25,12 @@
                 显示帐号
             </ToggleButton>
             <ToggleButton
+                v-model="styleStore.viewSettings.enableMarkdown"
+                class="setting-item"
+            >
+                启用 Markdown
+            </ToggleButton>
+            <ToggleButton
                 v-model="styleStore.viewSettings.colorMode"
                 class="setting-item"
                 value="playerName"

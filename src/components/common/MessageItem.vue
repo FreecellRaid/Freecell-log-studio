@@ -81,9 +81,11 @@
                     @keydown.esc="$emit('cancelEdit')"
                 ></textarea>
             </div>
-            <div v-else>
-                {{ message.content }}
-            </div>
+            <MarkdownContent
+                v-else
+                :content="message.content"
+                :enabled="styleStore.viewSettings.enableMarkdown"
+            />
         </div>
     </div>
 </template>
@@ -97,6 +99,7 @@ import { formatDate } from '@/utils/date';
 import { computeStyleForMessage } from '@/editor/styleEngine';
 import { Trash2, Plus, Scissors, ChevronsDown } from '@lucide/vue';
 import { vClickOutside } from '@/directives/clickOutside';
+import MarkdownContent from '@/components/common/MarkdownContent.vue';
 
 // 加入虚拟滚动之后，把编辑状态放在messageItem里会导致状态丢失
 // 统一改成父组件传入
