@@ -8,8 +8,16 @@
             "title": "文件导入",
             "items": [
                 {
-                    "term": "拖入工作区",
+                    "term": "选择文件",
+                    "description": "点击顶部导入按钮，可选择一个或多个日志文件"
+                },
+                {
+                    "term": "拖入工作区（桌面端）",
                     "description": "任意时刻将文件拖入中间工作区即可导入"
+                },
+                {
+                    "term": "从剪切板导入（桌面端）",
+                    "description": "点击顶部导入按钮，可直接导入剪切板中的日志文本"
                 }
             ]
         },
@@ -20,7 +28,7 @@
             "items": [
                 {
                     "term": "双击消息",
-                    "description": "进入编辑，enter保存编辑"
+                    "description": "进入编辑，按 Enter 保存，按 Esc 取消"
                 },
                 {
                     "term": "拖拽消息",
@@ -33,6 +41,10 @@
                 {
                     "term": "Shift + 点击",
                     "description": "范围选择"
+                },
+                {
+                    "term": "Markdown",
+                    "description": "在偏好设置中启用后，可在消息、导出预览和相应导出内容中渲染 Markdown"
                 }
             ]
         },
@@ -135,7 +147,7 @@
         {
             "type": "shortcuts",
             "icon": "Keyboard",
-            "title": "快捷键",
+            "title": "快捷键（桌面端）",
             "items": [
                 {
                     "key": "Ctrl + A",
@@ -162,6 +174,10 @@
                     "description": "重做"
                 },
                 {
+                    "key": "Ctrl + Shift + Z",
+                    "description": "重做"
+                },
+                {
                     "key": "Ctrl + E",
                     "description": "合并"
                 },
@@ -171,7 +187,7 @@
                 },
                 {
                     "key": "Ctrl + D",
-                    "description": "选中相同发言人"
+                    "description": "继续选中下一条相同发言人的消息"
                 },
                 {
                     "key": "Ctrl + /",
@@ -183,6 +199,10 @@
                 },
                 {
                     "key": "Ctrl + backspace",
+                    "description": "删除"
+                },
+                {
+                    "key": "Ctrl + Delete",
                     "description": "删除"
                 },
                 {
@@ -208,6 +228,10 @@
                 {
                     "key": "Ctrl + K",
                     "description": "打开帮助文档"
+                },
+                {
+                    "key": "macOS",
+                    "description": "使用 Command 代替 Ctrl"
                 }
             ]
         }
