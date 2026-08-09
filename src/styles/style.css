@@ -10,6 +10,8 @@
     --text-primary: #333333;
     --text-secondary: #999999;
     --text-muted: #666666;
+    /* 专门给预览标题写一个，避免深色模式下浅色预览出问题 */
+    --text-preview: #333333;
 
     /* 边框与分割线 */
     --border-color: #e0e0e0;
@@ -39,6 +41,7 @@
     --text-primary: #f3f3f3;
     --text-secondary: #707070;
     --text-muted: #858585;
+    --text-preview: #f3f3f3;
 
     --border-color: #444444;
     --hover-bg: #37373d;

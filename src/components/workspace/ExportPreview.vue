@@ -11,13 +11,7 @@
         <header class="view-header">
             <div class="view-title">
                 <Eye class="ui-icon icon-view-title" />
-                <h2
-                    class="text-view-title"
-                    :class="{
-                        'preview-always-white-title':
-                            uiStore.exportPreviewAlwaysWhite,
-                    }"
-                >
+                <h2 class="text-view-title">
                     {{ activeFormat.formatName }}预览
                 </h2>
                 <span class="msg-count">({{ rows.length }} 行)</span>
@@ -316,6 +310,10 @@ function getSegmentStyle(
     word-break: break-word;
 }
 
+.text-view-title {
+    color: var(--text-preview);
+}
+
 .preview-always-white {
     /* 局部覆写 CSS 变量为浅色模式的值 */
     --bg-workspace: #ffffff;
@@ -323,8 +321,5 @@ function getSegmentStyle(
     --text-primary: #1a202c;
     --text-muted: #718096;
     --icon-color: #a0aec0;
-}
-.preview-always-white-title {
-    color: #f3f3f3;
 }
 </style>
