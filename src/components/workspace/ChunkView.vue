@@ -364,20 +364,25 @@ function handleDragEnd() {
 }
 
 function handleContainerDragOver(event: DragEvent) {
-    const target = event.target as HTMLElement;
-    if (!target.closest('.message-item')) {
+    const target = event.target;
+    if (!(target instanceof Element) || !target.closest('.message-item')) {
         dropIndicatorIndex.value = null;
     }
     dragDropTool.onDragOver(event);
 }
 
 function handleContainerDrop(event: DragEvent) {
-    const target = event.target as HTMLElement;
-    if (target.closest('.message-item')) {
+    const target = event.target;
+    if (target instanceof Element && target.closest('.message-item')) {
         return;
     }
 
-    handleDragEnd();
+    dropIndicatorIndex.value = null;
+    dragDropTool.onDrop(
+        event,
+        currentChunkId.value,
+        currentChunk.value?.messages.length ?? 0,
+    );
 }
 
 function handleActionInsert(message: Message, index: number) {
