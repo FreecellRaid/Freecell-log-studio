@@ -46,7 +46,7 @@
                 <div class="document-group">
                     <div
                         class="doc-header"
-                        draggable="true"
+                        :draggable="!isRenamingDocument(doc)"
                         @click="handleToggleExpand(doc)"
                         @dragstart="handleDocumentDragStart($event, doc.docId)"
                         @dragover="
@@ -160,7 +160,7 @@
                                             chunk.chunkId,
                                         ),
                                 }"
-                                draggable="true"
+                                :draggable="!isRenamingChunk(chunk)"
                                 @click="
                                     handleChunkSelect(chunk.chunkId, $event)
                                 "
