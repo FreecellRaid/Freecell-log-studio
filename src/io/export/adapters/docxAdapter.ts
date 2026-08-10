@@ -1,12 +1,4 @@
-import {
-    AlignmentType,
-    Document,
-    HeadingLevel,
-    Packer,
-    Paragraph,
-    Tab,
-    TextRun,
-} from 'docx';
+import { AlignmentType, Document, Packer, Paragraph, Tab, TextRun } from 'docx';
 import type {
     ExportAdapterOptions,
     ExportFormat,
@@ -97,11 +89,6 @@ function createParagraphFromSegments(
         : createEmptyParagraph();
 }
 
-interface MarkdownParagraph {
-    runs: TextRun[];
-    heading?: (typeof HeadingLevel)[keyof typeof HeadingLevel];
-}
-
 function createInlineRuns(
     token: MarkdownToken,
     baseStyle?: ExportStyle,
@@ -139,24 +126,9 @@ function createInlineRuns(
     return runs;
 }
 
-function getHeadingLevel(tag: string) {
-    const levels = {
-        h1: HeadingLevel.HEADING_1,
-        h2: HeadingLevel.HEADING_2,
-        h3: HeadingLevel.HEADING_3,
-        h4: HeadingLevel.HEADING_4,
-        h5: HeadingLevel.HEADING_5,
-        h6: HeadingLevel.HEADING_6,
-    } as const;
-    return levels[tag as keyof typeof levels];
-}
-
-function markdownToParagraphs(
-    content: string,
-    baseStyle?: ExportStyle,
-): MarkdownParagraph[] {
+function markdownToRuns(content: string, baseStyle?: ExportStyle): TextRun[] {
     const tokens = parseMarkdown(content);
-    const paragraphs: MarkdownParagraph[] = [];
+    const blocks: TextRun[][] = [];
     const listStack: Array<'bullet' | 'ordered'> = [];
     let listItemIndex = 0;
     let quoteDepth = 0;
@@ -165,7 +137,7 @@ function markdownToParagraphs(
 
     for (let index = 0; index < tokens.length; index++) {
         const token = tokens[index];
-        // 只有普通文本的正文跟在模板前缀后面，标题、列表、表格等块级内容才另起 graph，避免出现大量空行
+        // Markdown 的块级结构先分别收集，最后统一转成同一 DOCX 段落内的软换行。
         if (token.type === 'bullet_list_open') listStack.push('bullet');
         else if (token.type === 'ordered_list_open') {
             listStack.push('ordered');
@@ -183,7 +155,7 @@ function markdownToParagraphs(
             tableRow = [];
             tableCellCount = 0;
         } else if (token.type === 'tr_close' && tableRow) {
-            paragraphs.push({ runs: tableRow });
+            blocks.push(tableRow);
             tableRow = null;
         } else if (token.type === 'inline') {
             const inlineRuns = createInlineRuns(token, baseStyle);
@@ -212,14 +184,7 @@ function markdownToParagraphs(
                 );
             }
 
-            const previous = tokens[index - 1];
-            paragraphs.push({
-                runs: [...prefix, ...inlineRuns],
-                heading:
-                    previous?.type === 'heading_open'
-                        ? getHeadingLevel(previous.tag)
-                        : undefined,
-            });
+            blocks.push([...prefix, ...inlineRuns]);
         } else if (token.type === 'fence' || token.type === 'code_block') {
             const codeRuns: TextRun[] = [];
             token.content
@@ -231,11 +196,13 @@ function markdownToParagraphs(
                         new TextRun({ text: line, font: 'Consolas' }),
                     );
                 });
-            paragraphs.push({ runs: codeRuns });
+            blocks.push(codeRuns);
         }
     }
 
-    return paragraphs.length > 0 ? paragraphs : [{ runs: [] }];
+    return blocks.flatMap((runs, index) =>
+        index === 0 ? runs : [new TextRun({ break: 1 }), ...runs],
+    );
 }
 
 function createParagraphsForBlock(
@@ -258,23 +225,19 @@ function createParagraphsForBlock(
         return [createParagraphFromSegments(segments)];
     }
 
-    const markdownParagraphs = markdownToParagraphs(
+    const markdownRuns = markdownToRuns(
         contentSegment.value,
         contentSegment.style,
     );
     const prefix = createRunsFromSegments(segments.slice(0, contentIndex));
     const suffix = createRunsFromSegments(segments.slice(contentIndex + 1));
-    markdownParagraphs[0].runs.unshift(...prefix);
-    markdownParagraphs.at(-1)?.runs.push(...suffix);
 
-    return markdownParagraphs.map(
-        (paragraph) =>
-            new Paragraph({
-                children: paragraph.runs,
-                alignment: AlignmentType.LEFT,
-                heading: paragraph.heading,
-            }),
-    );
+    return [
+        new Paragraph({
+            children: [...prefix, ...markdownRuns, ...suffix],
+            alignment: AlignmentType.LEFT,
+        }),
+    ];
 }
 
 function createRunsFromSegments(segments: RenderedExportSegment[]): TextRun[] {
