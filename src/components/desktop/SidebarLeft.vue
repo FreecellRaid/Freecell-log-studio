@@ -157,19 +157,11 @@ import { usePanelResize } from '@/composables/ui/usePanelResize';
 import { useUiStore } from '@/stores/ui/uiStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import ChunkListPanel from '@/components/panels/ChunkListPanel.vue';
+import ExportFormatPanel from '@/components/panels/ExportFormatPanel.vue';
+import IdentityPanel from '@/components/panels/IdentityPanel.vue';
+import RuleEditorPanel from '@/components/panels/RuleEditorPanel.vue';
+import SearchPanel from '@/components/panels/SearchPanel.vue';
 
-const IdentityPanel = defineAsyncComponent(
-    () => import('@/components/panels/IdentityPanel.vue'),
-);
-const RuleEditorPanel = defineAsyncComponent(
-    () => import('@/components/panels/RuleEditorPanel.vue'),
-);
-const ExportFormatPanel = defineAsyncComponent(
-    () => import('@/components/panels/ExportFormatPanel.vue'),
-);
-const SearchPanel = defineAsyncComponent(
-    () => import('@/components/panels/SearchPanel.vue'),
-);
 const SettingsPopover = defineAsyncComponent(
     () => import('@/components/popovers/SettingsPopover.vue'),
 );

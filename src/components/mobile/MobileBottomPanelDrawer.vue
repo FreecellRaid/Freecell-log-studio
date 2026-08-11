@@ -30,26 +30,14 @@
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent } from 'vue';
 import { useSwipeGesture } from '@/composables/interaction/useSwipeGesture';
 import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
-
-const ChunkListPanel = defineAsyncComponent(
-    () => import('@/components/panels/ChunkListPanel.vue'),
-);
-const ExportFormatPanel = defineAsyncComponent(
-    () => import('@/components/panels/ExportFormatPanel.vue'),
-);
-const IdentityPanel = defineAsyncComponent(
-    () => import('@/components/panels/IdentityPanel.vue'),
-);
-const RuleEditorPanel = defineAsyncComponent(
-    () => import('@/components/panels/RuleEditorPanel.vue'),
-);
-const SearchPanel = defineAsyncComponent(
-    () => import('@/components/panels/SearchPanel.vue'),
-);
+import ChunkListPanel from '@/components/panels/ChunkListPanel.vue';
+import ExportFormatPanel from '@/components/panels/ExportFormatPanel.vue';
+import IdentityPanel from '@/components/panels/IdentityPanel.vue';
+import RuleEditorPanel from '@/components/panels/RuleEditorPanel.vue';
+import SearchPanel from '@/components/panels/SearchPanel.vue';
 
 const mobileUiStore = useMobileUiStore();
 const windowStore = useWindowStore();
