@@ -3,7 +3,7 @@
         <input
             :ref="setFileInput"
             type="file"
-            accept=".txt,.json,application/json"
+            accept=".txt,.json,.docx,application/json,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             multiple
             hidden
             @change="handleFileChange"

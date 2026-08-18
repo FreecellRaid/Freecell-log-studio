@@ -8,7 +8,7 @@ import { buildLogDocument } from '@/io/import/parser';
 import { dispatchAdapter } from '@/io/import/importAdapters';
 import { tryParseProjectFile } from '@/io/storage/project';
 import { stripFileExtension } from '@/utils/fileName';
-import { readFileAsText } from '@/io/import/textDecoder';
+import { readImportFile } from '@/io/import/fileReader';
 import { useProjectManager } from '@/composables/application/useProjectManager';
 import { useHistoryStore } from '@/stores/editor/historyStore';
 
@@ -154,13 +154,17 @@ export function useFileImport() {
     async function importAndApply(files: File[]): Promise<number> {
         const entries = await Promise.all(
             files.map(async (file) => {
-                const decoded = await readFileAsText(file);
-                console.log(
-                    `文件 ${file.name} 检测编码: ${decoded.encoding}（置信度 ${decoded.confidence.toFixed(2)}）`,
-                );
+                const imported = await readImportFile(file);
+                if (imported.source === 'text') {
+                    console.log(
+                        `文件 ${file.name} 检测编码: ${imported.encoding}（置信度 ${imported.confidence?.toFixed(2)}）`,
+                    );
+                } else {
+                    console.log(`文件 ${file.name} 已提取 DOCX 纯文本`);
+                }
                 return {
                     name: stripFileExtension(file.name),
-                    text: decoded.text,
+                    text: imported.text,
                 };
             }),
         );
