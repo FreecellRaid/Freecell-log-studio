@@ -266,4 +266,196 @@ describe('project log commands', () => {
         expect(commands.moveDocument('doc-c', 1)).toBe(false);
         expect(history.undoStack).toHaveLength(1);
     });
+
+    it('inserts, reorders, updates, and deletes messages with normalized indexes', () => {
+        const log = useLogStore();
+        const commands = useLogCommands();
+        const history = useHistoryStore();
+        log.replaceDocuments([
+            document('doc-a', [chunk('chunk-a', [message('a'), message('c')])]),
+        ]);
+
+        expect(commands.addMessage('chunk-a', message('b'), 1)).toBe(true);
+        expect(commands.reorderMessageInChunk('chunk-a', 2, 0)).toBe(true);
+        expect(
+            commands.batchUpdateMessages(new Set(['a', 'b']), {
+                note: 'selected',
+                role: 'npc',
+            }),
+        ).toBe(true);
+        expect(commands.deleteMessage('chunk-a', 'b')).toBe(true);
+
+        const messages = log.findChunkById('chunk-a')?.messages ?? [];
+        expect(messages.map((item) => item.messageId)).toEqual(['c', 'a']);
+        expect(messages.map((item) => item.messageIndex)).toEqual([0, 1]);
+        expect(messages.find((item) => item.messageId === 'a')).toMatchObject({
+            note: 'selected',
+            role: 'npc',
+        });
+        expect(history.undoStack).toHaveLength(4);
+
+        expect(commands.reorderMessageInChunk('chunk-a', 0, 0)).toBe(false);
+        expect(commands.deleteMessage('chunk-a', 'missing')).toBe(false);
+        expect(commands.batchUpdateMessages(new Set(['missing']), {})).toBe(
+            false,
+        );
+        expect(history.undoStack).toHaveLength(4);
+    });
+
+    it('creates a blank message after the source while preserving its identity', () => {
+        const log = useLogStore();
+        const commands = useLogCommands();
+        const source = message('source', 'Alice');
+        source.account = 'alice-account';
+        source.role = 'gm';
+        log.replaceDocuments([
+            document('doc-a', [chunk('chunk-a', [source, message('tail')])]),
+        ]);
+
+        expect(commands.insertNewMessageAfter('chunk-a', source, 0)).toBe(
+            true,
+        );
+        const inserted = log.findChunkById('chunk-a')?.messages[1];
+        expect(inserted).toMatchObject({
+            chunkId: 'chunk-a',
+            messageIndex: 1,
+            playerName: 'Alice',
+            account: 'alice-account',
+            content: '',
+            role: 'gm',
+            note: '',
+        });
+        expect(inserted?.messageId).not.toBe('source');
+        expect(inserted?.time).toBeInstanceOf(Date);
+    });
+
+    it('batch deletes across chunks and restores the complete edit with undo', () => {
+        const log = useLogStore();
+        const commands = useLogCommands();
+        const history = useHistoryStore();
+        log.replaceDocuments([
+            document('doc-a', [
+                chunk('chunk-a', [message('a'), message('b')]),
+                chunk('chunk-b', [message('c'), message('d')]),
+            ]),
+        ]);
+
+        expect(commands.batchDeleteMessages(new Set(['a', 'd']))).toBe(true);
+        expect(log.allMessages.map((item) => item.messageId)).toEqual(['b', 'c']);
+        expect(history.undoStack).toHaveLength(1);
+
+        history.undo();
+        expect(log.allMessages.map((item) => item.messageId)).toEqual([
+            'a',
+            'b',
+            'c',
+            'd',
+        ]);
+        expect(commands.batchDeleteMessages(new Set(['missing']))).toBe(false);
+    });
+
+    it('merges messages into the requested target and toggles flags in batches', () => {
+        const log = useLogStore();
+        const commands = useLogCommands();
+        const history = useHistoryStore();
+        log.replaceDocuments([
+            document('doc-a', [
+                chunk('chunk-a', [message('a'), message('b'), message('c')]),
+            ]),
+        ]);
+
+        expect(commands.mergeMessages('chunk-a', ['a', 'c'], 'c')).toBe(true);
+        expect(log.findChunkById('chunk-a')?.messages).toMatchObject([
+            { messageId: 'b', messageIndex: 0 },
+            { messageId: 'c', messageIndex: 1, content: 'a\nc' },
+        ]);
+        expect(commands.toggleOoc(new Set(['b', 'c']))).toBe(true);
+        expect(commands.toggleCommand(new Set(['c']))).toBe(true);
+        expect(log.messagesById.get('b')?.isOoc).toBe(true);
+        expect(log.messagesById.get('c')).toMatchObject({
+            isOoc: true,
+            isCommand: true,
+        });
+        expect(history.undoStack).toHaveLength(3);
+
+        expect(commands.mergeWithNextMessage('chunk-a', 'c')).toBe(false);
+        expect(commands.toggleOoc(new Set(['missing']))).toBe(false);
+        expect(commands.toggleCommand(new Set())).toBe(false);
+    });
+
+    it('updates document and chunk metadata with the expected history behavior', () => {
+        const log = useLogStore();
+        const commands = useLogCommands();
+        const history = useHistoryStore();
+        log.replaceDocuments([
+            document('doc-a', [chunk('chunk-a', [message('a')])]),
+        ]);
+
+        expect(commands.renameDocument('doc-a', '  Session One  ')).toBe(true);
+        expect(log.documents[0].docName).toBe('Session One');
+        expect(log.projectName).toBe('Session One');
+        expect(commands.updateChunk('chunk-a', { chunkName: ' Scene One ' })).toBe(
+            true,
+        );
+        expect(log.documents[0].chunks[0].chunkName).toBe(' Scene One ');
+        expect(history.undoStack).toHaveLength(2);
+
+        expect(commands.setDocumentExpanded('doc-a', true)).toBe(true);
+        expect(commands.setDocumentExpanded('doc-a', true)).toBe(false);
+        expect(log.documents[0].isExpanded).toBe(true);
+        expect(history.undoStack).toHaveLength(2);
+        expect(commands.renameDocument('doc-a', '   ')).toBe(false);
+        expect(commands.updateChunk('missing', { chunkName: 'x' })).toBe(false);
+    });
+
+    it('inserts copied chunks and rewrites all ownership and index fields', () => {
+        const log = useLogStore();
+        const commands = useLogCommands();
+        log.replaceDocuments([
+            document('doc-a', [chunk('existing', [message('a')])]),
+        ]);
+        const copied = chunk('copied', [message('b'), message('c')]);
+
+        expect(commands.insertChunks('doc-a', [copied], -10)).toBe(true);
+        expect(log.documents[0].chunks.map((item) => item.chunkId)).toEqual([
+            'copied',
+            'existing',
+        ]);
+        expect(log.findChunkById('copied')).toMatchObject({
+            docId: 'doc-a',
+            chunkIndex: 0,
+        });
+        expect(
+            log.findChunkById('copied')?.messages.map((item) => ({
+                chunkId: item.chunkId,
+                messageIndex: item.messageIndex,
+            })),
+        ).toEqual([
+            { chunkId: 'copied', messageIndex: 0 },
+            { chunkId: 'copied', messageIndex: 1 },
+        ]);
+        expect(commands.insertChunks('missing', [chunk('x', [])], 0)).toBe(
+            false,
+        );
+        expect(commands.insertChunks('doc-a', [], 0)).toBe(false);
+    });
+
+    it('rejects invalid split, merge, move, and reorder operations without history', () => {
+        const log = useLogStore();
+        const commands = useLogCommands();
+        const history = useHistoryStore();
+        log.replaceDocuments([
+            document('doc-a', [chunk('chunk-a', [message('a')])]),
+            document('doc-b', [chunk('chunk-b', [message('b')])]),
+        ]);
+
+        expect(commands.splitChunk('chunk-a', 'a')).toBe(false);
+        expect(commands.mergeChunks(['chunk-a', 'chunk-b'])).toBe(false);
+        expect(commands.mergeWithNextChunk('chunk-a')).toBe(false);
+        expect(commands.moveChunk('chunk-a', 'missing', 0)).toBe(false);
+        expect(commands.moveMessages([], 'chunk-a', 'chunk-b', 0)).toBe(false);
+        expect(commands.reorderChunk(-1, 0)).toBe(false);
+        expect(commands.deleteChunk('missing')).toBe(false);
+        expect(history.undoStack).toHaveLength(0);
+    });
 });
