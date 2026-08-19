@@ -1,0 +1,47 @@
+StandardMessage(account) 2026/04/08 00:00:10
+标准消息格式
+
+PlayerNameWith(brackets)(123456) 2026/04/08 00:00:10
+QQ导出的playerName字段中可以有括号，account字段一定是Number
+
+AccountWithBrackets(accountWith(brackets)) 2026/04/08 00:00:10
+回声岛导出的account字段中可以有括号，但不以Number开头
+
+(PlayerWithoutName)2026/04/08 00:00:10
+部分骰系用.log export导出时骰子没有playerName
+
+MessageWithSpace (account) 2026/04/08 00:00:10
+部分骰系的playerName后有一个空格
+
+PlayerWithoutAccount2026/04/08 00:00:10
+猫爷导出的没有account字段
+
+NonStandardTime1(account) 2026-04-08 00:00:10
+qq新版消息管理器直接导出的时间格式
+
+NonStandardTime2(account) 2026/4/8 00:00:10
+qq旧版消息管理器直接导出的时间格式
+
+NonStandardTime3(account) 00:00:10
+qq当日的消息直接导出没有日期
+
+UndefinedCommand(account) 2026/04/08 00:00:10
+undefined 回声岛的部分演出操作导出为undefined
+
+CommandCN(account) 2026/04/08 00:00:10
+。中文句号指令
+
+CommandEN(account) 2026/04/08 00:00:10
+.英文句号指令
+
+Command/(account) 2026/04/08 00:00:10
+/指令
+
+Command\(account) 2026/04/08 00:00:10
+\指令
+
+OocCN(account) 2026/04/08 00:00:10
+（中文括号ooc）
+
+OocEN(account) 2026/04/08 00:00:10
+(英文括号ooc)
