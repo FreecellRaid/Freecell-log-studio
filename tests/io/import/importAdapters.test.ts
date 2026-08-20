@@ -47,6 +47,21 @@ describe('QQ adapter', () => {
             time: new Date(2025, 11, 31, 23, 59, 59),
         });
     });
+
+    it('does not include the month and day in the player name', () => {
+        const currentYearLog = [
+            'Alice: 08-20 20:31:50',
+            'first',
+            'Bob: 08-20 20:32:02',
+            'second',
+        ].join('\n');
+
+        const adapter = dispatchAdapter(currentYearLog);
+        expect(adapter.id).toBe('qq-adapter');
+        expect(
+            adapter.parse(currentYearLog).map((row) => row.playerName),
+        ).toEqual(['Alice', 'Bob']);
+    });
 });
 
 describe('painted log adapter', () => {

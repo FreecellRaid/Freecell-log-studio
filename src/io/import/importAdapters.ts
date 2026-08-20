@@ -89,7 +89,7 @@ export const QqImportAdapter: ImportAdapter = {
 
 // 标准(以及看起来标准)的导入格式，匹配header行，兼容各种缺字段和各种时间
 const HEADER_REGEX =
-    /^(.*?)\s*(\d{4}[/-]\d{1,2}[/-]\d{1,2}\s+\d{1,2}:\d{1,2}:\d{1,2}|\d{1,2}:\d{1,2}:\d{1,2})\s*$/;
+    /^(?!.*:\s+(?:\d{4}-)?\d{1,2}-\d{1,2}\s+\d{1,2}:\d{1,2}:\d{1,2}\s*$)(.*?)\s*(\d{4}[/-]\d{1,2}[/-]\d{1,2}\s+\d{1,2}:\d{1,2}:\d{1,2}|\d{1,2}:\d{1,2}:\d{1,2})\s*$/;
 
 const StandardImportAdapter: ImportAdapter = {
     id: 'standard-adapter',
