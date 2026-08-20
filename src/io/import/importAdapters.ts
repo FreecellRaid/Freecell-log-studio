@@ -24,6 +24,69 @@ export function dispatchAdapter(text: string): ImportAdapter {
     return bestAdapter;
 }
 
+// QQ 消息管理器文本格式
+// playerName: MM-DD HH:mm:ss（本年消息）
+// playerName: YYYY-MM-DD HH:mm:ss（非本年消息）
+// 时间中没有年份时使用导入时的年份。
+const QQ_LOG_REGEX =
+    /^(.+?):\s+(?:(\d{4})-)?(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})\s*$/;
+
+export const QqImportAdapter: ImportAdapter = {
+    id: 'qq-adapter',
+    name: 'QQ 聊天记录格式',
+
+    test: (sampleLines: string[]) => {
+        let score = 0;
+        for (const line of sampleLines) {
+            if (QQ_LOG_REGEX.test(line)) {
+                score += 10;
+            }
+        }
+        return score;
+    },
+
+    parse: (text: string) => {
+        const rows: ImportRow[] = [];
+        const referenceDate = new Date();
+        let currentName: string | null = null;
+        let currentTime: Date | undefined;
+        let contentBuffer: string[] = [];
+
+        const flushBuffer = () => {
+            if (currentName !== null && contentBuffer.length > 0) {
+                rows.push({
+                    playerName: currentName,
+                    account: '',
+                    time: currentTime,
+                    content: cleanContent(contentBuffer.join('\n')),
+                });
+            }
+            contentBuffer = [];
+        };
+
+        for (const line of text.split('\n')) {
+            const match = line.match(QQ_LOG_REGEX);
+            if (match) {
+                flushBuffer();
+                currentName = match[1].trim();
+                currentTime = new Date(
+                    match[2] ? Number(match[2]) : referenceDate.getFullYear(),
+                    Number(match[3]) - 1,
+                    Number(match[4]),
+                    Number(match[5]),
+                    Number(match[6]),
+                    Number(match[7]),
+                );
+            } else if (currentName !== null) {
+                contentBuffer.push(line);
+            }
+        }
+        flushBuffer();
+
+        return rows;
+    },
+};
+
 // 标准(以及看起来标准)的导入格式，匹配header行，兼容各种缺字段和各种时间
 const HEADER_REGEX =
     /^(.*?)\s*(\d{4}[/-]\d{1,2}[/-]\d{1,2}\s+\d{1,2}:\d{1,2}:\d{1,2}|\d{1,2}:\d{1,2}:\d{1,2})\s*$/;
@@ -95,7 +158,7 @@ function extractIdentity(header: string): {
         const lastMatch = matches[matches.length - 1];
         const lastContent = lastMatch[1];
 
-        // playerName里可以有括号，但最后一个括号内容为纯数字 (如 QQ )
+        // playerName里可以有括号，但最后一个括号内容为纯数字 (如 qq 骰娘导出 )
         if (/^\d+$/.test(lastContent)) {
             const name = trimmedHeader.slice(0, lastMatch.index).trim();
             return { playerName: name, account: lastContent };
@@ -409,6 +472,7 @@ export const SealchatImportAdapter: ImportAdapter = {
 };
 
 const ALL_ADAPTERS: ImportAdapter[] = [
+    QqImportAdapter,
     StandardImportAdapter,
     PaintedLogAdapter,
     CcfoliaImportAdapter,

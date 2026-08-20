@@ -3,9 +3,51 @@ import {
     CcfoliaImportAdapter,
     PaintedLogAdapter,
     PineappleImportAdapter,
+    QqImportAdapter,
     SealchatImportAdapter,
     dispatchAdapter,
 } from '@/io/import/importAdapters';
+
+describe('QQ adapter', () => {
+    const log = [
+        '弥幽: 08-20 20:31:50',
+        '第一条消息',
+        '',
+        '消息的第二段',
+        '',
+        'Freecell: 08-20 20:32:02',
+        '(第二条消息)',
+        '',
+        '旧友: 2025-12-31 23:59:59',
+        '去年的消息',
+    ].join('\n');
+
+    it('recognizes QQ exports and parses identities, times and multiline content', () => {
+        expect(dispatchAdapter(log).id).toBe('qq-adapter');
+
+        const rows = QqImportAdapter.parse(log);
+        expect(rows).toHaveLength(3);
+        expect(rows[0]).toMatchObject({
+            playerName: '弥幽',
+            account: '',
+            content: '第一条消息\n\n消息的第二段',
+        });
+        expect(rows[0].time).toEqual(
+            new Date(new Date().getFullYear(), 7, 20, 20, 31, 50),
+        );
+        expect(rows[1]).toMatchObject({
+            playerName: 'Freecell',
+            account: '',
+            content: '(第二条消息)',
+        });
+        expect(rows[2]).toMatchObject({
+            playerName: '旧友',
+            account: '',
+            content: '去年的消息',
+            time: new Date(2025, 11, 31, 23, 59, 59),
+        });
+    });
+});
 
 describe('painted log adapter', () => {
     const log = [
@@ -131,8 +173,8 @@ describe('SealChat adapter', () => {
 
 describe('adapter dispatch', () => {
     it('rejects text without enough format evidence', () => {
-        expect(() => dispatchAdapter('plain text\nwithout log headers')).toThrow(
-            '无法识别该文件的格式',
-        );
+        expect(() =>
+            dispatchAdapter('plain text\nwithout log headers'),
+        ).toThrow('无法识别该文件的格式');
     });
 });
