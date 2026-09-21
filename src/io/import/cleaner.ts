@@ -15,8 +15,8 @@ export function cleanContent(rawContent: string): string {
                 '',
             )
 
-            // 删除行首的 #
-            .replace(/^#/gm, '')
+            // 现在会误伤 md 不删了
+            // .replace(/^#/gm, '')
 
             // 将 3 个以上的连续换行压缩为 2 个换行
             .replace(/\n{3,}/g, '\n\n')
