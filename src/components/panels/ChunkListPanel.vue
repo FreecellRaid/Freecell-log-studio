@@ -762,7 +762,7 @@ function withScrollAnchor(action: () => void) {
     position: absolute;
     left: 0;
     right: 0;
-    top: 1px;
+    bottom: -1px;
     border-top: 2px solid var(--active-accent);
     pointer-events: none;
     z-index: 1;

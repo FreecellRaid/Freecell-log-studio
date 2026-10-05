@@ -169,6 +169,28 @@ describe('project log commands', () => {
         expect(log.documents[1].chunks[0].chunkIndex).toBe(0);
     });
 
+    it('moves a chunk to the indicated boundary within the same document', () => {
+        const log = useLogStore();
+        const commands = useLogCommands();
+        log.replaceDocuments([
+            document('doc-a', [
+                chunk('chunk-a', []),
+                chunk('chunk-b', []),
+                chunk('chunk-c', []),
+                chunk('chunk-d', []),
+            ]),
+        ]);
+
+        // Boundary 3 is immediately after chunk-c in the pre-move list.
+        expect(commands.moveChunk('chunk-b', 'doc-a', 3)).toBe(true);
+        expect(log.documents[0].chunks.map((item) => item.chunkId)).toEqual([
+            'chunk-a',
+            'chunk-c',
+            'chunk-b',
+            'chunk-d',
+        ]);
+    });
+
     it('deletes a document with project and rule synchronization', () => {
         const log = useLogStore();
         const commands = useLogCommands();

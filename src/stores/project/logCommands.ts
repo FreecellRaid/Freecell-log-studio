@@ -589,9 +589,17 @@ export const useLogCommands = defineStore('logCommands', () => {
 
         return executeEdit(!isNoopMove, () => {
             sourceDoc.chunks.splice(sourceIndex, 1);
+            // targetIndex describes a boundary in the list before the dragged
+            // chunk is removed. When moving down within the same document,
+            // that boundary shifts left by one after the removal.
+            const insertionIndex =
+                sourceDoc.docId === targetDoc.docId &&
+                normalizedTargetIndex > sourceIndex
+                    ? normalizedTargetIndex - 1
+                    : normalizedTargetIndex;
             const clampedIndex = Math.max(
                 0,
-                Math.min(targetIndex, targetDoc.chunks.length),
+                Math.min(insertionIndex, targetDoc.chunks.length),
             );
             targetDoc.chunks.splice(clampedIndex, 0, chunk);
         });
