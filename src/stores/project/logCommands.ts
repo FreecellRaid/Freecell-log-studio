@@ -166,26 +166,39 @@ export const useLogCommands = defineStore('logCommands', () => {
                 idSet.has(message.messageId) ? index : -1,
             )
             .filter((index) => index !== -1);
-        const currentStartIndex = sourcePositions[0] ?? -1;
-        const currentEndIndex =
-            sourcePositions[sourcePositions.length - 1] ?? -1;
         const normalizedTargetIndex = Math.max(
             0,
             Math.min(targetIndex, targetChunk.messages.length),
         );
+        const removedBeforeTarget =
+            sourceChunkId === targetChunkId
+                ? sourcePositions.filter(
+                      (position) => position < normalizedTargetIndex,
+                  ).length
+                : 0;
+        const insertionIndex = normalizedTargetIndex - removedBeforeTarget;
+        const remainingMessages = sourceChunk.messages.filter(
+            (message) => !idSet.has(message.messageId),
+        );
+        const reorderedMessages = [...remainingMessages];
+        if (sourceChunkId === targetChunkId) {
+            reorderedMessages.splice(
+                insertionIndex,
+                0,
+                ...movingMessages,
+            );
+        }
         const isNoopMove =
             sourceChunkId === targetChunkId &&
-            currentStartIndex !== -1 &&
-            normalizedTargetIndex >= currentStartIndex &&
-            normalizedTargetIndex <= currentEndIndex + 1;
+            reorderedMessages.every(
+                (message, index) => message === sourceChunk.messages[index],
+            );
 
         return executeEdit(!isNoopMove, () => {
-            sourceChunk.messages = sourceChunk.messages.filter(
-                (m) => !idSet.has(m.messageId),
-            );
+            sourceChunk.messages = remainingMessages;
             const clampedIndex = Math.max(
                 0,
-                Math.min(targetIndex, targetChunk.messages.length),
+                Math.min(insertionIndex, targetChunk.messages.length),
             );
             targetChunk.messages.splice(clampedIndex, 0, ...movingMessages);
         });

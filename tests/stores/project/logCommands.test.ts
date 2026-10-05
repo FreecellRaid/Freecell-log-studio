@@ -76,6 +76,57 @@ describe('project log commands', () => {
         ).toEqual(['b', 'c']);
     });
 
+    it('moves messages to the indicated boundary within the same chunk', () => {
+        const log = useLogStore();
+        const commands = useLogCommands();
+        log.replaceDocuments([
+            document('doc-a', [
+                chunk('chunk-a', [
+                    message('a'),
+                    message('b'),
+                    message('c'),
+                    message('d'),
+                ]),
+            ]),
+        ]);
+
+        // Boundary 3 is immediately before message d in the pre-move list.
+        expect(commands.moveMessages(['b'], 'chunk-a', 'chunk-a', 3)).toBe(
+            true,
+        );
+        expect(
+            log.documents[0].chunks[0].messages.map((item) => item.messageId),
+        ).toEqual(['a', 'c', 'b', 'd']);
+    });
+
+    it('accounts for every selected message before a same-chunk target', () => {
+        const log = useLogStore();
+        const commands = useLogCommands();
+        log.replaceDocuments([
+            document('doc-a', [
+                chunk('chunk-a', [
+                    message('a'),
+                    message('b'),
+                    message('c'),
+                    message('d'),
+                    message('e'),
+                ]),
+            ]),
+        ]);
+
+        expect(
+            commands.moveMessages(
+                ['b', 'd'],
+                'chunk-a',
+                'chunk-a',
+                5,
+            ),
+        ).toBe(true);
+        expect(
+            log.documents[0].chunks[0].messages.map((item) => item.messageId),
+        ).toEqual(['a', 'c', 'e', 'b', 'd']);
+    });
+
     it('captures exactly once for a change and not for a no-op', () => {
         const log = useLogStore();
         const commands = useLogCommands();
