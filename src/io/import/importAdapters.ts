@@ -183,9 +183,9 @@ function extractIdentity(header: string): {
 // 兼容格式1: <playerName>: content
 // 兼容格式2: HH:mm:ss <playerName>: content
 // 兼容格式3: YYYY-MM-DD HH:mm:ss <playerName>: content
-// 兼容半角/全角冒号，以及各种空白字符
+// 兼容半角/全角冒号、无冒号，以及各种空白字符
 const PAINTED_LOG_REGEX =
-    /^(?:((?:\d{4}-\d{2}-\d{2}\s+)?\d{2}:\d{2}:\d{2})\s+)?<([^>]+)>[:：]\s*(.*)$/;
+    /^(?:((?:\d{4}-\d{2}-\d{2}\s+)?\d{2}:\d{2}:\d{2})\s+)?<([^>]+)>[:：]?\s*(.*)$/;
 
 export const PaintedLogAdapter: ImportAdapter = {
     id: 'painted-log-adapter',

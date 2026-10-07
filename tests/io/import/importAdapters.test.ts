@@ -70,13 +70,14 @@ describe('painted log adapter', () => {
         'continued line',
         '13:45:06 <Charlie>: time-only message',
         '<Bob>： second message',
+        '<David> message without colon',
     ].join('\n');
 
-    it('recognizes full-date, time-only and untimed entries with both colon variants', () => {
+    it('recognizes supported times and entries with either colon variant or no colon', () => {
         expect(dispatchAdapter(log).id).toBe('painted-log-adapter');
 
         const rows = PaintedLogAdapter.parse(log);
-        expect(rows).toHaveLength(3);
+        expect(rows).toHaveLength(4);
         expect(rows[0]).toMatchObject({
             playerName: 'Alice',
             account: '',
@@ -96,6 +97,12 @@ describe('painted log adapter', () => {
             playerName: 'Bob',
             account: '',
             content: 'second message',
+            time: undefined,
+        });
+        expect(rows[3]).toMatchObject({
+            playerName: 'David',
+            account: '',
+            content: 'message without colon',
             time: undefined,
         });
     });
