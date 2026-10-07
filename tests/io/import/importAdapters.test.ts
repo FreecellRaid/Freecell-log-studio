@@ -66,26 +66,33 @@ describe('QQ adapter', () => {
 
 describe('painted log adapter', () => {
     const log = [
-        '12:30:05 <Alice>: first line',
+        '2026-05-20 12:30:05 <Alice>: first line',
         'continued line',
+        '13:45:06 <Charlie>: time-only message',
         '<Bob>： second message',
     ].join('\n');
 
-    it('recognizes timed and untimed entries with both colon variants', () => {
+    it('recognizes full-date, time-only and untimed entries with both colon variants', () => {
         expect(dispatchAdapter(log).id).toBe('painted-log-adapter');
 
         const rows = PaintedLogAdapter.parse(log);
-        expect(rows).toHaveLength(2);
+        expect(rows).toHaveLength(3);
         expect(rows[0]).toMatchObject({
             playerName: 'Alice',
             account: '',
             content: 'first line\ncontinued line',
+            time: new Date(2026, 4, 20, 12, 30, 5),
         });
-        expect(rows[0].time).toBeInstanceOf(Date);
-        expect(rows[0].time?.getHours()).toBe(12);
-        expect(rows[0].time?.getMinutes()).toBe(30);
-        expect(rows[0].time?.getSeconds()).toBe(5);
         expect(rows[1]).toMatchObject({
+            playerName: 'Charlie',
+            account: '',
+            content: 'time-only message',
+        });
+        expect(rows[1].time).toBeInstanceOf(Date);
+        expect(rows[1].time?.getHours()).toBe(13);
+        expect(rows[1].time?.getMinutes()).toBe(45);
+        expect(rows[1].time?.getSeconds()).toBe(6);
+        expect(rows[2]).toMatchObject({
             playerName: 'Bob',
             account: '',
             content: 'second message',

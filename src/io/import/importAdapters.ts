@@ -182,8 +182,10 @@ function extractIdentity(header: string): {
 // 染色器log
 // 兼容格式1: <playerName>: content
 // 兼容格式2: HH:mm:ss <playerName>: content
+// 兼容格式3: YYYY-MM-DD HH:mm:ss <playerName>: content
 // 兼容半角/全角冒号，以及各种空白字符
-const PAINTED_LOG_REGEX = /^(?:(\d{2}:\d{2}:\d{2})\s+)?<([^>]+)>[:：]\s*(.*)$/;
+const PAINTED_LOG_REGEX =
+    /^(?:((?:\d{4}-\d{2}-\d{2}\s+)?\d{2}:\d{2}:\d{2})\s+)?<([^>]+)>[:：]\s*(.*)$/;
 
 export const PaintedLogAdapter: ImportAdapter = {
     id: 'painted-log-adapter',
@@ -192,7 +194,7 @@ export const PaintedLogAdapter: ImportAdapter = {
     test: (sampleLines: string[]) => {
         let score = 0;
         for (const line of sampleLines) {
-            if (/^(?:(?:\d{2}:\d{2}:\d{2})\s+)?<[^>]+>[:：]/.test(line)) {
+            if (PAINTED_LOG_REGEX.test(line)) {
                 score += 10;
             }
         }
