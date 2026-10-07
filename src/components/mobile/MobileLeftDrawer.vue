@@ -83,6 +83,17 @@
             <div class="mobile-settings-list">
                 <div class="drawer-row">
                     <span class="drawer-row-icon">
+                        <MessageSquare class="ui-icon" />
+                    </span>
+                    <span>导入时删除场外括号</span>
+                    <ToggleButton
+                        v-model="importSettingsStore.stripOocParentheses"
+                        aria-label="导入时删除场外括号"
+                        title="删除首尾的（）和()，仅影响后续导入"
+                    />
+                </div>
+                <div class="drawer-row">
+                    <span class="drawer-row-icon">
                         <Clock3 class="ui-icon" />
                     </span>
                     <span>显示时间</span>
@@ -115,6 +126,7 @@ import {
     Clock3,
     Eye,
     FolderOpen,
+    MessageSquare,
     Moon,
     Pencil,
     Save,
@@ -125,12 +137,14 @@ import { useLogStore } from '@/stores/project/logStore';
 import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
 import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
 import { useUiStore } from '@/stores/ui/uiStore';
+import { useImportSettingsStore } from '@/stores/ui/importSettingsStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import { useWorkspaceActions } from '@/composables/application/useWorkspaceActions';
 import { useSwipeGesture } from '@/composables/interaction/useSwipeGesture';
 
 const logStore = useLogStore();
 const uiStore = useUiStore();
+const importSettingsStore = useImportSettingsStore();
 const windowStore = useWindowStore();
 const mobileUiStore = useMobileUiStore();
 const editorSessionStore = useEditorSessionStore();

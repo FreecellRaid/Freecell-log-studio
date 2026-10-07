@@ -11,6 +11,8 @@ import { stripFileExtension } from '@/utils/fileName';
 import { readImportFile } from '@/io/import/fileReader';
 import { useProjectManager } from '@/composables/application/useProjectManager';
 import { useHistoryStore } from '@/stores/editor/historyStore';
+import { useImportSettingsStore } from '@/stores/ui/importSettingsStore';
+import { stripOocParentheses } from '@/io/import/cleaner';
 
 // 统一换行符并移除0宽字符，防止正则崩掉
 function preprocessText(text: string): string {
@@ -50,6 +52,7 @@ export function useFileImport() {
     const windowStore = useWindowStore();
     const projectManager = useProjectManager();
     const historyStore = useHistoryStore();
+    const importSettingsStore = useImportSettingsStore();
 
     function getFirstChunk(): Chunk | null {
         let firstChunk: Chunk | null = null;
@@ -142,6 +145,20 @@ export function useFileImport() {
 
         if (documents.length === 0) {
             return 0;
+        }
+
+        const messages = documents.flatMap((doc) =>
+            doc.chunks.flatMap((chunk) => chunk.messages),
+        );
+        if (
+            messages.length > 0 &&
+            importSettingsStore.resolveStripOocParentheses()
+        ) {
+            for (const message of messages) {
+                if (message.isOoc) {
+                    message.content = stripOocParentheses(message.content);
+                }
+            }
         }
 
         logStore.appendDocuments(documents);

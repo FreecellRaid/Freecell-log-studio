@@ -4,6 +4,13 @@
 
         <div class="settings-section">
             <ToggleButton
+                v-model="importSettingsStore.stripOocParentheses"
+                class="setting-item"
+                title="导入时删除场外发言首尾的（）和()"
+            >
+                导入删除场外括号
+            </ToggleButton>
+            <ToggleButton
                 v-model="styleStore.viewSettings.hideOoc"
                 class="setting-item"
             >
@@ -65,9 +72,11 @@
 import ToggleButton from '@/components/common/ToggleButton.vue';
 import { useStyleStore } from '@/stores/project/styleStore';
 import { useUiStore } from '@/stores/ui/uiStore';
+import { useImportSettingsStore } from '@/stores/ui/importSettingsStore';
 
 const uiStore = useUiStore();
 const styleStore = useStyleStore();
+const importSettingsStore = useImportSettingsStore();
 </script>
 
 <style scoped>
