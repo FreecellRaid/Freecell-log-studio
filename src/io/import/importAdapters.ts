@@ -87,6 +87,73 @@ export const QqImportAdapter: ImportAdapter = {
     },
 };
 
+// 旧版 QQ 消息管理器文本导出：时间在前，昵称与账号在后。
+// YYYY-MM-DD H:m:s playerName(account)
+// YYYY-MM-DD H:m:s playerName<account>（邮箱等账号）
+const LEGACY_QQ_LOG_REGEX =
+    /^(\d{4}-\d{2}-\d{2}\s+\d{1,2}:\d{1,2}:\d{1,2})\s+(.+?)(?:\(([^()]+)\)|<([^<>]+)>)\s*$/;
+
+export const LegacyQqImportAdapter: ImportAdapter = {
+    id: 'legacy-qq-adapter',
+    name: '旧版 QQ 消息管理器导出格式',
+
+    test: (sampleLines: string[]) => {
+        let score = 0;
+        for (const line of sampleLines) {
+            if (LEGACY_QQ_LOG_REGEX.test(line)) {
+                score += 10;
+            }
+        }
+        // 导出说明是强元信息，可识别仅包含一条消息的完整导出。
+        if (
+            score > 0 &&
+            sampleLines.some((line) =>
+                /^消息记录[（(]此消息记录为文本格式，不支持重新导入[）)]/.test(
+                    line,
+                ),
+            )
+        ) {
+            score += 100;
+        }
+        return score;
+    },
+
+    parse: (text: string) => {
+        const rows: ImportRow[] = [];
+        let currentName: string | null = null;
+        let currentAccount = '';
+        let currentTime: Date | undefined;
+        let contentBuffer: string[] = [];
+
+        const flushBuffer = () => {
+            if (currentName !== null && contentBuffer.length > 0) {
+                rows.push({
+                    playerName: currentName,
+                    account: currentAccount,
+                    time: currentTime,
+                    content: cleanContent(contentBuffer.join('\n')),
+                });
+            }
+            contentBuffer = [];
+        };
+
+        for (const line of text.split('\n')) {
+            const match = line.match(LEGACY_QQ_LOG_REGEX);
+            if (match) {
+                flushBuffer();
+                currentTime = parseLogDate(match[1]);
+                currentName = match[2].trim();
+                currentAccount = (match[3] ?? match[4]).trim();
+            } else if (currentName !== null) {
+                contentBuffer.push(line);
+            }
+        }
+        flushBuffer();
+
+        return rows;
+    },
+};
+
 // 标准(以及看起来标准)的导入格式，匹配header行，兼容各种缺字段和各种时间
 const HEADER_REGEX =
     /^(?!.*:\s+(?:\d{4}-)?\d{1,2}-\d{1,2}\s+\d{1,2}:\d{1,2}:\d{1,2}\s*$)(.*?)\s*(\d{4}[/-]\d{1,2}[/-]\d{1,2}\s+\d{1,2}:\d{1,2}:\d{1,2}|\d{1,2}:\d{1,2}:\d{1,2})\s*$/;
@@ -475,6 +542,7 @@ export const SealchatImportAdapter: ImportAdapter = {
 
 const ALL_ADAPTERS: ImportAdapter[] = [
     QqImportAdapter,
+    LegacyQqImportAdapter,
     StandardImportAdapter,
     PaintedLogAdapter,
     CcfoliaImportAdapter,
