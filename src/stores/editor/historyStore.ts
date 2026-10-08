@@ -1,3 +1,4 @@
+import { cloneDocuments } from '@/io/storage/project';
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import { useLogStore } from '@/stores/project/logStore';
@@ -60,34 +61,6 @@ export const useHistoryStore = defineStore('history', () => {
         }
 
         return value;
-    }
-
-    function cloneDocuments(documents: LogDocument[]): LogDocument[] {
-        return documents.map((doc) => ({
-            docId: doc.docId,
-            docName: doc.docName,
-            docIndex: doc.docIndex,
-            isExpanded: doc.isExpanded,
-            chunks: doc.chunks.map((chunk) => ({
-                chunkId: chunk.chunkId,
-                docId: chunk.docId,
-                chunkName: chunk.chunkName,
-                chunkIndex: chunk.chunkIndex,
-                messages: chunk.messages.map((message) => ({
-                    messageId: message.messageId,
-                    chunkId: message.chunkId,
-                    messageIndex: message.messageIndex,
-                    playerName: message.playerName,
-                    account: message.account,
-                    time: new Date(message.time.getTime()),
-                    content: message.content,
-                    isOoc: message.isOoc,
-                    isCommand: message.isCommand,
-                    role: message.role,
-                    note: message.note,
-                })),
-            })),
-        }));
     }
 
     function cloneRules(rules: StyleRule[]): StyleRule[] {

@@ -1,4 +1,10 @@
-import type { RuleStyle, StyleArea, StyleRule, ViewSettings } from '@/types/style';
+import { cloneLogMetadata } from '@/utils/logMetadata';
+import type {
+    RuleStyle,
+    StyleArea,
+    StyleRule,
+    ViewSettings,
+} from '@/types/style';
 import type { LogDocument, MessageFilter } from '@/types/log';
 import { isRoleType } from '@/types/log';
 import type { ProjectFile } from '@/types/project';
@@ -69,6 +75,7 @@ function cloneMessageFilter(filter: MessageFilter): MessageFilter {
 export function cloneDocuments(documents: LogDocument[]): LogDocument[] {
     return documents.map((doc) => ({
         docId: doc.docId,
+        source: doc.source ? { ...doc.source } : undefined,
         docName: doc.docName,
         docIndex: doc.docIndex,
         isExpanded: doc.isExpanded,
@@ -79,6 +86,8 @@ export function cloneDocuments(documents: LogDocument[]): LogDocument[] {
             chunkIndex: chunk.chunkIndex,
             messages: chunk.messages.map((message) => ({
                 messageId: message.messageId,
+                originalMessageId: message.originalMessageId,
+                meta: message.meta ? cloneLogMetadata(message.meta) : undefined,
                 chunkId: message.chunkId,
                 messageIndex: message.messageIndex,
                 playerName: message.playerName,
@@ -239,6 +248,12 @@ function normalizeDocuments(rawDocuments: unknown): LogDocument[] {
 
         return {
             docId: typeof doc.docId === 'string' ? doc.docId : generateId(),
+            source:
+                isRecord(doc.source) &&
+                typeof doc.source.provider === 'string' &&
+                typeof doc.source.id === 'string'
+                    ? { provider: doc.source.provider, id: doc.source.id }
+                    : undefined,
             docName:
                 typeof doc.docName === 'string'
                     ? stripFileExtension(doc.docName)
@@ -277,6 +292,13 @@ function normalizeDocuments(rawDocuments: unknown): LogDocument[] {
                         }
 
                         return {
+                            originalMessageId:
+                                typeof message.originalMessageId === 'string'
+                                    ? message.originalMessageId
+                                    : undefined,
+                            meta: isRecord(message.meta)
+                                ? cloneLogMetadata(message.meta)
+                                : undefined,
                             messageId:
                                 typeof message.messageId === 'string'
                                     ? message.messageId

@@ -90,13 +90,14 @@
                     <ImportPopover
                         @file="handleSelectFileImport"
                         @clipboard="handleClipboardImport"
+                        @link="handleLinkImport"
                     />
                 </div>
             </div>
             <input
                 :ref="setFileInput"
                 type="file"
-                accept=".txt,.json,.docx,application/json,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                accept=".txt,.trpglog,.json,.docx,application/json,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                 multiple
                 hidden
                 @change="handleFileChange"
@@ -134,6 +135,7 @@ import { vClickOutside } from '@/directives/clickOutside';
 import type { ProjectFile } from '@/types/project';
 import StoredProjectsPopover from '@/components/popovers/StoredProjectsPopover.vue';
 import ExportPopover from '@/components/popovers/ExportPopover.vue';
+import { useRemoteImportStore } from '@/stores/ui/remoteImportStore';
 import ImportPopover from '@/components/popovers/ImportPopover.vue';
 
 const logStore = useLogStore();
@@ -158,6 +160,11 @@ function toggleImportPanel() {
     const targetState = !showImportPopover.value;
     closeAllPopovers();
     showImportPopover.value = targetState;
+}
+
+function handleLinkImport() {
+    closeAllPopovers();
+    useRemoteImportStore().open();
 }
 
 function handleSelectFileImport() {

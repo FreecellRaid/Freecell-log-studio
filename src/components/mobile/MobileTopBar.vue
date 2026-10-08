@@ -3,7 +3,7 @@
         <input
             :ref="setFileInput"
             type="file"
-            accept=".txt,.json,.docx,application/json,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            accept=".txt,.trpglog,.json,.docx,application/json,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             multiple
             hidden
             @change="handleFileChange"
@@ -30,6 +30,14 @@
         >
             <Upload class="ui-icon" />
         </button>
+        <button
+            class="mobile-topbar-button"
+            type="button"
+            title="从链接导入"
+            @click="remoteImport.open()"
+        >
+            <Link class="ui-icon" />
+        </button>
         <div class="mobile-export-container">
             <button
                 class="mobile-topbar-button"
@@ -48,8 +56,9 @@
 
 <script setup lang="ts">
 import { defineAsyncComponent, ref } from 'vue';
-import { Download, PanelLeftOpen, Upload } from '@lucide/vue';
+import { Download, Link, PanelLeftOpen, Upload } from '@lucide/vue';
 import { useFileImportInput } from '@/composables/application/useImporter';
+import { useRemoteImportStore } from '@/stores/ui/remoteImportStore';
 import { useLogStore } from '@/stores/project/logStore';
 import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
 
@@ -57,6 +66,7 @@ const ExportPopover = defineAsyncComponent(
     () => import('@/components/popovers/ExportPopover.vue'),
 );
 
+const remoteImport = useRemoteImportStore();
 const showExportPopover = ref(false);
 const logStore = useLogStore();
 const mobileUiStore = useMobileUiStore();

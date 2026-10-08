@@ -1,3 +1,4 @@
+import { cloneLogMetadata } from '@/utils/logMetadata';
 import type {
     Message,
     Chunk,
@@ -45,15 +46,17 @@ export function transformRowToMessage(
 
     return {
         messageId: generateId(),
+        originalMessageId: row.originalMessageId,
+        meta: row.meta ? cloneLogMetadata(row.meta) : undefined,
         chunkId: 'null',
         messageIndex: index,
         playerName: name,
         account,
         time: row.time || importTime,
         content,
-        isOoc,
-        isCommand,
-        role: inferRole(name, roleConfig),
+        isOoc: row.isOoc ?? isOoc,
+        isCommand: row.isCommand ?? isCommand,
+        role: row.role ?? inferRole(name, roleConfig),
         note,
     };
 }

@@ -1,3 +1,4 @@
+import { cloneLogMetadata } from '@/utils/logMetadata';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import type { Message, Chunk } from '@/types/log';
@@ -13,6 +14,7 @@ export const useClipboardStore = defineStore('clipboard', () => {
         dataType.value = 'messages';
         copiedMessages.value = messages.map((m) => ({
             ...m,
+            meta: m.meta ? cloneLogMetadata(m.meta) : undefined,
             time: new Date(m.time.getTime()),
             messageIndex: -1,
             chunkId: 'null', // 复制时不保留 index,chunkId，由editorStore.addMessage调用的时候补上
@@ -27,6 +29,7 @@ export const useClipboardStore = defineStore('clipboard', () => {
             ...c,
             messages: c.messages.map((m) => ({
                 ...m,
+                meta: m.meta ? cloneLogMetadata(m.meta) : undefined,
                 time: new Date(m.time.getTime()),
             })),
         }));
@@ -38,6 +41,7 @@ export const useClipboardStore = defineStore('clipboard', () => {
         if (dataType.value !== 'messages') return [];
         return copiedMessages.value.map((m) => ({
             ...m,
+            meta: m.meta ? cloneLogMetadata(m.meta) : undefined,
             messageId: generateId(),
         }));
     }
@@ -53,6 +57,7 @@ export const useClipboardStore = defineStore('clipboard', () => {
                 // docId 和 chunkIndex 将在插入时由 refreshChunkMetadata 覆盖
                 messages: c.messages.map((m) => ({
                     ...m,
+                    meta: m.meta ? cloneLogMetadata(m.meta) : undefined,
                     messageId: generateId(),
                     chunkId: newChunkId,
                     time: new Date(m.time.getTime()),

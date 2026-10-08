@@ -5,7 +5,10 @@ import { useStyleStore } from '@/stores/project/styleStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import type { Chunk, LogDocument } from '@/types/log';
 import { buildLogDocument } from '@/io/import/parser';
-import { dispatchAdapter } from '@/io/import/importAdapters';
+import { importFiles, preprocessText } from '@/io/import/importService';
+import type { ImportRow, ImportTextEntry } from '@/types/import';
+import type { LogSource } from '@/types/log';
+export { importFiles } from '@/io/import/importService';
 import { tryParseProjectFile } from '@/io/storage/project';
 import { stripFileExtension } from '@/utils/fileName';
 import { readImportFile } from '@/io/import/fileReader';
@@ -13,38 +16,6 @@ import { useProjectManager } from '@/composables/application/useProjectManager';
 import { useHistoryStore } from '@/stores/editor/historyStore';
 import { useImportSettingsStore } from '@/stores/ui/importSettingsStore';
 import { stripOocParentheses } from '@/io/import/cleaner';
-
-// 统一换行符并移除0宽字符，防止正则崩掉
-function preprocessText(text: string): string {
-    return text.replace(/\r\n|\r/g, '\n').replace(/[\u200B-\u200D\uFEFF]/g, '');
-}
-
-export async function importFiles(
-    fileData: { name: string; text: string }[],
-    startIndex: number = 0,
-): Promise<LogDocument[]> {
-    const documents: LogDocument[] = [];
-
-    for (let i = 0; i < fileData.length; i++) {
-        const { name, text } = fileData[i];
-        if (!text.trim()) continue;
-
-        try {
-            const adapter = dispatchAdapter(text);
-            const rows = adapter.parse(text); //
-            const doc = buildLogDocument(rows, name, startIndex + i); //
-            documents.push(doc);
-
-            console.log(`文件 ${name} 使用适配器: ${adapter.name}`);
-        } catch (error) {
-            console.error(`解析文件 ${name} 失败:`, error);
-            throw new Error(
-                `文件 "${name}" 解析失败: ${error instanceof Error ? error.message : '未知错误'}`,
-            );
-        }
-    }
-    return documents;
-}
 
 export function useFileImport() {
     const logStore = useLogStore();
@@ -89,6 +60,53 @@ export function useFileImport() {
         if (firstChunk) {
             windowStore.setActiveChunk(firstChunk.chunkId);
         }
+    }
+
+    function applyDocuments(
+        documents: LogDocument[],
+        focusImported = false,
+    ): number {
+        if (documents.length === 0) return 0;
+        const messages = documents.flatMap((doc) =>
+            doc.chunks.flatMap((chunk) => chunk.messages),
+        );
+        if (
+            messages.length > 0 &&
+            importSettingsStore.resolveStripOocParentheses()
+        ) {
+            for (const message of messages) {
+                if (message.isOoc)
+                    message.content = stripOocParentheses(message.content);
+            }
+        }
+        logStore.appendDocuments(documents);
+        styleStore.syncSystemRulesFromMessages(logStore.allMessages);
+        historyStore.clearHistory();
+        const first = documents[0]?.chunks[0];
+        if (focusImported && first) windowStore.setActiveChunk(first.chunkId);
+        else openFirstChunkViewIfNeeded();
+        return documents.length;
+    }
+
+    async function importRowsAndApply(
+        rows: ImportRow[],
+        name: string,
+        source?: LogSource,
+    ): Promise<number> {
+        const doc = buildLogDocument(rows, name, logStore.documents.length);
+        if (!doc.chunks.length) throw new Error('日志中没有可导入的消息');
+        doc.source = source ? { ...source } : undefined;
+        return applyDocuments([doc], true);
+    }
+
+    // 远程日志只能追加日志，不能通过内容嗅探替换为工程文件。
+    async function importLogTextAndApply(
+        entries: ImportTextEntry[],
+    ): Promise<number> {
+        return applyDocuments(
+            await importFiles(entries, logStore.documents.length),
+            true,
+        );
     }
 
     async function importTextAndApply(
@@ -143,29 +161,7 @@ export function useFileImport() {
             logStore.documents.length,
         );
 
-        if (documents.length === 0) {
-            return 0;
-        }
-
-        const messages = documents.flatMap((doc) =>
-            doc.chunks.flatMap((chunk) => chunk.messages),
-        );
-        if (
-            messages.length > 0 &&
-            importSettingsStore.resolveStripOocParentheses()
-        ) {
-            for (const message of messages) {
-                if (message.isOoc) {
-                    message.content = stripOocParentheses(message.content);
-                }
-            }
-        }
-
-        logStore.appendDocuments(documents);
-        styleStore.syncSystemRulesFromMessages(logStore.allMessages);
-        historyStore.clearHistory();
-        openFirstChunkViewIfNeeded();
-        return documents.length;
+        return applyDocuments(documents);
     }
 
     async function importAndApply(files: File[]): Promise<number> {
@@ -191,6 +187,10 @@ export function useFileImport() {
     return {
         importAndApply,
         importTextAndApply,
+        applyLogDocuments: (documents: LogDocument[]) =>
+            applyDocuments(documents, true),
+        importRowsAndApply,
+        importLogTextAndApply,
     };
 }
 

@@ -158,7 +158,7 @@ export const LegacyQqImportAdapter: ImportAdapter = {
 const HEADER_REGEX =
     /^(?!.*:\s+(?:\d{4}-)?\d{1,2}-\d{1,2}\s+\d{1,2}:\d{1,2}:\d{1,2}\s*$)(.*?)\s*(\d{4}[/-]\d{1,2}[/-]\d{1,2}\s+\d{1,2}:\d{1,2}:\d{1,2}|\d{1,2}:\d{1,2}:\d{1,2})\s*$/;
 
-const StandardImportAdapter: ImportAdapter = {
+export const StandardImportAdapter: ImportAdapter = {
     id: 'standard-adapter',
     name: '标准日志格式',
 
@@ -540,7 +540,7 @@ export const SealchatImportAdapter: ImportAdapter = {
     },
 };
 
-const ALL_ADAPTERS: ImportAdapter[] = [
+export const ALL_ADAPTERS: ImportAdapter[] = [
     QqImportAdapter,
     LegacyQqImportAdapter,
     StandardImportAdapter,
@@ -549,3 +549,9 @@ const ALL_ADAPTERS: ImportAdapter[] = [
     PineappleImportAdapter,
     SealchatImportAdapter,
 ];
+
+export function getImportAdapter(id: string): ImportAdapter {
+    const adapter = ALL_ADAPTERS.find((adapter) => adapter.id === id);
+    if (!adapter) throw new Error(`不支持的日志格式：${id}`);
+    return adapter;
+}

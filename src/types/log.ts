@@ -11,7 +11,14 @@ export function isRoleType(value: unknown): value is RoleType {
     );
 }
 
+export interface LogSource {
+    provider: string;
+    id: string;
+}
+
 export interface Message {
+    originalMessageId?: string;
+    meta?: Record<string, unknown>;
     messageId: string;
     chunkId: string;
     messageIndex: number; //chunk内索引
@@ -51,6 +58,7 @@ export interface Chunk {
 }
 
 export interface LogDocument {
+    source?: LogSource;
     docId: string;
     docName: string;
     docIndex: number;

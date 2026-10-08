@@ -16,6 +16,14 @@
         >
             从剪切板导入
         </button>
+        <button
+            class="import-item"
+            type="button"
+            role="menuitem"
+            @click="emit('link')"
+        >
+            从链接导入
+        </button>
     </div>
 </template>
 
@@ -23,6 +31,7 @@
 const emit = defineEmits<{
     file: [];
     clipboard: [];
+    link: [];
 }>();
 </script>
 

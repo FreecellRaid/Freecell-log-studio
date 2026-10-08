@@ -1,3 +1,5 @@
+import type { RoleType, LogSource } from './log';
+
 // Adapter 只需要尽力提取, Parser 进行兜底补全
 export interface ImportRow {
     playerName?: string;
@@ -5,7 +7,11 @@ export interface ImportRow {
     content: string;
     time?: Date;
     note?: string;
-    meta?: Record<string, any>; // 用于存放特殊平台元信息
+    originalMessageId?: string;
+    role?: RoleType;
+    isOoc?: boolean;
+    isCommand?: boolean;
+    meta?: Record<string, unknown>; // 用于存放特殊平台元信息
 }
 
 export interface ImportAdapter {
@@ -22,4 +28,11 @@ export interface ImportAdapter {
      * @param text 经过 Pre-filter 清洗后的完整文本
      */
     parse: (text: string) => ImportRow[];
+}
+
+export interface ImportTextEntry {
+    name: string;
+    text: string;
+    format?: string;
+    source?: LogSource;
 }
