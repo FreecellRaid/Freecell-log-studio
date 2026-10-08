@@ -4,17 +4,10 @@
 
         <div class="settings-section">
             <ToggleButton
-                v-model="importSettingsStore.stripOocParentheses"
-                class="setting-item"
-                title="导入时删除场外发言首尾的（）和()"
-            >
-                导入删除场外括号
-            </ToggleButton>
-            <ToggleButton
                 v-model="styleStore.viewSettings.hideOoc"
                 class="setting-item"
             >
-                隐藏 OOC 消息
+                隐藏场外消息
             </ToggleButton>
             <ToggleButton
                 v-model="styleStore.viewSettings.hideCommand"
@@ -63,6 +56,13 @@
                 class="setting-item"
             >
                 预览始终白色背景
+            </ToggleButton>
+            <ToggleButton
+                v-model="importSettingsStore.stripOocParentheses"
+                class="setting-item"
+                title="导入时删除场外发言首尾的（）和()"
+            >
+                导入删除场外括号
             </ToggleButton>
         </div>
     </div>
