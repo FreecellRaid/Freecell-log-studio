@@ -105,12 +105,12 @@ function handleKeydown(event: KeyboardEvent) {
     width: min(480px, 100%);
     max-height: 85dvh;
     overflow: auto;
-    background: var(--bg-main, var(--bg-topbar));
+    background: var(--bg-workspace);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 20px;
-    box-shadow: 0 8px 32px #0004;
+    box-shadow: 0 8px 32px var(--box-shadow);
 }
 h3 {
     margin: 0 0 16px;
@@ -129,12 +129,20 @@ input {
     border-radius: 4px;
     font: inherit;
 }
+input::placeholder {
+    color: var(--text-muted);
+}
+input:focus-visible,
+button:focus-visible {
+    outline: 2px solid var(--active-accent);
+    outline-offset: 2px;
+}
 p {
     white-space: pre-wrap;
     overflow-wrap: anywhere;
 }
 .remote-import-error {
-    color: var(--color-warning, #b45309);
+    color: var(--color-warning);
 }
 .remote-import-actions {
     display: flex;
@@ -153,5 +161,8 @@ button {
 button:disabled {
     opacity: 0.5;
     cursor: default;
+}
+button:hover:not(:disabled) {
+    background: var(--hover-bg);
 }
 </style>

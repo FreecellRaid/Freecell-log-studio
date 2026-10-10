@@ -3,7 +3,7 @@
         :is="isMobile ? MobileEditor : DesktopEditor"
         :class="[{ 'dark-mode': uiStore.isDarkMode }]"
     />
-    <RemoteImportDialog />
+    <RemoteImportDialog :class="{ 'dark-mode': uiStore.isDarkMode }" />
 </template>
 
 <script setup lang="ts">
