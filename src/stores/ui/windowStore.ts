@@ -96,6 +96,20 @@ function windowStore() {
         });
     }
 
+    // 清理指向已不存在分块的 chunkView 窗口（数据清空/替换后遗留的孤儿视图）
+    function pruneOrphanChunkViews(hasChunk: (chunkId: string) => boolean) {
+        let hasValidView = false;
+        for (const win of Array.from(openWindows.value.values())) {
+            if (win.windowName !== 'chunkView') continue;
+            if (hasChunk(win.originalId)) {
+                hasValidView = true;
+            } else {
+                unregisterWindow(win.windowId);
+            }
+        }
+        return hasValidView;
+    }
+
     // 选择左侧面板；若当前面板已打开，则在原位置切换内容
     function selectLeftPanel(name: WindowName) {
         const previousPanel = selectedLeftPanel.value;
@@ -442,6 +456,7 @@ function windowStore() {
         isWindowOpen,
         isWindowFocused,
         setActiveChunk,
+        pruneOrphanChunkViews,
         openExportPreview,
         toggleExportPreview,
         openHelpDocument,

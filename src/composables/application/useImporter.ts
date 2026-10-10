@@ -47,15 +47,12 @@ export function useFileImport() {
         return firstChunk;
     }
 
-    function hasOpenedChunkView(): boolean {
-        return Array.from(windowStore.openWindows.values()).some(
-            (win) => win.windowName === 'chunkView',
-        );
-    }
-
-    // 自动打开第一个场景进入编辑
+    // 自动打开第一个场景进入编辑；先清掉指向已消失分块的孤儿视图
     function openFirstChunkViewIfNeeded() {
-        if (hasOpenedChunkView()) return;
+        const hasValidView = windowStore.pruneOrphanChunkViews((chunkId) =>
+            Boolean(logStore.findChunkById(chunkId)),
+        );
+        if (hasValidView) return;
         const firstChunk = getFirstChunk();
         if (firstChunk) {
             windowStore.setActiveChunk(firstChunk.chunkId);

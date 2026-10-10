@@ -50,6 +50,8 @@ export function useWorkspaceActions() {
         selectionStore.clearAllSelections();
         editorSessionStore.stopEditing();
         historyStore.clearHistory();
+        // 数据已清空，工作区里指向旧分块的视图一并移除，避免残留"未知场景"
+        windowStore.pruneOrphanChunkViews(() => false);
         windowStore.setFocus(options?.focusTarget ?? 'default');
         options?.afterClear?.();
         return true;
