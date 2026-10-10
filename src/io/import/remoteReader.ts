@@ -72,7 +72,11 @@ export async function readRemoteLog(
         return (await decodeText(bytes)).text;
     };
     try {
-        const result = await source.load(request, { readText });
+        const result = await source.load(request, {
+            readText,
+            signal: controller.signal,
+            maxBytes,
+        });
         controller.signal.throwIfAborted();
         if (!result.text.trim()) throw new Error('日志服务器返回了空日志');
         return result;

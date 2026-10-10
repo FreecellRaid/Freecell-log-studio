@@ -1,5 +1,6 @@
 import type { ImportTextEntry } from '@/types/import';
 import type { LogDocument } from '@/types/log';
+import { parseSealdiceLog, SEALDICE_LOG_FORMAT } from './sealdiceLog';
 import { dispatchAdapter, getImportAdapter } from './importAdapters';
 import { buildLogDocument } from './parser';
 import { parseStructuredLog, STRUCTURED_LOG_FORMAT } from './structuredLog';
@@ -20,12 +21,20 @@ export async function importFiles(
             const structured = parseStructuredLog(text);
             if (entry.format === STRUCTURED_LOG_FORMAT && !structured)
                 throw new Error('文件不符合 freecell-log-v1 格式');
+            const sealdice = parseSealdiceLog(text);
+            if (entry.format === SEALDICE_LOG_FORMAT && !sealdice)
+                throw new Error('文件不符合海豹 JSON 日志格式');
             let rows;
             if (
                 structured &&
                 (!entry.format || entry.format === STRUCTURED_LOG_FORMAT)
             ) {
                 rows = structured.rows;
+            } else if (
+                sealdice &&
+                (!entry.format || entry.format === SEALDICE_LOG_FORMAT)
+            ) {
+                rows = sealdice;
             } else {
                 const adapter = entry.format
                     ? getImportAdapter(entry.format)

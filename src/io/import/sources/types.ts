@@ -5,9 +5,12 @@ export interface RemoteLogRequest {
     id?: string;
     url?: string;
     format?: string;
+    password?: string;
 }
 
 export interface RemoteSourceContext {
+    signal: AbortSignal;
+    maxBytes: number;
     readText: (url: string) => Promise<string>;
 }
 

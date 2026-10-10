@@ -11,8 +11,9 @@ https://freecellraid.github.io/Freecell-log-studio/#source=oliva&id=<URL编码�
 https://freecellraid.github.io/Freecell-log-studio/#source=url&url=<URL编码后的HTTPS下载地址>&format=standard-adapter
 ```
 
-- `source`：来源适配器的 ID，目前支持 `oliva`、`url`。
+- `source`：来源适配器的 ID，目前支持 `oliva`、`sealdice`、`url`。
 - `id`：由来源服务解释的日志标识；青果使用完整的 `log_<UUID>_<日志名>`，临时日志包含 `_temp` 后缀。
+- `password`：海豹日志的读取密码，位于编辑器链接的 hash 中，不写入工程文件。
 - `url`：`url` 来源使用的直接下载地址，不是网页预览地址。
 - `format`：可选的格式 ID。省略时自动识别；明确指定时仍检查内容是否符合格式。
 
@@ -48,6 +49,26 @@ OlivaDiceLogger.data.dataLogPainterUrl = (
 
 本项目先请求青果 `logReader.php?m=metaData&id=…`，检查 `code`，再读取 `rawData` 或元信息中的 `redirectDownloadUrl`。青果来源默认指定 `standard-adapter`，因此单条文字消息也可以导入。
 
+## 海豹机器人
+
+「从链接导入」可以直接粘贴原有的 `http://log.weizaima.com/?key=<标识>#<密码>` 或 HTTPS 链接。本项目只从该地址提取标识和密码，实际下载始终使用 HTTPS：
+
+```text
+https://dice-api.weizaima.com/dice/api/load_data?key=<标识>&password=<密码>
+```
+
+要在打开编辑器时自动导入，机器人或桥接插件应将返回链接转换为：
+
+```text
+https://freecellraid.github.io/Freecell-log-studio/#source=sealdice&id=<标识>&password=<密码>
+```
+
+必须对参数逐项编码。原染色器链接不能仅替换域名，因为标识在 query 中、密码在 hash 中。海豹端是否能通过配置直接改写链接取决于所用版本；本项目没有修改骰子或附带海豹插件。
+
+已支持 `client: "SealDice"` 的 Base64 + zlib 压缩 JSON，以及本地或 HTTPS 直链导入的海豹 JSON（`version` 和 `items`）。JSON 中的秒级 Unix 时间转换为绝对时间，昵称、平台账号、原始消息 ID 保留；`isDice: true` 明确映射为骰子角色，其他角色按昵称推断。检定等元信息保存在 `meta.sealdice`。正文沿用现有文本清洗规则，包括删除 CQ 码。
+
+解压后的内容限制为 10 MiB。当前尚不支持服务器的 `client: "Parquet"` 编码；遇到这种日志会明确提示，可先用 `.log export` 导出的 TXT 文件导入。
+
 ## 文本格式
 
 目前可以显式指定以下 ID：
@@ -61,6 +82,7 @@ OlivaDiceLogger.data.dataLogPainterUrl = (
 | `ccfolia-adapter`     | Ccfolia HTML                    |
 | `pineapple-adapter`   | 菠萝日志                        |
 | `sealchat-adapter`    | SealChat                        |
+| `sealdice-json`       | 海豹结构化 JSON                 |
 | `freecell-log-v1`     | 下述结构化 JSON                 |
 
 现有文本适配器继续使用原有清洗规则（包括删除 CQ 码）。结构化 JSON 的正文不经过文本格式的 CQ/HTML 清洗，但显示仍使用编辑器现有的安全文本/Markdown 渲染。图片、语音、引用的专门展示暂未实现。

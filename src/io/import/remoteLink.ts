@@ -14,6 +14,27 @@ export function validateRemoteUrl(value: string): URL {
 
 export function parseRemoteLogLink(input: string): RemoteLogRequest | null {
     const value = input.trim();
+    if (!value.startsWith('#')) {
+        const url = new URL(value);
+        // 海豹旧染色器链接只用于提取标识，下载始终使用固定 HTTPS API。
+        if (
+            ['http:', 'https:'].includes(url.protocol) &&
+            url.hostname === 'log.weizaima.com' &&
+            !url.username &&
+            !url.password &&
+            !url.port &&
+            url.pathname === '/' &&
+            url.searchParams.has('key')
+        ) {
+            if (url.searchParams.getAll('key').length !== 1)
+                throw new Error('链接中 key 参数重复');
+            const id = url.searchParams.get('key') || '';
+            const password = decodeURIComponent(url.hash.slice(1));
+            if (!id.trim() || !password.trim())
+                throw new Error('缺少海豹日志标识或密码');
+            return { source: 'sealdice', id, password };
+        }
+    }
     const hash = value.startsWith('#')
         ? value.slice(1)
         : new URL(value).hash.slice(1);
@@ -25,14 +46,14 @@ export function parseRemoteLogLink(input: string): RemoteLogRequest | null {
     }
     const params = new URLSearchParams(hash);
     if (!params.has('source')) return null;
-    for (const key of ['source', 'id', 'url', 'format']) {
+    for (const key of ['source', 'id', 'url', 'format', 'password']) {
         if (params.getAll(key).length > 1)
             throw new Error(`链接中 ${key} 参数重复`);
     }
     const source = params.get('source') || '';
     if (!source) throw new Error('缺少日志来源');
     const request: RemoteLogRequest = { source };
-    for (const key of ['id', 'url', 'format'] as const) {
+    for (const key of ['id', 'url', 'format', 'password'] as const) {
         const field = params.get(key);
         if (field) request[key] = field;
     }
@@ -56,7 +77,7 @@ export function buildRemoteLogLink(
 ): string {
     const url = new URL(editorUrl);
     const params = new URLSearchParams({ source: request.source });
-    for (const key of ['id', 'url', 'format'] as const) {
+    for (const key of ['id', 'url', 'format', 'password'] as const) {
         if (request[key]) params.set(key, request[key]);
     }
     url.hash = params.toString();
