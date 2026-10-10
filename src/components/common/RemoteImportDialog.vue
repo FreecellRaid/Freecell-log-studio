@@ -109,7 +109,6 @@ function handleKeydown(event: KeyboardEvent) {
     background: var(--bg-workspace);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
     padding: 20px;
     box-shadow: 0 8px 32px var(--box-shadow);
 }
@@ -121,7 +120,7 @@ h3 {
 
 label {
     display: block;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
     font-size: 14px;
 }
 
@@ -162,10 +161,11 @@ p {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
+    margin-top: 16px;
 }
 
 button {
-    padding: 8px 14px;
+    padding: 6px 12px;
     border: 1px solid var(--border-color);
     border-radius: 4px;
     color: inherit;
