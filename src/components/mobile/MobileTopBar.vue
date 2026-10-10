@@ -22,28 +22,37 @@
             <h4>{{ logStore.projectName || '未命名工程' }}</h4>
             <p>{{ logStore.totalMessages }} 条消息</p>
         </div>
-        <button
-            class="mobile-topbar-button"
-            type="button"
-            title="导入文档/工程"
-            @click="triggerImport"
+        <div
+            class="mobile-import-container"
+            v-click-outside="closeImportPopover"
         >
-            <Upload class="ui-icon" />
-        </button>
-        <button
-            class="mobile-topbar-button"
-            type="button"
-            title="从链接导入"
-            @click="remoteImport.open()"
+            <button
+                class="mobile-topbar-button"
+                type="button"
+                title="导入文档/工程"
+                aria-haspopup="menu"
+                :aria-expanded="showImportPopover"
+                @click.stop="toggleImportPanel"
+            >
+                <Upload class="ui-icon" />
+            </button>
+            <div v-if="showImportPopover" class="mobile-import-popover">
+                <ImportPopover
+                    @file="handleSelectFileImport"
+                    @clipboard="handleClipboardImport"
+                    @link="handleLinkImport"
+                />
+            </div>
+        </div>
+        <div
+            class="mobile-export-container"
+            v-click-outside="closeExportPopover"
         >
-            <Link class="ui-icon" />
-        </button>
-        <div class="mobile-export-container">
             <button
                 class="mobile-topbar-button"
                 type="button"
                 title="导出记录"
-                @click.stop="showExportPopover = !showExportPopover"
+                @click.stop="toggleExportPanel"
             >
                 <Download class="ui-icon" />
             </button>
@@ -56,7 +65,9 @@
 
 <script setup lang="ts">
 import { defineAsyncComponent, ref } from 'vue';
-import { Download, Link, PanelLeftOpen, Upload } from '@lucide/vue';
+import { Download, PanelLeftOpen, Upload } from '@lucide/vue';
+import ImportPopover from '@/components/popovers/ImportPopover.vue';
+import { vClickOutside } from '@/directives/clickOutside';
 import { useFileImportInput } from '@/composables/application/useImporter';
 import { useRemoteImportStore } from '@/stores/ui/remoteImportStore';
 import { useLogStore } from '@/stores/project/logStore';
@@ -67,10 +78,45 @@ const ExportPopover = defineAsyncComponent(
 );
 
 const remoteImport = useRemoteImportStore();
+const showImportPopover = ref(false);
 const showExportPopover = ref(false);
 const logStore = useLogStore();
 const mobileUiStore = useMobileUiStore();
-const { setFileInput, triggerImport, handleFileChange } = useFileImportInput();
+const { setFileInput, triggerImport, handleFileChange, importFromClipboard } =
+    useFileImportInput();
+
+function closeImportPopover() {
+    showImportPopover.value = false;
+}
+
+function closeExportPopover() {
+    showExportPopover.value = false;
+}
+
+function toggleImportPanel() {
+    closeExportPopover();
+    showImportPopover.value = !showImportPopover.value;
+}
+
+function toggleExportPanel() {
+    closeImportPopover();
+    showExportPopover.value = !showExportPopover.value;
+}
+
+function handleSelectFileImport() {
+    closeImportPopover();
+    triggerImport();
+}
+
+async function handleClipboardImport() {
+    closeImportPopover();
+    await importFromClipboard();
+}
+
+function handleLinkImport() {
+    closeImportPopover();
+    remoteImport.open();
+}
 </script>
 
 <style scoped>
@@ -112,12 +158,14 @@ const { setFileInput, triggerImport, handleFileChange } = useFileImportInput();
     color: var(--text-secondary);
 }
 
-.mobile-export-container {
+.mobile-export-container,
+.mobile-import-container {
     position: relative;
     flex-shrink: 0;
 }
 
-.mobile-export-popover {
+.mobile-export-popover,
+.mobile-import-popover {
     position: absolute;
     top: calc(100% + 4px);
     right: -10px;
