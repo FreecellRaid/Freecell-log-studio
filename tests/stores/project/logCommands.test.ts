@@ -114,14 +114,9 @@ describe('project log commands', () => {
             ]),
         ]);
 
-        expect(
-            commands.moveMessages(
-                ['b', 'd'],
-                'chunk-a',
-                'chunk-a',
-                5,
-            ),
-        ).toBe(true);
+        expect(commands.moveMessages(['b', 'd'], 'chunk-a', 'chunk-a', 5)).toBe(
+            true,
+        );
         expect(
             log.documents[0].chunks[0].messages.map((item) => item.messageId),
         ).toEqual(['a', 'c', 'e', 'b', 'd']);
@@ -385,9 +380,7 @@ describe('project log commands', () => {
             document('doc-a', [chunk('chunk-a', [source, message('tail')])]),
         ]);
 
-        expect(commands.insertNewMessageAfter('chunk-a', source, 0)).toBe(
-            true,
-        );
+        expect(commands.insertNewMessageAfter('chunk-a', source, 0)).toBe(true);
         const inserted = log.findChunkById('chunk-a')?.messages[1];
         expect(inserted).toMatchObject({
             chunkId: 'chunk-a',
@@ -414,7 +407,10 @@ describe('project log commands', () => {
         ]);
 
         expect(commands.batchDeleteMessages(new Set(['a', 'd']))).toBe(true);
-        expect(log.allMessages.map((item) => item.messageId)).toEqual(['b', 'c']);
+        expect(log.allMessages.map((item) => item.messageId)).toEqual([
+            'b',
+            'c',
+        ]);
         expect(history.undoStack).toHaveLength(1);
 
         history.undo();
@@ -467,9 +463,9 @@ describe('project log commands', () => {
         expect(commands.renameDocument('doc-a', '  Session One  ')).toBe(true);
         expect(log.documents[0].docName).toBe('Session One');
         expect(log.projectName).toBe('Session One');
-        expect(commands.updateChunk('chunk-a', { chunkName: ' Scene One ' })).toBe(
-            true,
-        );
+        expect(
+            commands.updateChunk('chunk-a', { chunkName: ' Scene One ' }),
+        ).toBe(true);
         expect(log.documents[0].chunks[0].chunkName).toBe(' Scene One ');
         expect(history.undoStack).toHaveLength(2);
 

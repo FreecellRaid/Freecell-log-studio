@@ -2,54 +2,173 @@
     <div ref="rootRef" class="popover-date-picker">
         <div class="date-trigger" :class="{ 'is-open': isOpen }">
             <div class="segment-group" @pointerdown.stop>
-                <input v-model="segYear" class="seg-input seg-year" type="text" inputmode="numeric" maxlength="4" placeholder="年" @input="autoAdvance($event, 4)" @blur="commitSegments" />
+                <input
+                    v-model="segYear"
+                    class="seg-input seg-year"
+                    type="text"
+                    inputmode="numeric"
+                    maxlength="4"
+                    placeholder="年"
+                    @input="autoAdvance($event, 4)"
+                    @blur="commitSegments"
+                />
                 <span class="seg-sep">/</span>
-                <input v-model="segMonth" class="seg-input" type="text" inputmode="numeric" maxlength="2" placeholder="月" @input="autoAdvance($event, 2, 2)" @blur="commitSegments" />
+                <input
+                    v-model="segMonth"
+                    class="seg-input"
+                    type="text"
+                    inputmode="numeric"
+                    maxlength="2"
+                    placeholder="月"
+                    @input="autoAdvance($event, 2, 2)"
+                    @blur="commitSegments"
+                />
                 <span class="seg-sep">/</span>
-                <input v-model="segDay" class="seg-input" type="text" inputmode="numeric" maxlength="2" placeholder="日" @input="autoAdvance($event, 2, 4)" @blur="commitSegments" />
+                <input
+                    v-model="segDay"
+                    class="seg-input"
+                    type="text"
+                    inputmode="numeric"
+                    maxlength="2"
+                    placeholder="日"
+                    @input="autoAdvance($event, 2, 4)"
+                    @blur="commitSegments"
+                />
                 <span class="seg-gap"></span>
-                <input v-model="segHour" class="seg-input" type="text" inputmode="numeric" maxlength="2" placeholder="时" @input="autoAdvance($event, 2, 3)" @blur="commitSegments" />
+                <input
+                    v-model="segHour"
+                    class="seg-input"
+                    type="text"
+                    inputmode="numeric"
+                    maxlength="2"
+                    placeholder="时"
+                    @input="autoAdvance($event, 2, 3)"
+                    @blur="commitSegments"
+                />
                 <span class="seg-sep">:</span>
-                <input v-model="segMinute" class="seg-input" type="text" inputmode="numeric" maxlength="2" placeholder="分" @input="autoAdvance($event, 2)" @blur="commitSegments" />
+                <input
+                    v-model="segMinute"
+                    class="seg-input"
+                    type="text"
+                    inputmode="numeric"
+                    maxlength="2"
+                    placeholder="分"
+                    @input="autoAdvance($event, 2)"
+                    @blur="commitSegments"
+                />
                 <span class="seg-sep">:</span>
-                <input v-model="segSecond" class="seg-input" type="text" inputmode="numeric" maxlength="2" placeholder="秒" @input="autoAdvance($event, 2)" @blur="commitSegments" />
+                <input
+                    v-model="segSecond"
+                    class="seg-input"
+                    type="text"
+                    inputmode="numeric"
+                    maxlength="2"
+                    placeholder="秒"
+                    @input="autoAdvance($event, 2)"
+                    @blur="commitSegments"
+                />
             </div>
-            <button type="button" class="calendar-button" title="打开日历选择" @pointerdown.prevent="toggle">
+            <button
+                type="button"
+                class="calendar-button"
+                title="打开日历选择"
+                @pointerdown.prevent="toggle"
+            >
                 <CalendarIcon class="trigger-icon" />
             </button>
         </div>
 
         <Teleport to="body">
-            <div v-show="isOpen" ref="dropdownRef" class="date-dropdown" :style="dropdownStyle">
+            <div
+                v-show="isOpen"
+                ref="dropdownRef"
+                class="date-dropdown"
+                :style="dropdownStyle"
+            >
                 <div class="date-header">
-                    <button type="button" class="nav-button" @click="viewMode === 'days' ? shiftMonth(-1) : shiftYearPage(-1)">
+                    <button
+                        type="button"
+                        class="nav-button"
+                        @click="
+                            viewMode === 'days'
+                                ? shiftMonth(-1)
+                                : shiftYearPage(-1)
+                        "
+                    >
                         <ChevronLeft class="nav-icon" />
                     </button>
-                    <button type="button" class="title-button" @click="toggleViewMode">
-                        <span class="month-title">{{ viewMode === 'days' ? monthTitle : yearRangeTitle }}</span>
-                        <ChevronDown class="mode-icon" :class="{ 'is-years': viewMode === 'years' }" />
+                    <button
+                        type="button"
+                        class="title-button"
+                        @click="toggleViewMode"
+                    >
+                        <span class="month-title">
+                            {{
+                                viewMode === 'days'
+                                    ? monthTitle
+                                    : yearRangeTitle
+                            }}
+                        </span>
+                        <ChevronDown
+                            class="mode-icon"
+                            :class="{ 'is-years': viewMode === 'years' }"
+                        />
                     </button>
-                    <button type="button" class="nav-button" @click="viewMode === 'days' ? shiftMonth(1) : shiftYearPage(1)">
+                    <button
+                        type="button"
+                        class="nav-button"
+                        @click="
+                            viewMode === 'days'
+                                ? shiftMonth(1)
+                                : shiftYearPage(1)
+                        "
+                    >
                         <ChevronRight class="nav-icon" />
                     </button>
                 </div>
 
                 <template v-if="viewMode === 'days'">
                     <div class="weekday-row">
-                        <span v-for="day in weekdays" :key="day" class="weekday-cell">{{ day }}</span>
+                        <span
+                            v-for="day in weekdays"
+                            :key="day"
+                            class="weekday-cell"
+                        >
+                            {{ day }}
+                        </span>
                     </div>
                     <div class="day-grid">
                         <span
                             v-for="(cell, index) in dayCells"
                             :key="index"
                             class="day-cell"
-                            :class="{ 'is-empty': !cell, 'is-selected': cell && cell.isSelected, 'is-today': cell && cell.isToday }"
+                            :class="{
+                                'is-empty': !cell,
+                                'is-selected': cell && cell.isSelected,
+                                'is-today': cell && cell.isToday,
+                            }"
                             @click="cell && selectDate(cell.value)"
-                        >{{ cell ? cell.label : '' }}</span>
+                        >
+                            {{ cell ? cell.label : '' }}
+                        </span>
                     </div>
                     <div class="quick-row">
-                        <button type="button" class="quick-button" :disabled="!modelValue" @click="clearValue">清除</button>
-                        <button type="button" class="quick-button" :class="{ 'is-active': isTodaySelected }" @click="selectToday">今日</button>
+                        <button
+                            type="button"
+                            class="quick-button"
+                            :disabled="!modelValue"
+                            @click="clearValue"
+                        >
+                            清除
+                        </button>
+                        <button
+                            type="button"
+                            class="quick-button"
+                            :class="{ 'is-active': isTodaySelected }"
+                            @click="selectToday"
+                        >
+                            今日
+                        </button>
                     </div>
                 </template>
                 <div v-else class="year-grid">
@@ -57,9 +176,14 @@
                         v-for="cell in yearCells"
                         :key="cell.year"
                         class="year-cell"
-                        :class="{ 'is-selected': cell.isSelected, 'is-today': cell.isToday }"
+                        :class="{
+                            'is-selected': cell.isSelected,
+                            'is-today': cell.isToday,
+                        }"
                         @click="selectYear(cell.year)"
-                    >{{ cell.year }}</span>
+                    >
+                        {{ cell.year }}
+                    </span>
                 </div>
             </div>
         </Teleport>
@@ -68,7 +192,12 @@
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watch, type Ref } from 'vue';
-import { Calendar as CalendarIcon, ChevronDown, ChevronLeft, ChevronRight } from '@lucide/vue';
+import {
+    Calendar as CalendarIcon,
+    ChevronDown,
+    ChevronLeft,
+    ChevronRight,
+} from '@lucide/vue';
 import { onClickOutside, useEventListener } from '@vueuse/core';
 
 const props = withDefaults(
@@ -107,7 +236,9 @@ watch(
 const segmentRefs = computed(() => {
     const root = rootRef.value;
     if (!root) return [];
-    return Array.from(root.querySelectorAll('.seg-input')) as HTMLInputElement[];
+    return Array.from(
+        root.querySelectorAll('.seg-input'),
+    ) as HTMLInputElement[];
 });
 
 function syncSegmentsFromValue(value: string) {
@@ -171,8 +302,10 @@ watch([segMonth, segDay, segHour, segMinute, segSecond], () => {
     if (segMonth.value.length > 2) segMonth.value = segMonth.value.slice(0, 2);
     if (segDay.value.length > 2) segDay.value = segDay.value.slice(0, 2);
     if (segHour.value.length > 2) segHour.value = segHour.value.slice(0, 2);
-    if (segMinute.value.length > 2) segMinute.value = segMinute.value.slice(0, 2);
-    if (segSecond.value.length > 2) segSecond.value = segSecond.value.slice(0, 2);
+    if (segMinute.value.length > 2)
+        segMinute.value = segMinute.value.slice(0, 2);
+    if (segSecond.value.length > 2)
+        segSecond.value = segSecond.value.slice(0, 2);
 });
 
 const SEGMENT_RANGES: Record<string, { min: number; max: number }> = {
@@ -200,9 +333,14 @@ function commitSegments() {
     check(segSecond, 'second');
 
     // 用户把所有段都清空，视为清除选择
-    const allEmpty = [segYear, segMonth, segDay, segHour, segMinute, segSecond].every(
-        (seg) => seg.value.trim() === '',
-    );
+    const allEmpty = [
+        segYear,
+        segMonth,
+        segDay,
+        segHour,
+        segMinute,
+        segSecond,
+    ].every((seg) => seg.value.trim() === '');
     if (allEmpty) {
         emit('update:modelValue', '');
         return;
@@ -240,9 +378,13 @@ function currentTimePart(): string | null {
     return `${hh.padStart(2, '0')}:${mm.padStart(2, '0')}:${ss.padStart(2, '0')}`;
 }
 
-const monthTitle = computed(() => `${viewYear.value}年${viewMonth.value + 1}月`);
+const monthTitle = computed(
+    () => `${viewYear.value}年${viewMonth.value + 1}月`,
+);
 const yearPageStart = computed(() => Math.floor(viewYear.value / 12) * 12);
-const yearRangeTitle = computed(() => `${yearPageStart.value} - ${yearPageStart.value + 11}`);
+const yearRangeTitle = computed(
+    () => `${yearPageStart.value} - ${yearPageStart.value + 11}`,
+);
 
 interface Cell {
     label: string;
@@ -325,7 +467,9 @@ function todayValue() {
     const now = new Date();
     return formatDate(now.getFullYear(), now.getMonth(), now.getDate());
 }
-const isTodaySelected = computed(() => props.modelValue.split('T')[0] === todayValue());
+const isTodaySelected = computed(
+    () => props.modelValue.split('T')[0] === todayValue(),
+);
 function selectToday() {
     const value = todayValue();
     const [y, m] = value.split('-').map(Number);

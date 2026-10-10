@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-    buildProjectFile,
-    normalizeProjectFile,
-} from '@/io/storage/project';
+import { buildProjectFile, normalizeProjectFile } from '@/io/storage/project';
 
 const viewSettings = {
     hideOoc: false,

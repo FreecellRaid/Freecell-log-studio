@@ -6,14 +6,10 @@
             @pointerdown="handleControlPointerdown"
         >
             <div ref="chipListRef" class="chip-list">
-                <span
-                    v-for="tag in modelValue"
-                    :key="tag"
-                    class="tag-chip"
-                >
-                    <span class="chip-text" :title="labelOf(tag)">{{
-                        labelOf(tag)
-                    }}</span>
+                <span v-for="tag in modelValue" :key="tag" class="tag-chip">
+                    <span class="chip-text" :title="labelOf(tag)">
+                        {{ labelOf(tag) }}
+                    </span>
                     <button
                         type="button"
                         class="chip-remove icon-interactive"
@@ -59,13 +55,10 @@
                             class="check-icon"
                             :class="{ 'is-checked': isSelected(item.label) }"
                         />
-                        <span class="item-label" :title="item.label">{{
-                            item.label
-                        }}</span>
-                        <span
-                            v-if="item.isCustom"
-                            class="item-custom-hint"
-                        >
+                        <span class="item-label" :title="item.label">
+                            {{ item.label }}
+                        </span>
+                        <span v-if="item.isCustom" class="item-custom-hint">
                             手输关键词
                         </span>
                         <span
@@ -150,9 +143,7 @@ const query = computed(() => inputValue.value.trim());
 
 const filteredOptions = computed<SelectOption[]>(() => {
     if (!query.value) return props.options;
-    return props.options.filter((option) =>
-        option.label.includes(query.value),
-    );
+    return props.options.filter((option) => option.label.includes(query.value));
 });
 
 const listItems = computed<DropdownItem[]>(() => {

@@ -17,11 +17,7 @@
             </button>
         </div>
 
-        <div
-            ref="controlsRef"
-            class="search-controls"
-            :style="controlsStyle"
-        >
+        <div ref="controlsRef" class="search-controls" :style="controlsStyle">
             <div class="search-input-wrapper">
                 <input
                     v-model="searchStore.quickSearch"
@@ -55,75 +51,77 @@
                     class="advanced-wrapper"
                 >
                     <div class="advanced-options">
-                    <div class="form-group">
-                        <label>角色名</label>
-                        <MultiTagSelect
-                            v-model="searchStore.filter.playerName"
-                            :options="playerNameOptions"
-                            placeholder="可下拉选择或手动输入，回车确认"
-                        />
-                    </div>
-                    <div class="form-group">
-                        <label>账号</label>
-                        <MultiTagSelect
-                            v-model="searchStore.filter.account"
-                            :options="accountOptions"
-                            placeholder="可下拉选择或手动输入，回车确认"
-                        />
-                    </div>
-                    <div class="form-group">
-                        <label>备注</label>
-                        <input
-                            class="form-control"
-                            v-model="searchStore.filter.note"
-                            type="text"
-                            placeholder="匹配备注..."
-                        />
-                    </div>
-                    <div class="time-filter-group">
                         <div class="form-group">
-                            <label>开始时间</label>
-                            <PopoverDatePicker
-                                v-model="searchStore.filter.timeStart"
-                                placeholder="选择开始日期"
-                            />
-                        </div>
-                        <div class="form-group">
-                            <label>结束时间</label>
-                            <PopoverDatePicker
-                                v-model="searchStore.filter.timeEnd"
-                                placeholder="选择结束日期"
-                            />
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group flex-1">
-                            <label>身份</label>
+                            <label>角色名</label>
                             <MultiTagSelect
-                                v-model="roleFilterValue"
-                                :options="roleOptions"
-                                placeholder="可下拉选择身份，支持多选"
+                                v-model="searchStore.filter.playerName"
+                                :options="playerNameOptions"
+                                placeholder="可下拉选择或手动输入，回车确认"
                             />
                         </div>
-                        <div class="form-group flex-1">
-                            <div class="boolean-filter-grid">
-                                <div class="form-group boolean-filter-item">
-                                    <label>场外</label>
-                                    <PopoverSelect
-                                        v-model="searchStore.filter.isOoc"
-                                        :options="booleanOptions"
-                                    />
-                                </div>
-                                <div class="form-group boolean-filter-item">
-                                    <label>指令</label>
-                                    <PopoverSelect
-                                        v-model="searchStore.filter.isCommand"
-                                        :options="booleanOptions"
-                                    />
+                        <div class="form-group">
+                            <label>账号</label>
+                            <MultiTagSelect
+                                v-model="searchStore.filter.account"
+                                :options="accountOptions"
+                                placeholder="可下拉选择或手动输入，回车确认"
+                            />
+                        </div>
+                        <div class="form-group">
+                            <label>备注</label>
+                            <input
+                                class="form-control"
+                                v-model="searchStore.filter.note"
+                                type="text"
+                                placeholder="匹配备注..."
+                            />
+                        </div>
+                        <div class="time-filter-group">
+                            <div class="form-group">
+                                <label>开始时间</label>
+                                <PopoverDatePicker
+                                    v-model="searchStore.filter.timeStart"
+                                    placeholder="选择开始日期"
+                                />
+                            </div>
+                            <div class="form-group">
+                                <label>结束时间</label>
+                                <PopoverDatePicker
+                                    v-model="searchStore.filter.timeEnd"
+                                    placeholder="选择结束日期"
+                                />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group flex-1">
+                                <label>身份</label>
+                                <MultiTagSelect
+                                    v-model="roleFilterValue"
+                                    :options="roleOptions"
+                                    placeholder="可下拉选择身份，支持多选"
+                                />
+                            </div>
+                            <div class="form-group flex-1">
+                                <div class="boolean-filter-grid">
+                                    <div class="form-group boolean-filter-item">
+                                        <label>场外</label>
+                                        <PopoverSelect
+                                            v-model="searchStore.filter.isOoc"
+                                            :options="booleanOptions"
+                                        />
+                                    </div>
+                                    <div class="form-group boolean-filter-item">
+                                        <label>指令</label>
+                                        <PopoverSelect
+                                            v-model="
+                                                searchStore.filter.isCommand
+                                            "
+                                            :options="booleanOptions"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
                     </div>
                 </div>
             </transition>
@@ -396,7 +394,6 @@ function selectAllMatches() {
         messages: searchStore.searchResults,
     });
 }
-
 
 const truncate = (str: string, len: number) => {
     return str.length > len ? str.substring(0, len) + '...' : str;

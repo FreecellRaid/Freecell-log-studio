@@ -32,9 +32,9 @@
                             class="check-icon"
                             :class="{ 'is-checked': item.value === modelValue }"
                         />
-                        <span class="item-label" :title="item.label">{{
-                            item.label
-                        }}</span>
+                        <span class="item-label" :title="item.label">
+                            {{ item.label }}
+                        </span>
                     </button>
                 </div>
             </Transition>
@@ -69,9 +69,7 @@ const highlightIndex = ref(0);
 const dropdownStyle = ref<Record<string, string>>({});
 
 const selectedLabel = computed(() => {
-    const match = props.options.find(
-        (item) => item.value === props.modelValue,
-    );
+    const match = props.options.find((item) => item.value === props.modelValue);
     return match ? match.label : '';
 });
 

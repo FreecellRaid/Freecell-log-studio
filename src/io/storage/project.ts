@@ -5,11 +5,7 @@ import type {
     StyleRule,
     ViewSettings,
 } from '@/types/style';
-import type {
-    LogDocument,
-    MessageFilter,
-    RoleType,
-} from '@/types/log';
+import type { LogDocument, MessageFilter, RoleType } from '@/types/log';
 import { isRoleType } from '@/types/log';
 import type { ProjectFile } from '@/types/project';
 import { stripFileExtension } from '@/utils/fileName';

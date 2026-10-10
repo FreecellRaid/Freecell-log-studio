@@ -12,9 +12,7 @@ function normalizeStringFilter(value: string) {
 // 解析时间过滤值；带 T 时间部分的精确到秒，纯日期作为结束条件时含当天全天
 function parseTimeFilterValue(value: string, isEnd: boolean): Date | null {
     // 统一分隔符，Safari 对空格分隔的日期时间解析不可靠
-    const normalized = value.includes('T')
-        ? value
-        : value.replace(' ', 'T');
+    const normalized = value.includes('T') ? value : value.replace(' ', 'T');
     const date = new Date(normalized);
     // 不完整/越界的输入会解析为 Invalid Date，跳过该条件
     if (Number.isNaN(date.getTime())) return null;

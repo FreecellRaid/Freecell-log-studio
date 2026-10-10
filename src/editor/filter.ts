@@ -61,7 +61,11 @@ export function matchesMessageFilter(
 
             case 'role':
                 if (Array.isArray(expectedValue)) {
-                    if ((expectedValue as RoleType[]).indexOf(messageValue as RoleType) === -1)
+                    if (
+                        (expectedValue as RoleType[]).indexOf(
+                            messageValue as RoleType,
+                        ) === -1
+                    )
                         return false;
                 } else if (messageValue !== expectedValue) return false;
                 break;

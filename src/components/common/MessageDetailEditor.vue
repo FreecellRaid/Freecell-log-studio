@@ -45,9 +45,7 @@
         <div class="prop-row">
             <ToggleButton
                 :model-value="values.isOoc"
-                @update:model-value="
-                    emitFieldChange('isOoc', Boolean($event))
-                "
+                @update:model-value="emitFieldChange('isOoc', Boolean($event))"
             >
                 场外消息
             </ToggleButton>

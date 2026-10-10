@@ -182,11 +182,7 @@ export const useLogCommands = defineStore('logCommands', () => {
         );
         const reorderedMessages = [...remainingMessages];
         if (sourceChunkId === targetChunkId) {
-            reorderedMessages.splice(
-                insertionIndex,
-                0,
-                ...movingMessages,
-            );
+            reorderedMessages.splice(insertionIndex, 0, ...movingMessages);
         }
         const isNoopMove =
             sourceChunkId === targetChunkId &&

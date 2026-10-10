@@ -48,7 +48,9 @@
                     <PopoverSelect
                         :model-value="item.role"
                         :options="roleOptions"
-                        @update:model-value="(role) => updateRole(item.id, role)"
+                        @update:model-value="
+                            (role) => updateRole(item.id, role)
+                        "
                     />
                 </div>
 

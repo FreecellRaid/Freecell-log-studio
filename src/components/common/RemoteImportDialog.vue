@@ -25,7 +25,7 @@
                     :disabled="store.loading"
                     autofocus
                 />
-                <p v-if="store.loading" role="status">正在加载日志…</p>
+                <p v-if="store.loading" role="status">正在加载……</p>
                 <p v-if="store.error" class="remote-import-error" role="alert">
                     {{ store.error }}
                 </p>
@@ -95,12 +95,13 @@ function handleKeydown(event: KeyboardEvent) {
     position: fixed;
     inset: 0;
     z-index: 1000;
-    background: #0008;
+    background: var(--box-shadow);
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 16px;
 }
+
 .remote-import-dialog {
     width: min(480px, 100%);
     max-height: 85dvh;
@@ -112,44 +113,57 @@ function handleKeydown(event: KeyboardEvent) {
     padding: 20px;
     box-shadow: 0 8px 32px var(--box-shadow);
 }
+
 h3 {
-    margin: 0 0 16px;
+    margin: 0 0 10px;
+    font-size: 16px;
 }
+
 label {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
+    font-size: 14px;
 }
+
 input {
-    box-sizing: border-box;
     width: 100%;
-    padding: 10px;
-    background: var(--bg-topbar);
-    color: inherit;
+    box-sizing: border-box;
+    background-color: var(--bg-primary);
     border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 10px;
     border-radius: 4px;
-    font: inherit;
+    font-size: 14px;
+    outline: none;
 }
+
 input::placeholder {
     color: var(--text-muted);
 }
+
 input:focus-visible,
 button:focus-visible {
-    outline: 2px solid var(--active-accent);
-    outline-offset: 2px;
+    outline: 1px solid var(--active-accent);
+    outline-offset: -1px;
 }
+
 p {
     white-space: pre-wrap;
     overflow-wrap: anywhere;
+    font-size: 14px;
+    color: var(--text-muted);
 }
+
 .remote-import-error {
     color: var(--color-warning);
 }
+
 .remote-import-actions {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-    margin-top: 20px;
 }
+
 button {
     padding: 8px 14px;
     border: 1px solid var(--border-color);
@@ -158,10 +172,12 @@ button {
     background: var(--bg-topbar);
     cursor: pointer;
 }
+
 button:disabled {
     opacity: 0.5;
     cursor: default;
 }
+
 button:hover:not(:disabled) {
     background: var(--hover-bg);
 }

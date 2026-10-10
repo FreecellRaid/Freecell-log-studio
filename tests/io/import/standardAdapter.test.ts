@@ -64,12 +64,12 @@ describe('standard import adapter', () => {
             account: 'PlayerWithoutAccount',
         });
 
-        expect(messages.slice(9, 14).every((message) => message.isCommand)).toBe(
-            true,
-        );
+        expect(
+            messages.slice(9, 14).every((message) => message.isCommand),
+        ).toBe(true);
         expect(messages.slice(14).every((message) => message.isOoc)).toBe(true);
-        expect(messages.slice(0, 9).every((message) => !message.isCommand)).toBe(
-            true,
-        );
+        expect(
+            messages.slice(0, 9).every((message) => !message.isCommand),
+        ).toBe(true);
     });
 });
