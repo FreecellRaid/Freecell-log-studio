@@ -32,6 +32,8 @@
 }
 
 .dark-mode {
+    /* 让原生控件（日期选择器、滚动条等）在深色主题下以深色渲染 */
+    color-scheme: dark;
     --bg-topbar: #2d2d2d;
     --bg-sidebar: #252526;
     --bg-workspace: #2d2d2d;

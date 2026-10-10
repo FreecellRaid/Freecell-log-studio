@@ -91,6 +91,7 @@
                         <span
                             v-else
                             class="doc-name"
+                            title="双击重命名文档"
                             @dblclick.stop="
                                 startRename('document', doc.docId, doc.docName)
                             "
@@ -203,6 +204,7 @@
                                 <span
                                     v-else
                                     class="chunk-name"
+                                    title="双击重命名场景"
                                     @dblclick.stop="
                                         startRename(
                                             'chunk',
