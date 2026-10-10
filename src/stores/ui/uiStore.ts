@@ -48,6 +48,11 @@ function uiStore() {
         'freecell-log-studio.ui.rightPanelWidth',
         280,
     );
+    // 搜索面板筛选区高度上限；null 表示随内容自适应
+    const searchFilterMaxHeight = useLocalStorage<number | null>(
+        'freecell-log-studio.ui.searchFilterMaxHeight',
+        null,
+    );
     const showTime = useLocalStorage(
         'freecell-log-studio.ui.showTime',
         legacyUiSettings.showTime ?? true,
@@ -117,6 +122,7 @@ function uiStore() {
     return {
         leftPanelWidth,
         rightPanelWidth,
+        searchFilterMaxHeight,
         showTime,
         showAccount,
         exportPreviewAlwaysWhite,

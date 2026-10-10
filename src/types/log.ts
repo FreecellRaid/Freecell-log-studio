@@ -42,10 +42,13 @@ export interface MessageFilter {
     playerName?: StringFilterValue;
     account?: StringFilterValue;
     time?: Date;
+    /** 时间范围过滤（含边界） */
+    timeStart?: Date;
+    timeEnd?: Date;
     content?: StringFilterValue;
     isOoc?: boolean;
     isCommand?: boolean;
-    role?: RoleType;
+    role?: RoleType | RoleType[];
     note?: StringFilterValue;
 }
 

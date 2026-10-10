@@ -1,4 +1,4 @@
-import type { Message, MessageFilter } from '@/types/log';
+import type { Message, MessageFilter, RoleType } from '@/types/log';
 
 export function matchesMessageFilter(
     message: Message,
@@ -9,7 +9,10 @@ export function matchesMessageFilter(
     for (const [key, expectedValue] of Object.entries(filter)) {
         if (expectedValue === undefined || expectedValue === null) continue;
 
-        const messageValue = message[key as keyof Message];
+        // timeStart/timeEnd 是范围过滤条件而非消息字段，对应的消息字段是 time
+        const messageKey =
+            key === 'timeStart' || key === 'timeEnd' ? 'time' : key;
+        const messageValue = message[messageKey as keyof Message];
         if (messageValue === undefined || messageValue === null) return false;
 
         switch (key) {
@@ -53,8 +56,14 @@ export function matchesMessageFilter(
 
             case 'isOoc':
             case 'isCommand':
-            case 'role':
                 if (messageValue !== expectedValue) return false;
+                break;
+
+            case 'role':
+                if (Array.isArray(expectedValue)) {
+                    if ((expectedValue as RoleType[]).indexOf(messageValue as RoleType) === -1)
+                        return false;
+                } else if (messageValue !== expectedValue) return false;
                 break;
 
             // 日期字段：可以精确匹配或按日期比较
@@ -69,6 +78,25 @@ export function matchesMessageFilter(
                     if (messageValue !== expectedValue) return false;
                 }
                 break;
+
+            case 'timeStart':
+            case 'timeEnd': {
+                if (
+                    !(messageValue instanceof Date) ||
+                    !(expectedValue instanceof Date)
+                ) {
+                    return false;
+                }
+                const messageTime = messageValue.getTime();
+                const expectedTime = expectedValue.getTime();
+                // Invalid Date（NaN）不参与比较，视为条件无效
+                if (Number.isNaN(expectedTime)) break;
+                if (key === 'timeStart' && messageTime < expectedTime)
+                    return false;
+                if (key === 'timeEnd' && messageTime > expectedTime)
+                    return false;
+                break;
+            }
 
             default:
                 if (messageValue !== expectedValue) return false;

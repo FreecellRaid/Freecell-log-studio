@@ -5,7 +5,11 @@ import type {
     StyleRule,
     ViewSettings,
 } from '@/types/style';
-import type { LogDocument, MessageFilter } from '@/types/log';
+import type {
+    LogDocument,
+    MessageFilter,
+    RoleType,
+} from '@/types/log';
 import { isRoleType } from '@/types/log';
 import type { ProjectFile } from '@/types/project';
 import { stripFileExtension } from '@/utils/fileName';
@@ -15,6 +19,10 @@ export const PROJECT_FILE_VERSION = 2 as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isRoleTypeArray(value: unknown): value is RoleType[] {
+    return Array.isArray(value) && value.every(isRoleType);
 }
 
 function cloneFilterValue<T>(value: T): T {
@@ -63,7 +71,7 @@ function cloneMessageFilter(filter: MessageFilter): MessageFilter {
     if (filter.isCommand !== undefined) {
         clonedFilter.isCommand = filter.isCommand;
     }
-    if (isRoleType(filter.role)) {
+    if (isRoleType(filter.role) || isRoleTypeArray(filter.role)) {
         clonedFilter.role = filter.role;
     }
     if (filter.note !== undefined) {
@@ -229,7 +237,7 @@ function normalizeFilter(rawFilter: unknown): MessageFilter {
     if (typeof rawFilter.isCommand === 'boolean') {
         filter.isCommand = rawFilter.isCommand;
     }
-    if (isRoleType(rawFilter.role)) {
+    if (isRoleType(rawFilter.role) || isRoleTypeArray(rawFilter.role)) {
         filter.role = rawFilter.role as MessageFilter['role'];
     }
 
