@@ -5,6 +5,28 @@ const log = 'Alice(10001) 2026-10-09 20:00:00\nhello\n';
 afterEach(() => vi.useRealTimers());
 
 describe('remote sources', () => {
+    it.each([
+        ['LOG_123_调查记录', '调查记录'],
+        [
+            'log_550e8400-e29b-41d4-a716-446655440000_调查_第二幕.trpglog',
+            '调查_第二幕',
+        ],
+        ['调查记录', '调查记录'],
+        ['LOG_123_', 'LOG_123_'],
+        [undefined, '链接中的_日志名'],
+    ])('extracts the Oliva display name from %s', async (fileName, name) => {
+        const fetcher = vi
+            .fn<typeof fetch>()
+            .mockResolvedValueOnce(Response.json({ code: 0, fileName }))
+            .mockResolvedValueOnce(new Response(log));
+        const result = await readRemoteLog(
+            { source: 'oliva', id: 'log_123_链接中的_日志名' },
+            { fetch: fetcher },
+        );
+        expect(result.name).toBe(name);
+        expect(result.source?.id).toBe('log_123_链接中的_日志名');
+    });
+
     it('loads Oliva metadata then a redirected text file with encoded identifiers', async () => {
         const fetcher = vi
             .fn<typeof fetch>()

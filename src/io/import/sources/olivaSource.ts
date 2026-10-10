@@ -2,6 +2,14 @@ import type { LogSourceAdapter } from './types';
 
 const API_URL = 'https://api.dice.center/dicelogger/logReader.php';
 
+function extractLogName(fileName: string): string {
+    // 只移除前缀和标识，保留日志名称中的下划线。
+    const match = /^log_[^_]+_([\s\S]+)$/i.exec(fileName);
+    if (!match) return fileName;
+    const name = match[1].replace(/\.trpglog$/i, '');
+    return name.trim() ? name : fileName;
+}
+
 export const olivaSource: LogSourceAdapter = {
     id: 'oliva',
     async load(request, context) {
@@ -30,10 +38,11 @@ export const olivaSource: LogSourceAdapter = {
             throw new Error('日志下载地址无效');
         url.searchParams.set('m', 'rawData');
         return {
-            name:
+            name: extractLogName(
                 typeof meta.fileName === 'string' && meta.fileName
                     ? meta.fileName
                     : request.id,
+            ),
             text: await context.readText(meta.redirectDownloadUrl || url.href),
             format: request.format || 'standard-adapter',
             source: { provider: 'oliva', id: request.id },
