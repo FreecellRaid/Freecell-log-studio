@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue';
+import { computed, ref, type MaybeRefOrGetter } from 'vue';
 import { useLogCommands } from '@/stores/project/logCommands';
 import { useActiveContext } from '@/composables/application/useActiveContext';
 
@@ -12,9 +12,11 @@ const globalDraggedMessage = ref<DraggedMessageInfo | null>(null);
 const globalDraggedChunk = ref<string | null>(null);
 const globalDraggedDocument = ref<string | null>(null);
 
-export function useMessageDragDrop() {
+export function useMessageDragDrop(
+    ownerId?: MaybeRefOrGetter<string | undefined>,
+) {
     const logEditorStore = useLogCommands();
-    const activeContext = useActiveContext();
+    const activeContext = useActiveContext(ownerId);
 
     function onDragOver(event: DragEvent) {
         event.preventDefault();

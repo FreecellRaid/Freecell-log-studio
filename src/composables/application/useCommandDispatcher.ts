@@ -335,15 +335,16 @@ export function useCommandDispatcher() {
                 [target.messageId],
                 false,
             );
-            windowStore.requestMessageReveal(chunkId, target.messageId);
 
             if (windowStore.hasSplitView) {
                 const activePaneIndex = windowStore.getActivePaneIndex();
                 windowStore.setPaneView(activePaneIndex, 'chunkView', chunkId);
+                windowStore.requestMessageReveal(chunkId, target.messageId);
                 return;
             }
 
             windowStore.setActiveChunk(chunkId);
+            windowStore.requestMessageReveal(chunkId, target.messageId);
             return;
         }
         if (cmd === 'cancel') {

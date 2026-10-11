@@ -183,14 +183,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, toValue, type MaybeRefOrGetter } from 'vue';
 import { useResponsiveMode } from '@/composables/ui/useResponsiveMode';
 import { Eye, X, SquareSplitHorizontal } from '@lucide/vue';
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 import MarkdownContent from '@/components/common/MarkdownContent.vue';
 import type { RenderedExportSegment } from '@/io/export/exportRender';
-import { useExportPreview } from '@/composables/application/useExportPreview';
+import { renderExportDocument } from '@/io/export/exportRender';
+import { flattenLogToRows } from '@/io/export/flattener';
+import { useExportStore } from '@/stores/io/exportStore';
+import { useLogStore } from '@/stores/project/logStore';
+import { useStyleStore } from '@/stores/project/styleStore';
 import { useUiStore } from '@/stores/ui/uiStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
 
@@ -235,6 +239,34 @@ function getSegmentStyle(
     if (segment.style.italic) css.fontStyle = 'italic';
 
     return css;
+}
+
+function useExportPreview(formatId: MaybeRefOrGetter<string>) {
+    const exportStore = useExportStore();
+    const logStore = useLogStore();
+    const styleStore = useStyleStore();
+    // 预览始终绑定实例的模板，不回退到其他活动模板。
+    const activeFormat = computed(() =>
+        exportStore.formatById(toValue(formatId)),
+    );
+    const rowsWithId = computed(() => {
+        if (!activeFormat.value) return [];
+        const rows = flattenLogToRows(
+            logStore.documents,
+            styleStore.viewSettings,
+            styleStore.activeRules,
+        );
+        return renderExportDocument(rows, activeFormat.value).blocks.map(
+            (block, index) => ({
+                ...block,
+                rowId: `${block.type}-${index}`,
+            }),
+        );
+    });
+    const enableMarkdown = computed(
+        () => styleStore.viewSettings.enableMarkdown,
+    );
+    return { activeFormat, rowsWithId, enableMarkdown };
 }
 </script>
 

@@ -90,11 +90,13 @@ export const useLogCommands = defineStore('logCommands', () => {
         });
     }
 
-    function insertNewMessageAfter(
-        chunkId: string,
-        msg: Message,
-        index: number,
-    ) {
+    function insertNewMessageAfter(chunkId: string, msg: Message) {
+        const chunk = logStore.findChunkById(chunkId);
+        const index =
+            chunk?.messages.findIndex(
+                (message) => message.messageId === msg.messageId,
+            ) ?? -1;
+        if (index === -1) return false;
         const newMessage: Message = {
             messageId: generateId(),
             chunkId,

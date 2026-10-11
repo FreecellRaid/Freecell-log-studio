@@ -21,7 +21,11 @@
             </header>
 
             <div
-                v-if="mobileUiStore.activeSheet === 'message' && editingMessage"
+                v-if="
+                    mobileUiStore.activeSheet === 'message' &&
+                    editingMessage &&
+                    messageDraft
+                "
                 class="mobile-form"
             >
                 <MessageDetailEditor
@@ -71,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, reactive, ref, watch } from 'vue';
+import { computed, defineAsyncComponent, ref, watch } from 'vue';
 import { X } from '@lucide/vue';
 import type {
     MessageDetailTextField,
@@ -96,15 +100,7 @@ const editingMessage = computed(() => {
     if (target?.kind !== 'message') return null;
     return logStore.messagesById.get(target.messageId) ?? null;
 });
-const messageDraft = reactive<MessageDetailValues>({
-    playerName: editingMessage.value?.playerName ?? '',
-    account: editingMessage.value?.account ?? '',
-    role: editingMessage.value?.role ?? 'unknown',
-    content: editingMessage.value?.content ?? '',
-    note: editingMessage.value?.note ?? '',
-    isOoc: editingMessage.value?.isOoc ?? false,
-    isCommand: editingMessage.value?.isCommand ?? false,
-});
+const messageDraft = computed(() => editorSessionStore.messageDraft);
 const projectNameDraft = ref(logStore.projectName);
 const chunkNameDraft = ref(
     editorSessionStore.activeTarget?.kind === 'chunkName'
@@ -141,14 +137,14 @@ function getInputValue(event: Event) {
 }
 
 function updateMessageDraftText(field: MessageDetailTextField, value: string) {
-    messageDraft[field] = value;
+    editorSessionStore.updateMessageDraft(field, value);
 }
 
 function commitMessageDraftText(field: MessageDetailTextField) {
     const target = editorSessionStore.activeTarget;
-    if (target?.kind !== 'message') return;
+    if (target?.kind !== 'message' || !messageDraft.value) return;
     logCommands.updateMessage(target.chunkId, target.messageId, {
-        [field]: messageDraft[field],
+        [field]: messageDraft.value[field],
     });
 }
 
@@ -156,9 +152,9 @@ function updateMessageDraftField<K extends keyof MessageDetailValues>(
     field: K,
     value: MessageDetailValues[K],
 ) {
-    messageDraft[field] = value;
+    editorSessionStore.updateMessageDraft(field, value);
     const target = editorSessionStore.activeTarget;
-    if (target?.kind !== 'message') return;
+    if (target?.kind !== 'message' || !messageDraft.value) return;
     logCommands.updateMessage(target.chunkId, target.messageId, {
         [field]: value,
     });

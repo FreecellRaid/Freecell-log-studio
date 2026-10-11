@@ -1,132 +1,180 @@
 <template>
-    <template v-if="activeChunk">
-        <section class="mobile-editor-header">
-            <h4>{{ activeChunk.chunkName || '未命名场景' }}</h4>
-            <p>{{ messages.length }} 条消息</p>
-            <button
-                class="mobile-icon-button"
-                type="button"
-                title="重命名场景"
-                @click="$emit('renameChunk')"
-            >
-                <Pencil class="ui-icon" />
-            </button>
-        </section>
+    <section ref="listRef" class="mobile-message-list">
+        <div v-if="messages.length === 0" class="view-empty-hint">
+            {{
+                chunk.messages.length
+                    ? '当前筛选下没有可见消息。'
+                    : '该场景目前没有任何消息。'
+            }}
+        </div>
+        <article
+            v-for="message in messages"
+            :key="message.messageId"
+            class="mobile-message"
+            :data-message-id="message.messageId"
+            :class="{
+                'is-selected': activeContext.selectedMessageIds.value.has(
+                    message.messageId,
+                ),
+            }"
+            @click="toggleMessageSelection(message.messageId)"
+        >
+            <header class="mobile-message-header">
+                <strong
+                    class="mobile-message-name"
+                    :style="getMessageStyle(message).nameStyle"
+                >
+                    {{ message.playerName || '未知角色' }}
+                </strong>
+                <span
+                    v-if="uiStore.showAccount && message.account"
+                    class="mobile-message-account"
+                >
+                    {{ message.account }}
+                </span>
+                <time v-if="uiStore.showTime" class="mobile-message-time">
+                    {{ formatDate(message.time) }}
+                </time>
+            </header>
 
-        <section>
-            <article
-                v-for="(message, index) in messages"
-                :key="message.messageId"
-                class="mobile-message"
-                :class="{
-                    'is-selected': activeContext.selectedMessageIds.value.has(
+            <div
+                class="mobile-message-content"
+                :style="getMessageStyle(message).contentStyle"
+            >
+                <MarkdownContent
+                    :content="message.content || '空消息'"
+                    :enabled="styleStore.viewSettings.enableMarkdown"
+                />
+            </div>
+
+            <footer class="mobile-message-tags">
+                <span v-if="message.isOoc">场外</span>
+                <span v-if="message.isCommand">指令</span>
+                <span v-if="message.note">{{ message.note }}</span>
+            </footer>
+
+            <div
+                v-if="
+                    activeContext.selectedMessageIds.value.has(
                         message.messageId,
-                    ),
-                }"
-                @click="toggleMessageSelection(message.messageId)"
+                    )
+                "
+                class="mobile-message-actions"
             >
-                <header class="mobile-message-header">
-                    <strong
-                        class="mobile-message-name"
-                        :style="getMessageStyle(message).nameStyle"
-                    >
-                        {{ message.playerName || '未知角色' }}
-                    </strong>
-                    <span
-                        v-if="uiStore.showAccount && message.account"
-                        class="mobile-message-account"
-                    >
-                        {{ message.account }}
-                    </span>
-                    <time v-if="uiStore.showTime" class="mobile-message-time">
-                        {{ formatDate(message.time) }}
-                    </time>
-                </header>
-
-                <div
-                    class="mobile-message-content"
-                    :style="getMessageStyle(message).contentStyle"
+                <button
+                    class="mobile-action-button"
+                    type="button"
+                    @click.stop="startMessageEdit(message)"
                 >
-                    <MarkdownContent
-                        :content="message.content || '空消息'"
-                        :enabled="styleStore.viewSettings.enableMarkdown"
-                    />
-                </div>
-
-                <footer class="mobile-message-tags">
-                    <span v-if="message.isOoc">场外</span>
-                    <span v-if="message.isCommand">指令</span>
-                    <span v-if="message.note">{{ message.note }}</span>
-                </footer>
-
-                <div
-                    v-if="
-                        activeContext.selectedMessageIds.value.has(
-                            message.messageId,
-                        )
-                    "
-                    class="mobile-message-actions"
+                    编辑
+                </button>
+                <button
+                    class="mobile-action-button"
+                    type="button"
+                    @click.stop="insertAfter(message)"
                 >
-                    <button
-                        class="mobile-action-button"
-                        type="button"
-                        @click.stop="$emit('editMessage', message)"
-                    >
-                        编辑
-                    </button>
-                    <button
-                        class="mobile-action-button"
-                        type="button"
-                        @click.stop="$emit('insertAfter', message, index)"
-                    >
-                        插入
-                    </button>
-                    <button
-                        class="mobile-action-button"
-                        type="button"
-                        @click.stop="$emit('mergeWithNext', message.messageId)"
-                    >
-                        合并
-                    </button>
-                    <button
-                        class="mobile-action-button is-warning"
-                        type="button"
-                        @click.stop="$emit('deleteMessage', message.messageId)"
-                    >
-                        删除
-                    </button>
-                </div>
-            </article>
-        </section>
-    </template>
+                    插入
+                </button>
+                <button
+                    class="mobile-action-button"
+                    type="button"
+                    @click.stop="mergeWithNext(message.messageId)"
+                >
+                    合并
+                </button>
+                <button
+                    class="mobile-action-button is-warning"
+                    type="button"
+                    @click.stop="deleteMessage(message.messageId)"
+                >
+                    删除
+                </button>
+            </div>
+        </article>
+    </section>
 </template>
 
 <script setup lang="ts">
-import { Pencil } from '@lucide/vue';
+import { ref, watch } from 'vue';
+import { useLogCommands } from '@/stores/project/logCommands';
+import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
+import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
 import { computeStyleForMessage } from '@/editor/styleEngine';
 import { useStyleStore } from '@/stores/project/styleStore';
 import { useUiStore } from '@/stores/ui/uiStore';
+import { useMessageReveal } from '@/composables/application/useMessageReveal';
 import { useActiveContext } from '@/composables/application/useActiveContext';
 import type { Chunk, Message } from '@/types/log';
 import { formatDate } from '@/utils/date';
 import MarkdownContent from '@/components/common/MarkdownContent.vue';
 
 const props = defineProps<{
-    activeChunk: Chunk | null;
+    windowId: string;
+    chunk: Chunk;
     messages: Message[];
-}>();
-
-defineEmits<{
-    (e: 'renameChunk'): void;
-    (e: 'editMessage', message: Message): void;
-    (e: 'insertAfter', message: Message, index: number): void;
-    (e: 'mergeWithNext', messageId: string): void;
-    (e: 'deleteMessage', messageId: string): void;
 }>();
 
 const uiStore = useUiStore();
 const styleStore = useStyleStore();
-const activeContext = useActiveContext(() => props.activeChunk?.chunkId);
+const activeContext = useActiveContext(() => props.windowId);
+
+const logCommands = useLogCommands();
+const mobileUiStore = useMobileUiStore();
+const editorSessionStore = useEditorSessionStore();
+const listRef = ref<HTMLElement | null>(null);
+
+useMessageReveal({
+    windowId: () => props.windowId,
+    messages: () => props.messages,
+    ready: () => Boolean(listRef.value),
+    reveal: (_index, messageId) => {
+        const element = Array.from(
+            listRef.value?.querySelectorAll<HTMLElement>('[data-message-id]') ??
+                [],
+        ).find((item) => item.dataset.messageId === messageId);
+        if (!element) return false;
+        element.scrollIntoView({ block: 'center' });
+        return true;
+    },
+});
+
+function startMessageEdit(message: Message) {
+    editorSessionStore.startEditing(
+        {
+            kind: 'message',
+            chunkId: props.chunk.chunkId,
+            messageId: message.messageId,
+        },
+        props.windowId,
+    );
+    mobileUiStore.openSheet('message');
+}
+function insertAfter(message: Message) {
+    logCommands.insertNewMessageAfter(props.chunk.chunkId, message);
+}
+function mergeWithNext(messageId: string) {
+    logCommands.mergeWithNextMessage(props.chunk.chunkId, messageId);
+}
+function deleteMessage(messageId: string) {
+    if (!window.confirm('确定要删除这条消息吗？')) return;
+    logCommands.deleteMessage(props.chunk.chunkId, messageId);
+    if (activeContext.selectedMessageIds.value.has(messageId))
+        activeContext.clearMessageSelection();
+}
+// 从桌面切换到移动端时，继续展示同一份编辑草稿。
+watch(
+    () => editorSessionStore.activeTarget,
+    (target) => {
+        if (
+            target?.kind === 'message' &&
+            target.chunkId === props.chunk.chunkId
+        ) {
+            editorSessionStore.startEditing(target, props.windowId);
+            mobileUiStore.openSheet('message');
+        }
+    },
+    { immediate: true },
+);
 
 function toggleMessageSelection(messageId: string) {
     if (activeContext.selectedMessageIds.value.has(messageId)) {
@@ -142,39 +190,11 @@ function getMessageStyle(message: Message) {
 </script>
 
 <style scoped>
-.mobile-editor-header {
-    min-height: 50px;
-    padding: 0px 12px 0px 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--bg-workspace);
-    position: sticky;
-    top: -1px;
-    z-index: 1;
-}
-
-.mobile-editor-header h4 {
-    margin: 0;
-    line-height: 1.25;
-}
-
-.mobile-editor-header p {
-    margin: 3px 0 0;
-    font-size: 12px;
-    color: var(--text-secondary);
-}
-
-.mobile-icon-button {
-    width: 40px;
-    height: 40px;
-    margin-left: auto;
-}
-
-.mobile-icon-button .ui-icon {
-    width: 18px;
-    height: 18px;
+.mobile-message-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .mobile-message {

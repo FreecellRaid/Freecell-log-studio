@@ -380,7 +380,7 @@ describe('project log commands', () => {
             document('doc-a', [chunk('chunk-a', [source, message('tail')])]),
         ]);
 
-        expect(commands.insertNewMessageAfter('chunk-a', source, 0)).toBe(true);
+        expect(commands.insertNewMessageAfter('chunk-a', source)).toBe(true);
         const inserted = log.findChunkById('chunk-a')?.messages[1];
         expect(inserted).toMatchObject({
             chunkId: 'chunk-a',

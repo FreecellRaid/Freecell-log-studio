@@ -27,6 +27,8 @@ function windowStore() {
     );
     const focusStack = ref<string[]>([]);
     const pendingMessageReveal = ref<{
+        requestId: string;
+        windowId: string;
         chunkId: string;
         messageId: string;
     } | null>(null);
@@ -92,6 +94,8 @@ function windowStore() {
         if (!win || windowId === 'defaultView') return;
         const wasFocused = activeFocus.value === windowId;
         openWindows.value.delete(windowId);
+        if (pendingMessageReveal.value?.windowId === windowId)
+            clearPendingMessageReveal();
         focusStack.value = focusStack.value.filter((id) => id !== windowId);
 
         const paneIndex = paneWindowIds.value.indexOf(windowId);
@@ -415,15 +419,25 @@ function windowStore() {
         replacePaneView(paneIndex, windowName, originalId);
     }
 
-    function requestMessageReveal(chunkId: string, messageId: string) {
+    function requestMessageReveal(
+        chunkId: string,
+        messageId: string,
+        windowId = currentActiveView.value.windowId,
+    ) {
+        const win = openWindows.value.get(windowId);
+        if (win?.windowName !== 'chunkView' || win.target.chunkId !== chunkId)
+            return;
         pendingMessageReveal.value = {
+            requestId: generateId(),
+            windowId,
             chunkId,
             messageId,
         };
     }
 
-    function clearPendingMessageReveal() {
-        pendingMessageReveal.value = null;
+    function clearPendingMessageReveal(requestId?: string) {
+        if (!requestId || pendingMessageReveal.value?.requestId === requestId)
+            pendingMessageReveal.value = null;
     }
 
     // 关闭指定 pane，也支持最后一个单屏业务视图。

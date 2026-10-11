@@ -14,18 +14,18 @@ const DefaultView = defineAsyncComponent(
     () => import('@/components/workspace/DefaultView.vue'),
 );
 
+const ChunkView = defineAsyncComponent(
+    () => import('@/components/workspace/ChunkView.vue'),
+);
+
 export const desktopWorkspaceAdapter: WorkspaceAdapter = {
-    chunkView: defineAsyncComponent(
-        () => import('@/components/workspace/DesktopChunkView.vue'),
-    ),
+    chunkView: ChunkView,
     exportPreview: ExportPreview,
     defaultView: DefaultView,
 };
 
 export const mobileWorkspaceAdapter: WorkspaceAdapter = {
-    chunkView: defineAsyncComponent(
-        () => import('@/components/workspace/MobileChunkView.vue'),
-    ),
+    chunkView: ChunkView,
     exportPreview: ExportPreview,
     defaultView: DefaultView,
 };
