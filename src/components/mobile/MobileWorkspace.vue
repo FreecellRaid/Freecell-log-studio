@@ -1,29 +1,27 @@
 <template>
     <main class="mobile-main">
-        <MobileChunkView v-if="activeChunk" :active-chunk="activeChunk" />
-        <MobileDefaultView v-else />
+        <component
+            :is="getWorkspaceComponent(mobileWorkspaceAdapter, visibleView)"
+            :key="visibleView?.windowId ?? 'defaultView'"
+            v-bind="getWorkspaceProps(visibleView)"
+        />
     </main>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import MobileChunkView from '@/components/mobile/workspace/MobileChunkView.vue';
-import MobileDefaultView from '@/components/mobile/workspace/MobileDefaultView.vue';
-import { useLogStore } from '@/stores/project/logStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
-import type { Chunk } from '@/types/log';
+import { selectMobileView } from '@/windows/selectMobileView';
+import {
+    mobileWorkspaceAdapter,
+    getWorkspaceComponent,
+    getWorkspaceProps,
+} from '@/windows/workspaceAdapters';
 
-const logStore = useLogStore();
 const windowStore = useWindowStore();
-
-const activeChunk = computed<Chunk | null>(() => {
-    const currentView = windowStore.currentActiveView;
-    if (currentView.windowName === 'chunkView') {
-        return logStore.findChunkById(currentView.originalId);
-    }
-
-    return logStore.allChunks[0] ?? null;
-});
+const visibleView = computed(() =>
+    selectMobileView(windowStore.openWindows, windowStore.focusStack),
+);
 </script>
 
 <style scoped>

@@ -153,8 +153,9 @@
                                             .windowId === 'chunkList',
                                     // 对view的焦点判断
                                     'is-active-chunk':
-                                        windowStore.currentActiveView
-                                            .originalId === chunk.chunkId,
+                                        getWindowTargetId(
+                                            windowStore.currentActiveView,
+                                        ) === chunk.chunkId,
                                     // 选中判断
                                     'is-selected':
                                         activeContext.selectedChunkIds.value.has(
@@ -285,6 +286,7 @@
 </template>
 
 <script setup lang="ts">
+import { getWindowTargetId } from '@/types/window';
 import { ChevronRight, ChevronsDown, Plus, Trash2 } from '@lucide/vue';
 import { nextTick, reactive, ref, watch } from 'vue';
 import {

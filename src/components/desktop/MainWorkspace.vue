@@ -14,10 +14,15 @@
                     @pointerdown.capture="handlePaneClick(pane.paneIndex)"
                 >
                     <component
-                        :is="getViewComponent(pane.instance?.windowName)"
+                        :is="
+                            getWorkspaceComponent(
+                                desktopWorkspaceAdapter,
+                                pane.instance,
+                            )
+                        "
                         v-if="pane.instance"
                         :key="pane.instance.windowId"
-                        v-bind="getComponentProps(pane.instance)"
+                        v-bind="getWorkspaceProps(pane.instance)"
                     />
                     <DefaultView v-else />
                 </div>
@@ -39,40 +44,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent } from 'vue';
+import { computed } from 'vue';
 import { useWindowStore } from '@/stores/ui/windowStore';
-import type { WindowInstance, WindowName } from '@/types/window';
+import {
+    desktopWorkspaceAdapter,
+    getWorkspaceComponent,
+    getWorkspaceProps,
+} from '@/windows/workspaceAdapters';
 import FileImporter from '@/components/desktop/workspace/FileImporter.vue';
 import DefaultView from '@/components/desktop/workspace/DefaultView.vue';
 
-const ChunkView = defineAsyncComponent(
-    () => import('@/components/desktop/workspace/ChunkView.vue'),
-);
-const ExportPreview = defineAsyncComponent(
-    () => import('@/components/desktop/workspace/ExportPreview.vue'),
-);
-
 const windowStore = useWindowStore();
 const workspacePanes = computed(() => windowStore.workspacePanes);
-
-const viewComponentMap: Partial<Record<WindowName, any>> = {
-    chunkView: ChunkView,
-    exportPreview: ExportPreview,
-    defaultView: DefaultView,
-};
-
-// 根据 WindowName 获取对应的 Vue 组件
-function getViewComponent(name?: WindowName) {
-    if (!name) return DefaultView;
-    return viewComponentMap[name] || DefaultView;
-}
-
-function getComponentProps(instance: WindowInstance) {
-    return {
-        windowId: instance.windowId,
-        originalId: instance.originalId,
-    };
-}
 
 function getPaneStyle(index: 0 | 1): Record<string, string> {
     const isHorizontal = windowStore.paneDirection === 'horizontal';

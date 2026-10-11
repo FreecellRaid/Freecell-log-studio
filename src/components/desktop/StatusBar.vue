@@ -109,7 +109,9 @@ const activeContext = useActiveContext();
 
 const activeChunk = computed(function () {
     if (windowStore.currentActiveView.windowName === 'chunkView') {
-        return logStore.findChunkById(windowStore.currentActiveView.originalId);
+        return logStore.findChunkById(
+            windowStore.currentActiveView.target.chunkId,
+        );
     } else return null;
 });
 
@@ -119,7 +121,7 @@ const activeExportFormat = computed(function () {
     }
 
     return (
-        exportStore.formatById(windowStore.currentActiveView.originalId) ||
+        exportStore.formatById(windowStore.currentActiveView.target.formatId) ||
         exportStore.activeFormat
     );
 });

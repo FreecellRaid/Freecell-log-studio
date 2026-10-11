@@ -309,7 +309,7 @@ const previewedFormatIds = computed(() => {
 
     for (const win of windowStore.openWindows.values()) {
         if (win.windowName === 'exportPreview') {
-            ids.add(win.originalId);
+            ids.add(win.target.formatId);
         }
     }
 

@@ -391,6 +391,7 @@
 </template>
 
 <script setup lang="ts">
+import { getWindowTargetId } from '@/types/window';
 import { ChevronRight, Eye, EyeOff, Plus, Trash2 } from '@lucide/vue';
 import { ref, computed } from 'vue';
 import { useStyleStore } from '@/stores/project/styleStore';
@@ -409,7 +410,7 @@ const logStore = useLogStore();
 const windowStore = useWindowStore();
 const activeViewId = computed(() => {
     const view = windowStore.currentActiveView;
-    return view.originalId || view.windowId;
+    return getWindowTargetId(view);
 });
 // 注意，这里传入的id不是响应式的！切换窗口会有bug
 const activeContext = useActiveContext(activeViewId.value);

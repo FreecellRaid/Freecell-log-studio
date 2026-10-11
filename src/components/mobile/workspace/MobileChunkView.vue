@@ -1,5 +1,6 @@
 <template>
     <MobileMessageList
+        v-if="activeChunk"
         :active-chunk="activeChunk"
         :messages="visibleMessages"
         @rename-chunk="startChunkRename"
@@ -8,6 +9,9 @@
         @merge-with-next="mergeWithNext"
         @delete-message="deleteMessage"
     />
+    <div v-else class="view-empty-hint">
+        当前场景已不存在，请从场景列表选择其他场景。
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -19,7 +23,8 @@ import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
 import { useActiveContext } from '@/composables/application/useActiveContext';
 import { useStyleStore } from '@/stores/project/styleStore';
 import { useUiStore } from '@/stores/ui/uiStore';
-import type { Chunk, Message } from '@/types/log';
+import { useLogStore } from '@/stores/project/logStore';
+import type { Message } from '@/types/log';
 
 const uiStore = useUiStore();
 const styleStore = useStyleStore();
@@ -27,8 +32,9 @@ const logCommands = useLogCommands();
 const mobileUiStore = useMobileUiStore();
 const editorSessionStore = useEditorSessionStore();
 
-const props = defineProps<{ activeChunk: Chunk }>();
-const activeChunk = computed(() => props.activeChunk);
+const props = defineProps<{ windowId: string; originalId: string }>();
+const logStore = useLogStore();
+const activeChunk = computed(() => logStore.findChunkById(props.originalId));
 const activeContext = useActiveContext(() => activeChunk.value?.chunkId);
 
 const visibleMessages = computed(() => {

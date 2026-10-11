@@ -1,3 +1,5 @@
+import { getWindowTargetId } from '@/types/window';
+import { windowDefinitions } from '@/windows/windowDefinitions';
 import { computed, toValue } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import type { Message, MessageFilter } from '@/types/log';
@@ -20,7 +22,11 @@ export function useActiveContext(
             for (let i = stack.length - 1; i >= 0; i--) {
                 const windowId = stack[i];
                 const win = windowStore.openWindows.get(windowId);
-                if (!win || win.windowType === 'modal') continue;
+                if (
+                    !win ||
+                    !windowDefinitions[win.windowName].participatesInSelection
+                )
+                    continue;
                 targetId = windowId;
                 break;
             }
@@ -28,7 +34,7 @@ export function useActiveContext(
 
         if (!targetId) return 'defaultView';
         const win = windowStore.openWindows.get(targetId);
-        return win?.originalId || targetId;
+        return win ? getWindowTargetId(win) : targetId;
     });
     const selectedMessageIds = computed(() =>
         selectionStore.getSelectedIds(effectiveId.value, 'message'),

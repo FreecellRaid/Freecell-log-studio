@@ -1,3 +1,4 @@
+import { getWindowTargetId } from '@/types/window';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import { useWindowStore } from '@/stores/ui/windowStore';
@@ -113,10 +114,12 @@ describe('workspace pane focus', () => {
         store.openLeftPanel();
         store.setPaneView(store.getActivePaneIndex(), 'chunkView', 'chunk-new');
 
-        expect(store.workspacePanes[0]?.instance?.originalId).toBe(
+        expect(getWindowTargetId(store.workspacePanes[0]!.instance!)).toBe(
             'chunk-left',
         );
-        expect(store.workspacePanes[1]?.instance?.originalId).toBe('chunk-new');
+        expect(getWindowTargetId(store.workspacePanes[1]!.instance!)).toBe(
+            'chunk-new',
+        );
     });
 
     it('keeps the last active pane when closing a split view', () => {
@@ -126,7 +129,7 @@ describe('workspace pane focus', () => {
         store.closeSplitView();
 
         expect(store.hasSplitView).toBe(false);
-        expect(store.workspacePanes[0]?.instance?.originalId).toBe(
+        expect(getWindowTargetId(store.workspacePanes[0]!.instance!)).toBe(
             'chunk-right',
         );
         expect(store.getActivePaneIndex()).toBe(0);
@@ -171,8 +174,6 @@ describe('workspace lifecycle consistency', () => {
             store.registerWindow({
                 windowId: name,
                 windowName: name,
-                windowType: 'panel',
-                originalId: name,
             });
         }
         store.openHelpDocument();
@@ -207,8 +208,18 @@ describe('workspace lifecycle consistency', () => {
             const removed =
                 store.workspacePanes[paneIndex === 0 ? 1 : 0]!.instance!;
             const selections = useSelectionStore();
-            selections.select(retained.originalId, 'message', ['keep'], false);
-            selections.select(removed.originalId, 'message', ['remove'], false);
+            selections.select(
+                getWindowTargetId(retained),
+                'message',
+                ['keep'],
+                false,
+            );
+            selections.select(
+                getWindowTargetId(removed),
+                'message',
+                ['remove'],
+                false,
+            );
             store.closeSplitView(retained.windowId);
             expect(store.currentActiveView).toBe(
                 store.openWindows.get(retained.windowId),
@@ -216,10 +227,14 @@ describe('workspace lifecycle consistency', () => {
             expect(store.paneWindowIds).toEqual([retained.windowId, null]);
             expect(store.isWindowOpen(removed.windowId)).toBe(false);
             expect([
-                ...selections.getSelectedIds(retained.originalId, 'message'),
+                ...selections.getSelectedIds(
+                    getWindowTargetId(retained),
+                    'message',
+                ),
             ]).toEqual(['keep']);
             expect(
-                selections.getSelectedIds(removed.originalId, 'message').size,
+                selections.getSelectedIds(getWindowTargetId(removed), 'message')
+                    .size,
             ).toBe(0);
         },
     );
@@ -272,14 +287,14 @@ describe('workspace lifecycle consistency', () => {
         store.setActiveChunk('new');
         expect(store.hasSplitView).toBe(true);
         expect(store.workspacePanes[0]!.instance!.windowId).toBe(left);
-        expect(store.currentActiveView.originalId).toBe('new');
+        expect(getWindowTargetId(store.currentActiveView)).toBe('new');
     });
 
     it('prunes deleted scenes and leaves no stale pane references', () => {
         const store = createSplitView();
         expect(store.pruneOrphanChunkViews((id) => id === 'right')).toBe(true);
         expect(store.hasSplitView).toBe(false);
-        expect(store.currentActiveView.originalId).toBe('right');
+        expect(getWindowTargetId(store.currentActiveView)).toBe('right');
         expect(store.pruneOrphanChunkViews(() => false)).toBe(false);
         expect(store.paneWindowIds).toEqual(['defaultView', null]);
         expect(store.currentActiveView.windowName).toBe('defaultView');
@@ -293,7 +308,7 @@ describe('workspace lifecycle consistency', () => {
         store.setActiveChunk('left');
         const sceneId = store.currentActiveView.windowId;
         store.toggleExportPreview('format-1');
-        expect(store.currentActiveView.originalId).toBe('format-1');
+        expect(getWindowTargetId(store.currentActiveView)).toBe('format-1');
         const previewId = store.currentActiveView.windowId;
         expect(previewId).not.toBe('format-1');
         store.toggleExportPreview('format-1');
@@ -307,7 +322,7 @@ describe('workspace lifecycle consistency', () => {
         store.openExportPreview('format-1');
         const firstId = store.currentActiveView.windowId;
         store.openExportPreview('format-2');
-        expect(store.currentActiveView.originalId).toBe('format-2');
+        expect(getWindowTargetId(store.currentActiveView)).toBe('format-2');
         expect(store.isWindowOpen(firstId)).toBe(false);
         expect(store.hasSplitView).toBe(false);
         store.unregisterWindow(store.currentActiveView.windowId);

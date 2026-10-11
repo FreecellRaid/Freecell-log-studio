@@ -12,9 +12,9 @@
             <div class="view-title">
                 <Eye class="ui-icon icon-view-title" />
                 <h2 class="text-view-title">
-                    {{ activeFormat.formatName }}预览
+                    {{ activeFormat?.formatName ?? '未知模板' }}预览
                 </h2>
-                <span class="msg-count">({{ rows.length }} 行)</span>
+                <span class="msg-count">({{ rowsWithId.length }} 行)</span>
             </div>
             <div class="view-actions">
                 <button
@@ -36,168 +36,24 @@
             </div>
         </header>
 
-        <div class="message-list-container export-preview-content">
-            <div v-if="rows.length === 0" class="view-empty-hint">
-                当前没有可导出的内容。
-            </div>
-
-            <template v-else>
-                <DynamicScroller
-                    :items="rowsWithId"
-                    :min-item-size="24"
-                    key-field="rowId"
-                    class="scroller"
-                >
-                    <template #default="{ item: row, index, active }">
-                        <DynamicScrollerItem
-                            :item="row"
-                            :active="active"
-                            :size-dependencies="[
-                                row.plainText,
-                                row.trailingPlainText,
-                                activeFormat.messageTemplate,
-                                activeFormat.messageSeparator,
-                                activeFormat.docSeparator,
-                                activeFormat.chunkSeparator,
-                            ]"
-                            :data-index="index"
-                        >
-                            <div class="preview-row">
-                                <div
-                                    v-if="row.type !== 'message'"
-                                    class="separator-preview"
-                                >
-                                    <span
-                                        v-for="(segment, tIdx) in row.segments"
-                                        :key="'block-' + tIdx"
-                                    >
-                                        <template
-                                            v-if="
-                                                segment.type === 'text' ||
-                                                segment.type === 'content'
-                                            "
-                                        >
-                                            <span
-                                                :style="
-                                                    getSegmentStyle(segment)
-                                                "
-                                            >
-                                                {{ segment.value }}
-                                            </span>
-                                        </template>
-                                        <br
-                                            v-else-if="
-                                                segment.type === 'newline'
-                                            "
-                                        />
-                                        <span
-                                            v-else-if="segment.type === 'tab'"
-                                            class="tab-space"
-                                        ></span>
-                                    </span>
-                                </div>
-
-                                <div v-else class="message-preview">
-                                    <template
-                                        v-for="(segment, tIdx) in row.segments"
-                                        :key="'msg-' + tIdx"
-                                    >
-                                        <MarkdownContent
-                                            v-if="segment.type === 'content'"
-                                            :content="segment.value"
-                                            :enabled="
-                                                styleStore.viewSettings
-                                                    .enableMarkdown
-                                            "
-                                            :style="getSegmentStyle(segment)"
-                                        />
-                                        <template
-                                            v-else-if="segment.type === 'text'"
-                                        >
-                                            <span
-                                                :style="
-                                                    getSegmentStyle(segment)
-                                                "
-                                            >
-                                                {{ segment.value }}
-                                            </span>
-                                        </template>
-                                        <br
-                                            v-else-if="
-                                                segment.type === 'newline'
-                                            "
-                                        />
-                                        <span
-                                            v-else-if="segment.type === 'tab'"
-                                            class="tab-space"
-                                        ></span>
-                                    </template>
-
-                                    <span class="message-separator">
-                                        <span
-                                            v-for="(
-                                                segment, tIdx
-                                            ) in row.trailingSegments"
-                                            :key="'sep-' + tIdx"
-                                        >
-                                            <template
-                                                v-if="
-                                                    segment.type === 'text' ||
-                                                    segment.type === 'content'
-                                                "
-                                            >
-                                                <span
-                                                    :style="
-                                                        getSegmentStyle(segment)
-                                                    "
-                                                >
-                                                    {{ segment.value }}
-                                                </span>
-                                            </template>
-                                            <br
-                                                v-else-if="
-                                                    segment.type === 'newline'
-                                                "
-                                            />
-                                            <span
-                                                v-else-if="
-                                                    segment.type === 'tab'
-                                                "
-                                                class="tab-space"
-                                            ></span>
-                                        </span>
-                                    </span>
-                                </div>
-                            </div>
-                        </DynamicScrollerItem>
-                    </template>
-                </DynamicScroller>
-            </template>
-        </div>
+        <ExportPreviewContent
+            v-if="activeFormat"
+            :rows-with-id="rowsWithId"
+            :active-format="activeFormat"
+            :enable-markdown="enableMarkdown"
+        />
+        <div v-else class="view-empty-hint">当前预览模板已不存在。</div>
     </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Eye, X, SquareSplitHorizontal } from '@lucide/vue';
-import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
-import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
-
-import {
-    renderExportDocument,
-    type RenderedExportSegment,
-} from '@/io/export/exportRender';
-import { flattenLogToRows } from '@/io/export/flattener';
-import { useExportStore } from '@/stores/editor/exportStore';
-import { useLogStore } from '@/stores/project/logStore';
-import { useStyleStore } from '@/stores/project/styleStore';
+import ExportPreviewContent from '@/components/common/workspace/ExportPreviewContent.vue';
+import { useExportPreview } from '@/composables/application/useExportPreview';
 import { useUiStore } from '@/stores/ui/uiStore';
-import MarkdownContent from '@/components/common/MarkdownContent.vue';
 import { useWindowStore } from '@/stores/ui/windowStore';
 
-const logStore = useLogStore();
-const styleStore = useStyleStore();
-const exportStore = useExportStore();
 const uiStore = useUiStore();
 const windowStore = useWindowStore();
 const props = defineProps<{
@@ -207,27 +63,9 @@ const props = defineProps<{
 
 const effectiveWindowId = computed(() => props.windowId);
 const isActive = computed(() => windowStore.activeFocus === props.windowId);
-const activeFormat = computed(
-    () => exportStore.formatById(props.originalId) || exportStore.activeFormat,
+const { activeFormat, rowsWithId, enableMarkdown } = useExportPreview(
+    () => props.originalId,
 );
-
-const rowsWithId = computed(() => {
-    const rawRows = flattenLogToRows(
-        logStore.documents,
-        styleStore.viewSettings,
-        styleStore.activeRules,
-    );
-
-    return renderExportDocument(rawRows, activeFormat.value).blocks.map(
-        (block, index) => ({
-            ...block,
-            rowId: `${block.type}-${index}`,
-        }),
-    );
-});
-
-// 兼容旧变量名
-const rows = computed(() => rowsWithId.value);
 
 function handleSplit() {
     windowStore.openSplitView('exportPreview', props.originalId);
@@ -236,65 +74,9 @@ function handleSplit() {
 function handleClose() {
     windowStore.unregisterWindow(effectiveWindowId.value);
 }
-
-function getSegmentStyle(
-    segment: RenderedExportSegment,
-): Record<string, string> {
-    if (
-        (segment.type !== 'text' && segment.type !== 'content') ||
-        !segment.style
-    )
-        return {};
-
-    const css: Record<string, string> = {};
-    if (segment.style.color) css.color = segment.style.color;
-    if (segment.style.bold) css.fontWeight = 'bold';
-    if (segment.style.italic) css.fontStyle = 'italic';
-
-    return css;
-}
 </script>
 
 <style scoped>
-.message-list-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    background-color: var(--bg-workspace);
-}
-
-.scroller {
-    flex: 1;
-    height: 100%;
-}
-
-.export-preview-content {
-    /* 移除 padding，改到 row 内部
-       否则虚拟滚动计算偏移时会有偏差 */
-    font-family: monospace;
-    font-size: 14px;
-    line-height: 1.5;
-    color: var(--text-primary);
-}
-
-.preview-row {
-    padding: 0 20px;
-}
-
-.tab-space {
-    display: inline-block;
-    width: 2em;
-}
-
-.separator-preview {
-    color: var(--text-muted);
-}
-
-.message-preview {
-    word-break: break-word;
-}
-
 .text-view-title {
     color: var(--text-preview);
 }

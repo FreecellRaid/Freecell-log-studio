@@ -2,11 +2,16 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { useSelectionStore } from '@/stores/editor/selectionStore';
 import type {
-    WindowName,
+    PanelWindowName,
     WindowInstance,
     PaneDirection,
     WorkspacePane,
 } from '@/types/window';
+import { getWindowTargetId } from '@/types/window';
+import {
+    isWorkspaceView,
+    windowDefinitions,
+} from '@/windows/windowDefinitions';
 import { generateId } from '@/utils/id';
 
 function windowStore() {
@@ -14,8 +19,6 @@ function windowStore() {
     const defaultWindow: WindowInstance = {
         windowId: 'defaultView',
         windowName: 'defaultView',
-        windowType: 'view',
-        originalId: 'defaultView',
     };
     // 默认页始终注册，作为没有业务视图时的统一兜底。
     const openWindows = ref<Map<string, WindowInstance>>(
@@ -29,7 +32,7 @@ function windowStore() {
     const activeFocus = computed(() => {
         return currentActiveWindow.value.windowId;
     });
-    const selectedLeftPanel = ref<WindowName>('chunkList');
+    const selectedLeftPanel = ref<PanelWindowName>('chunkList');
     const layoutInitialized = ref(false);
     const openWindowIds = computed(() => new Set(openWindows.value.keys()));
 
@@ -44,7 +47,7 @@ function windowStore() {
         const win = openWindows.value.get(target);
         if (!win) return;
 
-        if (win.windowType === 'view') {
+        if (isWorkspaceView(win)) {
             const paneIndex = paneWindowIds.value.indexOf(target);
             if (paneIndex === 0 || paneIndex === 1) {
                 activePaneIndex.value = paneIndex;
@@ -60,6 +63,9 @@ function windowStore() {
 
     // 注册并打开一个窗口。
     function registerWindow(win: WindowInstance) {
+        if (windowDefinitions[win.windowName].singleton) {
+            win = { ...win, windowId: win.windowName };
+        }
         if (!openWindows.value.has(win.windowId)) {
             openWindows.value.set(win.windowId, win);
         }
@@ -70,12 +76,11 @@ function windowStore() {
         for (let i = focusStack.value.length - 1; i >= 0; i--) {
             const id = focusStack.value[i];
             const win = openWindows.value.get(id);
-            if (win?.windowType === 'view' && id !== 'defaultView') return id;
+            if (win && isWorkspaceView(win) && id !== 'defaultView') return id;
         }
         return (
             Array.from(openWindows.value.values()).find(
-                (win) =>
-                    win.windowType === 'view' && win.windowId !== 'defaultView',
+                (win) => isWorkspaceView(win) && win.windowId !== 'defaultView',
             )?.windowId ?? 'defaultView'
         );
     }
@@ -97,15 +102,15 @@ function windowStore() {
 
         if (
             !Array.from(openWindows.value.values()).some(
-                (other) => other.originalId === win.originalId,
+                (other) => getWindowTargetId(other) === getWindowTargetId(win),
             )
         ) {
-            selectionStore.clearSelection(win.originalId);
+            selectionStore.clearSelection(getWindowTargetId(win));
         }
         if (wasFocused) {
             const fallback = currentActiveWindow.value;
             setFocus(
-                fallback.windowType === 'view'
+                isWorkspaceView(fallback)
                     ? currentActiveView.value.windowId
                     : fallback.windowId,
             );
@@ -116,12 +121,18 @@ function windowStore() {
         windowName: 'chunkView' | 'exportPreview',
         originalId: string,
     ): WindowInstance {
-        return {
-            windowId: generateId(),
-            windowName,
-            windowType: 'view',
-            originalId,
-        };
+        const windowId = generateId();
+        return windowName === 'chunkView'
+            ? {
+                  windowId,
+                  windowName,
+                  target: { kind: 'chunk', chunkId: originalId },
+              }
+            : {
+                  windowId,
+                  windowName,
+                  target: { kind: 'format', formatId: originalId },
+              };
     }
 
     function replacePaneView(
@@ -135,7 +146,7 @@ function windowStore() {
             : undefined;
         if (
             previous?.windowName === windowName &&
-            previous.originalId === originalId
+            getWindowTargetId(previous) === originalId
         ) {
             setFocus(previous.windowId);
             return;
@@ -148,12 +159,10 @@ function windowStore() {
         if (previousId) unregisterWindow(previousId);
     }
 
-    function registerPanel(name: WindowName) {
+    function registerPanel(name: PanelWindowName) {
         registerWindow({
             windowId: name,
             windowName: name,
-            windowType: 'panel',
-            originalId: name,
         });
     }
 
@@ -162,7 +171,7 @@ function windowStore() {
         let hasValidView = false;
         for (const win of Array.from(openWindows.value.values())) {
             if (win.windowName !== 'chunkView') continue;
-            if (hasChunk(win.originalId)) {
+            if (hasChunk(win.target.chunkId)) {
                 hasValidView = true;
             } else {
                 unregisterWindow(win.windowId);
@@ -172,7 +181,7 @@ function windowStore() {
     }
 
     // 选择左侧面板；若当前面板已打开，则在原位置切换内容
-    function selectLeftPanel(name: WindowName) {
+    function selectLeftPanel(name: PanelWindowName) {
         const previousPanel = selectedLeftPanel.value;
         const wasOpen = isWindowOpen(previousPanel);
 
@@ -184,7 +193,7 @@ function windowStore() {
         if (wasOpen) registerPanel(name);
     }
 
-    function openLeftPanel(name: WindowName = selectedLeftPanel.value) {
+    function openLeftPanel(name: PanelWindowName = selectedLeftPanel.value) {
         if (name !== selectedLeftPanel.value) selectLeftPanel(name);
         if (!isWindowOpen(name)) registerPanel(name);
     }
@@ -235,12 +244,16 @@ function windowStore() {
         }
         const existing = Array.from(openWindows.value.values()).find(
             (win) =>
-                win.windowName === 'chunkView' && win.originalId === chunkId,
+                win.windowName === 'chunkView' &&
+                win.target.chunkId === chunkId,
         );
         if (existing) setFocus(existing.windowId);
         else registerWindow(createView('chunkView', chunkId));
         for (const win of Array.from(openWindows.value.values())) {
-            if (win.windowName === 'chunkView' && win.originalId !== chunkId) {
+            if (
+                win.windowName === 'chunkView' &&
+                win.target.chunkId !== chunkId
+            ) {
                 unregisterWindow(win.windowId);
             }
         }
@@ -267,7 +280,7 @@ function windowStore() {
         const previews = Array.from(openWindows.value.values()).filter(
             (win) =>
                 win.windowName === 'exportPreview' &&
-                win.originalId === formatId,
+                win.target.formatId === formatId,
         );
         if (previews.length) {
             previews.forEach((win) => unregisterWindow(win.windowId));
@@ -318,8 +331,6 @@ function windowStore() {
         registerWindow({
             windowId: 'help',
             windowName: 'help',
-            windowType: 'modal',
-            originalId: 'help',
         });
     }
     function closeHelpDocument() {
@@ -337,7 +348,11 @@ function windowStore() {
     ) {
         if (hasSplitView.value) closeSplitView();
         const leftWindowId = currentActiveView.value.windowId;
-        if (leftWindowId === 'defaultView') return false;
+        if (
+            !windowDefinitions[currentActiveView.value.windowName].allowSplit ||
+            !windowDefinitions[rightWindowName].allowSplit
+        )
+            return false;
         const right = createView(rightWindowName, rightOriginalId);
         openWindows.value.set(right.windowId, right);
         paneWindowIds.value = [leftWindowId, right.windowId];

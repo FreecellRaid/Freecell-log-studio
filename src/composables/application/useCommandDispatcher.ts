@@ -1,3 +1,5 @@
+import { getWindowTargetId } from '@/types/window';
+import { windowDefinitions } from '@/windows/windowDefinitions';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import { useActiveContext } from '@/composables/application/useActiveContext';
 import { useHistoryStore } from '@/stores/editor/historyStore';
@@ -48,10 +50,11 @@ export function useCommandDispatcher() {
 
     const dispatch = (command: CommandType, payload?: any) => {
         const activeWin = windowStore.currentActiveWindow;
-        const { windowType, windowName, originalId } = activeWin;
+        const { windowName } = activeWin;
+        const originalId = getWindowTargetId(activeWin);
 
         // P0 Modal 开启时拦截其他业务命令
-        if (windowType === 'modal') {
+        if (windowDefinitions[windowName].blocksCommands) {
             if (command === 'cancel') return windowStore.closeHelpDocument();
             return;
         }
