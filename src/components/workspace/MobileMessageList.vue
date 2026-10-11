@@ -13,10 +13,25 @@
             class="mobile-message"
             :data-message-id="message.messageId"
             :class="{
+                'is-dragging':
+                    reorder.isDragging.value &&
+                    reorder.draggedId.value === message.messageId,
+                'is-drop-before':
+                    reorder.dropTarget.value?.messageId === message.messageId &&
+                    reorder.dropTarget.value.position === 'before',
+                'is-drop-after':
+                    reorder.dropTarget.value?.messageId === message.messageId &&
+                    reorder.dropTarget.value.position === 'after',
                 'is-selected': activeContext.selectedMessageIds.value.has(
                     message.messageId,
                 ),
             }"
+            @touchstart="reorder.onTouchStart($event, message.messageId)"
+            @touchmove="reorder.onTouchMove"
+            @touchend="reorder.onTouchEnd"
+            @touchcancel="reorder.cancel"
+            @click.capture="reorder.onClick"
+            @contextmenu="reorder.onContextMenu"
             @click="toggleMessageSelection(message.messageId)"
         >
             <header class="mobile-message-header">
@@ -96,6 +111,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useMobileMessageReorder } from '@/composables/interaction/useMobileMessageReorder';
 import { useLogCommands } from '@/stores/project/logCommands';
 import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
 import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
@@ -122,6 +138,11 @@ const logCommands = useLogCommands();
 const mobileUiStore = useMobileUiStore();
 const editorSessionStore = useEditorSessionStore();
 const listRef = ref<HTMLElement | null>(null);
+const reorder = useMobileMessageReorder({
+    chunk: () => props.chunk,
+    messages: () => props.messages,
+    container: listRef,
+});
 
 useMessageReveal({
     windowId: () => props.windowId,
@@ -202,11 +223,33 @@ function getMessageStyle(message: Message) {
 }
 
 .mobile-message {
+    position: relative;
+    user-select: none;
+    -webkit-touch-callout: none;
     padding: 12px 20px;
     border-bottom: 1px solid var(--border-color);
     background: var(--bg-workspace);
 }
 
+.mobile-message.is-dragging {
+    opacity: 0.45;
+}
+.mobile-message.is-drop-before::before,
+.mobile-message.is-drop-after::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-top: 2px solid var(--active-accent);
+    pointer-events: none;
+    z-index: 1;
+}
+.mobile-message.is-drop-before::before {
+    top: 0;
+}
+.mobile-message.is-drop-after::after {
+    bottom: 0;
+}
 .mobile-message.is-selected {
     background: var(--selection-bg);
     outline: 1px solid var(--active-accent);
