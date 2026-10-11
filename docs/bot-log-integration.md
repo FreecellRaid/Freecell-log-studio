@@ -1,6 +1,6 @@
 # 机器人日志链接接入
 
-Freecell-log-studio （以下简称“本项目”）可以从机器人发出的链接自动下载日志并进入编辑。上传和存储由机器人原有的日志服务负责，本项目负责读取、解析和编辑，不提供上传接口或编辑结果回写服务。
+**Freecell-log-studio**（以下简称“本项目”）支持通过机器人发出的链接自动下载日志并进入编辑。日志的上传与存储仍由机器人原有的日志服务负责；本项目只负责**读取、解析和编辑**，不提供上传接口，也不会将编辑结果回写到原服务。
 
 ## 链接约定
 
@@ -11,13 +11,19 @@ https://freecellraid.github.io/Freecell-log-studio/#source=oliva&id=<URL编码�
 https://freecellraid.github.io/Freecell-log-studio/#source=url&url=<URL编码后的HTTPS下载地址>&format=standard-adapter
 ```
 
-- `source`：来源适配器的 ID，目前支持 `oliva`、`sealdice`、`url`。
-- `id`：由来源服务解释的日志标识；青果使用完整的 `log_<UUID>_<日志名>`，临时日志包含 `_temp` 后缀。
-- `password`：海豹日志的读取密码，位于编辑器链接的 hash 中，不写入工程文件。
-- `url`：`url` 来源使用的直接下载地址，不是网页预览地址。
-- `format`：可选的格式 ID。省略时自动识别；明确指定时仍检查内容是否符合格式。
+### 参数说明
 
-参数值必须逐项编码，不能把整个链接一起编码。JavaScript 可使用 `URLSearchParams`，Python 示例：
+| 参数       | 说明                                                                                      |
+| ---------- | ----------------------------------------------------------------------------------------- |
+| `source`   | 来源适配器 ID，目前支持 `oliva`、`sealdice`、`url`                                        |
+| `id`       | 由来源服务解释的日志标识。青果使用完整的 `log_<UUID>_<日志名>`，临时日志包含 `_temp` 后缀 |
+| `password` | 海豹日志的读取密码。位于编辑器链接的 hash 中，不写入工程文件                              |
+| `url`      | `url` 来源使用的直接下载地址，不是网页预览地址                                            |
+| `format`   | 可选的格式 ID。省略时自动识别；明确指定时仍会检查内容是否符合格式                         |
+
+> **注意**：参数值必须逐项编码，不能把整个链接一起编码。
+
+JavaScript 可使用 `URLSearchParams`。Python 示例如下：
 
 ```python
 from urllib.parse import urlencode
@@ -31,9 +37,17 @@ params = urlencode({
 editor_link = "https://freecellraid.github.io/Freecell-log-studio/#" + params
 ```
 
-默认的 HTTPS 直链来源不发送浏览器登录凭证。服务必须允许本项目所在域跨域读取（CORS）。重定向后的服务也需要支持 HTTPS 和 CORS；不能只允许机器人上传而禁止浏览器读取。
+### 远程读取限制
 
-当前一次远程导入的总下载上限为 10 MiB，整体下载超时为 30 秒，均可通过 `RemoteReadOptions` 调整。服务错误、超时、过期和格式错误会显示在导入窗口中，用户可重试或取消。
+默认的 HTTPS 直链来源**不发送浏览器登录凭证**，服务必须允许本项目所在域跨域读取（CORS）。重定向后的服务同样需要支持 HTTPS 和 CORS，不能只允许机器人上传而禁止浏览器读取。
+
+当前限制：
+
+- 单次远程导入总下载上限：**10 MiB**
+- 整体下载超时：**30 秒**
+- 以上均可通过 `RemoteReadOptions` 调整
+
+服务错误、超时、过期和格式错误会显示在导入窗口中，用户可重试或取消。
 
 ## 青果机器人
 
@@ -45,19 +59,31 @@ OlivaDiceLogger.data.dataLogPainterUrl = (
 )
 ```
 
-可修改 Logger 的配置常量，或用独立 OlivOS 桥接插件在 Logger 可用后设置该值。需验证插件加载顺序和重载行为。本项目不包含机器人端插件。
+可修改 Logger 的配置常量，或使用独立的 [OlivaDiceFreecellBridge](https://forum.olivos.run/d/934-log) 桥接插件在 Logger 可用后设置该值。需验证插件加载顺序和重载行为。本项目不包含机器人端插件。
 
-本项目先请求青果 `logReader.php?m=metaData&id=…`，检查 `code`，再读取 `rawData` 或元信息中的 `redirectDownloadUrl`。青果来源默认指定 `standard-adapter`，因此单条文字消息也可以导入。
+导入流程：
+
+1. 请求青果 `logReader.php?m=metaData&id=…`
+2. 检查 `code`
+3. 读取 `rawData` 或元信息中的 `redirectDownloadUrl`
+
+青果来源默认指定 `standard-adapter`，因此单条文字消息也可以导入。
 
 ## 海豹机器人
 
-「从链接导入」可以直接粘贴原有的 `http://log.weizaima.com/?key=<标识>#<密码>` 或 HTTPS 链接。本项目只从该地址提取标识和密码，实际下载始终使用 HTTPS：
+「从链接导入」可以直接粘贴原有的：
+
+```text
+http://log.weizaima.com/?key=<标识>#<密码>
+```
+
+或 HTTPS 链接。本项目只从该地址提取标识和密码，实际下载始终使用 HTTPS：
 
 ```text
 https://dice-api.weizaima.com/dice/api/load_data?key=<标识>&password=<密码>
 ```
 
-要在打开编辑器时自动导入，机器人或桥接插件应将返回链接转换为：
+若要在打开编辑器时自动导入，机器人或桥接插件应将返回链接转换为：
 
 ```text
 https://freecellraid.github.io/Freecell-log-studio/#source=sealdice&id=<标识>&password=<密码>
@@ -65,27 +91,42 @@ https://freecellraid.github.io/Freecell-log-studio/#source=sealdice&id=<标识>&
 
 必须对参数逐项编码。原染色器链接不能仅替换域名，因为标识在 query 中、密码在 hash 中。海豹端是否能通过配置直接改写链接取决于所用版本；本项目没有修改骰子或附带海豹插件。
 
-已支持 `client: "SealDice"` 的 Base64 + zlib 压缩 JSON，以及本地或 HTTPS 直链导入的海豹 JSON（`version` 和 `items`）。JSON 中的秒级 Unix 时间转换为绝对时间，昵称、平台账号、原始消息 ID 保留；`isDice: true` 明确映射为骰子角色，其他角色按昵称推断。检定等元信息保存在 `meta.sealdice`。正文沿用现有文本清洗规则，包括删除 CQ 码。
+### 已支持内容
 
-解压后的内容限制为 10 MiB。当前尚不支持服务器的 `client: "Parquet"` 编码；遇到这种日志会明确提示，可先用 `.log export` 导出的 TXT 文件导入。
+- `client: "SealDice"` 的 Base64 + zlib 压缩 JSON
+- 本地或 HTTPS 直链导入的海豹 JSON（`version` 和 `items`）
+
+处理规则：
+
+- JSON 中的秒级 Unix 时间转换为绝对时间
+- 昵称、平台账号、原始消息 ID 保留
+- `isDice: true` 明确映射为骰子角色，其他角色按昵称推断
+- 检定等元信息保存在 `meta.sealdice`
+- 正文沿用现有文本清洗规则，包括删除 CQ 码
+
+解压后的内容限制为 **10 MiB**。
+
+_暂不支持：服务器的 `client: "Parquet"` 编码。遇到这种日志会明确提示，可先用 `.log export` 导出的 TXT 文件导入。_
 
 ## 文本格式
 
 目前可以显式指定以下 ID：
 
-| ID                    | 格式                            |
-| --------------------- | ------------------------------- |
-| `standard-adapter`    | 昵称(账号) 日期时间，下一行正文 |
-| `qq-adapter`          | 新版 QQ 消息管理器              |
-| `legacy-qq-adapter`   | 旧版 QQ 消息管理器              |
-| `painted-log-adapter` | 染色器日志                      |
-| `ccfolia-adapter`     | Ccfolia HTML                    |
-| `pineapple-adapter`   | 菠萝日志                        |
-| `sealchat-adapter`    | SealChat                        |
-| `sealdice-json`       | 海豹结构化 JSON                 |
-| `freecell-log-v1`     | 下述结构化 JSON                 |
+| ID                    | 格式                     |
+| --------------------- | ------------------------ |
+| `standard-adapter`    | 大多数骰子的默认导出格式 |
+| `qq-adapter`          | 新版 QQ 消息管理器       |
+| `legacy-qq-adapter`   | 旧版 QQ 消息管理器       |
+| `painted-log-adapter` | 染色器日志               |
+| `ccfolia-adapter`     | Ccfolia HTML             |
+| `pineapple-adapter`   | 菠萝日志                 |
+| `sealchat-adapter`    | SealChat                 |
+| `sealdice-json`       | 海豹结构化 JSON          |
+| `freecell-log-v1`     | 下述结构化 JSON          |
 
-现有文本适配器继续使用原有清洗规则（包括删除 CQ 码）。结构化 JSON 的正文不经过文本格式的 CQ/HTML 清洗，但显示仍使用编辑器现有的安全文本/Markdown 渲染。图片、语音、引用的专门展示暂未实现。
+现有文本适配器继续使用原有清洗规则（包括删除 CQ 码）。结构化 JSON 的正文不经过文本格式的 CQ/HTML 清洗，但显示仍使用编辑器现有的安全文本/Markdown 渲染。
+
+> **暂未实现**：图片、语音、引用的专门展示。
 
 ## 结构化 JSON 协议 v1
 
@@ -113,17 +154,27 @@ https://freecellraid.github.io/Freecell-log-studio/#source=sealdice&id=<标识>&
 }
 ```
 
-- 顶层必需：`schema`、`version`、`messages`；`name` 可选。
-- 每条消息必需：字符串 `content`。空正文会跳过，整份日志没有可导入消息则报错。
-- `id`、`playerName`、`account`、`note` 可选，必须是字符串。
-- `time` 可选；提供时必须是包含 `Z` 或时区偏移的 ISO 日期时间。省略时使用导入时间。
-- `role` 可选：`gm`、`pl`、`ob`、`bot`、`npc`、`unknown`。省略时按昵称推断。
-- `isOoc`、`isCommand` 可选，必须是布尔值。提供的值优先于正文推断。
-- `meta` 可选，必须是 JSON 对象。
+### 字段说明
+
+顶层字段
+
+- 必需：`schema`、`version`、`messages`
+- 可选：`name`
+
+消息字段
+
+- 必需：字符串 `content`。空正文会跳过；整份日志没有可导入消息则报错
+- 可选：`id`、`playerName`、`account`、`note`，必须是字符串
+- 可选：`time`。提供时必须是包含 `Z` 或时区偏移的 ISO 日期时间；省略时使用导入时间
+- 可选：`role`。可选值：`gm`、`pl`、`ob`、`bot`、`npc`、`unknown`；省略时按昵称推断
+- 可选：`isOoc`、`isCommand`，必须是布尔值。提供的值优先于正文推断
+- 可选：`meta`，必须是 JSON 对象
+
+### 数据保留与去重
 
 平台消息 `id` 保存在 `originalMessageId`，本项目另外生成自己的内部消息 ID。来源标识、原始消息 ID 和元信息随工程保存，并保留在撤销/重做中。旧版工程文件仍可读取。
 
-同一来源和日志标识在当前工作区只导入一次，重复打开会聚焦已有文档，保留编辑内容。如果希望重新获取更新后的临时日志，先删除当前工作区中的对应文档再导入。此版本不进行远程自动同步。
+同一来源和日志标识在当前工作区**只导入一次**，重复打开会聚焦已有文档，保留编辑内容。如果希望重新获取更新后的临时日志，先删除当前工作区中的对应文档再导入。
 
 ## 增加特殊日志服务
 
