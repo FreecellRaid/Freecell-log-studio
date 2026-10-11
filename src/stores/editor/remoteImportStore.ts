@@ -97,7 +97,6 @@ export const useRemoteImportStore = defineStore('remoteImport', () => {
     }
 
     return {
-        visible,
         input,
         loading,
         error,

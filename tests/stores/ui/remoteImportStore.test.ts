@@ -3,7 +3,7 @@ import { createPinia, disposePinia, setActivePinia } from 'pinia';
 import { setSSRHandler } from '@vueuse/core';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import * as importService from '@/io/import/importService';
-import { useRemoteImportStore } from '@/stores/ui/remoteImportStore';
+import { useRemoteImportStore } from '@/stores/editor/remoteImportStore';
 import { useLogStore } from '@/stores/project/logStore';
 import { useImportSettingsStore } from '@/stores/ui/importSettingsStore';
 import { useFileImport } from '@/composables/application/useImporter';
@@ -61,7 +61,6 @@ describe('remote import workflow', () => {
         expect(
             useLogStore().allMessages.map((message) => message.content),
         ).toEqual(['existing', 'hello']);
-        expect(store.visible).toBe(false);
         await store.importLink('#2-log_a');
         expect(useLogStore().documents).toHaveLength(2);
         expect(store.message).toContain('已在当前工作区');
@@ -111,7 +110,6 @@ describe('remote import workflow', () => {
         reader.mockRejectedValueOnce(new Error('expired'));
         await store.importLink('#2-log_a');
         expect(store.error).toBe('expired');
-        expect(store.visible).toBe(true);
         reader.mockResolvedValueOnce(entry);
         await store.importLink();
         expect(store.error).toBe('');
@@ -130,10 +128,8 @@ describe('remote import workflow', () => {
         const windows = useWindowStore();
         const pending = store.importLink('#2-log_a');
         const signal = reader.mock.calls[0][1]?.signal;
-        expect(store.visible).toBe(true);
         expect(windows.topModal?.windowName).toBe('remoteImport');
         windows.unregisterWindow('remoteImport');
-        expect(store.visible).toBe(false);
         expect(store.loading).toBe(false);
         expect(signal?.aborted).toBe(true);
         finish(entry);
@@ -159,7 +155,6 @@ describe('remote import workflow', () => {
         useWindowStore().closeTopModal();
         finish(documents);
         await pending;
-        expect(store.visible).toBe(false);
         expect(store.loading).toBe(false);
         expect(useLogStore().documents).toHaveLength(0);
     });
@@ -176,11 +171,9 @@ describe('remote import workflow', () => {
         const windows = useWindowStore();
         const pending = store.importLink('#2-log_a');
         windows.openHelpDocument();
-        expect(store.visible).toBe(true);
         expect(reader.mock.calls[0][1]?.signal?.aborted).toBe(false);
         finish(entry);
         await pending;
-        expect(store.visible).toBe(false);
         expect(windows.topModal?.windowName).toBe('help');
         expect(windows.activeFocus).toBe('help');
         expect(windows.currentActiveView.windowName).toBe('chunkView');

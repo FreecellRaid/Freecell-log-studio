@@ -69,7 +69,7 @@ import { Download, PanelLeftOpen, Upload } from '@lucide/vue';
 import ImportPopover from '@/components/popovers/ImportPopover.vue';
 import { vClickOutside } from '@/directives/clickOutside';
 import { useFileImportInput } from '@/composables/application/useImporter';
-import { useRemoteImportStore } from '@/stores/ui/remoteImportStore';
+import { useRemoteImportStore } from '@/stores/editor/remoteImportStore';
 import { useLogStore } from '@/stores/project/logStore';
 import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
 

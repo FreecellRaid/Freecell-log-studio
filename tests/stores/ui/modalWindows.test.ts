@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import { useCommandDispatcher } from '@/composables/application/useCommandDispatcher';
-import { useRemoteImportStore } from '@/stores/ui/remoteImportStore';
+import { useRemoteImportStore } from '@/stores/editor/remoteImportStore';
 
 describe('shared modal lifecycle', () => {
     beforeEach(() => {
@@ -56,7 +56,6 @@ describe('shared modal lifecycle', () => {
         dispatch('toggleLeft');
         expect(windows.isWindowOpen('chunkList')).toBe(false);
         dispatch('cancel');
-        expect(remote.visible).toBe(false);
         expect(windows.isWindowOpen('help')).toBe(true);
         dispatch('cancel');
         expect(windows.topModal).toBeNull();
