@@ -14,7 +14,7 @@ import { stripFileExtension } from '@/utils/fileName';
 import { readImportFile } from '@/io/import/fileReader';
 import { useProjectManager } from '@/composables/application/useProjectManager';
 import { useHistoryStore } from '@/stores/editor/historyStore';
-import { useImportSettingsStore } from '@/stores/ui/importSettingsStore';
+import { useImportSettingsStore } from '@/stores/io/importSettingsStore';
 import { stripOocParentheses } from '@/io/import/cleaner';
 
 export function useFileImport() {

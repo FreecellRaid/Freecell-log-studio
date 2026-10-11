@@ -3,7 +3,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import { ref } from 'vue';
 import type { ExportFormat } from '@/types/export';
 import { useExportPreview } from '@/composables/application/useExportPreview';
-import { useExportStore } from '@/stores/editor/exportStore';
+import { useExportStore } from '@/stores/io/exportStore';
 import { useLogStore } from '@/stores/project/logStore';
 
 beforeEach(() => {

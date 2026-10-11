@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, disposePinia, setActivePinia } from 'pinia';
 import { setSSRHandler } from '@vueuse/core';
 import { useFileImport } from '@/composables/application/useImporter';
-import { useImportSettingsStore } from '@/stores/ui/importSettingsStore';
+import { useImportSettingsStore } from '@/stores/io/importSettingsStore';
 import { useLogStore } from '@/stores/project/logStore';
 import { buildProjectFile } from '@/io/storage/project';
 

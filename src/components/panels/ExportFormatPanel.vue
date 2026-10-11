@@ -283,7 +283,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { Plus, ChevronRight, Trash2, Check, Eye } from '@lucide/vue';
-import { EXPORT_PRESET_IDS, useExportStore } from '@/stores/editor/exportStore';
+import { EXPORT_PRESET_IDS, useExportStore } from '@/stores/io/exportStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import type { ExportFormat } from '@/types/export';
 import { vClickOutside } from '@/directives/clickOutside';

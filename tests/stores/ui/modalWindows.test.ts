@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import { useCommandDispatcher } from '@/composables/application/useCommandDispatcher';
-import { useRemoteImportStore } from '@/stores/editor/remoteImportStore';
+import { useRemoteImportStore } from '@/stores/io/remoteImportStore';
 
 describe('shared modal lifecycle', () => {
     beforeEach(() => {

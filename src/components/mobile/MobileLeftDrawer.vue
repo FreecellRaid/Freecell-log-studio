@@ -137,7 +137,7 @@ import { useLogStore } from '@/stores/project/logStore';
 import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
 import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
 import { useUiStore } from '@/stores/ui/uiStore';
-import { useImportSettingsStore } from '@/stores/ui/importSettingsStore';
+import { useImportSettingsStore } from '@/stores/io/importSettingsStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import { useWorkspaceActions } from '@/composables/application/useWorkspaceActions';
 import { useSwipeGesture } from '@/composables/interaction/useSwipeGesture';

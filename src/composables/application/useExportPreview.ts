@@ -1,7 +1,7 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue';
 import { renderExportDocument } from '@/io/export/exportRender';
 import { flattenLogToRows } from '@/io/export/flattener';
-import { useExportStore } from '@/stores/editor/exportStore';
+import { useExportStore } from '@/stores/io/exportStore';
 import { useLogStore } from '@/stores/project/logStore';
 import { useStyleStore } from '@/stores/project/styleStore';
 

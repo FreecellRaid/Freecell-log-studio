@@ -6,7 +6,7 @@ import { useHistoryStore } from '@/stores/editor/historyStore';
 import { useClipboardStore } from '@/stores/editor/clipboardStore';
 import { useLogCommands } from '@/stores/project/logCommands';
 import { useLogStore } from '@/stores/project/logStore';
-import { useExportStore } from '@/stores/editor/exportStore';
+import { useExportStore } from '@/stores/io/exportStore';
 import { useSelectionStore } from '@/stores/editor/selectionStore';
 import { useProjectManager } from '@/composables/application/useProjectManager';
 import type { Chunk } from '@/types/log';

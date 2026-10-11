@@ -38,7 +38,7 @@
 <script setup lang="ts">
 import { Link } from '@lucide/vue';
 import ModalDialog from '@/components/modal/ModalDialog.vue';
-import { useRemoteImportStore } from '@/stores/editor/remoteImportStore';
+import { useRemoteImportStore } from '@/stores/io/remoteImportStore';
 const store = useRemoteImportStore();
 </script>
 

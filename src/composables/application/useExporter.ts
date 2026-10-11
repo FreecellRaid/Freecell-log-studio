@@ -1,6 +1,6 @@
 import { useLogStore } from '@/stores/project/logStore';
 import { useStyleStore } from '@/stores/project/styleStore';
-import { useExportStore } from '@/stores/editor/exportStore';
+import { useExportStore } from '@/stores/io/exportStore';
 import { flattenLogToRows } from '@/io/export/flattener';
 import { sanitizeProjectFilename } from '@/io/storage/project';
 import {

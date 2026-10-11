@@ -135,7 +135,7 @@ import { vClickOutside } from '@/directives/clickOutside';
 import type { ProjectFile } from '@/types/project';
 import StoredProjectsPopover from '@/components/popovers/StoredProjectsPopover.vue';
 import ExportPopover from '@/components/popovers/ExportPopover.vue';
-import { useRemoteImportStore } from '@/stores/editor/remoteImportStore';
+import { useRemoteImportStore } from '@/stores/io/remoteImportStore';
 import ImportPopover from '@/components/popovers/ImportPopover.vue';
 
 const logStore = useLogStore();

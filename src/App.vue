@@ -19,7 +19,7 @@ import { defineAsyncComponent, onMounted, onUnmounted, watch } from 'vue';
 import { useWindowStore } from '@/stores/ui/windowStore';
 
 import ModalHost from '@/components/modal/ModalHost.vue';
-import { useRemoteImportStore } from '@/stores/editor/remoteImportStore.js';
+import { useRemoteImportStore } from '@/stores/io/remoteImportStore.js';
 
 const remoteImport = useRemoteImportStore();
 function importFromLocation() {
