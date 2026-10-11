@@ -83,13 +83,33 @@
             <div class="mobile-settings-list">
                 <div class="drawer-row">
                     <span class="drawer-row-icon">
+                        <MessageSquareOff class="ui-icon" />
+                    </span>
+                    <span>隐藏场外消息</span>
+                    <ToggleButton
+                        v-model="styleStore.viewSettings.hideOoc"
+                        aria-label="隐藏场外消息"
+                    />
+                </div>
+                <div class="drawer-row">
+                    <span class="drawer-row-icon">
+                        <Terminal class="ui-icon" />
+                    </span>
+                    <span>隐藏指令消息</span>
+                    <ToggleButton
+                        v-model="styleStore.viewSettings.hideCommand"
+                        aria-label="隐藏指令消息"
+                    />
+                </div>
+                <div class="drawer-row">
+                    <span class="drawer-row-icon">
                         <MessageSquare class="ui-icon" />
                     </span>
                     <span>导入时删除场外括号</span>
                     <ToggleButton
                         v-model="importSettingsStore.stripOocParentheses"
                         aria-label="导入时删除场外括号"
-                        title="删除首尾的（）和()，仅影响后续导入"
+                        title="删除首尾的（）和()，不删除场外消息"
                     />
                 </div>
                 <div class="drawer-row">
@@ -97,21 +117,85 @@
                         <Clock3 class="ui-icon" />
                     </span>
                     <span>显示时间</span>
-                    <ToggleButton v-model="uiStore.showTime" />
+                    <ToggleButton
+                        v-model="uiStore.showTime"
+                        aria-label="显示时间"
+                    />
                 </div>
                 <div class="drawer-row">
                     <span class="drawer-row-icon">
                         <AtSign class="ui-icon" />
                     </span>
                     <span>显示账号</span>
-                    <ToggleButton v-model="uiStore.showAccount" />
+                    <ToggleButton
+                        v-model="uiStore.showAccount"
+                        aria-label="显示账号"
+                    />
                 </div>
                 <div class="drawer-row">
                     <span class="drawer-row-icon">
                         <Eye class="ui-icon" />
                     </span>
                     <span>显示被过滤消息</span>
-                    <ToggleButton v-model="uiStore.showHidden" />
+                    <ToggleButton
+                        v-model="uiStore.showHidden"
+                        aria-label="显示被过滤消息"
+                    />
+                </div>
+                <div class="drawer-row">
+                    <span class="drawer-row-icon">
+                        <Code class="ui-icon" />
+                    </span>
+                    <span>启用 Markdown</span>
+                    <ToggleButton
+                        v-model="styleStore.viewSettings.enableMarkdown"
+                        aria-label="启用 Markdown"
+                    />
+                </div>
+                <div class="drawer-row">
+                    <span class="drawer-row-icon">
+                        <Palette class="ui-icon" />
+                    </span>
+                    <span>按角色名染色</span>
+                    <ToggleButton
+                        v-model="styleStore.viewSettings.colorMode"
+                        value="playerName"
+                        aria-label="按角色名染色"
+                    />
+                </div>
+                <div class="drawer-row">
+                    <span class="drawer-row-icon">
+                        <AtSign class="ui-icon" />
+                    </span>
+                    <span>按账号染色</span>
+                    <ToggleButton
+                        v-model="styleStore.viewSettings.colorMode"
+                        value="account"
+                        aria-label="按账号染色"
+                    />
+                </div>
+                <div class="drawer-row">
+                    <span class="drawer-row-icon">
+                        <Monitor class="ui-icon" />
+                    </span>
+                    <span>深色模式跟随系统</span>
+                    <ToggleButton
+                        :model-value="uiStore.followSystem"
+                        aria-label="深色模式跟随系统"
+                        @update:model-value="
+                            uiStore.setFollowSystem(Boolean($event))
+                        "
+                    />
+                </div>
+                <div class="drawer-row">
+                    <span class="drawer-row-icon">
+                        <FileImage class="ui-icon" />
+                    </span>
+                    <span>预览始终白色背景</span>
+                    <ToggleButton
+                        v-model="uiStore.exportPreviewAlwaysWhite"
+                        aria-label="预览始终白色背景"
+                    />
                 </div>
             </div>
         </aside>
@@ -124,16 +208,23 @@ import {
     AtSign,
     BookOpen,
     Clock3,
+    Code,
     Eye,
+    FileImage,
     FolderOpen,
     MessageSquare,
+    MessageSquareOff,
+    Monitor,
     Moon,
+    Palette,
     Pencil,
     Save,
     SunMedium,
+    Terminal,
     Trash2,
 } from '@lucide/vue';
 import { useLogStore } from '@/stores/project/logStore';
+import { useStyleStore } from '@/stores/project/styleStore';
 import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
 import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
 import { useUiStore } from '@/stores/ui/uiStore';
@@ -143,6 +234,7 @@ import { useWorkspaceActions } from '@/composables/application/useWorkspaceActio
 import { useSwipeGesture } from '@/composables/interaction/useSwipeGesture';
 
 const logStore = useLogStore();
+const styleStore = useStyleStore();
 const uiStore = useUiStore();
 const importSettingsStore = useImportSettingsStore();
 const windowStore = useWindowStore();
