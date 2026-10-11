@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, disposePinia, setActivePinia } from 'pinia';
 import { setSSRHandler } from '@vueuse/core';
+import { useWindowStore } from '@/stores/ui/windowStore';
+import * as importService from '@/io/import/importService';
 import { useRemoteImportStore } from '@/stores/ui/remoteImportStore';
 import { useLogStore } from '@/stores/project/logStore';
 import { useImportSettingsStore } from '@/stores/ui/importSettingsStore';
@@ -43,6 +45,7 @@ describe('remote import workflow', () => {
         useRemoteImportStore().cancel();
         disposePinia(pinia);
         setSSRHandler('getDefaultStorage', () => undefined);
+        vi.restoreAllMocks();
         vi.unstubAllGlobals();
     });
 
@@ -113,6 +116,99 @@ describe('remote import workflow', () => {
         await store.importLink();
         expect(store.error).toBe('');
         expect(useLogStore().documents).toHaveLength(1);
+    });
+
+    it('derives visibility from the registry and cancels through the generic close entry', async () => {
+        let finish!: (value: ImportTextEntry) => void;
+        reader.mockImplementationOnce(
+            () =>
+                new Promise((resolve) => {
+                    finish = resolve;
+                }),
+        );
+        const store = useRemoteImportStore();
+        const windows = useWindowStore();
+        const pending = store.importLink('#2-log_a');
+        const signal = reader.mock.calls[0][1]?.signal;
+        expect(store.visible).toBe(true);
+        expect(windows.topModal?.windowName).toBe('remoteImport');
+        windows.unregisterWindow('remoteImport');
+        expect(store.visible).toBe(false);
+        expect(store.loading).toBe(false);
+        expect(signal?.aborted).toBe(true);
+        finish(entry);
+        await pending;
+        expect(useLogStore().documents).toHaveLength(0);
+    });
+
+    it('discards parsed documents when the top modal closes during parsing', async () => {
+        const documents = await importService.importFiles([entry], 0);
+        let finish!: (value: typeof documents) => void;
+        const parser = vi
+            .spyOn(importService, 'importFiles')
+            .mockImplementationOnce(
+                () =>
+                    new Promise((resolve) => {
+                        finish = resolve;
+                    }),
+            );
+        reader.mockResolvedValueOnce(entry);
+        const store = useRemoteImportStore();
+        const pending = store.importLink('#2-log_a');
+        await vi.waitFor(() => expect(parser).toHaveBeenCalled());
+        useWindowStore().closeTopModal();
+        finish(documents);
+        await pending;
+        expect(store.visible).toBe(false);
+        expect(store.loading).toBe(false);
+        expect(useLogStore().documents).toHaveLength(0);
+    });
+
+    it('preserves an open request while another modal is on top, then opens the imported scene', async () => {
+        let finish!: (value: ImportTextEntry) => void;
+        reader.mockImplementationOnce(
+            () =>
+                new Promise((resolve) => {
+                    finish = resolve;
+                }),
+        );
+        const store = useRemoteImportStore();
+        const windows = useWindowStore();
+        const pending = store.importLink('#2-log_a');
+        windows.openHelpDocument();
+        expect(store.visible).toBe(true);
+        expect(reader.mock.calls[0][1]?.signal?.aborted).toBe(false);
+        finish(entry);
+        await pending;
+        expect(store.visible).toBe(false);
+        expect(windows.topModal?.windowName).toBe('help');
+        expect(windows.activeFocus).toBe('help');
+        expect(windows.currentActiveView.windowName).toBe('chunkView');
+        windows.closeTopModal();
+        expect(windows.activeFocus).toBe(windows.currentActiveView.windowId);
+    });
+
+    it('does not apply the first request after close and immediate reopen', async () => {
+        let finish!: (value: ImportTextEntry) => void;
+        reader.mockImplementationOnce(
+            () =>
+                new Promise((resolve) => {
+                    finish = resolve;
+                }),
+        );
+        reader.mockResolvedValueOnce({
+            ...entry,
+            source: { provider: 'oliva', id: 'log_b' },
+        });
+        const store = useRemoteImportStore();
+        const first = store.importLink('#2-log_a');
+        useWindowStore().closeModal('remoteImport');
+        await store.importLink('#2-log_b');
+        finish(entry);
+        await first;
+        expect(useLogStore().documents).toHaveLength(1);
+        expect(useLogStore().documents[0].source?.id).toBe('log_b');
+        expect(store.loading).toBe(false);
     });
 
     it('cannot replace the workspace when a remote server returns project JSON', async () => {

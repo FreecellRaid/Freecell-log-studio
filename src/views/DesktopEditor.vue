@@ -1,7 +1,6 @@
 <template>
     <div class="ide-container">
         <TopMenuBar />
-        <HelpDocument v-if="windowStore.isWindowOpen('help')" />
 
         <main class="middle-section">
             <aside class="sidebar-left">
@@ -31,7 +30,6 @@ import { onMounted } from 'vue';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import { useKeyboardShortcuts } from '@/composables/interaction/useKeyboardShortcuts';
 import { useScrollbarVisibility } from '@/composables/ui/useScrollbarVisibility';
-import HelpDocument from '@/components/modal/HelpDocument.vue';
 import TopMenuBar from '@/components/desktop/TopMenuBar.vue';
 import SidebarLeft from '@/components/desktop/SidebarLeft.vue';
 import MainWorkspace from '@/components/desktop/MainWorkspace.vue';

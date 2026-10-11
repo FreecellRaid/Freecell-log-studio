@@ -1,9 +1,15 @@
 <template>
-    <component
-        :is="isMobile ? MobileEditor : DesktopEditor"
-        :class="[{ 'dark-mode': uiStore.isDarkMode }]"
-    />
-    <RemoteImportDialog :class="{ 'dark-mode': uiStore.isDarkMode }" />
+    <div
+        class="editor-shell"
+        :inert="Boolean(windowStore.topModal)"
+        :aria-hidden="windowStore.topModal ? true : undefined"
+    >
+        <component
+            :is="isMobile ? MobileEditor : DesktopEditor"
+            :class="[{ 'dark-mode': uiStore.isDarkMode }]"
+        />
+    </div>
+    <ModalHost />
 </template>
 
 <script setup lang="ts">
@@ -12,7 +18,7 @@ import { useResponsiveMode } from '@/composables/ui/useResponsiveMode.js';
 import { defineAsyncComponent, onMounted, onUnmounted, watch } from 'vue';
 import { useWindowStore } from '@/stores/ui/windowStore';
 
-import RemoteImportDialog from '@/components/modal/RemoteImportDialog.vue';
+import ModalHost from '@/components/modal/ModalHost.vue';
 import { useRemoteImportStore } from '@/stores/ui/remoteImportStore';
 
 const remoteImport = useRemoteImportStore();
@@ -59,3 +65,9 @@ onUnmounted(() => {
     remoteImport.cancel();
 });
 </script>
+
+<style scoped>
+.editor-shell {
+    display: contents;
+}
+</style>

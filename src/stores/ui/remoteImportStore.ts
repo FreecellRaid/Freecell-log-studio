@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { resolveRemoteInput } from '@/io/import/remoteLink';
 import { readRemoteLog } from '@/io/import/remoteReader';
 import { importFiles } from '@/io/import/importService';
@@ -8,7 +8,8 @@ import { useLogStore } from '@/stores/project/logStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
 
 export const useRemoteImportStore = defineStore('remoteImport', () => {
-    const visible = ref(false);
+    const windowStore = useWindowStore();
+    const visible = computed(() => windowStore.isWindowOpen('remoteImport'));
     const input = ref('');
     const loading = ref(false);
     const error = ref('');
@@ -23,15 +24,24 @@ export const useRemoteImportStore = defineStore('remoteImport', () => {
         loading.value = false;
     }
 
+    // 通用关闭入口也同步取消请求，不依赖组件卸载或平台切换。
+    watch(
+        visible,
+        (isVisible) => {
+            if (!isVisible) cancel();
+        },
+        { flush: 'sync' },
+    );
+
     function open() {
-        visible.value = true;
+        windowStore.openModal('remoteImport');
         error.value = '';
         message.value = '';
     }
 
     function close() {
-        cancel();
-        visible.value = false;
+        if (visible.value) windowStore.closeModal('remoteImport');
+        else cancel();
     }
 
     async function importLink(value = input.value) {
@@ -40,7 +50,7 @@ export const useRemoteImportStore = defineStore('remoteImport', () => {
         const activeController = new AbortController();
         controller = activeController;
         input.value = value;
-        visible.value = true;
+        open();
         loading.value = true;
         error.value = '';
         message.value = '';
@@ -60,7 +70,7 @@ export const useRemoteImportStore = defineStore('remoteImport', () => {
                 );
             if (existing) {
                 const chunk = existing.chunks[0];
-                if (chunk) useWindowStore().setActiveChunk(chunk.chunkId);
+                if (chunk) windowStore.setActiveChunk(chunk.chunkId);
                 message.value = '这份日志已在当前工作区中，已为你打开。';
                 return;
             }
@@ -71,7 +81,9 @@ export const useRemoteImportStore = defineStore('remoteImport', () => {
             if (!doc) throw new Error('日志中没有可导入的消息');
             // 复用统一的应用入口，保留消息字段和导入偏好。
             useFileImport().applyLogDocuments(documents);
-            visible.value = false;
+            close();
+            const chunk = doc.chunks[0];
+            if (chunk) windowStore.setActiveChunk(chunk.chunkId);
         } catch (cause) {
             if (current !== revision) return;
             error.value =

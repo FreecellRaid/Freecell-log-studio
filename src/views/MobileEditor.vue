@@ -5,7 +5,6 @@
         @touchend="editorGesture.onTouchEnd"
         @touchcancel="editorGesture.onTouchCancel"
     >
-        <HelpDocument v-if="windowStore.isWindowOpen('help')" />
         <MobileTopBar />
         <MobileWorkspace />
         <MobileHistoryFloat />
@@ -22,7 +21,6 @@ import { useSwipeGesture } from '@/composables/interaction/useSwipeGesture';
 import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import type { MobileBottomPanelName } from '@/types/mobile';
-import HelpDocument from '@/components/modal/HelpDocument.vue';
 import MobileActiveSheet from '@/components/mobile/MobileActiveSheet.vue';
 import MobileBottomPanelDrawer from '@/components/mobile/MobileBottomPanelDrawer.vue';
 import MobileHistoryFloat from '@/components/mobile/MobileHistoryFloat.vue';
@@ -68,9 +66,7 @@ const editorGesture = useSwipeGesture([
 ]);
 
 function hasOpenOverlay() {
-    return Boolean(
-        mobileUiStore.activeOverlay || windowStore.isWindowOpen('help'),
-    );
+    return Boolean(mobileUiStore.activeOverlay || windowStore.topModal);
 }
 
 onUnmounted(mobileUiStore.reset);

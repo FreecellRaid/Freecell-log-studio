@@ -8,10 +8,15 @@ export type WindowName =
     | 'chunkView'
     | 'defaultView'
     | 'exportPreview'
-    | 'help';
+    | 'help'
+    | 'remoteImport';
 
 export type WorkspaceViewName = 'chunkView' | 'exportPreview' | 'defaultView';
-export type PanelWindowName = Exclude<WindowName, WorkspaceViewName | 'help'>;
+export type ModalWindowName = 'help' | 'remoteImport';
+export type PanelWindowName = Exclude<
+    WindowName,
+    WorkspaceViewName | ModalWindowName
+>;
 
 export type WindowTarget =
     | { kind: 'chunk'; chunkId: string }

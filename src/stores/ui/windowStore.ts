@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { useSelectionStore } from '@/stores/editor/selectionStore';
 import type {
     PanelWindowName,
+    ModalWindowName,
     WindowInstance,
     PaneDirection,
     WorkspacePane,
@@ -289,7 +290,30 @@ function windowStore() {
         }
     }
 
+    // 顺序只考虑 modal 之间的聚焦；背景窗口获得焦点不会盖过 modal。
+    const openModals = computed(() =>
+        Array.from(openWindows.value.values())
+            .filter(
+                (win) => windowDefinitions[win.windowName].group === 'modal',
+            )
+            .sort(
+                (a, b) =>
+                    focusStack.value.indexOf(a.windowId) -
+                    focusStack.value.indexOf(b.windowId),
+            ),
+    );
+    const topModal = computed(() => openModals.value.at(-1) ?? null);
+    const blockingModal = computed(
+        () =>
+            [...openModals.value]
+                .reverse()
+                .find(
+                    (win) => windowDefinitions[win.windowName].blocksCommands,
+                ) ?? null,
+    );
+
     const currentActiveWindow = computed((): WindowInstance => {
+        if (blockingModal.value) return blockingModal.value;
         for (let i = focusStack.value.length - 1; i >= 0; i--) {
             const target = focusStack.value[i];
             const win = openWindows.value.get(target);
@@ -326,15 +350,23 @@ function windowStore() {
         return activePaneIndex.value;
     }
 
-    // 打开帮助弹窗
+    function openModal(name: ModalWindowName) {
+        registerWindow({ windowId: name, windowName: name });
+    }
+
+    function closeModal(name: ModalWindowName) {
+        unregisterWindow(name);
+    }
+
+    function closeTopModal() {
+        if (topModal.value) unregisterWindow(topModal.value.windowId);
+    }
+
     function openHelpDocument() {
-        registerWindow({
-            windowId: 'help',
-            windowName: 'help',
-        });
+        openModal('help');
     }
     function closeHelpDocument() {
-        if (isWindowOpen('help')) unregisterWindow('help');
+        closeModal('help');
     }
 
     const isWindowOpen = (windowId: string) =>
@@ -406,6 +438,9 @@ function windowStore() {
         activeFocus,
         selectedLeftPanel,
         currentActiveWindow,
+        openModals,
+        topModal,
+        blockingModal,
         currentActiveView,
         workspacePanes,
         paneWindowIds,
@@ -432,6 +467,9 @@ function windowStore() {
         pruneOrphanChunkViews,
         openExportPreview,
         toggleExportPreview,
+        openModal,
+        closeModal,
+        closeTopModal,
         openHelpDocument,
         closeHelpDocument,
         openSplitView,

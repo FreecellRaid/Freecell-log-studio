@@ -23,6 +23,14 @@ const view: WindowDefinition = {
     blocksCommands: false,
 };
 
+const modal: WindowDefinition = {
+    group: 'modal',
+    singleton: true,
+    allowSplit: false,
+    participatesInSelection: false,
+    blocksCommands: true,
+};
+
 export const windowDefinitions: Readonly<
     Record<WindowName, Readonly<WindowDefinition>>
 > = {
@@ -40,13 +48,8 @@ export const windowDefinitions: Readonly<
         allowSplit: false,
         participatesInSelection: false,
     },
-    help: {
-        group: 'modal',
-        singleton: true,
-        allowSplit: false,
-        participatesInSelection: false,
-        blocksCommands: true,
-    },
+    help: modal,
+    remoteImport: modal,
 };
 
 export function isWorkspaceView(win: WindowInstance): boolean {

@@ -55,7 +55,7 @@ export function useCommandDispatcher() {
 
         // P0 Modal 开启时拦截其他业务命令
         if (windowDefinitions[windowName].blocksCommands) {
-            if (command === 'cancel') return windowStore.closeHelpDocument();
+            if (command === 'cancel') return windowStore.closeTopModal();
             return;
         }
 
