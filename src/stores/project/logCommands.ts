@@ -349,21 +349,29 @@ export const useLogCommands = defineStore('logCommands', () => {
         );
     }
 
-    function mergeWithNextMessage(chunkId: string, messageId: string) {
+    function mergeWithNextMessage(
+        chunkId: string,
+        messageId: string,
+        visibleMessageIds?: readonly string[],
+    ) {
         const chunk = logStore.findChunkById(chunkId);
         if (!chunk) return false;
 
-        const index = chunk.messages.findIndex(
-            (m) => m.messageId === messageId,
-        );
-        if (index === -1 || index >= chunk.messages.length - 1) return false;
-
-        const nextMessage = chunk.messages[index + 1];
-        return mergeMessages(
-            chunkId,
-            [messageId, nextMessage.messageId],
-            messageId,
-        );
+        const orderedIds =
+            visibleMessageIds ??
+            chunk.messages.map((message) => message.messageId);
+        const index = orderedIds.indexOf(messageId);
+        const nextMessageId = orderedIds[index + 1];
+        if (index === -1 || !nextMessageId || nextMessageId === messageId)
+            return false;
+        // 列表可能在操作前更新，避免目标丢失时退化为合并其他消息。
+        if (
+            ![messageId, nextMessageId].every((id) =>
+                chunk.messages.some((message) => message.messageId === id),
+            )
+        )
+            return false;
+        return mergeMessages(chunkId, [messageId, nextMessageId], messageId);
     }
 
     function toggleOoc(targetIds: Set<string>) {

@@ -1,3 +1,6 @@
+import { getVisibleMessages } from '@/editor/messageVisibility';
+import { useStyleStore } from '@/stores/project/styleStore';
+import { useUiStore } from '@/stores/ui/uiStore';
 import { getWindowTargetId } from '@/types/window';
 import { windowDefinitions } from '@/windows/windowDefinitions';
 import { useWindowStore } from '@/stores/ui/windowStore';
@@ -159,18 +162,23 @@ export function useCommandDispatcher() {
             if (selectedIds.size > 0) logCommands.toggleCommand(selectedIds);
         }
         if (cmd === 'merge') {
-            const selectedIds = activeContext.selectedMessageIds.value;
-            if (selectedIds.size > 1) {
-                logCommands.mergeMessages(
-                    chunkId,
-                    Array.from(selectedIds),
-                    Array.from(selectedIds)[0],
-                );
+            const visibleIds = getVisibleMessages(
+                messages,
+                useStyleStore().viewSettings,
+                useUiStore().showHidden,
+            ).map((message) => message.messageId);
+            const visibleIdSet = new Set(visibleIds);
+            const selectedIds = Array.from(
+                activeContext.selectedMessageIds.value,
+            ).filter((id) => visibleIdSet.has(id));
+            if (selectedIds.length > 1) {
+                logCommands.mergeMessages(chunkId, selectedIds, selectedIds[0]);
                 activeContext.clearMessageSelection();
-            } else {
+            } else if (selectedIds.length === 1) {
                 logCommands.mergeWithNextMessage(
                     chunkId,
-                    Array.from(selectedIds)[0],
+                    selectedIds[0],
+                    visibleIds,
                 );
             }
         }

@@ -290,7 +290,12 @@ function handleActionInsert(message: Message) {
 
 function handleActionMerge(message: Message) {
     withScrollAnchor(() => {
-        const selectedIds = activeContext.selectedMessageIds.value;
+        const visibleIds = messages.value.map((item) => item.messageId);
+        const selectedIds = new Set(
+            visibleIds.filter((id) =>
+                activeContext.selectedMessageIds.value.has(id),
+            ),
+        );
         if (selectedIds.has(message.messageId) && selectedIds.size > 1) {
             logCommands.mergeMessages(
                 currentChunkId.value,
@@ -304,6 +309,7 @@ function handleActionMerge(message: Message) {
         logCommands.mergeWithNextMessage(
             currentChunkId.value,
             message.messageId,
+            visibleIds,
         );
     });
 }

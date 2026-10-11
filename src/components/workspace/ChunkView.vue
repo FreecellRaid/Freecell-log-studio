@@ -73,6 +73,7 @@ import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
 import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
 import { useLogStore } from '@/stores/project/logStore';
 import { useStyleStore } from '@/stores/project/styleStore';
+import { getVisibleMessages } from '@/editor/messageVisibility';
 import { useUiStore } from '@/stores/ui/uiStore';
 
 const DesktopMessageList = defineAsyncComponent(
@@ -105,18 +106,13 @@ function useChunkView(chunkId: MaybeRefOrGetter<string>) {
     const styleStore = useStyleStore();
     const uiStore = useUiStore();
     const chunk = computed(() => logStore.findChunkById(toValue(chunkId)));
-    const messages = computed(() => {
-        if (!chunk.value) return [];
-        if (uiStore.showHidden) return chunk.value.messages;
-        const { hideOoc, hideCommand } = styleStore.viewSettings;
-        return chunk.value.messages.filter(
-            (message) =>
-                !(
-                    (hideOoc && message.isOoc) ||
-                    (hideCommand && message.isCommand)
-                ),
-        );
-    });
+    const messages = computed(() =>
+        getVisibleMessages(
+            chunk.value?.messages ?? [],
+            styleStore.viewSettings,
+            uiStore.showHidden,
+        ),
+    );
     return { chunk, messages };
 }
 </script>

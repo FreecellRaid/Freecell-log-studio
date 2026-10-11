@@ -153,7 +153,11 @@ function insertAfter(message: Message) {
     logCommands.insertNewMessageAfter(props.chunk.chunkId, message);
 }
 function mergeWithNext(messageId: string) {
-    logCommands.mergeWithNextMessage(props.chunk.chunkId, messageId);
+    logCommands.mergeWithNextMessage(
+        props.chunk.chunkId,
+        messageId,
+        props.messages.map((message) => message.messageId),
+    );
 }
 function deleteMessage(messageId: string) {
     if (!window.confirm('确定要删除这条消息吗？')) return;
