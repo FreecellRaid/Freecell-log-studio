@@ -7,8 +7,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import MobileChunkView from '@/components/mobile/MobileChunkView.vue';
-import MobileDefaultView from '@/components/mobile/MobileDefaultView.vue';
+import MobileChunkView from '@/components/mobile/workspace/MobileChunkView.vue';
+import MobileDefaultView from '@/components/mobile/workspace/MobileDefaultView.vue';
 import { useLogStore } from '@/stores/project/logStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import type { Chunk } from '@/types/log';

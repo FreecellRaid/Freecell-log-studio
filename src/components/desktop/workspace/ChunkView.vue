@@ -114,7 +114,7 @@ import { computed, nextTick, ref, watch } from 'vue';
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 
-import MessageItem from '@/components/common/MessageItem.vue';
+import MessageItem from '@/components/desktop/workspace/MessageItem.vue';
 import { useActiveContext } from '@/composables/application/useActiveContext';
 import { useCommandDispatcher } from '@/composables/application/useCommandDispatcher';
 import { useMessageDragDrop } from '@/composables/interaction/useDragDrop';

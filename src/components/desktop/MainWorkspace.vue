@@ -42,14 +42,14 @@
 import { computed, defineAsyncComponent } from 'vue';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import type { WindowInstance, WindowName } from '@/types/window';
-import FileImporter from '@/components/desktop/FileImporter.vue';
-import DefaultView from '@/components/workspace/DefaultView.vue';
+import FileImporter from '@/components/desktop/workspace/FileImporter.vue';
+import DefaultView from '@/components/desktop/workspace/DefaultView.vue';
 
 const ChunkView = defineAsyncComponent(
-    () => import('@/components/workspace/ChunkView.vue'),
+    () => import('@/components/desktop/workspace/ChunkView.vue'),
 );
 const ExportPreview = defineAsyncComponent(
-    () => import('@/components/workspace/ExportPreview.vue'),
+    () => import('@/components/desktop/workspace/ExportPreview.vue'),
 );
 
 const windowStore = useWindowStore();

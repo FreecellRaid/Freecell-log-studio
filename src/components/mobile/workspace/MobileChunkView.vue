@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import MobileMessageList from '@/components/mobile/MobileMessageList.vue';
+import MobileMessageList from '@/components/mobile/workspace/MobileMessageList.vue';
 import { useLogCommands } from '@/stores/project/logCommands';
 import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
 import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
