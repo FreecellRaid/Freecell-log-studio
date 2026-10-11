@@ -159,6 +159,13 @@
                 >
                     全选
                 </button>
+                <button
+                    class="btn-primary"
+                    :disabled="activeContext.selectedMessageIds.value.size === 0"
+                    @click="deleteSelectedMessages"
+                >
+                    删除
+                </button>
             </div>
         </div>
 
@@ -393,6 +400,11 @@ function selectAllMatches() {
     dispatch('selectAll', {
         messages: searchStore.searchResults,
     });
+}
+
+function deleteSelectedMessages() {
+    windowStore.setFocus('search');
+    dispatch('delete');
 }
 
 const truncate = (str: string, len: number) => {
