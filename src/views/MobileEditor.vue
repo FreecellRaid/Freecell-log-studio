@@ -22,7 +22,7 @@ import { useSwipeGesture } from '@/composables/interaction/useSwipeGesture';
 import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import type { MobileBottomPanelName } from '@/types/mobile';
-import HelpDocument from '@/components/common/HelpDocument.vue';
+import HelpDocument from '@/components/modal/HelpDocument.vue';
 import MobileActiveSheet from '@/components/mobile/MobileActiveSheet.vue';
 import MobileBottomPanelDrawer from '@/components/mobile/MobileBottomPanelDrawer.vue';
 import MobileHistoryFloat from '@/components/mobile/MobileHistoryFloat.vue';

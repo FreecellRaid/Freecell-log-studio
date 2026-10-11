@@ -12,7 +12,7 @@ import { useResponsiveMode } from '@/composables/ui/useResponsiveMode.js';
 import { defineAsyncComponent, onMounted, onUnmounted, watch } from 'vue';
 import { useWindowStore } from '@/stores/ui/windowStore';
 
-import RemoteImportDialog from '@/components/common/RemoteImportDialog.vue';
+import RemoteImportDialog from '@/components/modal/RemoteImportDialog.vue';
 import { useRemoteImportStore } from '@/stores/ui/remoteImportStore';
 
 const remoteImport = useRemoteImportStore();
