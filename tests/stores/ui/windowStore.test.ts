@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import { useWindowStore } from '@/stores/ui/windowStore';
+import { useSelectionStore } from '@/stores/editor/selectionStore';
 import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
 
 describe('window registry state', () => {
@@ -97,7 +98,7 @@ describe('workspace pane focus', () => {
         const store = createSplitView();
         expect(store.getActivePaneIndex()).toBe(1);
 
-        store.setFocus('chunkList');
+        store.openLeftPanel();
 
         expect(store.getActivePaneIndex()).toBe(1);
         expect(store.workspacePanes[1]?.isActive).toBe(true);
@@ -109,7 +110,7 @@ describe('workspace pane focus', () => {
         expect(rightWindowId).toBeTruthy();
 
         store.setFocus(rightWindowId!);
-        store.setFocus('chunkList');
+        store.openLeftPanel();
         store.setPaneView(store.getActivePaneIndex(), 'chunkView', 'chunk-new');
 
         expect(store.workspacePanes[0]?.instance?.originalId).toBe(
@@ -120,7 +121,7 @@ describe('workspace pane focus', () => {
 
     it('keeps the last active pane when closing a split view', () => {
         const store = createSplitView();
-        store.setFocus('chunkList');
+        store.openLeftPanel();
 
         store.closeSplitView();
 
@@ -129,5 +130,187 @@ describe('workspace pane focus', () => {
             'chunk-right',
         );
         expect(store.getActivePaneIndex()).toBe(0);
+    });
+});
+
+describe('workspace lifecycle consistency', () => {
+    beforeEach(() => {
+        setActivePinia(createPinia());
+    });
+
+    function createSplitView(sameChunk = false) {
+        const store = useWindowStore();
+        store.setActiveChunk('left');
+        store.openSplitView('chunkView', sameChunk ? 'left' : 'right');
+        return store;
+    }
+
+    it('registers a persistent default view and ignores invalid focus targets', () => {
+        const store = useWindowStore();
+        expect(store.currentActiveView).toBe(
+            store.openWindows.get('defaultView'),
+        );
+        store.setFocus('missing');
+        store.unregisterWindow('defaultView');
+        expect(store.focusStack).toEqual([]);
+        expect(store.activeFocus).toBe('defaultView');
+        expect(store.isWindowOpen('defaultView')).toBe(true);
+    });
+
+    it('keeps the workspace view across more than five panel/modal focuses', () => {
+        const store = useWindowStore();
+        store.setActiveChunk('left');
+        const id = store.currentActiveView.windowId;
+        for (const name of [
+            'chunkList',
+            'identity',
+            'search',
+            'ruleEditor',
+            'exportFormat',
+        ] as const) {
+            store.registerWindow({
+                windowId: name,
+                windowName: name,
+                windowType: 'panel',
+                originalId: name,
+            });
+        }
+        store.openHelpDocument();
+        expect(store.currentActiveView.windowId).toBe(id);
+        expect(store.focusStack).toContain(id);
+        expect(store.activeFocus).toBe('help');
+    });
+
+    it('reuses a scene window and retains its selection when reopened', () => {
+        const store = useWindowStore();
+        store.setActiveChunk('left');
+        const id = store.currentActiveView.windowId;
+        const selections = useSelectionStore();
+        selections.select('left', 'message', ['message-1'], false);
+        store.setActiveChunk('left');
+        expect(store.currentActiveView.windowId).toBe(id);
+        expect([...selections.getSelectedIds('left', 'message')]).toEqual([
+            'message-1',
+        ]);
+        expect(
+            [...store.openWindows.values()].filter(
+                (win) => win.windowName === 'chunkView',
+            ),
+        ).toHaveLength(1);
+    });
+
+    it.each([0, 1] as const)(
+        'keeps pane %i and its selection when exiting split view',
+        (paneIndex) => {
+            const store = createSplitView();
+            const retained = store.workspacePanes[paneIndex]!.instance!;
+            const removed =
+                store.workspacePanes[paneIndex === 0 ? 1 : 0]!.instance!;
+            const selections = useSelectionStore();
+            selections.select(retained.originalId, 'message', ['keep'], false);
+            selections.select(removed.originalId, 'message', ['remove'], false);
+            store.closeSplitView(retained.windowId);
+            expect(store.currentActiveView).toBe(
+                store.openWindows.get(retained.windowId),
+            );
+            expect(store.paneWindowIds).toEqual([retained.windowId, null]);
+            expect(store.isWindowOpen(removed.windowId)).toBe(false);
+            expect([
+                ...selections.getSelectedIds(retained.originalId, 'message'),
+            ]).toEqual(['keep']);
+            expect(
+                selections.getSelectedIds(removed.originalId, 'message').size,
+            ).toBe(0);
+        },
+    );
+
+    it('clears shared selection only when the final same-source window closes', () => {
+        const store = createSplitView(true);
+        const selections = useSelectionStore();
+        selections.select('left', 'message', ['keep'], false);
+        store.closePane(store.workspacePanes[1]!.instance!.windowId);
+        expect([...selections.getSelectedIds('left', 'message')]).toEqual([
+            'keep',
+        ]);
+        store.closePane(store.currentActiveView.windowId);
+        expect(selections.getSelectedIds('left', 'message').size).toBe(0);
+        expect(store.currentActiveView.windowName).toBe('defaultView');
+    });
+
+    it.each([0, 1] as const)(
+        'collapses layout when pane %i is unregistered directly',
+        (paneIndex) => {
+            const store = createSplitView();
+            const closing = store.workspacePanes[paneIndex]!.instance!.windowId;
+            const remaining =
+                store.workspacePanes[paneIndex === 0 ? 1 : 0]!.instance!
+                    .windowId;
+            store.unregisterWindow(closing);
+            expect(store.hasSplitView).toBe(false);
+            expect(store.paneWindowIds).toEqual([remaining, null]);
+            expect(store.focusStack).not.toContain(closing);
+            expect(store.currentActiveView.windowId).toBe(remaining);
+        },
+    );
+
+    it('replaces a pane without closing the other pane and reuses an unchanged target', () => {
+        const store = createSplitView();
+        const left = store.workspacePanes[0]!.instance!.windowId;
+        const oldRight = store.workspacePanes[1]!.instance!.windowId;
+        store.setPaneView(1, 'chunkView', 'new');
+        const newRight = store.currentActiveView.windowId;
+        expect(store.paneWindowIds).toEqual([left, newRight]);
+        expect(store.isWindowOpen(oldRight)).toBe(false);
+        expect(store.hasSplitView).toBe(true);
+        store.setPaneView(1, 'chunkView', 'new');
+        expect(store.currentActiveView.windowId).toBe(newRight);
+    });
+
+    it('changes only the active scene pane through setActiveChunk', () => {
+        const store = createSplitView();
+        const left = store.workspacePanes[0]!.instance!.windowId;
+        store.setActiveChunk('new');
+        expect(store.hasSplitView).toBe(true);
+        expect(store.workspacePanes[0]!.instance!.windowId).toBe(left);
+        expect(store.currentActiveView.originalId).toBe('new');
+    });
+
+    it('prunes deleted scenes and leaves no stale pane references', () => {
+        const store = createSplitView();
+        expect(store.pruneOrphanChunkViews((id) => id === 'right')).toBe(true);
+        expect(store.hasSplitView).toBe(false);
+        expect(store.currentActiveView.originalId).toBe('right');
+        expect(store.pruneOrphanChunkViews(() => false)).toBe(false);
+        expect(store.paneWindowIds).toEqual(['defaultView', null]);
+        expect(store.currentActiveView.windowName).toBe('defaultView');
+        expect(store.focusStack.every((id) => store.openWindows.has(id))).toBe(
+            true,
+        );
+    });
+
+    it('toggles a preview by format ID and returns to the scene', () => {
+        const store = useWindowStore();
+        store.setActiveChunk('left');
+        const sceneId = store.currentActiveView.windowId;
+        store.toggleExportPreview('format-1');
+        expect(store.currentActiveView.originalId).toBe('format-1');
+        const previewId = store.currentActiveView.windowId;
+        expect(previewId).not.toBe('format-1');
+        store.toggleExportPreview('format-1');
+        expect(store.isWindowOpen(previewId)).toBe(false);
+        expect(store.currentActiveView.windowId).toBe(sceneId);
+        expect(store.hasSplitView).toBe(false);
+    });
+
+    it('replaces preview formats without leaving the old instance registered', () => {
+        const store = useWindowStore();
+        store.openExportPreview('format-1');
+        const firstId = store.currentActiveView.windowId;
+        store.openExportPreview('format-2');
+        expect(store.currentActiveView.originalId).toBe('format-2');
+        expect(store.isWindowOpen(firstId)).toBe(false);
+        expect(store.hasSplitView).toBe(false);
+        store.unregisterWindow(store.currentActiveView.windowId);
+        expect(store.activeFocus).toBe('defaultView');
     });
 });

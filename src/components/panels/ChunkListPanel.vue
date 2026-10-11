@@ -474,10 +474,10 @@ function handleDelete(chunkId: string) {
     ) {
         targets.forEach((id) => {
             logCommands.deleteChunk(id);
-            if (windowStore.isWindowOpen(id)) {
-                windowStore.unregisterWindow(id);
-            }
         });
+        windowStore.pruneOrphanChunkViews((id) =>
+            Boolean(logStore.findChunkById(id)),
+        );
 
         if (selectedChunkIds.value.has(chunkId)) {
             clearSelection();

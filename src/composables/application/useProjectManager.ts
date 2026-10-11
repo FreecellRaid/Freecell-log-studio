@@ -93,7 +93,11 @@ export function useProjectManager() {
         clipboardStore.clearClipboard();
         activeContext.clearSelection();
         historyStore.clearHistory();
+        windowStore.pruneOrphanChunkViews((id) =>
+            Boolean(logStore.findChunkById(id)),
+        );
         windowStore.focusStack = [];
+        windowStore.setFocus(windowStore.currentActiveView.windowId);
 
         return true;
     }

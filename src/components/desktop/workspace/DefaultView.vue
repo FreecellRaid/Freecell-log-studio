@@ -38,19 +38,10 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
 import { FolderOpen, LayoutDashboard } from '@lucide/vue';
 import { useWindowStore } from '@/stores/ui/windowStore';
 
 const windowStore = useWindowStore();
-onMounted(() => {
-    windowStore.registerWindow({
-        windowId: 'defaultView',
-        windowName: 'defaultView',
-        windowType: 'view',
-        originalId: 'defaultView',
-    });
-});
 </script>
 
 <style scoped>

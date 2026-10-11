@@ -252,24 +252,7 @@ function handleSplit() {
 }
 
 function handleClose() {
-    if (windowStore.hasSplitView) {
-        windowStore.closePane(effectiveWindowId.value);
-        return;
-    }
-
     windowStore.unregisterWindow(effectiveWindowId.value);
-
-    const otherView = Array.from(windowStore.openWindows.values()).find(
-        (win) =>
-            win.windowType === 'view' &&
-            win.windowId !== effectiveWindowId.value,
-    );
-
-    if (otherView) {
-        windowStore.setFocus(otherView.windowId);
-        return;
-    }
-    windowStore.setFocus('defaultView');
 }
 
 function handleMessageSelect(event: MouseEvent, msgId: string, index: number) {

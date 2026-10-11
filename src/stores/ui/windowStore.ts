@@ -11,55 +11,54 @@ import { generateId } from '@/utils/id';
 
 function windowStore() {
     const selectionStore = useSelectionStore();
-    const openWindows = ref<Map<string, WindowInstance>>(new Map());
+    const defaultWindow: WindowInstance = {
+        windowId: 'defaultView',
+        windowName: 'defaultView',
+        windowType: 'view',
+        originalId: 'defaultView',
+    };
+    // 默认页始终注册，作为没有业务视图时的统一兜底。
+    const openWindows = ref<Map<string, WindowInstance>>(
+        new Map([[defaultWindow.windowId, defaultWindow]]),
+    );
     const focusStack = ref<string[]>([]);
     const pendingMessageReveal = ref<{
         chunkId: string;
         messageId: string;
     } | null>(null);
     const activeFocus = computed(() => {
-        return focusStack.value[focusStack.value.length - 1] || 'defaultView';
+        return currentActiveWindow.value.windowId;
     });
     const selectedLeftPanel = ref<WindowName>('chunkList');
     const layoutInitialized = ref(false);
     const openWindowIds = computed(() => new Set(openWindows.value.keys()));
 
-    const workspaceViewPanes = ref<[WindowInstance, WindowInstance | null]>([
-        {
-            windowId: 'defaultView',
-            windowName: 'defaultView',
-            windowType: 'view',
-            originalId: 'defaultView',
-        },
-        null,
-    ]);
+    // 布局只保存引用，窗口实例统一从 openWindows 获取。
+    const paneWindowIds = ref<[string, string | null]>(['defaultView', null]);
     const paneSizes = ref<[number, number]>([50, 50]);
     const paneDirection = ref<PaneDirection>('horizontal');
     const activePaneIndex = ref<0 | 1>(0);
 
-    // 聚焦到一个目标
+    // 聚焦 view 时更新布局；面板和弹窗的焦点不会改变活动 pane。
     function setFocus(target: string) {
-        // 先移除已有的相同目标
-        const index = focusStack.value.findIndex((t) => t === target);
+        const win = openWindows.value.get(target);
+        if (!win) return;
 
-        if (index !== -1) {
-            focusStack.value.splice(index, 1);
+        if (win.windowType === 'view') {
+            const paneIndex = paneWindowIds.value.indexOf(target);
+            if (paneIndex === 0 || paneIndex === 1) {
+                activePaneIndex.value = paneIndex;
+            } else {
+                paneWindowIds.value[activePaneIndex.value] = target;
+            }
         }
-
-        focusStack.value.push(target);
-        if (focusStack.value.length > 5) {
-            focusStack.value.shift();
-        }
-
-        const paneIndex = workspaceViewPanes.value.findIndex(
-            (pane) => pane?.windowId === target,
+        focusStack.value = focusStack.value.filter(
+            (id) => id !== target && openWindows.value.has(id),
         );
-        if (paneIndex === 0 || paneIndex === 1) {
-            activePaneIndex.value = paneIndex;
-        }
+        focusStack.value.push(target);
     }
 
-    // 注册并打开一个窗口
+    // 注册并打开一个窗口。
     function registerWindow(win: WindowInstance) {
         if (!openWindows.value.has(win.windowId)) {
             openWindows.value.set(win.windowId, win);
@@ -67,24 +66,86 @@ function windowStore() {
         setFocus(win.windowId);
     }
 
-    // 关闭并注销一个窗口
+    function getFallbackViewId() {
+        for (let i = focusStack.value.length - 1; i >= 0; i--) {
+            const id = focusStack.value[i];
+            const win = openWindows.value.get(id);
+            if (win?.windowType === 'view' && id !== 'defaultView') return id;
+        }
+        return (
+            Array.from(openWindows.value.values()).find(
+                (win) =>
+                    win.windowType === 'view' && win.windowId !== 'defaultView',
+            )?.windowId ?? 'defaultView'
+        );
+    }
+
+    // 关闭实例，同时维护布局引用、焦点历史和同源选择状态。
     function unregisterWindow(windowId: string) {
-        const winToClose = openWindows.value.get(windowId);
-        const targetOriginalId = winToClose?.originalId || windowId;
+        const win = openWindows.value.get(windowId);
+        if (!win || windowId === 'defaultView') return;
+        const wasFocused = activeFocus.value === windowId;
         openWindows.value.delete(windowId);
-        const index = focusStack.value.findIndex((t) => t === windowId);
-        const isOriginalIdStillInUse = Array.from(
-            openWindows.value.values(),
-        ).some((w) => w.originalId === targetOriginalId);
+        focusStack.value = focusStack.value.filter((id) => id !== windowId);
 
-        // 只有当所有同源窗口都被关闭时，才清空 selectionStore 中的状态
-        if (!isOriginalIdStillInUse) {
-            selectionStore.clearSelection(targetOriginalId);
+        const paneIndex = paneWindowIds.value.indexOf(windowId);
+        if (paneIndex !== -1) {
+            const otherId = paneWindowIds.value[paneIndex === 0 ? 1 : 0];
+            paneWindowIds.value = [otherId ?? getFallbackViewId(), null];
+            activePaneIndex.value = 0;
         }
 
-        if (index !== -1) {
-            focusStack.value.splice(index, 1);
+        if (
+            !Array.from(openWindows.value.values()).some(
+                (other) => other.originalId === win.originalId,
+            )
+        ) {
+            selectionStore.clearSelection(win.originalId);
         }
+        if (wasFocused) {
+            const fallback = currentActiveWindow.value;
+            setFocus(
+                fallback.windowType === 'view'
+                    ? currentActiveView.value.windowId
+                    : fallback.windowId,
+            );
+        }
+    }
+
+    function createView(
+        windowName: 'chunkView' | 'exportPreview',
+        originalId: string,
+    ): WindowInstance {
+        return {
+            windowId: generateId(),
+            windowName,
+            windowType: 'view',
+            originalId,
+        };
+    }
+
+    function replacePaneView(
+        paneIndex: 0 | 1,
+        windowName: 'chunkView' | 'exportPreview',
+        originalId: string,
+    ) {
+        const previousId = paneWindowIds.value[paneIndex];
+        const previous = previousId
+            ? openWindows.value.get(previousId)
+            : undefined;
+        if (
+            previous?.windowName === windowName &&
+            previous.originalId === originalId
+        ) {
+            setFocus(previous.windowId);
+            return;
+        }
+        const win = createView(windowName, originalId);
+        // 先挂接新实例，再关闭旧实例，避免布局收起或同源选择被提前清理。
+        openWindows.value.set(win.windowId, win);
+        paneWindowIds.value[paneIndex] = win.windowId;
+        setFocus(win.windowId);
+        if (previousId) unregisterWindow(previousId);
     }
 
     function registerPanel(name: WindowName) {
@@ -158,85 +219,60 @@ function windowStore() {
         else openInspector();
     }
 
-    // 切换到场景编辑视图
+    // 单屏复用已打开的场景；分屏只替换活动 pane。
     function setActiveChunk(chunkId: string) {
-        // 注销当前所有类型为 'view' 的 chunkView，防止selection残留
-        openWindows.value.forEach((win) => {
-            if (win.windowName === 'chunkView' && win.originalId !== chunkId) {
-                unregisterWindow(win.windowId);
+        if (!chunkId) {
+            for (const win of Array.from(openWindows.value.values())) {
+                if (win.windowName === 'chunkView')
+                    unregisterWindow(win.windowId);
             }
-        });
-
-        if (chunkId) {
-            registerWindow({
-                windowId: generateId(),
-                windowName: 'chunkView',
-                windowType: 'view',
-                originalId: chunkId,
-            });
-        } else {
             setFocus('defaultView');
-        }
-    }
-
-    // 切换导出预览
-    function openExportPreview(formatId: string) {
-        const currentView = currentActiveView.value;
-        // 如果当前是空白默认页，直接原地替换
-        if (currentView.windowName === 'defaultView') {
-            const newWindowId = generateId();
-            registerWindow({
-                windowId: newWindowId,
-                windowName: 'exportPreview',
-                windowType: 'view',
-                originalId: formatId,
-            });
-            setFocus(newWindowId);
-            return;
-        }
-
-        // 如果当前活跃窗口本身就是预览窗口，直接在当前位置切换模板
-        if (currentView.windowName === 'exportPreview') {
-            if (hasSplitView.value) {
-                setPaneView(getActivePaneIndex(), 'exportPreview', formatId);
-            } else {
-                // 单屏模式下的预览切换
-                const newWindowId = generateId();
-                unregisterWindow(currentView.windowId);
-                registerWindow({
-                    windowId: newWindowId,
-                    windowName: 'exportPreview',
-                    windowType: 'view',
-                    originalId: formatId,
-                });
-                setFocus(newWindowId);
-            }
             return;
         }
         if (hasSplitView.value) {
-            // 已在双屏：找到不活跃的那一侧并替换
-            const currentPaneIndex = getActivePaneIndex();
-            const targetPaneIndex = currentPaneIndex === 0 ? 1 : 0;
-            setPaneView(targetPaneIndex, 'exportPreview', formatId);
+            setPaneView(activePaneIndex.value, 'chunkView', chunkId);
+            return;
+        }
+        const existing = Array.from(openWindows.value.values()).find(
+            (win) =>
+                win.windowName === 'chunkView' && win.originalId === chunkId,
+        );
+        if (existing) setFocus(existing.windowId);
+        else registerWindow(createView('chunkView', chunkId));
+        for (const win of Array.from(openWindows.value.values())) {
+            if (win.windowName === 'chunkView' && win.originalId !== chunkId) {
+                unregisterWindow(win.windowId);
+            }
+        }
+    }
+
+    function openExportPreview(formatId: string) {
+        const currentView = currentActiveView.value;
+        if (currentView.windowName === 'exportPreview') {
+            replacePaneView(activePaneIndex.value, 'exportPreview', formatId);
+        } else if (hasSplitView.value) {
+            setPaneView(
+                activePaneIndex.value === 0 ? 1 : 0,
+                'exportPreview',
+                formatId,
+            );
+        } else if (currentView.windowName === 'defaultView') {
+            replacePaneView(0, 'exportPreview', formatId);
         } else {
-            // 单屏模式：直接开启分屏预览
             openSplitView('exportPreview', formatId);
         }
     }
 
     function toggleExportPreview(formatId: string) {
-        const isActive = activeFocus.value === formatId;
-        if (isActive) {
-            unregisterWindow(formatId);
+        const previews = Array.from(openWindows.value.values()).filter(
+            (win) =>
+                win.windowName === 'exportPreview' &&
+                win.originalId === formatId,
+        );
+        if (previews.length) {
+            previews.forEach((win) => unregisterWindow(win.windowId));
         } else {
-            const newWindowId = generateId();
-            registerWindow({
-                windowId: newWindowId,
-                windowName: 'exportPreview',
-                windowType: 'view',
-                originalId: formatId,
-            });
-            setFocus(newWindowId);
+            openExportPreview(formatId);
         }
     }
 
@@ -248,59 +284,30 @@ function windowStore() {
                 return win;
             }
         }
-        const defaultWin = openWindows.value.get('defaultView');
-        return (
-            defaultWin ?? {
-                windowId: 'defaultView',
-                windowName: 'defaultView',
-                windowType: 'view',
-                originalId: 'defaultView',
-            }
-        );
+        return currentActiveView.value;
     });
 
-    const currentActiveView = computed((): WindowInstance => {
-        for (let i = focusStack.value.length - 1; i >= 0; i--) {
-            const target = focusStack.value[i];
-            const win = openWindows.value.get(target);
-            if (win && win.windowType === 'view') {
-                return win;
-            }
-        }
-        const defaultWin = openWindows.value.get('defaultView');
-        return (
-            defaultWin ?? {
-                windowId: 'defaultView',
-                windowName: 'defaultView',
-                windowType: 'view',
-                originalId: 'defaultView',
-            }
-        );
-    });
+    // 工作区活动视图由布局决定，与面板/弹窗焦点历史无关。
+    const currentActiveView = computed(
+        (): WindowInstance =>
+            openWindows.value.get(
+                paneWindowIds.value[activePaneIndex.value] ?? 'defaultView',
+            ) ?? openWindows.value.get('defaultView')!,
+    );
 
-    const workspacePanes = computed((): WorkspacePane[] => {
-        if (hasSplitView.value) {
-            return ([0, 1] as const).map((paneIndex) => {
-                const instance = workspaceViewPanes.value[paneIndex];
-                return {
-                    paneIndex,
-                    instance,
-                    isActive: paneIndex === activePaneIndex.value,
-                };
-            });
-        }
-
-        const instance = currentActiveView.value;
-        return [
-            {
-                paneIndex: 0,
-                instance,
-                isActive: true,
-            },
-        ];
-    });
-
-    const hasSplitView = computed(() => workspaceViewPanes.value[1] !== null);
+    const hasSplitView = computed(() => paneWindowIds.value[1] !== null);
+    const workspacePanes = computed((): WorkspacePane[] =>
+        (hasSplitView.value ? ([0, 1] as const) : ([0] as const)).map(
+            (paneIndex) => ({
+                paneIndex,
+                instance:
+                    openWindows.value.get(
+                        paneWindowIds.value[paneIndex] ?? 'defaultView',
+                    ) ?? null,
+                isActive: paneIndex === activePaneIndex.value,
+            }),
+        ),
+    );
 
     function getActivePaneIndex(): 0 | 1 {
         return activePaneIndex.value;
@@ -328,84 +335,37 @@ function windowStore() {
         rightWindowName: 'chunkView' | 'exportPreview',
         rightOriginalId: string,
     ) {
-        if (hasSplitView.value) {
-            closeSplitView();
-        }
-
-        const currentView = currentActiveView.value;
-        if (currentView.windowName === 'defaultView') return false;
-
-        const leftPane: WindowInstance = {
-            windowId: currentView.windowId,
-            originalId: currentView.originalId,
-            windowName: currentView.windowName,
-            windowType: 'view',
-        };
-
-        const newRightWindowId = generateId();
-        const rightPane: WindowInstance = {
-            windowId: newRightWindowId,
-            originalId: rightOriginalId,
-            windowName: rightWindowName,
-            windowType: 'view',
-        };
-        registerWindow(rightPane);
-
-        workspaceViewPanes.value = [leftPane, rightPane];
-        activePaneIndex.value = 1;
+        if (hasSplitView.value) closeSplitView();
+        const leftWindowId = currentActiveView.value.windowId;
+        if (leftWindowId === 'defaultView') return false;
+        const right = createView(rightWindowName, rightOriginalId);
+        openWindows.value.set(right.windowId, right);
+        paneWindowIds.value = [leftWindowId, right.windowId];
+        setFocus(right.windowId);
         return true;
     }
 
-    // 退出分屏模式，回到单视图
+    // 保留实例不经历注销，避免清空其选择状态。
     function closeSplitView(keepWindowId?: string) {
         if (!hasSplitView.value) return;
-
-        const [leftPane, rightPane] = workspaceViewPanes.value;
-        if (!rightPane) return;
-
-        // 如果没指定保留哪个，则保留最后活动的 pane
-        const targetId =
-            keepWindowId ||
-            workspaceViewPanes.value[activePaneIndex.value]?.windowId;
-
-        const activePane =
-            [leftPane, rightPane].find((p) => p.windowId === targetId) ||
-            leftPane;
-
-        // 先注销全部
-        unregisterWindow(leftPane.windowId);
-        unregisterWindow(rightPane.windowId);
-
-        // 只恢复需要保留的那一个
-        if (activePane.windowName !== 'defaultView') {
-            registerWindow(activePane);
-        }
-        workspaceViewPanes.value = [{ ...activePane }, null];
+        const [leftId, rightId] = paneWindowIds.value;
+        const requestedId =
+            keepWindowId ?? paneWindowIds.value[activePaneIndex.value];
+        const keepId = requestedId === rightId ? rightId! : leftId;
+        const closingId = keepId === leftId ? rightId! : leftId;
+        paneWindowIds.value = [keepId, null];
         activePaneIndex.value = 0;
+        unregisterWindow(closingId);
+        setFocus(keepId);
     }
 
-    // 切换指定 pane 显示的视图
     function setPaneView(
         paneIndex: 0 | 1,
         windowName: 'chunkView' | 'exportPreview',
         originalId: string,
     ) {
         if (!hasSplitView.value) return;
-        const pane = workspaceViewPanes.value[paneIndex];
-        if (!pane) return;
-
-        unregisterWindow(pane.windowId);
-        const newWindowId = generateId();
-        const newWindow: WindowInstance = {
-            windowId: newWindowId,
-            windowName: windowName,
-            windowType: 'view',
-            originalId: originalId,
-        };
-
-        registerWindow(newWindow);
-        workspaceViewPanes.value[paneIndex] = newWindow;
-        activePaneIndex.value = paneIndex;
+        replacePaneView(paneIndex, windowName, originalId);
     }
 
     function requestMessageReveal(chunkId: string, messageId: string) {
@@ -419,13 +379,10 @@ function windowStore() {
         pendingMessageReveal.value = null;
     }
 
-    // 关闭指定 pane
+    // 关闭指定 pane，也支持最后一个单屏业务视图。
     function closePane(closingWindowId: string) {
-        if (!hasSplitView.value) return;
-        const otherPane = workspaceViewPanes.value.find(
-            (p) => p && p.windowId !== closingWindowId,
-        );
-        closeSplitView(otherPane?.windowId);
+        if (!paneWindowIds.value.includes(closingWindowId)) return;
+        unregisterWindow(closingWindowId);
     }
 
     return {
@@ -436,6 +393,7 @@ function windowStore() {
         currentActiveWindow,
         currentActiveView,
         workspacePanes,
+        paneWindowIds,
         hasSplitView,
         paneDirection,
         paneSizes,

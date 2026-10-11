@@ -52,7 +52,7 @@ export function useWorkspaceActions() {
         historyStore.clearHistory();
         // 数据已清空，工作区里指向旧分块的视图一并移除，避免残留"未知场景"
         windowStore.pruneOrphanChunkViews(() => false);
-        windowStore.setFocus(options?.focusTarget ?? 'default');
+        windowStore.setFocus(options?.focusTarget ?? 'defaultView');
         options?.afterClear?.();
         return true;
     }

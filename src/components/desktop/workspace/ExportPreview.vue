@@ -234,22 +234,7 @@ function handleSplit() {
 }
 
 function handleClose() {
-    if (windowStore.hasSplitView) {
-        windowStore.closePane(effectiveWindowId.value);
-    } else {
-        windowStore.unregisterWindow(effectiveWindowId.value);
-
-        const otherView = Array.from(windowStore.openWindows.values()).find(
-            (win) =>
-                win.windowType === 'view' &&
-                win.windowId !== effectiveWindowId.value,
-        );
-        if (otherView) {
-            windowStore.setFocus(otherView.windowId);
-        } else {
-            windowStore.setFocus('defaultView');
-        }
-    }
+    windowStore.unregisterWindow(effectiveWindowId.value);
 }
 
 function getSegmentStyle(
