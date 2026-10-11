@@ -1,7 +1,7 @@
 <template>
     <div
+        class="view"
         :class="[
-            isMobile ? 'mobile-export-preview' : 'view',
             {
                 'preview-always-white': uiStore.exportPreviewAlwaysWhite,
                 'is-active': isActive,
@@ -239,18 +239,7 @@ function getSegmentStyle(
 </script>
 
 <style scoped>
-.mobile-export-preview {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    min-height: 0;
-    background: var(--bg-workspace);
-}
-
-.mobile-preview-header .view-title {
-    min-width: 0;
-}
-.mobile-preview-header .view-actions {
+.view-actions {
     margin-left: auto;
     flex-shrink: 0;
 }
