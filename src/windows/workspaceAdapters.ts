@@ -7,28 +7,27 @@ import {
 
 type WorkspaceAdapter = Record<WorkspaceViewName, Component>;
 
+const ExportPreview = defineAsyncComponent(
+    () => import('@/components/common/workspace/ExportPreview.vue'),
+);
+const DefaultView = defineAsyncComponent(
+    () => import('@/components/common/workspace/DefaultView.vue'),
+);
+
 export const desktopWorkspaceAdapter: WorkspaceAdapter = {
     chunkView: defineAsyncComponent(
         () => import('@/components/desktop/workspace/ChunkView.vue'),
     ),
-    exportPreview: defineAsyncComponent(
-        () => import('@/components/desktop/workspace/ExportPreview.vue'),
-    ),
-    defaultView: defineAsyncComponent(
-        () => import('@/components/desktop/workspace/DefaultView.vue'),
-    ),
+    exportPreview: ExportPreview,
+    defaultView: DefaultView,
 };
 
 export const mobileWorkspaceAdapter: WorkspaceAdapter = {
     chunkView: defineAsyncComponent(
         () => import('@/components/mobile/workspace/MobileChunkView.vue'),
     ),
-    exportPreview: defineAsyncComponent(
-        () => import('@/components/mobile/workspace/MobileExportPreview.vue'),
-    ),
-    defaultView: defineAsyncComponent(
-        () => import('@/components/mobile/workspace/MobileDefaultView.vue'),
-    ),
+    exportPreview: ExportPreview,
+    defaultView: DefaultView,
 };
 
 export function getWorkspaceComponent(

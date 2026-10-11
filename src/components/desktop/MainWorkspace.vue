@@ -52,7 +52,7 @@ import {
     getWorkspaceProps,
 } from '@/windows/workspaceAdapters';
 import FileImporter from '@/components/desktop/workspace/FileImporter.vue';
-import DefaultView from '@/components/desktop/workspace/DefaultView.vue';
+import DefaultView from '@/components/common/workspace/DefaultView.vue';
 
 const windowStore = useWindowStore();
 const workspacePanes = computed(() => windowStore.workspacePanes);

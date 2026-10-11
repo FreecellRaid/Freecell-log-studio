@@ -1,11 +1,11 @@
 <template>
     <div
         class="view"
-        data-focus-id="defaultView"
         :class="{ 'is-active': windowStore.activeFocus === 'defaultView' }"
-        @pointerdown="windowStore.setFocus('defaultView')"
+        data-focus-id="defaultView"
+        @pointerdown="handleFocus"
     >
-        <header class="view-header">
+        <header v-if="!isMobile" class="view-header">
             <div class="view-title">
                 <LayoutDashboard class="ui-icon icon-view-title" />
                 <h2 class="text-view-title">工作台</h2>
@@ -17,12 +17,18 @@
                 <FolderOpen class="bg-icon" />
                 <h2 class="title">导入跑团 Log</h2>
                 <p class="subtitle">
-                    将文件拖拽至工作台区域，或点击右上角
-                    <FolderOpen class="ui-icon" />
+                    <template v-if="!isMobile">
+                        将文件拖拽至工作台区域，或
+                    </template>
+                    点击右上角
+                    <Upload class="ui-icon" />
                     进行导入
+                    <br />
+                    <br />
+                    点击左下角打开场景列表
                 </p>
 
-                <div class="shortcuts-hint">
+                <div class="shortcuts-hint" v-if="!isMobile">
                     <div class="shortcut-item">
                         <span>切换侧边栏</span>
                         <span>Ctrl + B</span>
@@ -38,10 +44,16 @@
 </template>
 
 <script setup lang="ts">
-import { FolderOpen, LayoutDashboard } from '@lucide/vue';
+import { FolderOpen, LayoutDashboard, Upload } from '@lucide/vue';
 import { useWindowStore } from '@/stores/ui/windowStore';
+import { useResponsiveMode } from '@/composables/ui/useResponsiveMode';
 
+const { isMobile } = useResponsiveMode();
 const windowStore = useWindowStore();
+
+function handleFocus() {
+    if (!isMobile.value) windowStore.setFocus('defaultView');
+}
 </script>
 
 <style scoped>
