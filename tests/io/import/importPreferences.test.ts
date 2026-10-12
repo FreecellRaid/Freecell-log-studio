@@ -52,24 +52,24 @@ describe('import preferences', () => {
         vi.unstubAllGlobals();
     });
 
-    it('asks once for a batch, cleans only OOC content and keeps OOC flags', async () => {
-        confirm.mockReturnValue(true);
+    it('defaults to keeping parentheses for a batch without prompting', async () => {
         const importer = useFileImport();
 
         expect(await importer.importTextAndApply([entry, entry])).toBe(2);
-        expect(confirm).toHaveBeenCalledTimes(1);
-        expect(stored.get(storageKey)).toBe('true');
+        expect(confirm).not.toHaveBeenCalled();
+        expect(useImportSettingsStore().stripOocParentheses).toBe(false);
+        expect(stored.get(storageKey)).toBe('false');
         expect(
             useLogStore().allMessages.map(({ content, isOoc }) => ({
                 content,
                 isOoc,
             })),
         ).toEqual([
-            { content: '场外（说明）', isOoc: true },
-            { content: '第一行\n第二行', isOoc: true },
+            { content: '（场外（说明））', isOoc: true },
+            { content: '(第一行\n第二行)', isOoc: true },
             { content: '场内（保留）', isOoc: false },
-            { content: '场外（说明）', isOoc: true },
-            { content: '第一行\n第二行', isOoc: true },
+            { content: '（场外（说明））', isOoc: true },
+            { content: '(第一行\n第二行)', isOoc: true },
             { content: '场内（保留）', isOoc: false },
         ]);
     });
@@ -77,14 +77,14 @@ describe('import preferences', () => {
     it.each([true, false])(
         'remembers the choice %s across store reloads',
         async (choice) => {
-            confirm.mockReturnValue(choice);
+            stored.set(storageKey, String(choice));
             await useFileImport().importTextAndApply([entry]);
             expect(stored.get(storageKey)).toBe(String(choice));
 
             reloadStores();
             await useFileImport().importTextAndApply([entry]);
 
-            expect(confirm).toHaveBeenCalledTimes(1);
+            expect(confirm).not.toHaveBeenCalled();
             expect(useImportSettingsStore().stripOocParentheses).toBe(choice);
             expect(useLogStore().allMessages[0].content).toBe(
                 choice ? '场外（说明）' : '（场外（说明））',
@@ -107,7 +107,7 @@ describe('import preferences', () => {
         expect(useLogStore().allMessages[3].content).toBe('（场外（说明））');
     });
 
-    it('does not ask or store a choice for empty or failed imports', async () => {
+    it('does not prompt or add documents for empty or failed imports', async () => {
         const importer = useFileImport();
         expect(
             await importer.importTextAndApply([{ name: 'empty', text: ' ' }]),
@@ -119,21 +119,24 @@ describe('import preferences', () => {
         ).rejects.toThrow('解析失败');
 
         expect(confirm).not.toHaveBeenCalled();
-        expect(stored.has(storageKey)).toBe(false);
+        expect(useImportSettingsStore().stripOocParentheses).toBe(false);
         expect(useLogStore().documents).toHaveLength(0);
     });
 
-    it('asks again if the stored preference is invalid', async () => {
-        stored.set(storageKey, 'invalid');
-        confirm.mockReturnValue(false);
+    it.each(['null', 'invalid'])(
+        'defaults stored preference %s to false without prompting',
+        async (value) => {
+            stored.set(storageKey, value);
 
-        await useFileImport().importTextAndApply([entry]);
+            await useFileImport().importTextAndApply([entry]);
 
-        expect(confirm).toHaveBeenCalledTimes(1);
-        expect(stored.get(storageKey)).toBe('false');
-    });
+            expect(confirm).not.toHaveBeenCalled();
+            expect(useImportSettingsStore().stripOocParentheses).toBe(false);
+            expect(useLogStore().allMessages[0].content).toBe('（场外（说明））');
+        },
+    );
 
-    it.each([null, true])(
+    it.each([false, true])(
         'preserves project content with preference %s',
         async (choice) => {
             const settings = useImportSettingsStore();

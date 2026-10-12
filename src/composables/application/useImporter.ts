@@ -69,7 +69,7 @@ export function useFileImport() {
         );
         if (
             messages.length > 0 &&
-            importSettingsStore.resolveStripOocParentheses()
+            importSettingsStore.stripOocParentheses
         ) {
             for (const message of messages) {
                 if (message.isOoc)
