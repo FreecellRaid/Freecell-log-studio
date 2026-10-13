@@ -31,7 +31,6 @@ export function renderMarkdownToHtml(content: string): string {
     return markdown.render(content);
 }
 
-// 给未来 docx 导出用
 export function parseMarkdown(content: string): readonly MarkdownToken[] {
     return markdown.parse(content, {});
 }

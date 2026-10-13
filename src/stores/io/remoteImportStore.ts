@@ -15,6 +15,8 @@ export const useRemoteImportStore = defineStore('remoteImport', () => {
     const error = ref('');
     const message = ref('');
     let controller: AbortController | undefined;
+
+    // 取消网络请求后，已经开始的解析也可能继续完成，需要阻止旧结果覆盖新请求。
     let revision = 0;
 
     function cancel() {

@@ -126,6 +126,7 @@ function createInlineRuns(
     return runs;
 }
 
+// 列表、引用、表格转成文本布局，图片和链接目标不保留
 function markdownToRuns(content: string, baseStyle?: ExportStyle): TextRun[] {
     const tokens = parseMarkdown(content);
     const blocks: TextRun[][] = [];
