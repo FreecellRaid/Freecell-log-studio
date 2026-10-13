@@ -45,19 +45,48 @@ export function getPlaceholderValue(
     switch (key) {
         case 'name':
             return row.playerName
-                ? format.playerNameFormat.replace('{{name}}', row.playerName)
+                ? renderFieldFormat(
+                      format.playerNameFormat,
+                      'name',
+                      row.playerName,
+                      row,
+                  )
                 : '';
         case 'account':
             return row.account
-                ? format.accountFormat.replace('{{account}}', row.account)
+                ? renderFieldFormat(
+                      format.accountFormat,
+                      'account',
+                      row.account,
+                      row,
+                  )
                 : '';
         case 'time':
             return row.time
-                ? format.timeFormat.replace('{{time}}', row.time)
+                ? renderFieldFormat(format.timeFormat, 'time', row.time, row)
                 : '';
         case 'content':
             return row.content || '';
+        case 'nameColor':
+            return row.nameStyle?.color ?? '';
+        case 'contentColor':
+            return row.contentStyle?.color ?? '';
         default:
             return '';
     }
+}
+
+// 一次替换模板中的字段和颜色，不再解析替换后的用户数据。
+function renderFieldFormat(
+    template: string,
+    field: string,
+    value: string,
+    row: ExportRow,
+): string {
+    return template.replace(/\{\{(.*?)\}\}/g, (placeholder, key: string) => {
+        if (key === field) return value;
+        if (key === 'nameColor') return row.nameStyle?.color ?? '';
+        if (key === 'contentColor') return row.contentStyle?.color ?? '';
+        return placeholder;
+    });
 }

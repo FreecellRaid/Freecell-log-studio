@@ -6,6 +6,8 @@ export const EXPORT_PRESET_IDS = [
     'magic',
     'standard',
     'markdown',
+    'bbcode',
+    'markdownNameColor',
     'classicTrpgLog',
     'hangingIndent',
     'echoWorkshop',
@@ -73,6 +75,31 @@ export const PRESETS: ExportFormat[] = [
         messageSeparator: '\n\n---\n\n',
     },
     {
+        formatId: 'markdownNameColor',
+        formatName: 'Markdown 格式(姓名着色)',
+        fileExtension: '.md',
+        playerNameFormat: '<span style="color: {{nameColor}}">{{name}}</span>',
+        accountFormat: '`{{account}}`',
+        timeFormat: '*{{time}}*',
+        docSeparator: '# {{name}}',
+        chunkSeparator: '## {{name}}',
+        messageTemplate: '{{name}} {{account}} {{time}}\n\n> {{content}}',
+        messageSeparator: '\n\n---\n\n',
+    },
+    {
+        formatId: 'bbcode',
+        formatName: 'BBCode 格式',
+        fileExtension: '.txt',
+        playerNameFormat: '[color={{nameColor}}]{{name}}[/color]',
+        accountFormat: '({{account}})',
+        timeFormat: '{{time}}',
+        docSeparator: '[b]{{name}}[/b]\n',
+        chunkSeparator: '[b]{{name}}[/b]\n',
+        messageTemplate:
+            '[color=silver]{{time}}[/color]{{name}}\n[color={{contentColor}}]{{content}}[/color]',
+        messageSeparator: '\n\n',
+    },
+    {
         formatId: 'magic',
         formatName: '神人格式',
         fileExtension: '.ts',
@@ -91,9 +118,21 @@ export const useExportStore = defineStore('export', {
     state: () => {
         const storedFormats = localStorage.getItem('app_export_formats');
         const storedActiveId = localStorage.getItem('app_export_active_id');
+        const formats: ExportFormat[] = storedFormats
+            ? JSON.parse(storedFormats)
+            : PRESETS.map((preset) => ({ ...preset }));
+
+        // 补齐新预设，同时保留用户对已有模板的编辑。
+        for (const preset of PRESETS) {
+            if (
+                !formats.some((format) => format.formatId === preset.formatId)
+            ) {
+                formats.push({ ...preset });
+            }
+        }
 
         return {
-            formats: storedFormats ? JSON.parse(storedFormats) : [...PRESETS],
+            formats,
             activeFormatId: storedActiveId || 'standard',
         };
     },

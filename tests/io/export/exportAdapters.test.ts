@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { ExportFormat, ExportRow } from '@/types/export';
 import { htmlAdapter, textAdapter } from '@/io/export/adapters/exportAdapters';
+import { getPlaceholderValue } from '@/io/export/templateParser';
+import { PRESETS } from '@/stores/io/exportStore';
 
 const format: ExportFormat = {
     formatId: 'format',
@@ -26,6 +28,94 @@ const rows: ExportRow[] = [
 ];
 
 describe('styled export adapters', () => {
+    it('resolves both colors in layout, field formats and message separators', () => {
+        const colorRows: ExportRow[] = [
+            {
+                ...rows[0],
+                account: 'alice',
+                time: '12:00',
+                contentStyle: { color: '#abcdef' },
+            },
+        ];
+        const colorFormat: ExportFormat = {
+            ...format,
+            playerNameFormat: '{{nameColor}}/{{contentColor}}/{{name}}',
+            accountFormat: '{{nameColor}}/{{contentColor}}/{{account}}',
+            timeFormat: '{{nameColor}}/{{contentColor}}/{{time}}',
+            messageTemplate:
+                '{{name}}|{{account}}|{{time}}|{{nameColor}}|{{contentColor}}|{{content}}',
+            messageSeparator: '|{{nameColor}}/{{contentColor}}\n',
+        };
+        expect(textAdapter(colorRows, colorFormat)).toBe(
+            '#123456/#abcdef/Alice|#123456/#abcdef/alice|#123456/#abcdef/12:00|#123456|#abcdef|hello|#123456/#abcdef\n',
+        );
+        expect(htmlAdapter(colorRows, colorFormat)).toContain(
+            '#123456/#abcdef/Alice',
+        );
+    });
+
+    it('exports empty colors for missing styles and document or chunk separators', () => {
+        expect(
+            textAdapter(
+                [
+                    { type: 'documentSeparator', content: 'Doc' },
+                    { type: 'chunkSeparator', content: 'Scene' },
+                    { type: 'message', playerName: 'Alice', content: 'hello' },
+                    {
+                        type: 'message',
+                        content: 'world',
+                        nameStyle: {},
+                        contentStyle: {},
+                    },
+                ],
+                {
+                    ...format,
+                    playerNameFormat: '{{nameColor}}{{name}}{{contentColor}}',
+                    docSeparator: '{{name}}[{{nameColor}}/{{contentColor}}]\n',
+                    chunkSeparator:
+                        '{{name}}[{{nameColor}}/{{contentColor}}]\n',
+                    messageTemplate:
+                        '{{name}}[{{nameColor}}/{{contentColor}}]{{content}}',
+                },
+            ),
+        ).toBe('Doc[/]\nScene[/]\nAlice[/]hello\n[/]world\n');
+    });
+
+    it('does not interpret placeholders or replacement patterns in user data', () => {
+        expect(
+            getPlaceholderValue(
+                'name',
+                {
+                    type: 'message',
+                    content: '',
+                    playerName: '{{nameColor}} $&',
+                    nameStyle: { color: '#123456' },
+                },
+                { ...format, playerNameFormat: '{{name}} {{nameColor}}' },
+            ),
+        ).toBe('{{nameColor}} $& #123456');
+    });
+
+    it('exports separate BBCode colors and colors only the name in the Markdown preset', () => {
+        const colorRows: ExportRow[] = [
+            {
+                ...rows[0],
+                contentStyle: { color: '#abcdef' },
+            },
+        ];
+        const bbcode = PRESETS.find((preset) => preset.formatId === 'bbcode')!;
+        const markdown = PRESETS.find(
+            (preset) => preset.formatId === 'markdownNameColor',
+        )!;
+        expect(textAdapter(colorRows, bbcode)).toBe(
+            '[color=#123456]Alice[/color] \n[color=#abcdef]hello[/color]\n\n',
+        );
+        const text = textAdapter(colorRows, markdown);
+        expect(text).toContain('<span style="color: #123456">Alice</span>');
+        expect(text).toContain('> hello');
+        expect(text).not.toContain('#abcdef');
+    });
+
     it('keeps style in HTML output', () => {
         const html = htmlAdapter(rows, format);
         expect(html).toContain('color: #123456; font-weight: bold');
