@@ -6,7 +6,7 @@ import { useWindowStore } from '@/stores/ui/windowStore';
 import type { Chunk, LogDocument } from '@/types/log';
 import { buildLogDocument } from '@/io/import/parser';
 import { importFiles, preprocessText } from '@/io/import/importService';
-import type { ImportRow, ImportTextEntry } from '@/types/import';
+import type { ImportRow } from '@/types/import';
 import type { LogSource } from '@/types/log';
 export { importFiles } from '@/io/import/importService';
 import { tryParseProjectFile } from '@/io/storage/project';
@@ -67,10 +67,7 @@ export function useFileImport() {
         const messages = documents.flatMap((doc) =>
             doc.chunks.flatMap((chunk) => chunk.messages),
         );
-        if (
-            messages.length > 0 &&
-            importSettingsStore.stripOocParentheses
-        ) {
+        if (messages.length > 0 && importSettingsStore.stripOocParentheses) {
             for (const message of messages) {
                 if (message.isOoc)
                     message.content = stripOocParentheses(message.content);
@@ -97,15 +94,6 @@ export function useFileImport() {
     }
 
     // 远程日志只能追加日志，不能通过内容嗅探替换为工程文件。
-    async function importLogTextAndApply(
-        entries: ImportTextEntry[],
-    ): Promise<number> {
-        return applyDocuments(
-            await importFiles(entries, logStore.documents.length),
-            true,
-        );
-    }
-
     async function importTextAndApply(
         entries: { name: string; text: string }[],
     ): Promise<number> {
@@ -187,7 +175,6 @@ export function useFileImport() {
         applyLogDocuments: (documents: LogDocument[]) =>
             applyDocuments(documents, true),
         importRowsAndApply,
-        importLogTextAndApply,
     };
 }
 

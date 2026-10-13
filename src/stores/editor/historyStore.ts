@@ -137,15 +137,6 @@ export const useHistoryStore = defineStore('history', () => {
         redoStack.value = [];
     }
 
-    function runWithoutCapture<T>(fn: () => T): T {
-        captureDisabledDepth.value++;
-        try {
-            return fn();
-        } finally {
-            captureDisabledDepth.value--;
-        }
-    }
-
     return {
         undoStack,
         redoStack,
@@ -156,6 +147,5 @@ export const useHistoryStore = defineStore('history', () => {
         undo,
         redo,
         clearHistory,
-        runWithoutCapture,
     };
 });

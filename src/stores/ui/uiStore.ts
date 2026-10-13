@@ -115,9 +115,6 @@ function uiStore() {
         'freecell-log-studio.ui.exportPreviewAlwaysWhite',
         false,
     );
-    function toggleExportPreviewAlwaysWhite() {
-        exportPreviewAlwaysWhite.value = !exportPreviewAlwaysWhite.value;
-    }
 
     return {
         leftPanelWidth,
@@ -129,7 +126,6 @@ function uiStore() {
         isDarkMode,
         followSystem,
         showHidden,
-        toggleExportPreviewAlwaysWhite,
         toggleDarkMode,
         initTheme,
         setFollowSystem,

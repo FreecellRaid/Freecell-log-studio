@@ -2,8 +2,7 @@ import { getWindowTargetId } from '@/types/window';
 import { windowDefinitions } from '@/windows/windowDefinitions';
 import { computed, toValue } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
-import type { Message, MessageFilter } from '@/types/log';
-import { matchesMessageFilter } from '@/editor/filter';
+import type { Message } from '@/types/log';
 import { useLogStore } from '@/stores/project/logStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import { useSelectionStore } from '@/stores/editor/selectionStore';
@@ -144,19 +143,6 @@ export function useActiveContext(
         }
     }
 
-    function selectMessagesByFilter(filter: MessageFilter) {
-        const matchedIds: string[] = [];
-        logStore.documents.forEach((doc) => {
-            doc.chunks.forEach((chunk) => {
-                chunk.messages.forEach((msg) => {
-                    if (matchesMessageFilter(msg, filter))
-                        matchedIds.push(msg.messageId);
-                });
-            });
-        });
-        selectionStore.select(effectiveId.value, 'message', matchedIds, true);
-    }
-
     return {
         effectiveId,
         selectedMessageIds,
@@ -176,7 +162,6 @@ export function useActiveContext(
         clearChunkSelection,
 
         selectAllInChunk,
-        selectMessagesByFilter,
         clearSelection: () => selectionStore.clearSelection(effectiveId.value),
     };
 }

@@ -73,24 +73,6 @@ function SelectionStore() {
         }
     }
 
-    function deselect(
-        windowId: string,
-        type: SelectionType,
-        ids: string | string[],
-    ) {
-        const state = getState(windowId, type);
-        const idList = Array.isArray(ids) ? ids : [ids];
-        const newIds = new Set(state.ids);
-
-        idList.forEach((id) => newIds.delete(id));
-        state.ids = newIds;
-
-        // 如果最后选中的元素被移除了，重置 lastSelectedId
-        if (state.lastSelectedId && idList.includes(state.lastSelectedId)) {
-            state.lastSelectedId = Array.from(newIds).pop();
-        }
-    }
-
     function clearSelection(windowId: string, type?: SelectionType) {
         if (windowId === 'defaultView') return;
 
@@ -307,7 +289,6 @@ function SelectionStore() {
         getState,
         createState,
         select,
-        deselect,
         clearSelection,
         clearAllSelections,
         getSelectedIds,

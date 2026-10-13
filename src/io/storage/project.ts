@@ -482,17 +482,6 @@ export function tryParseProjectFile(
     }
 }
 
-export function parseProjectFile(
-    jsonText: string,
-    options: { regenerateProjectId?: boolean } = {},
-): ProjectFile {
-    const parsed = tryParseProjectFile(jsonText, options);
-    if (!parsed) {
-        throw new Error('无效的工程 JSON 文件');
-    }
-    return parsed;
-}
-
 export function sanitizeProjectFilename(projectName: string): string {
     const baseName = projectName.trim() || 'project';
     return baseName.replace(/[\\/:*?"<>|]/g, '_');
