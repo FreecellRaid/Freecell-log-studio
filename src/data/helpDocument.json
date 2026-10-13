@@ -4,6 +4,21 @@
     "sections": [
         {
             "type": "tips",
+            "icon": "FolderOpen",
+            "title": "快速上手",
+            "items": [
+                {
+                    "term": "整理流程",
+                    "description": "导入日志 → 整理场景和身份 → 编辑消息与染色 → 选择模板并预览 → 导出与保存工程"
+                },
+                {
+                    "term": "保存与备份",
+                    "description": "保存到本地用于当前浏览器恢复(通过链接导入时不会影响服务器数据)；导出为工程文件用于备份或迁移"
+                }
+            ]
+        },
+        {
+            "type": "tips",
             "icon": "Upload",
             "title": "文件导入",
             "items": [
@@ -21,11 +36,23 @@
                 },
                 {
                     "term": "从链接导入",
-                    "description": "复制骰子机器人发送的日志链接，可直接导入青果、海豹日志"
+                    "description": "支持青果、海豹日志链接及公开的 HTTPS 文本/JSON 直链；直链服务须允许跨域读取，默认下载上限 10 MiB、超时 30 秒"
                 },
                 {
                     "term": "删除场外括号",
-                    "description": "首次导入日志时询问是否删除场外发言首尾的（）和()，并记住选择。可在偏好设置中修改，仅影响后续导入，仍保留场外标记"
+                    "description": "默认关闭，可在偏好设置（移动端左侧菜单）启用。导入时删除场外发言首尾各一个括号，仅影响后续日志导入，仍保留场外标记"
+                },
+                {
+                    "term": "DOCX 导入",
+                    "description": "只提取纯文本，不保留原文件的样式和图片；提取出的文字仍须符合支持的日志格式"
+                },
+                {
+                    "term": "文本清洗",
+                    "description": "普通文本适配器删除 CQ 码和部分 HTML 标签；图片、语音和引用没有专门的展示"
+                },
+                {
+                    "term": "工程导入",
+                    "description": "工程 JSON 仅支持单文件导入，会替换当前工作区；普通日志追加为新文档。导入成功会清空撤销历史"
                 }
             ]
         },
@@ -35,8 +62,8 @@
             "title": "消息操作",
             "items": [
                 {
-                    "term": "双击消息",
-                    "description": "进入编辑，按 Enter 保存，按 Esc 取消"
+                    "term": "双击消息正文（桌面端）",
+                    "description": "进入编辑，Enter 保存，Shift + Enter 换行，Esc 取消；点击编辑区外也会保存"
                 },
                 {
                     "term": "拖拽消息",
@@ -44,7 +71,7 @@
                 },
                 {
                     "term": "Ctrl + 点击",
-                    "description": "多选消息"
+                    "description": "多选消息，macOS 使用 Command + 点击"
                 },
                 {
                     "term": "Shift + 点击",
@@ -52,7 +79,7 @@
                 },
                 {
                     "term": "Markdown",
-                    "description": "在偏好设置中启用后，可在消息、导出预览和相应导出内容中渲染 Markdown"
+                    "description": "启用后在消息、导出预览和 HTML 中渲染；DOCX 支持部分格式，TEXT 保留源文本"
                 }
             ]
         },
@@ -61,6 +88,10 @@
             "icon": "FolderOpen",
             "title": "场景管理",
             "items": [
+                {
+                    "term": "场景划分",
+                    "description": "默认按相邻消息的日期变化分块，不自动识别剧情场景；可手动拆分与合并"
+                },
                 {
                     "term": "双击名称",
                     "description": "重命名"
@@ -105,11 +136,11 @@
             "items": [
                 {
                     "term": "优先级",
-                    "description": "数字越大越优先，高优先级覆盖低优先级"
+                    "description": "数字越大越优先；匹配规则按颜色、加粗、斜体分别叠加，高优先级未设置的效果仍保留低优先级设置"
                 },
                 {
                     "term": "筛选条件",
-                    "description": "文本字段支持逗号分隔多个关键词"
+                    "description": "不同条件须同时满足；文本字段用逗号分隔的关键词满足任意一个即可，按包含关系匹配"
                 },
                 {
                     "term": "样式效果",
@@ -127,19 +158,19 @@
             "title": "导出模板占位符",
             "items": [
                 {
-                    "term": "{{ name }}",
+                    "term": "{{name}}",
                     "description": "角色名"
                 },
                 {
-                    "term": "{{ account }}",
+                    "term": "{{account}}",
                     "description": "账号"
                 },
                 {
-                    "term": "{{ content }}",
+                    "term": "{{content}}",
                     "description": "消息内容"
                 },
                 {
-                    "term": "{{ time }}",
+                    "term": "{{time}}",
                     "description": "时间"
                 },
                 {
@@ -149,6 +180,87 @@
                 {
                     "term": "\\n",
                     "description": "换行符"
+                },
+                {
+                    "term": "填写规则",
+                    "description": "名称区分大小写，括号内不要加空格；幕间/场景分隔符中的 {{name}} 分别表示文档名/场景名"
+                }
+            ]
+        },
+        {
+            "type": "tips",
+            "icon": "TextInitial",
+            "title": "导出与过滤",
+            "items": [
+                {
+                    "term": "导出格式",
+                    "description": "顶部导出菜单提供 TEXT、HTML、DOCX、剪切板及工程文件；DOC 当前没有菜单入口"
+                },
+                {
+                    "term": "文件后缀",
+                    "description": "模板后缀仅用于 TEXT 导出，例如 .txt 或 .md；HTML 和 DOCX 使用固定后缀"
+                },
+                {
+                    "term": "隐藏消息",
+                    "description": "隐藏场外或指令消息也会从导出预览、文件及导出到剪切板中排除对应消息，工程 JSON 仍保留全部消息"
+                },
+                {
+                    "term": "显示已隐藏消息",
+                    "description": "只影响编辑区显示，不会把隐藏消息重新加入导出"
+                },
+                {
+                    "term": "Markdown 限制",
+                    "description": "DOCX 的列表、引用和表格转为文本布局，不嵌入 Markdown 图片或生成可点击超链接；TEXT 不包含染色和富文本样式"
+                }
+            ]
+        },
+        {
+            "type": "tips",
+            "icon": "FolderOpen",
+            "title": "保存、恢复与撤销",
+            "items": [
+                {
+                    "term": "手动保存",
+                    "description": "工程不会自动保存或在刷新后自动恢复；桌面端使用保存和本地工程入口，移动端在左侧菜单保存并恢复最新快照"
+                },
+                {
+                    "term": "工程备份",
+                    "description": "导出为工程文件保存所有消息、样式规则和工程视图设置；导出模板与其他 UI 偏好不包含在工程中"
+                },
+                {
+                    "term": "替换工作区",
+                    "description": "恢复快照或导入工程会替换当前工作区，有内容时询问确认；撤销历史不会随工程保存"
+                },
+                {
+                    "term": "存储空间",
+                    "description": "浏览器清除站点数据会丢失快照；空间不足时保存会尝试移除较旧快照，重要工程请导出 JSON 备份"
+                },
+                {
+                    "term": "撤销范围",
+                    "description": "最多保留 20 步编辑历史；导入日志、导入工程或恢复快照会清空历史，不能通过撤销回到导入前"
+                }
+            ]
+        },
+        {
+            "type": "tips",
+            "icon": "MessageSquare",
+            "title": "移动端操作",
+            "items": [
+                {
+                    "term": "面板入口",
+                    "description": "底部切换场景、身份、染色、搜索和模板，顶部提供导入与导出，左侧菜单提供保存、恢复和偏好设置"
+                },
+                {
+                    "term": "选择与编辑",
+                    "description": "点击消息选中，再次点击取消；点击消息的编辑按钮修改正文、角色、账号和标记"
+                },
+                {
+                    "term": "长按排序",
+                    "description": "长按消息约半秒后拖动，在当前场景内重排；靠近列表边缘可自动滚动，松手完成移动"
+                },
+                {
+                    "term": "撤销与重做",
+                    "description": "有编辑历史时，使用底部上方的悬浮撤销/重做按钮"
                 }
             ]
         },
@@ -167,11 +279,11 @@
                 },
                 {
                     "key": "Ctrl + C",
-                    "description": "复制"
+                    "description": "复制消息或场景（应用内部剪贴板）"
                 },
                 {
                     "key": "Ctrl + V",
-                    "description": "粘贴"
+                    "description": "粘贴消息或场景（应用内部剪贴板）"
                 },
                 {
                     "key": "Ctrl + Z",
@@ -187,7 +299,7 @@
                 },
                 {
                     "key": "Ctrl + E",
-                    "description": "合并"
+                    "description": "合并选中消息或场景，单选时向下合并"
                 },
                 {
                     "key": "Ctrl + ↑/↓",
@@ -219,7 +331,7 @@
                 },
                 {
                     "key": "Ctrl + S",
-                    "description": "保存"
+                    "description": "保存当前工程到浏览器本地，不下载文件"
                 },
                 {
                     "key": "Ctrl + P",

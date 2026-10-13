@@ -138,7 +138,7 @@ function handleClose() {
 
 .section-title h3 {
     margin: 0;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text-primary);
 }
@@ -163,7 +163,7 @@ function handleClose() {
     display: inline-block;
     padding: 2px 6px;
     font-family: 'Fira Code', monospace;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text-primary);
     background: var(--bg-sidebar);
     border: 1px solid var(--border-color);
@@ -175,6 +175,7 @@ function handleClose() {
     margin: 0;
     padding-left: 20px;
     color: var(--text-primary);
+    font-size: 14px;
 }
 
 .tip-list li {
