@@ -151,8 +151,7 @@ import {
     TextInitial,
     UserRound,
 } from '@lucide/vue';
-import { defineAsyncComponent, ref, onMounted, onUnmounted, watch } from 'vue';
-import { useStyleStore } from '@/stores/project/styleStore';
+import { defineAsyncComponent, ref, onMounted, onUnmounted } from 'vue';
 import { usePanelResize } from '@/composables/ui/usePanelResize';
 import { useUiStore } from '@/stores/ui/uiStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
@@ -168,7 +167,6 @@ const SettingsPopover = defineAsyncComponent(
 
 const uiStore = useUiStore();
 const windowStore = useWindowStore();
-const styleStore = useStyleStore();
 const showSettings = ref(false);
 const closeSettings = () => {
     showSettings.value = false;
@@ -187,21 +185,6 @@ onMounted(() => {
 onUnmounted(() => {
     window.removeEventListener('click', closeSettings);
 });
-watch(
-    () => styleStore.viewSettings.colorMode,
-    (newMode) => {
-        styleStore.rules.forEach((rule) => {
-            // 仅处理系统基础规则 (priority 为 0 的规则)
-            if (rule.priority === 0) {
-                rule.isActive =
-                    (newMode === 'playerName' && !!rule.filter.playerName) ||
-                    (newMode === 'account' && !!rule.filter.account);
-            }
-        });
-    },
-    { immediate: true }, // 立即执行一次以确保初始状态正确
-);
-
 function handleNavClick(panelName: typeof windowStore.selectedLeftPanel) {
     if (
         windowStore.isWindowOpen(windowStore.selectedLeftPanel) &&

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import type { StyleRule, ColorMode, ViewSettings } from '@/types/style';
 import type { Message } from '@/types/log';
 import { generateId } from '@/utils/id';
@@ -44,6 +44,20 @@ function ruleStore() {
     });
     const rules = ref<StyleRule[]>([]);
     let hasInitializedDefaultRules = false;
+
+    // 设置控件通过 v-model 直接修改模式；历史恢复则替换规则但不恢复模式。
+    // 在 store 内同步两种入口，避免依赖桌面组件，并保证随后的导出立即使用新模式。
+    watch(
+        [() => viewSettings.value.colorMode, rules],
+        ([mode]) => {
+            for (const rule of rules.value) {
+                if (rule.priority === 0) {
+                    rule.isActive = Boolean(rule.filter[mode]);
+                }
+            }
+        },
+        { flush: 'sync' },
+    );
 
     // 获取所有系统基础规则 (Priority 0)
     const systemRules = computed(() => {
@@ -147,16 +161,6 @@ function ruleStore() {
 
     function setColorMode(mode: ColorMode) {
         viewSettings.value.colorMode = mode;
-
-        for (let i = 0; i < rules.value.length; i++) {
-            const rule = rules.value[i];
-            if (rule.priority === 0) {
-                rule.isActive =
-                    mode === 'playerName'
-                        ? !!rule.filter.playerName
-                        : !!rule.filter.account;
-            }
-        }
     }
 
     //同步修改：当玩家修改了名字/账号时，同步更新对应的规则过滤器
