@@ -58,6 +58,12 @@ function cloneMessageFilter(filter: MessageFilter): MessageFilter {
     if (filter.time !== undefined) {
         clonedFilter.time = new Date(filter.time.getTime());
     }
+    if (filter.timeStart !== undefined) {
+        clonedFilter.timeStart = cloneFilterValue(filter.timeStart);
+    }
+    if (filter.timeEnd !== undefined) {
+        clonedFilter.timeEnd = cloneFilterValue(filter.timeEnd);
+    }
     if (filter.content !== undefined) {
         clonedFilter.content = cloneFilterValue(filter.content);
     }
@@ -68,7 +74,7 @@ function cloneMessageFilter(filter: MessageFilter): MessageFilter {
         clonedFilter.isCommand = filter.isCommand;
     }
     if (isRoleType(filter.role) || isRoleTypeArray(filter.role)) {
-        clonedFilter.role = filter.role;
+        clonedFilter.role = cloneFilterValue(filter.role);
     }
     if (filter.note !== undefined) {
         clonedFilter.note = cloneFilterValue(filter.note);
@@ -107,6 +113,7 @@ export function cloneDocuments(documents: LogDocument[]): LogDocument[] {
     }));
 }
 
+// 工程保存和历史快照共用，日期、正则及数组不能与正在编辑的规则共享引用。
 export function cloneRules(rules: StyleRule[]): StyleRule[] {
     return rules.map((rule) => ({
         ruleId: rule.ruleId,
@@ -226,6 +233,12 @@ function normalizeFilter(rawFilter: unknown): MessageFilter {
     }
     if (rawFilter.time !== undefined) {
         filter.time = normalizeDate(rawFilter.time);
+    }
+    if (rawFilter.timeStart !== undefined) {
+        filter.timeStart = normalizeDate(rawFilter.timeStart);
+    }
+    if (rawFilter.timeEnd !== undefined) {
+        filter.timeEnd = normalizeDate(rawFilter.timeEnd);
     }
     if (typeof rawFilter.isOoc === 'boolean') {
         filter.isOoc = rawFilter.isOoc;

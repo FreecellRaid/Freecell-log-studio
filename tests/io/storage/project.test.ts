@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildProjectFile, normalizeProjectFile } from '@/io/storage/project';
+import type { StyleRule } from '@/types/style';
 
 const viewSettings = {
     hideOoc: false,
@@ -91,5 +92,84 @@ describe('project style rule persistence', () => {
         expect(project).not.toHaveProperty('colorRules');
         expect(project.styleRules).not.toBe(styleRules);
         expect(project.styleRules[0].style).not.toBe(styleRules[0].style);
+    });
+});
+
+describe('project rule filter cloning', () => {
+    function rule(): StyleRule {
+        return {
+            ruleId: 'range-rule',
+            ruleName: 'range',
+            filter: {
+                time: new Date('2026-10-13T12:00:00Z'),
+                timeStart: new Date('2026-10-13T00:00:00Z'),
+                timeEnd: new Date('2026-10-14T00:00:00Z'),
+                role: ['pl', 'gm'],
+                playerName: ['Alice'],
+                messageIndex: [1, 2],
+                content: /test/gi,
+            },
+            style: { color: '#abcdef' },
+            area: 'content',
+            priority: 1,
+            isActive: true,
+        };
+    }
+
+    it('isolates mutable filter values from the saved project', () => {
+        const original = rule();
+        const project = buildProjectFile({
+            projectId: 'range-project',
+            projectName: 'range',
+            documents: [],
+            styleRules: [original],
+            viewSettings,
+        });
+        const saved = project.styleRules[0];
+        expect(saved).toEqual(original);
+        for (const key of [
+            'time',
+            'timeStart',
+            'timeEnd',
+            'role',
+            'playerName',
+            'messageIndex',
+            'content',
+        ] as const) {
+            expect(saved.filter[key]).not.toBe(original.filter[key]);
+        }
+
+        original.filter.timeStart!.setTime(0);
+        original.filter.timeEnd!.setTime(0);
+        (original.filter.role as string[]).push('bot');
+        expect(saved.filter.timeStart!.toISOString()).toBe(
+            '2026-10-13T00:00:00.000Z',
+        );
+        expect(saved.filter.timeEnd!.toISOString()).toBe(
+            '2026-10-14T00:00:00.000Z',
+        );
+        expect(saved.filter.role).toEqual(['pl', 'gm']);
+    });
+
+    it('restores time range dates after a project JSON round trip', () => {
+        const original = rule();
+        const project = buildProjectFile({
+            projectId: 'range-project',
+            projectName: 'range',
+            documents: [],
+            styleRules: [original],
+            viewSettings,
+        });
+        const restored = normalizeProjectFile(
+            JSON.parse(JSON.stringify(project)),
+        );
+        expect(restored.styleRules[0].filter.timeStart).toEqual(
+            original.filter.timeStart,
+        );
+        expect(restored.styleRules[0].filter.timeEnd).toEqual(
+            original.filter.timeEnd,
+        );
+        expect(restored.styleRules[0].filter.timeStart).toBeInstanceOf(Date);
+        expect(restored.styleRules[0].filter.timeEnd).toBeInstanceOf(Date);
     });
 });

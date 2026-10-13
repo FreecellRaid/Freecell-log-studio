@@ -1,9 +1,9 @@
-import { cloneDocuments } from '@/io/storage/project';
+import { cloneDocuments, cloneRules } from '@/io/storage/project';
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import { useLogStore } from '@/stores/project/logStore';
 import { useStyleStore } from '../project/styleStore';
-import type { LogDocument, MessageFilter } from '@/types/log';
+import type { LogDocument } from '@/types/log';
 import type { StyleRule } from '@/types/style';
 
 interface HistorySnapshot {
@@ -23,57 +23,6 @@ export const useHistoryStore = defineStore('history', () => {
 
     const canUndo = computed(() => undoStack.value.length > 0);
     const canRedo = computed(() => redoStack.value.length > 0);
-
-    function cloneMessageFilter(filter: MessageFilter): MessageFilter {
-        const clonedFilter: MessageFilter = {};
-
-        if (filter.messageId !== undefined)
-            clonedFilter.messageId = cloneFilterValue(filter.messageId);
-        if (filter.chunkId !== undefined)
-            clonedFilter.chunkId = cloneFilterValue(filter.chunkId);
-        if (filter.messageIndex !== undefined)
-            clonedFilter.messageIndex = cloneFilterValue(filter.messageIndex);
-        if (filter.playerName !== undefined)
-            clonedFilter.playerName = cloneFilterValue(filter.playerName);
-        if (filter.account !== undefined)
-            clonedFilter.account = cloneFilterValue(filter.account);
-        if (filter.time !== undefined)
-            clonedFilter.time = new Date(filter.time.getTime());
-        if (filter.content !== undefined)
-            clonedFilter.content = cloneFilterValue(filter.content);
-        if (filter.isOoc !== undefined) clonedFilter.isOoc = filter.isOoc;
-        if (filter.isCommand !== undefined)
-            clonedFilter.isCommand = filter.isCommand;
-        if (filter.role !== undefined) clonedFilter.role = filter.role;
-        if (filter.note !== undefined)
-            clonedFilter.note = cloneFilterValue(filter.note);
-
-        return clonedFilter;
-    }
-
-    function cloneFilterValue<T>(value: T): T {
-        if (Array.isArray(value)) {
-            return [...value] as T;
-        }
-
-        if (value instanceof RegExp) {
-            return new RegExp(value.source, value.flags) as T;
-        }
-
-        return value;
-    }
-
-    function cloneRules(rules: StyleRule[]): StyleRule[] {
-        return rules.map((rule) => ({
-            ruleId: rule.ruleId,
-            ruleName: rule.ruleName,
-            filter: cloneMessageFilter(rule.filter),
-            style: { ...rule.style },
-            area: rule.area,
-            priority: rule.priority,
-            isActive: rule.isActive,
-        }));
-    }
 
     function createSnapshot(): HistorySnapshot {
         return {
