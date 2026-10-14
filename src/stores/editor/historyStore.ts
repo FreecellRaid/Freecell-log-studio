@@ -21,8 +21,21 @@ export const useHistoryStore = defineStore('history', () => {
     const isRestoring = ref(false);
     const captureDisabledDepth = ref(0);
 
+    // 修改代数：每次真实修改 +1（单调递增，不受撤销栈容量淘汰影响）
+    const editGeneration = ref(0);
+    const savedGeneration = ref(0);
+    // 已保存基线的工作区指纹，用于"改回去"场景的内容级判定
+    const savedWorkspaceJson = ref<string | null>(null);
+
     const canUndo = computed(() => undoStack.value.length > 0);
     const canRedo = computed(() => redoStack.value.length > 0);
+
+    function serializeWorkspace() {
+        return JSON.stringify({
+            documents: logStore.documents,
+            rules: styleStore.rules,
+        });
+    }
 
     function createSnapshot(): HistorySnapshot {
         return {
@@ -56,6 +69,7 @@ export const useHistoryStore = defineStore('history', () => {
         try {
             pushSnapshot(undoStack, createSnapshot());
             redoStack.value = [];
+            editGeneration.value += 1;
         } catch (error) {
             console.error('[history] captureSnapshot failed:', error);
         }
@@ -84,6 +98,23 @@ export const useHistoryStore = defineStore('history', () => {
     function clearHistory() {
         undoStack.value = [];
         redoStack.value = [];
+        // 导入/清空/打开工程后以当前状态为基线，刷新不弹确认
+        markSaved();
+    }
+
+    // 保存成功后调用：当前状态视为已保存基线
+    function markSaved() {
+        savedGeneration.value = editGeneration.value;
+        savedWorkspaceJson.value = serializeWorkspace();
+    }
+
+    // 刷新确认用：修改过且当前内容与已保存基线不一致。
+    // 先用修改代数短路（没改过不序列化），有修改时再做内容比对，
+    // 这样 a→b→a 的净零变化不会触发刷新确认。
+    function hasUnsavedChanges() {
+        if (editGeneration.value <= savedGeneration.value) return false;
+        if (savedWorkspaceJson.value === null) return true;
+        return serializeWorkspace() !== savedWorkspaceJson.value;
     }
 
     return {
@@ -96,5 +127,7 @@ export const useHistoryStore = defineStore('history', () => {
         undo,
         redo,
         clearHistory,
+        markSaved,
+        hasUnsavedChanges,
     };
 });

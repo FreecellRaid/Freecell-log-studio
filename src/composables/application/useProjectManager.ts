@@ -104,7 +104,12 @@ export function useProjectManager() {
 
     function saveCurrentProjectToLocal() {
         const project = createCurrentProjectFile();
-        return saveProjectToLocalStorage(project);
+        const result = saveProjectToLocalStorage(project);
+        if (result.success) {
+            // 保存成功后当前状态视为已保存基线，刷新时不再弹确认
+            historyStore.markSaved();
+        }
+        return result;
     }
 
     function exportCurrentProject() {
