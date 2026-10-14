@@ -11,10 +11,19 @@
             <header class="panel-header">
                 <div class="header-title">
                     <h3>消息属性检查器</h3>
+                    <div class="count" v-if="selectedItems.length > 0">
+                        ({{ selectedItems.length }})
+                    </div>
                 </div>
-                <div class="count" v-if="selectedItems.length > 0">
-                    已选中 {{ selectedItems.length }} 条
-                </div>
+                <button
+                    type="button"
+                    class="panel-header-action-button icon-interactive"
+                    title="关闭"
+                    aria-label="关闭"
+                    @click="windowStore.closeInspector"
+                >
+                    <X class="ui-icon" />
+                </button>
             </header>
 
             <div class="inspector-content">
@@ -72,6 +81,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { X } from '@lucide/vue';
 import MessageDetailEditor from '@/components/common/MessageDetailEditor.vue';
 import type {
     MessageDetailTextField,
@@ -83,12 +93,14 @@ import { usePanelResize } from '@/composables/ui/usePanelResize';
 import { useLogStore } from '@/stores/project/logStore';
 import { useLogCommands } from '@/stores/project/logCommands';
 import { useUiStore } from '@/stores/ui/uiStore';
+import { useWindowStore } from '@/stores/ui/windowStore';
 import type { Message } from '@/types/log';
 
 const activeContext = useActiveContext();
 const logStore = useLogStore();
 const logCommands = useLogCommands();
 const uiStore = useUiStore();
+const windowStore = useWindowStore();
 const { startResize } = usePanelResize({
     edge: 'left',
     getWidth: () => uiStore.rightPanelWidth,
@@ -171,6 +183,15 @@ function updateField(
 .sidebar-right-container {
     height: 100%;
     min-height: 0;
+}
+
+.header-title {
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.panel-header-action-button {
+    flex-shrink: 0;
 }
 
 .inspector-content {
