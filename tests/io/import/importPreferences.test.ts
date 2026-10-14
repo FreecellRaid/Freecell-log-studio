@@ -132,7 +132,9 @@ describe('import preferences', () => {
 
             expect(confirm).not.toHaveBeenCalled();
             expect(useImportSettingsStore().stripOocParentheses).toBe(false);
-            expect(useLogStore().allMessages[0].content).toBe('（场外（说明））');
+            expect(useLogStore().allMessages[0].content).toBe(
+                '（场外（说明））',
+            );
         },
     );
 

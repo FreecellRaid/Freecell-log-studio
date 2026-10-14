@@ -1,0 +1,8 @@
+# 依赖与构建产物
+node_modules
+dist
+
+# 不格式化的文件类型
+*.json
+*.yml
+*.yaml

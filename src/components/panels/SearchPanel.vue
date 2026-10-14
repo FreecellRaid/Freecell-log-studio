@@ -161,7 +161,9 @@
                 </button>
                 <button
                     class="btn-primary"
-                    :disabled="activeContext.selectedMessageIds.value.size === 0"
+                    :disabled="
+                        activeContext.selectedMessageIds.value.size === 0
+                    "
                     @click="deleteSelectedMessages"
                 >
                     删除
