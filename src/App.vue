@@ -8,7 +8,7 @@
             :class="[{ 'dark-mode': uiStore.isDarkMode }]"
         />
     </div>
-    <ModalHost :class="[{ 'dark-mode': uiStore.isDarkMode }]" />
+    <ModalHost />
 </template>
 
 <script setup lang="ts">
