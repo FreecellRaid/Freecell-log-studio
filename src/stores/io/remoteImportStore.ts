@@ -6,6 +6,7 @@ import { importFiles } from '@/io/import/importService';
 import { useFileImport } from '@/composables/application/useImporter';
 import { useLogStore } from '@/stores/project/logStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
+import type { ImportTextEntry } from '@/types/import';
 
 export const useRemoteImportStore = defineStore('remoteImport', () => {
     const windowStore = useWindowStore();
@@ -14,6 +15,10 @@ export const useRemoteImportStore = defineStore('remoteImport', () => {
     const loading = ref(false);
     const error = ref('');
     const message = ref('');
+    const originalEntry = ref<ImportTextEntry>();
+    const canDownloadOriginal = computed(
+        () => !loading.value && Boolean(originalEntry.value),
+    );
     let controller: AbortController | undefined;
 
     // 取消网络请求后，已经开始的解析也可能继续完成，需要阻止旧结果覆盖新请求。
@@ -39,11 +44,31 @@ export const useRemoteImportStore = defineStore('remoteImport', () => {
         windowStore.openModal('remoteImport');
         error.value = '';
         message.value = '';
+        originalEntry.value = undefined;
     }
 
     function close() {
         if (visible.value) windowStore.closeModal('remoteImport');
         else cancel();
+    }
+
+    function downloadOriginal() {
+        const entry = originalEntry.value;
+        if (!canDownloadOriginal.value || !entry) return;
+        const blob = new Blob([entry.text], {
+            type: 'text/plain;charset=utf-8',
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        const name = entry.name.replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_');
+        link.download = /\.[a-z0-9]+$/i.test(name)
+            ? name
+            : `${name || '原始日志'}.txt`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
     async function importLink(value = input.value) {
@@ -62,6 +87,7 @@ export const useRemoteImportStore = defineStore('remoteImport', () => {
                 signal: activeController.signal,
             });
             if (current !== revision) return;
+            originalEntry.value = entry;
             const logs = useLogStore();
             const existing =
                 entry.source &&
@@ -73,23 +99,27 @@ export const useRemoteImportStore = defineStore('remoteImport', () => {
             if (existing) {
                 const chunk = existing.chunks[0];
                 if (chunk) windowStore.setActiveChunk(chunk.chunkId);
-                message.value = '这份日志已在当前工作区中，已为你打开。';
+                message.value = '这份日志就在工作区中，已经为你导入好了哦～';
                 return;
             }
             // 先完成解析，切换链接或取消后不再应用旧结果。
             const documents = await importFiles([entry], logs.documents.length);
             if (current !== revision) return;
             const doc = documents[0];
-            if (!doc) throw new Error('日志中没有可导入的消息');
+            if (!doc)
+                throw new Error('诶，日志里没有可导入的消息呢(•́⍛•̀; ≡ •́⍛•̀;)');
+
             // 复用统一的应用入口，保留消息字段和导入偏好。
             useFileImport().applyLogDocuments(documents);
-            close();
+            message.value = '日志已导入，点击右上角关闭弹窗❛‿˂̵✧';
             const chunk = doc.chunks[0];
             if (chunk) windowStore.setActiveChunk(chunk.chunkId);
         } catch (cause) {
             if (current !== revision) return;
             error.value =
-                cause instanceof Error ? cause.message : '日志导入失败';
+                cause instanceof Error
+                    ? cause.message
+                    : '导入失败了｡°(°¯᷄◠¯᷅°)°｡';
         } finally {
             if (current === revision) {
                 loading.value = false;
@@ -103,6 +133,8 @@ export const useRemoteImportStore = defineStore('remoteImport', () => {
         loading,
         error,
         message,
+        canDownloadOriginal,
+        downloadOriginal,
         open,
         close,
         cancel,

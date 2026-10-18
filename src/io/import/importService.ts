@@ -54,7 +54,7 @@ export async function importFiles(
             );
             doc.source = entry.source ? { ...entry.source } : undefined;
             if (doc.chunks.length === 0)
-                throw new Error('日志中没有可导入的消息');
+                throw new Error('诶，日志里没有可导入的消息呢(•́⍛•̀; ≡ •́⍛•̀;)');
             documents.push(doc);
         } catch (error) {
             throw new Error(

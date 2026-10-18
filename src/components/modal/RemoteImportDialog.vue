@@ -15,14 +15,18 @@
                 :disabled="store.loading"
                 data-autofocus
             />
-            <p v-if="store.loading" role="status">正在加载……</p>
+            <p v-if="store.loading" role="status">努力加载中</p>
             <p v-if="store.error" class="remote-import-error" role="alert">
                 {{ store.error }}
             </p>
             <p v-if="store.message" role="status">{{ store.message }}</p>
             <div class="remote-import-actions">
-                <button type="button" @click="store.close()">
-                    {{ store.loading ? '取消加载' : '关闭' }}
+                <button
+                    v-if="store.canDownloadOriginal"
+                    type="button"
+                    @click="store.downloadOriginal()"
+                >
+                    下载原始文件
                 </button>
                 <button
                     type="submit"
