@@ -114,6 +114,17 @@
                 </div>
                 <div class="drawer-row">
                     <span class="drawer-row-icon">
+                        <FolderOpen class="ui-icon" />
+                    </span>
+                    <span>远程导入后自动关闭</span>
+                    <ToggleButton
+                        v-model="importSettingsStore.autoCloseRemoteImport"
+                        aria-label="导入后自动关闭弹窗"
+                        title="关闭此选项可保留弹窗下载原始文件"
+                    />
+                </div>
+                <div class="drawer-row">
+                    <span class="drawer-row-icon">
                         <Clock3 class="ui-icon" />
                     </span>
                     <span>显示时间</span>

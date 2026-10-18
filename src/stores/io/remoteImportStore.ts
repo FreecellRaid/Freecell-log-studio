@@ -6,6 +6,7 @@ import { importFiles } from '@/io/import/importService';
 import { useFileImport } from '@/composables/application/useImporter';
 import { useLogStore } from '@/stores/project/logStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
+import { useImportSettingsStore } from '@/stores/io/importSettingsStore';
 import type { ImportTextEntry } from '@/types/import';
 
 export const useRemoteImportStore = defineStore('remoteImport', () => {
@@ -100,6 +101,7 @@ export const useRemoteImportStore = defineStore('remoteImport', () => {
                 const chunk = existing.chunks[0];
                 if (chunk) windowStore.setActiveChunk(chunk.chunkId);
                 message.value = '这份日志就在工作区中，已经为你导入好了哦～';
+                if (useImportSettingsStore().autoCloseRemoteImport) close();
                 return;
             }
             // 先完成解析，切换链接或取消后不再应用旧结果。
@@ -114,6 +116,7 @@ export const useRemoteImportStore = defineStore('remoteImport', () => {
             message.value = '日志已导入，点击右上角关闭弹窗❛‿˂̵✧';
             const chunk = doc.chunks[0];
             if (chunk) windowStore.setActiveChunk(chunk.chunkId);
+            if (useImportSettingsStore().autoCloseRemoteImport) close();
         } catch (cause) {
             if (current !== revision) return;
             error.value =
