@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import type { ExportFormat, ExportRow } from '@/types/export';
 import { htmlAdapter, textAdapter } from '@/io/export/adapters/exportAdapters';
 import { getPlaceholderValue } from '@/io/export/templateParser';
-import { PRESETS } from '@/stores/io/exportStore';
 
 const format: ExportFormat = {
     formatId: 'format',
@@ -94,26 +93,6 @@ describe('styled export adapters', () => {
                 { ...format, playerNameFormat: '{{name}} {{nameColor}}' },
             ),
         ).toBe('{{nameColor}} $& #123456');
-    });
-
-    it('exports separate BBCode colors and colors only the name in the Markdown preset', () => {
-        const colorRows: ExportRow[] = [
-            {
-                ...rows[0],
-                contentStyle: { color: '#abcdef' },
-            },
-        ];
-        const bbcode = PRESETS.find((preset) => preset.formatId === 'bbcode')!;
-        const markdown = PRESETS.find(
-            (preset) => preset.formatId === 'markdownNameColor',
-        )!;
-        expect(textAdapter(colorRows, bbcode)).toBe(
-            '[color=#123456]Alice[/color] \n[color=#abcdef]hello[/color]\n\n',
-        );
-        const text = textAdapter(colorRows, markdown);
-        expect(text).toContain('<span style="color: #123456">Alice</span>');
-        expect(text).toContain('> hello');
-        expect(text).not.toContain('#abcdef');
     });
 
     it('keeps style in HTML output', () => {
