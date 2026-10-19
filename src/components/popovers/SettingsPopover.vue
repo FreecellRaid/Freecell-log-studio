@@ -69,7 +69,7 @@
                 class="setting-item"
                 title="关闭此选项可保留弹窗下载原始文件"
             >
-                导入后自动关闭弹窗
+                导入后关闭弹窗
             </ToggleButton>
         </div>
     </div>
