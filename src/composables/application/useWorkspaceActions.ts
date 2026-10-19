@@ -17,21 +17,26 @@ export function useWorkspaceActions() {
     const editorSessionStore = useEditorSessionStore();
     const projectManager = useProjectManager();
 
-    function saveCurrentProjectWithFeedback(options?: {
-        afterSave?: () => void;
+    async function saveCurrentProjectWithFeedback(options?: {
+        afterSave?: () => void | Promise<void>;
     }) {
-        const result = projectManager.saveCurrentProjectToLocal();
-        if (!result.success) {
-            alert('本地存储空间不足，保存失败。');
+        try {
+            await projectManager.saveCurrentProjectToLocal();
+        } catch (error) {
+            console.error(error);
+            alert(
+                error instanceof Error
+                    ? error.message
+                    : '工程保存失败，请重试。',
+            );
             return false;
         }
-
-        options?.afterSave?.();
-        alert(
-            result.removedCount > 0
-                ? `工程已保存，并自动清理了 ${result.removedCount} 个旧版本。`
-                : '工程已成功保存到本地。',
-        );
+        try {
+            await options?.afterSave?.();
+        } catch (error) {
+            console.error('工程已保存，但列表刷新失败', error);
+        }
+        alert('工程已成功保存到本地。');
         return true;
     }
 
@@ -59,6 +64,7 @@ export function useWorkspaceActions() {
 
     return {
         hasWorkspaceState: projectManager.hasWorkspaceState,
+        storageState: projectManager.storageState,
         getStoredProjects: projectManager.getStoredProjects,
         openStoredProject: projectManager.openStoredProject,
         saveCurrentProjectWithFeedback,

@@ -239,7 +239,7 @@ function encodeRegExp(_key: string, value: unknown): unknown {
         : value;
 }
 
-// 独立迁移入口；暂不接入现有 UI 的 v2 保存和读取流程。
+// 文件 DTO 迁移入口；编辑器运行时通过 workspaceProject 显式恢复。
 export function migrateProjectFileTo(value: unknown): ProjectFileReadResult {
     if (!isRecord(value))
         throw new ProjectFileError([

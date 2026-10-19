@@ -103,9 +103,16 @@ export const useHistoryStore = defineStore('history', () => {
     }
 
     // 保存成功后调用：当前状态视为已保存基线
-    function markSaved() {
-        savedGeneration.value = editGeneration.value;
-        savedWorkspaceJson.value = serializeWorkspace();
+    function createSaveCheckpoint() {
+        return {
+            generation: editGeneration.value,
+            workspaceJson: serializeWorkspace(),
+        };
+    }
+
+    function markSaved(checkpoint = createSaveCheckpoint()) {
+        savedGeneration.value = checkpoint.generation;
+        savedWorkspaceJson.value = checkpoint.workspaceJson;
     }
 
     // 刷新确认用：修改过且当前内容与已保存基线不一致。
@@ -128,6 +135,7 @@ export const useHistoryStore = defineStore('history', () => {
         redo,
         clearHistory,
         markSaved,
+        createSaveCheckpoint,
         hasUnsavedChanges,
     };
 });

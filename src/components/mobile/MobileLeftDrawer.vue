@@ -28,6 +28,7 @@
                     class="drawer-row"
                     type="button"
                     @click="workspaceActions.saveCurrentProjectWithFeedback()"
+                    :disabled="workspaceActions.storageState.isSaving"
                 >
                     <span class="drawer-row-icon">
                         <Save class="ui-icon" />
@@ -38,6 +39,9 @@
                     class="drawer-row"
                     type="button"
                     @click="openLatestStoredProject"
+                    :disabled="
+                        openingProject || workspaceActions.storageState.isSaving
+                    "
                 >
                     <span class="drawer-row-icon">
                         <FolderOpen class="ui-icon" />
@@ -214,6 +218,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 import ToggleButton from '@/components/common/ToggleButton.vue';
 import {
     AtSign,
@@ -252,6 +257,7 @@ const windowStore = useWindowStore();
 const mobileUiStore = useMobileUiStore();
 const editorSessionStore = useEditorSessionStore();
 const workspaceActions = useWorkspaceActions();
+const openingProject = ref(false);
 const closeGesture = useSwipeGesture({
     direction: 'left',
     onSwipe: mobileUiStore.closeOverlay,
@@ -262,12 +268,24 @@ function startProjectNameEdit() {
     mobileUiStore.openSheet('projectName');
 }
 
-function openLatestStoredProject() {
-    const latestProject = workspaceActions.getStoredProjects()[0];
-    if (!latestProject) return;
-
-    if (workspaceActions.openStoredProject(latestProject.projectId)) {
-        mobileUiStore.reset();
+async function openLatestStoredProject() {
+    if (openingProject.value) return;
+    openingProject.value = true;
+    try {
+        const projects = await workspaceActions.getStoredProjects();
+        const warnings = workspaceActions.storageState.migrationWarnings;
+        if (warnings.length) alert(warnings.join('\n'));
+        const latestProject = projects[0];
+        if (!latestProject) {
+            alert('当前没有已保存的本地工程。');
+            return;
+        }
+        if (await workspaceActions.openStoredProject(latestProject.projectId))
+            mobileUiStore.reset();
+    } catch (error) {
+        alert(error instanceof Error ? error.message : '恢复本地工程失败');
+    } finally {
+        openingProject.value = false;
     }
 }
 

@@ -45,7 +45,10 @@
                 type="button"
                 title="保存到本地"
                 @click="handleSaveProject"
-                :disabled="logStore.documents.length === 0"
+                :disabled="
+                    logStore.documents.length === 0 ||
+                    projectManager.storageState.isSaving
+                "
             >
                 <Save class="ui-icon" aria-hidden="true" />
             </button>
@@ -66,6 +69,11 @@
                 >
                     <StoredProjectsPopover
                         :projects="storedProjects"
+                        :loading="storedProjectsLoading"
+                        :error="storedProjectsError"
+                        :warnings="
+                            projectManager.storageState.migrationWarnings
+                        "
                         @refresh="refreshStoredProjects"
                         @close="closeAllPopovers"
                     />
@@ -132,7 +140,7 @@ import { useFileImportInput } from '@/composables/application/useImporter';
 import { useProjectManager } from '@/composables/application/useProjectManager';
 import { useWorkspaceActions } from '@/composables/application/useWorkspaceActions';
 import { vClickOutside } from '@/directives/clickOutside';
-import type { ProjectFile } from '@/types/project';
+import type { StoredProjectSummary } from '@/io/storage/projectStorage';
 import StoredProjectsPopover from '@/components/popovers/StoredProjectsPopover.vue';
 import ExportPopover from '@/components/popovers/ExportPopover.vue';
 import { useRemoteImportStore } from '@/stores/io/remoteImportStore';
@@ -149,7 +157,10 @@ const hasWorkspaceState = workspaceActions.hasWorkspaceState;
 const showExportPopover = ref(false);
 const showStoredProjectsPopover = ref(false);
 const showImportPopover = ref(false);
-const storedProjects = ref<ProjectFile[]>([]);
+const storedProjects = ref<StoredProjectSummary[]>([]);
+const storedProjectsLoading = ref(false);
+const storedProjectsError = ref('');
+let listRequest = 0;
 function closeAllPopovers() {
     showExportPopover.value = false;
     showStoredProjectsPopover.value = false;
@@ -188,18 +199,30 @@ function toggleStoredProjects() {
     const targetState = !showStoredProjectsPopover.value;
     closeAllPopovers();
     if (targetState) {
-        refreshStoredProjects();
+        void refreshStoredProjects();
     }
     showStoredProjectsPopover.value = targetState;
 }
 
-function refreshStoredProjects() {
-    storedProjects.value = projectManager.getStoredProjects();
+async function refreshStoredProjects() {
+    const request = ++listRequest;
+    storedProjectsLoading.value = true;
+    storedProjectsError.value = '';
+    try {
+        const projects = await projectManager.getStoredProjects();
+        if (request === listRequest) storedProjects.value = projects;
+    } catch (error) {
+        if (request === listRequest)
+            storedProjectsError.value =
+                error instanceof Error ? error.message : '读取本地工程失败';
+    } finally {
+        if (request === listRequest) storedProjectsLoading.value = false;
+    }
 }
 
-function handleSaveProject() {
+async function handleSaveProject() {
     closeAllPopovers();
-    workspaceActions.saveCurrentProjectWithFeedback({
+    await workspaceActions.saveCurrentProjectWithFeedback({
         afterSave: refreshStoredProjects,
     });
 }

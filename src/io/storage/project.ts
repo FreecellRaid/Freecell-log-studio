@@ -453,7 +453,7 @@ export function normalizeProjectFile(
         throw new Error('无效的工程文件：根结构错误');
     }
 
-    // 当前 UI 尚未接入资源存储；不能把新文件降级后丢弃图片。
+    // 仅兼容旧工程；v3 必须走 projectFile 校验和 workspaceProject 桥接。
     if (
         rawProject.schema !== undefined ||
         (rawProject.version !== undefined &&

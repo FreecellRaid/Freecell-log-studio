@@ -17,6 +17,9 @@ importers:
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
+      dexie:
+        specifier: ^4.4.6
+        version: 4.4.6
       docx:
         specifier: ^9.6.1
         version: 9.6.1
@@ -48,6 +51,9 @@ importers:
       '@vue/tsconfig':
         specifier: ^0.9.0
         version: 0.9.1(typescript@5.9.3)(vue@3.5.31(typescript@5.9.3))
+      fake-indexeddb:
+        specifier: ^6.2.6
+        version: 6.2.6
       prettier:
         specifier: ^3.8.1
         version: 3.8.1
@@ -707,6 +713,9 @@ packages:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
     engines: {node: '>=8'}
 
+  dexie@4.4.6:
+    resolution: {integrity: sha512-hJP/BO6mjB+tX6hToIO1kmxYLNmun90wYbfcoAoLpKEyDYal/k33dg0TAfoUe2TDsbbLoVIzljJ3BN2UbR5EOg==}
+
   dingbat-to-unicode@1.0.1:
     resolution: {integrity: sha512-98l0sW87ZT58pU4i61wa2OHwxbiYSbuxsCBozaVnYX2iCnr3bLM3fIes1/ej7h1YdOKuKt/MLs706TVnALA65w==}
 
@@ -742,6 +751,10 @@ packages:
   expect-type@1.4.0:
     resolution: {integrity: sha512-KfYbmpRm0VbLjEvVa9yGwCi9GI34xvi7A/HXYWQO65CSD2u3MczUJSuwXKFIxlGsgBQizV9q5J9NHj4VG0n+pA==}
     engines: {node: '>=12.0.0'}
+
+  fake-indexeddb@6.2.6:
+    resolution: {integrity: sha512-ihhmr0KoET51jT8R4YhbUYuLLvr1qqO6INISygtN16i8loR8kAxtAUr4+EKHTSMjL+lggaAn4OC7DRqzrNgnuQ==}
+    engines: {node: '>=18'}
 
   fast-deep-equal@3.1.3:
     resolution: {integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==}
@@ -1756,6 +1769,8 @@ snapshots:
 
   detect-libc@2.1.2: {}
 
+  dexie@4.4.6: {}
+
   dingbat-to-unicode@1.0.1: {}
 
   docx@9.6.1:
@@ -1813,6 +1828,8 @@ snapshots:
       '@types/estree': 1.0.9
 
   expect-type@1.4.0: {}
+
+  fake-indexeddb@6.2.6: {}
 
   fast-deep-equal@3.1.3: {}
 

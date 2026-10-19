@@ -5,13 +5,31 @@
             <button
                 class="icon-interactive"
                 type="button"
+                :disabled="loading || busy"
                 @click="refreshStoredProjects"
                 title="刷新列表"
             >
                 <RefreshCcw class="ui-icon" aria-hidden="true" />
             </button>
         </div>
-        <div v-if="projects.length === 0" class="stored-projects-empty">
+        <div v-if="loading" class="stored-projects-empty" role="status">
+            正在读取本地工程…
+        </div>
+        <div v-else-if="error" class="stored-projects-empty" role="alert">
+            {{ error }}
+        </div>
+        <div
+            v-for="warning in warnings"
+            :key="warning"
+            class="stored-projects-empty"
+            role="status"
+        >
+            {{ warning }}
+        </div>
+        <div
+            v-if="!loading && !error && projects.length === 0"
+            class="stored-projects-empty"
+        >
             当前没有已保存的本地工程
         </div>
         <div
@@ -26,13 +44,14 @@
                 </div>
                 <div class="stored-project-meta">
                     {{ formatStoredProjectTime(project.time) }} ·
-                    {{ project.documents.length }} 文档
+                    {{ project.documentCount }} 文档
                 </div>
             </div>
             <div class="stored-project-actions">
                 <button
                     class="icon-interactive icon-button-warning"
                     type="button"
+                    :disabled="busy || projectManager.storageState.isSaving"
                     title="删除工程"
                     @click.stop="handleDeleteStoredProject(project.projectId)"
                 >
@@ -44,12 +63,16 @@
 </template>
 <script setup lang="ts">
 import { RefreshCcw, Trash2 } from '@lucide/vue';
+import { ref } from 'vue';
 import { formatDate } from '@/utils/date';
-import type { ProjectFile } from '@/types/project';
+import type { StoredProjectSummary } from '@/io/storage/projectStorage';
 import { useProjectManager } from '@/composables/application/useProjectManager';
 
 defineProps<{
-    projects: ProjectFile[];
+    projects: StoredProjectSummary[];
+    loading: boolean;
+    error: string;
+    warnings: string[];
 }>();
 
 const emit = defineEmits<{
@@ -58,30 +81,37 @@ const emit = defineEmits<{
 }>();
 
 const projectManager = useProjectManager();
+const busy = ref(false);
 
 function refreshStoredProjects() {
     emit('refresh');
 }
 
-function handleOpenStoredProject(projectId: string) {
+async function handleOpenStoredProject(projectId: string) {
+    if (busy.value || projectManager.storageState.isSaving) return;
+    busy.value = true;
     try {
-        if (projectManager.openStoredProject(projectId)) {
+        if (await projectManager.openStoredProject(projectId)) {
             refreshStoredProjects();
             emit('close');
         }
     } catch (error) {
         console.error(error);
         alert(error instanceof Error ? error.message : '打开本地工程失败');
+    } finally {
+        busy.value = false;
     }
 }
 
-function handleDeleteStoredProject(projectId: string) {
+async function handleDeleteStoredProject(projectId: string) {
+    if (busy.value || projectManager.storageState.isSaving) return;
     if (!window.confirm('确定要删除这个工程文件吗？本操作不可撤销。')) {
         return;
     }
 
+    busy.value = true;
     try {
-        const deleted = projectManager.deleteStoredProject(projectId);
+        const deleted = await projectManager.deleteStoredProject(projectId);
         if (!deleted) {
             alert('未找到对应的本地工程。');
             return;
@@ -90,6 +120,8 @@ function handleDeleteStoredProject(projectId: string) {
     } catch (error) {
         console.error(error);
         alert(error instanceof Error ? error.message : '删除本地工程失败');
+    } finally {
+        busy.value = false;
     }
 }
 

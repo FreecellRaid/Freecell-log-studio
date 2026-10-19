@@ -18,6 +18,7 @@ import { useResponsiveMode } from '@/composables/ui/useResponsiveMode.js';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import { useRemoteImportStore } from '@/stores/io/remoteImportStore.js';
 import { useHistoryStore } from '@/stores/editor/historyStore';
+import { useProjectStorageStore } from '@/stores/io/projectStorageStore';
 import ModalHost from '@/components/modal/ModalHost.vue';
 
 const remoteImport = useRemoteImportStore();
@@ -44,9 +45,14 @@ const uiStore = useUiStore();
 const { isMobile } = useResponsiveMode();
 const windowStore = useWindowStore();
 const historyStore = useHistoryStore();
+const projectStorage = useProjectStorageStore();
 windowStore.initializeLayout(isMobile.value);
 
 onMounted(() => {
+    // 后台迁移存档，不等待、不自动替换当前工作区；失败后存储入口仍可重试。
+    void projectStorage
+        .initialize()
+        .catch((error: unknown) => console.error(error));
     uiStore.initTheme();
     window.addEventListener('hashchange', importFromLocation);
     importFromLocation();

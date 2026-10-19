@@ -10,14 +10,20 @@ import {
     buildProjectFile,
     sanitizeProjectFilename,
 } from '@/io/storage/project';
+import { projectRepository } from '@/io/storage/projectStorage';
 import {
-    deleteProjectFromLocalStorage,
-    loadStoredProjects,
-    saveProjectToLocalStorage,
-} from '@/io/storage/projectStorage';
+    migrateProjectFileTo,
+    stringifyProjectFile,
+} from '@/io/storage/projectFile';
+import { projectFileToWorkspace } from '@/io/storage/workspaceProject';
+import { useProjectStorageStore } from '@/stores/io/projectStorageStore';
+import type { ProjectFile as SerializedProject } from '@/types/projectFile';
 
-function downloadProjectJson(project: ProjectFile) {
-    const blob = new Blob([JSON.stringify(project, null, 2)], {
+// 不同按钮及快捷键共用队列，先发起的保存不能覆盖后发起的快照。
+let saveQueue: Promise<unknown> = Promise.resolve();
+
+function downloadProjectJson(project: SerializedProject) {
+    const blob = new Blob([stringifyProjectFile(project)], {
         type: 'application/json;charset=utf-8',
     });
     const url = URL.createObjectURL(blob);
@@ -38,6 +44,7 @@ export function useProjectManager() {
     const historyStore = useHistoryStore();
     const windowStore = useWindowStore();
     const activeContext = useActiveContext();
+    const storageState = useProjectStorageStore();
 
     const hasWorkspaceState = computed(() => {
         return (
@@ -61,7 +68,6 @@ export function useProjectManager() {
             viewSettings: styleStore.viewSettings,
         });
 
-        logStore.setProjectTime(time);
         return project;
     }
 
@@ -102,45 +108,69 @@ export function useProjectManager() {
         return true;
     }
 
-    function saveCurrentProjectToLocal() {
-        const project = createCurrentProjectFile();
-        const result = saveProjectToLocalStorage(project);
-        if (result.success) {
-            // 保存成功后当前状态视为已保存基线，刷新时不再弹确认
-            historyStore.markSaved();
+    async function saveCurrentProjectToLocal() {
+        const project = migrateProjectFileTo(
+            createCurrentProjectFile(),
+        ).project;
+        const checkpoint = historyStore.createSaveCheckpoint();
+        const documents = logStore.documents;
+        storageState.pendingSaves++;
+        const operation = saveQueue
+            .catch(() => undefined)
+            .then(async () => {
+                await storageState.initialize();
+                await projectRepository.save(project);
+                // 保存的是调用时的快照；异步期间的新修改仍然未保存。
+                if (
+                    logStore.projectId === project.projectId &&
+                    logStore.documents === documents
+                ) {
+                    logStore.setProjectTime(project.time);
+                    historyStore.markSaved(checkpoint);
+                }
+            });
+        saveQueue = operation;
+        try {
+            await operation;
+        } finally {
+            storageState.pendingSaves--;
         }
-        return result;
     }
 
     function exportCurrentProject() {
-        const project = createCurrentProjectFile();
+        const project = migrateProjectFileTo(
+            createCurrentProjectFile(),
+        ).project;
         downloadProjectJson(project);
     }
 
-    function getStoredProjects() {
-        return loadStoredProjects();
+    async function getStoredProjects() {
+        await storageState.initialize();
+        return projectRepository.list();
     }
 
-    function openStoredProject(projectId: string) {
-        const targetProject = loadStoredProjects().find(
-            (project) => project.projectId === projectId,
-        );
+    async function openStoredProject(projectId: string) {
+        const targetProject = await projectRepository.get(projectId);
 
         if (!targetProject) {
             throw new Error('未找到对应的本地工程');
         }
 
-        return replaceWorkspaceWithProject(targetProject, {
-            confirmIfNeeded: true,
-        });
+        return replaceWorkspaceWithProject(
+            projectFileToWorkspace(targetProject),
+            {
+                confirmIfNeeded: true,
+            },
+        );
     }
 
     function deleteStoredProject(projectId: string) {
-        return deleteProjectFromLocalStorage(projectId);
+        return projectRepository.delete(projectId);
     }
 
     return {
         hasWorkspaceState,
+        storageState,
         createCurrentProjectFile,
         replaceWorkspaceWithProject,
         saveCurrentProjectToLocal,

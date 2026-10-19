@@ -11,7 +11,7 @@ import { useLogCommands } from '@/stores/project/logCommands';
 import { useLogStore } from '@/stores/project/logStore';
 import { useExportStore } from '@/stores/io/exportStore';
 import { useSelectionStore } from '@/stores/editor/selectionStore';
-import { useProjectManager } from '@/composables/application/useProjectManager';
+import { useWorkspaceActions } from '@/composables/application/useWorkspaceActions';
 import type { Chunk } from '@/types/log';
 import { useSearchStore } from '@/stores/editor/searchStore';
 
@@ -47,7 +47,7 @@ export function useCommandDispatcher() {
     const logCommands = useLogCommands();
     const logStore = useLogStore();
     const selectionStore = useSelectionStore();
-    const projectManager = useProjectManager();
+    const workspaceActions = useWorkspaceActions();
     const exportStore = useExportStore();
     const searchStore = useSearchStore();
 
@@ -69,7 +69,9 @@ export function useCommandDispatcher() {
             openHelp: () => windowStore.openHelpDocument(),
             undo: () => history.undo(),
             redo: () => history.redo(),
-            save: () => projectManager.saveCurrentProjectToLocal(),
+            save: () => {
+                void workspaceActions.saveCurrentProjectWithFeedback();
+            },
             export: () => {
                 const formatId = exportStore.activeFormat?.formatId;
                 if (formatId) windowStore.openExportPreview(formatId);

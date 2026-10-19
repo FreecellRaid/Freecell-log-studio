@@ -9,7 +9,7 @@ import { importFiles, preprocessText } from '@/io/import/importService';
 import type { ImportRow } from '@/types/import';
 import type { LogSource } from '@/types/log';
 export { importFiles } from '@/io/import/importService';
-import { tryParseProjectFile } from '@/io/storage/project';
+import { tryReadWorkspaceProject } from '@/io/storage/workspaceProject';
 import { stripFileExtension } from '@/utils/fileName';
 import { readImportFile } from '@/io/import/fileReader';
 import { useProjectManager } from '@/composables/application/useProjectManager';
@@ -104,9 +104,7 @@ export function useFileImport() {
         const projectFiles = textEntries
             .map((entry) => ({
                 name: entry.name,
-                project: tryParseProjectFile(entry.text, {
-                    regenerateProjectId: true,
-                }),
+                project: tryReadWorkspaceProject(entry.text),
             }))
             .filter(
                 (
@@ -114,7 +112,7 @@ export function useFileImport() {
                 ): entry is {
                     name: string;
                     project: NonNullable<
-                        ReturnType<typeof tryParseProjectFile>
+                        ReturnType<typeof tryReadWorkspaceProject>
                     >;
                 } => entry.project !== null,
             );

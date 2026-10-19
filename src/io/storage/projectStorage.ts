@@ -1,109 +1,234 @@
-import type { ProjectFile, StoredProjectsIndex } from '@/types/project';
-import { normalizeProjectFile } from './project';
+import type { ProjectFile } from '@/types/projectFile';
+import { migrateProjectFileTo, validateProjectFile } from './projectFile';
+import { ProjectDatabase, type LegacyMigrationReport } from './database';
 
 export const PROJECTS_STORAGE_KEY = 'freecell-log-studio.projects';
+const MIGRATION_KEY = 'localStorage-projects-v1' as const;
 
-export interface SaveProjectResult {
-    success: boolean;
-    removedCount: number;
+export interface StoredProjectSummary {
+    projectId: string;
+    projectName: string;
+    time: string;
+    documentCount: number;
 }
 
-function isQuotaExceededError(error: unknown): boolean {
-    return (
-        error instanceof DOMException &&
-        (error.name === 'QuotaExceededError' ||
-            error.name === 'NS_ERROR_DOM_QUOTA_REACHED')
-    );
-}
-
-function sortProjectsByNewest(projects: ProjectFile[]): ProjectFile[] {
-    return [...projects].sort((a, b) => {
-        return new Date(b.time).getTime() - new Date(a.time).getTime();
-    });
-}
-
-function writeProjects(projects: ProjectFile[]) {
-    const payload: StoredProjectsIndex = {
-        projects,
-    };
-
-    localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(payload));
-}
-
-export function loadStoredProjects(): ProjectFile[] {
-    const raw = localStorage.getItem(PROJECTS_STORAGE_KEY);
-    if (!raw) {
-        return [];
-    }
-
-    try {
-        const parsed = JSON.parse(raw) as StoredProjectsIndex;
-        if (!parsed || !Array.isArray(parsed.projects)) {
-            return [];
-        }
-
-        const validProjects = parsed.projects
-            .map((project) => {
-                try {
-                    return normalizeProjectFile(project);
-                } catch {
-                    return null;
-                }
-            })
-            .filter((project): project is ProjectFile => project !== null);
-
-        return sortProjectsByNewest(validProjects);
-    } catch {
-        return [];
+export class ProjectStorageError extends Error {
+    readonly reason: 'quota' | 'unavailable' | 'data';
+    constructor(
+        message: string,
+        reason: ProjectStorageError['reason'],
+        cause?: unknown,
+    ) {
+        super(message, { cause });
+        this.name = 'ProjectStorageError';
+        this.reason = reason;
     }
 }
 
-export function saveProjectToLocalStorage(
-    project: ProjectFile,
-): SaveProjectResult {
-    const existingProjects = loadStoredProjects();
-    const filteredProjects = existingProjects.filter(
-        (item) => item.projectId !== project.projectId,
+function storageError(error: unknown): ProjectStorageError {
+    if (error instanceof ProjectStorageError) return error;
+    const name = error instanceof Error ? error.name : '';
+    if (
+        name === 'QuotaExceededError' ||
+        name === 'NS_ERROR_DOM_QUOTA_REACHED'
+    ) {
+        return new ProjectStorageError(
+            '本地存储空间不足，保存失败；已有工程未被删除。请导出备份或手动删除不需要的工程后重试。',
+            'quota',
+            error,
+        );
+    }
+    return new ProjectStorageError(
+        '无法访问本地工程存储，请检查浏览器存储权限；若其他页面正在使用旧版，请关闭后重试。',
+        'unavailable',
+        error,
     );
-    let nextProjects = sortProjectsByNewest([project, ...filteredProjects]);
-    let removedCount = 0;
+}
 
-    while (true) {
+function assertProject(value: unknown): asserts value is ProjectFile {
+    const result = validateProjectFile(value);
+    if (!result.valid)
+        throw new ProjectStorageError(
+            `工程数据校验失败：${result.errors[0]?.message ?? '未知错误'}`,
+            'data',
+        );
+}
+
+export function createProjectRepository(
+    options: {
+        database?: ProjectDatabase;
+        legacyStorage?: () => Pick<Storage, 'getItem'>;
+    } = {},
+) {
+    const database = options.database ?? new ProjectDatabase();
+    const legacyStorage =
+        options.legacyStorage ?? (() => globalThis.localStorage);
+    let initialization: Promise<LegacyMigrationReport> | undefined;
+
+    async function migrateLegacy(): Promise<LegacyMigrationReport> {
+        await database.open();
+        const done = await database.migrations.get(MIGRATION_KEY);
+        if (done) return done;
+        let raw: string | null;
         try {
-            writeProjects(nextProjects);
+            raw = legacyStorage().getItem(PROJECTS_STORAGE_KEY);
+        } catch {
             return {
-                success: true,
-                removedCount,
+                key: MIGRATION_KEY,
+                completedAt: '',
+                importedCount: 0,
+                skippedCount: 0,
+                warnings: [
+                    '无法读取旧版存档；未改动旧数据，下次访问本地存储时将重试。',
+                ],
             };
-        } catch (error) {
-            if (!isQuotaExceededError(error) || nextProjects.length === 0) {
+        }
+        const projects: ProjectFile[] = [];
+        const warnings: string[] = [];
+        let skippedCount = 0;
+        if (raw !== null) {
+            let parsed: unknown;
+            try {
+                parsed = JSON.parse(raw);
+            } catch {
                 return {
-                    success: false,
-                    removedCount,
+                    key: MIGRATION_KEY,
+                    completedAt: '',
+                    importedCount: 0,
+                    skippedCount: 0,
+                    warnings: [
+                        '旧版存档不是有效 JSON，原始备份已保留，未标记迁移完成。',
+                    ],
                 };
             }
+            if (
+                !parsed ||
+                typeof parsed !== 'object' ||
+                !('projects' in parsed) ||
+                !Array.isArray(parsed.projects)
+            ) {
+                return {
+                    key: MIGRATION_KEY,
+                    completedAt: '',
+                    importedCount: 0,
+                    skippedCount: 0,
+                    warnings: [
+                        '旧版存档缺少 projects 数组，原始备份已保留，未标记迁移完成。',
+                    ],
+                };
+            }
+            for (const [index, entry] of parsed.projects.entries()) {
+                try {
+                    projects.push(migrateProjectFileTo(entry).project);
+                } catch (error) {
+                    skippedCount++;
+                    warnings.push(
+                        `旧版第 ${index + 1} 个工程未迁移：${error instanceof Error ? error.message : '数据无效'}。原始备份已保留。`,
+                    );
+                }
+            }
+        }
+        // 工程、回读验证与迁移标记在同一事务中提交；多页面并发也只迁移一次。
+        return database.transaction(
+            'rw',
+            database.projects,
+            database.migrations,
+            async () => {
+                const completed = await database.migrations.get(MIGRATION_KEY);
+                if (completed) return completed;
+                let importedCount = 0;
+                for (const project of projects.sort(
+                    (a, b) => Date.parse(b.time) - Date.parse(a.time),
+                )) {
+                    if (await database.projects.get(project.projectId))
+                        continue;
+                    await database.projects.add(project);
+                    const saved = await database.projects.get(
+                        project.projectId,
+                    );
+                    assertProject(saved);
+                    if (JSON.stringify(saved) !== JSON.stringify(project))
+                        throw new ProjectStorageError(
+                            '旧工程迁移后的数据验证失败，已撤销本次迁移。',
+                            'data',
+                        );
+                    importedCount++;
+                }
+                const report: LegacyMigrationReport = {
+                    key: MIGRATION_KEY,
+                    completedAt: new Date().toISOString(),
+                    importedCount,
+                    skippedCount,
+                    warnings,
+                };
+                await database.migrations.put(report);
+                return report;
+            },
+        );
+    }
 
-            nextProjects = [...nextProjects]
-                .sort(
-                    (a, b) =>
-                        new Date(a.time).getTime() - new Date(b.time).getTime(),
-                )
-                .slice(1);
-            removedCount++;
+    async function initialize(): Promise<LegacyMigrationReport> {
+        initialization ??= migrateLegacy()
+            .then((report) => {
+                if (!report.completedAt) initialization = undefined;
+                return report;
+            })
+            .catch((error: unknown) => {
+                initialization = undefined;
+                throw storageError(error);
+            });
+        return initialization;
+    }
+
+    async function run<T>(operation: () => Promise<T>): Promise<T> {
+        try {
+            await initialize();
+            if (!database.isOpen()) await database.open();
+            return await operation();
+        } catch (error) {
+            throw storageError(error);
         }
     }
+
+    return {
+        initialize,
+        list: () =>
+            run(async (): Promise<StoredProjectSummary[]> => {
+                const projects = await database.projects.toArray();
+                return projects
+                    .map((project) => {
+                        assertProject(project);
+                        return {
+                            projectId: project.projectId,
+                            projectName: project.projectName,
+                            time: project.time,
+                            documentCount: project.documents.length,
+                        };
+                    })
+                    .sort((a, b) => Date.parse(b.time) - Date.parse(a.time));
+            }),
+        get: (projectId: string) =>
+            run(async () => {
+                const project = await database.projects.get(projectId);
+                if (project) assertProject(project);
+                return project;
+            }),
+        save: async (project: ProjectFile) => {
+            assertProject(project);
+            const snapshot = JSON.parse(JSON.stringify(project)) as ProjectFile;
+            return run(async () => {
+                await database.projects.put(snapshot);
+            });
+        },
+        delete: (projectId: string) =>
+            run(() =>
+                database.transaction('rw', database.projects, async () => {
+                    if (!(await database.projects.get(projectId))) return false;
+                    await database.projects.delete(projectId);
+                    return true;
+                }),
+            ),
+    };
 }
 
-export function deleteProjectFromLocalStorage(projectId: string): boolean {
-    const existingProjects = loadStoredProjects();
-    const nextProjects = existingProjects.filter(
-        (project) => project.projectId !== projectId,
-    );
-
-    if (nextProjects.length === existingProjects.length) {
-        return false;
-    }
-
-    writeProjects(nextProjects);
-    return true;
-}
+export const projectRepository = createProjectRepository();
