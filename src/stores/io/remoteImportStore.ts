@@ -2,7 +2,6 @@ import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import { resolveRemoteInput } from '@/io/import/remoteLink';
 import { readRemoteLog } from '@/io/import/remoteReader';
-import { importFiles } from '@/io/import/importService';
 import { useFileImport } from '@/composables/application/useImporter';
 import { useLogStore } from '@/stores/project/logStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
@@ -105,14 +104,22 @@ export const useRemoteImportStore = defineStore('remoteImport', () => {
                 return;
             }
             // 先完成解析，切换链接或取消后不再应用旧结果。
-            const documents = await importFiles([entry], logs.documents.length);
+            const destination = logs.documents;
+            const projectId = logs.projectId;
+            const importer = useFileImport();
+            const documents = await importer.prepareLogDocuments(
+                [entry],
+                activeController.signal,
+            );
             if (current !== revision) return;
+            if (logs.documents !== destination || logs.projectId !== projectId)
+                throw new Error('工作区已切换，未应用导入结果。');
             const doc = documents[0];
             if (!doc)
                 throw new Error('诶，日志里没有可导入的消息呢(•́⍛•̀; ≡ •́⍛•̀;)');
 
             // 复用统一的应用入口，保留消息字段和导入偏好。
-            useFileImport().applyLogDocuments(documents);
+            importer.applyLogDocuments(documents);
             message.value = '日志已导入，点击右上角关闭弹窗❛‿˂̵✧';
             const chunk = doc.chunks[0];
             if (chunk) windowStore.setActiveChunk(chunk.chunkId);

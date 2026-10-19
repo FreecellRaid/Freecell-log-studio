@@ -7,6 +7,7 @@ import type {
     MessageFilter,
 } from '@/types/log';
 import type { ImportRow } from '@/types/import';
+import type { ImageAttachment } from '@/types/resource';
 import { generateId } from '@/utils/id';
 import { matchesMessageFilter } from '@/editor/filter';
 
@@ -16,10 +17,11 @@ export function transformRowToMessage(
     index: number,
     importTime: Date,
     roleConfig: RoleKeywordConfig = defaultRoleConfig,
+    images?: ImageAttachment[],
 ): Message | null {
     // 删掉清洗之后剩下的空消息
     const content = row.content || '';
-    if (content.trim().length === 0) {
+    if (content.trim().length === 0 && !images?.length) {
         return null;
     }
 
@@ -54,6 +56,9 @@ export function transformRowToMessage(
         account,
         time: row.time || importTime,
         content,
+        ...(images?.length
+            ? { images: images.map((image) => ({ ...image })) }
+            : {}),
         isOoc: row.isOoc ?? isOoc,
         isCommand: row.isCommand ?? isCommand,
         role: row.role ?? inferRole(name, roleConfig),
@@ -136,11 +141,20 @@ export function buildLogDocument(
     fileName: string,
     docIndex: number,
     splitKeyword?: MessageFilter,
+    imageAttachments?: ReadonlyMap<ImportRow, ImageAttachment[]>,
 ): LogDocument {
     const docId = generateId();
     const importTime = new Date();
     const messages = rows
-        .map((r, i) => transformRowToMessage(r, i, importTime))
+        .map((r, i) =>
+            transformRowToMessage(
+                r,
+                i,
+                importTime,
+                defaultRoleConfig,
+                imageAttachments?.get(r),
+            ),
+        )
         .filter((m): m is Message => m !== null);
 
     const chunks = chunkMessages(messages, docId, splitKeyword);

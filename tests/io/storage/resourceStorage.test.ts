@@ -68,6 +68,45 @@ describe('image resource persistence', () => {
         vi.restoreAllMocks();
         await database.delete();
     });
+    it('registers imported links and unresolved placeholders together without downloading', async () => {
+        const ids = await resources.addImported([
+            {
+                type: 'image',
+                sourceUrl: 'https://example.com/map.png',
+                provenance: { kind: 'html', original: '<img src="map.png">' },
+            },
+            {
+                type: 'image',
+                provenance: {
+                    kind: 'cq',
+                    original: '[CQ:image,file=ABC.image]',
+                },
+            },
+        ]);
+        expect(ids).toHaveLength(2);
+        expect(await resources.get(ids[0])).toMatchObject({
+            sourceUrl: 'https://example.com/map.png',
+            provenance: { kind: 'html' },
+        });
+        expect((await resources.get(ids[0]))?.blob).toBeUndefined();
+        expect(await resources.get(ids[1])).toMatchObject({
+            sourceUrl: undefined,
+            provenance: { kind: 'cq' },
+        });
+    });
+    it('rolls back all imported metadata when batch persistence fails', async () => {
+        vi.spyOn(database.resources, 'bulkAdd').mockImplementationOnce(
+            (records) =>
+                Dexie.Promise.resolve().then(async () => {
+                    await database.resources.add(records[0]);
+                    throw new Error('quota');
+                }),
+        );
+        await expect(
+            resources.addImported([{ type: 'image' }, { type: 'image' }]),
+        ).rejects.toThrow('quota');
+        expect(await database.resources.count()).toBe(0);
+    });
 
     it('stores original bytes and thumbnail as Blobs, not Base64', async () => {
         const id = await resources.addLocal(blob(), 'map.png');

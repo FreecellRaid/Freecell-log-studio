@@ -1,5 +1,5 @@
 import type { ImportRow } from '@/types/import';
-import { cleanContent } from './cleaner';
+import { parseContent } from './contentParser';
 
 export const SEALDICE_LOG_FORMAT = 'sealdice-json';
 
@@ -45,9 +45,9 @@ export function parseSealdiceLog(text: string): ImportRow[] | null {
         return {
             playerName: nickname as string,
             account: IMUserId as string,
-            content: cleanContent(
-                (content as string).replace(/\r\n|\r/g, '\n'),
-            ),
+            ...parseContent((content as string).replace(/\r\n|\r/g, '\n'), {
+                syntax: 'cq',
+            }),
             time,
             role: message.isDice ? 'bot' : undefined,
             originalMessageId:

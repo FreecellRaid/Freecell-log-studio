@@ -4,9 +4,17 @@ import { useLogStore } from '@/stores/project/logStore';
 import { useStyleStore } from '@/stores/project/styleStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import type { Chunk, LogDocument } from '@/types/log';
-import { buildLogDocument } from '@/io/import/parser';
+import { resourceRepository } from '@/io/storage/resourceStorage';
+import {
+    retryAfterResourceCleanup,
+    documentResourceIds,
+} from '@/io/storage/resourceCleanup';
+import { currentResourceRoots } from './resourceRoots';
+import { useResourceTasksStore } from '@/stores/io/resourceTasksStore';
+import { importRows } from '@/io/import/importService';
+import type { ImportResourceOptions } from '@/io/import/importResources';
 import { importFiles, preprocessText } from '@/io/import/importService';
-import type { ImportRow } from '@/types/import';
+import type { ImportRow, ImportTextEntry } from '@/types/import';
 import type { LogSource } from '@/types/log';
 export { importFiles } from '@/io/import/importService';
 import { tryReadWorkspaceProject } from '@/io/storage/workspaceProject';
@@ -24,6 +32,50 @@ export function useFileImport() {
     const projectManager = useProjectManager();
     const historyStore = useHistoryStore();
     const importSettingsStore = useImportSettingsStore();
+
+    function resourceOptions(signal?: AbortSignal): ImportResourceOptions {
+        return {
+            signal,
+            persistResources: (resources) =>
+                retryAfterResourceCleanup(
+                    () => resourceRepository.addImported(resources),
+                    currentResourceRoots,
+                ),
+        };
+    }
+
+    async function prepareLogDocuments(
+        entries: ImportTextEntry[],
+        signal?: AbortSignal,
+    ) {
+        return importFiles(
+            entries,
+            logStore.documents.length,
+            resourceOptions(signal),
+        );
+    }
+
+    async function startImageDownloads(documents: LogDocument[]) {
+        const projectId = logStore.projectId;
+        const tasks = useResourceTasksStore();
+        for (const id of new Set(documentResourceIds(documents))) {
+            try {
+                const resource = await resourceRepository.get(id);
+                if (
+                    projectId !== logStore.projectId ||
+                    !logStore.documents.some((doc) =>
+                        documents.some(
+                            (imported) => imported.docId === doc.docId,
+                        ),
+                    )
+                )
+                    return;
+                if (resource?.sourceUrl && !resource.blob) tasks.enqueue(id);
+            } catch (error) {
+                console.warn('图片副本任务未启动，可在图片编辑中重试。', error);
+            }
+        }
+    }
 
     function getFirstChunk(): Chunk | null {
         let firstChunk: Chunk | null = null;
@@ -79,6 +131,7 @@ export function useFileImport() {
         const first = documents[0]?.chunks[0];
         if (focusImported && first) windowStore.setActiveChunk(first.chunkId);
         else openFirstChunkViewIfNeeded();
+        void startImageDownloads(documents);
         return documents.length;
     }
 
@@ -87,7 +140,19 @@ export function useFileImport() {
         name: string,
         source?: LogSource,
     ): Promise<number> {
-        const doc = buildLogDocument(rows, name, logStore.documents.length);
+        const destination = logStore.documents;
+        const projectId = logStore.projectId;
+        const doc = await importRows(
+            rows,
+            name,
+            logStore.documents.length,
+            resourceOptions(),
+        );
+        if (
+            logStore.documents !== destination ||
+            logStore.projectId !== projectId
+        )
+            throw new Error('工作区已切换，未应用导入结果。');
         if (!doc.chunks.length) throw new Error('日志中没有可导入的消息');
         doc.source = source ? { ...source } : undefined;
         return applyDocuments([doc], true);
@@ -95,9 +160,12 @@ export function useFileImport() {
 
     // 远程日志只能追加日志，不能通过内容嗅探替换为工程文件。
     async function importTextAndApply(
-        entries: { name: string; text: string }[],
+        entries: ImportTextEntry[],
     ): Promise<number> {
+        const destination = logStore.documents;
+        const projectId = logStore.projectId;
         const textEntries = entries.map((entry) => ({
+            ...entry,
             name: entry.name,
             text: preprocessText(entry.text),
         }));
@@ -136,18 +204,19 @@ export function useFileImport() {
             return applied ? 1 : 0;
         }
 
-        const documents = await importFiles(
-            textEntries.map((entry) => ({
-                name: entry.name,
-                text: entry.text,
-            })),
-            logStore.documents.length,
-        );
+        const documents = await prepareLogDocuments(textEntries);
+        if (
+            logStore.documents !== destination ||
+            logStore.projectId !== projectId
+        )
+            throw new Error('工作区已切换，未应用导入结果。');
 
         return applyDocuments(documents);
     }
 
     async function importAndApply(files: File[]): Promise<number> {
+        const destination = logStore.documents;
+        const projectId = logStore.projectId;
         const entries = await Promise.all(
             files.map(async (file) => {
                 const imported = await readImportFile(file);
@@ -164,12 +233,18 @@ export function useFileImport() {
                 };
             }),
         );
+        if (
+            logStore.documents !== destination ||
+            logStore.projectId !== projectId
+        )
+            throw new Error('工作区已切换，未应用导入结果。');
         return importTextAndApply(entries);
     }
 
     return {
         importAndApply,
         importTextAndApply,
+        prepareLogDocuments,
         applyLogDocuments: (documents: LogDocument[]) =>
             applyDocuments(documents, true),
         importRowsAndApply,

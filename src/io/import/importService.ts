@@ -3,6 +3,11 @@ import type { LogDocument } from '@/types/log';
 import { parseSealdiceLog, SEALDICE_LOG_FORMAT } from './sealdiceLog';
 import { dispatchAdapter, getImportAdapter } from './importAdapters';
 import { buildLogDocument } from './parser';
+import {
+    prepareImportResources,
+    type ImportResourceOptions,
+} from './importResources';
+import type { ImportRow } from '@/types/import';
 import { parseStructuredLog, STRUCTURED_LOG_FORMAT } from './structuredLog';
 
 export function preprocessText(text: string): string {
@@ -12,9 +17,11 @@ export function preprocessText(text: string): string {
 export async function importFiles(
     entries: ImportTextEntry[],
     startIndex = 0,
+    options: ImportResourceOptions = {},
 ): Promise<LogDocument[]> {
     const documents: LogDocument[] = [];
     for (const entry of entries) {
+        options.signal?.throwIfAborted();
         const text = preprocessText(entry.text);
         if (!text.trim()) continue;
         try {
@@ -47,10 +54,11 @@ export async function importFiles(
                     throw new Error('内容与指定日志格式不符');
                 rows = adapter.parse(text);
             }
-            const doc = buildLogDocument(
+            const doc = await importRows(
                 rows,
                 structured?.name || entry.name,
                 startIndex + documents.length,
+                { ...options, baseUrl: entry.baseUrl ?? options.baseUrl },
             );
             doc.source = entry.source ? { ...entry.source } : undefined;
             if (doc.chunks.length === 0)
@@ -63,4 +71,14 @@ export async function importFiles(
         }
     }
     return documents;
+}
+
+export async function importRows(
+    rows: ImportRow[],
+    name: string,
+    index = 0,
+    options: ImportResourceOptions = {},
+) {
+    const attachments = await prepareImportResources(rows, options);
+    return buildLogDocument(rows, name, index, undefined, attachments);
 }

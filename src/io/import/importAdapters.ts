@@ -1,6 +1,6 @@
 import type { ImportRow, ImportAdapter } from '@/types/import';
 import { parseLogDate } from '@/utils/date';
-import { cleanContent } from './cleaner';
+import { parseContent } from './contentParser';
 
 // 为什么各家没有结构化导出，还要自己用正则抠……
 // adapter test 标准: 元信息+100, 强特征+10, 弱特征+1, 错误特征-10
@@ -58,7 +58,9 @@ export const QqImportAdapter: ImportAdapter = {
                     playerName: currentName,
                     account: '',
                     time: currentTime,
-                    content: cleanContent(contentBuffer.join('\n')),
+                    ...parseContent(contentBuffer.join('\n'), {
+                        syntax: 'mixed',
+                    }),
                 });
             }
             contentBuffer = [];
@@ -131,7 +133,9 @@ export const LegacyQqImportAdapter: ImportAdapter = {
                     playerName: currentName,
                     account: currentAccount,
                     time: currentTime,
-                    content: cleanContent(contentBuffer.join('\n')),
+                    ...parseContent(contentBuffer.join('\n'), {
+                        syntax: 'mixed',
+                    }),
                 });
             }
             contentBuffer = [];
@@ -191,7 +195,7 @@ export const StandardImportAdapter: ImportAdapter = {
                     time: currentTimeMatch
                         ? parseLogDate(currentTimeMatch)
                         : undefined,
-                    content: cleanContent(rawContent),
+                    ...parseContent(rawContent, { syntax: 'mixed' }),
                 });
             }
             contentBuffer = [];
@@ -285,7 +289,7 @@ export const PaintedLogAdapter: ImportAdapter = {
                     time: currentTimeStr
                         ? parseLogDate(currentTimeStr)
                         : undefined,
-                    content: cleanContent(rawContent),
+                    ...parseContent(rawContent, { syntax: 'mixed' }),
                 });
             }
             contentBuffer = [];
@@ -354,15 +358,11 @@ export const CcfoliaImportAdapter: ImportAdapter = {
             const metaRaw = match[1].trim();
             const note = match[2].trim();
             const playerName = match[3].trim();
-            let rawContent = match[4];
-
-            // 将 <br> 或 <br/> 替换为实际换行符
-            // 去除前后的空白字符
-            rawContent = rawContent.replace(/<br\s*\/?>/gi, '\n').trim();
+            const rawContent = match[4];
 
             rows.push({
                 playerName,
-                content: cleanContent(rawContent),
+                ...parseContent(rawContent, { syntax: 'html' }),
                 note,
                 meta: metaRaw ? { tab: metaRaw } : undefined,
             });
@@ -408,7 +408,7 @@ export const PineappleImportAdapter: ImportAdapter = {
                     time: currentTimeStr
                         ? parseLogDate(currentTimeStr)
                         : undefined,
-                    content: cleanContent(rawContent),
+                    ...parseContent(rawContent, { syntax: 'mixed' }),
                 });
             }
             contentBuffer = [];
@@ -490,7 +490,7 @@ export const SealchatImportAdapter: ImportAdapter = {
                     time: currentTimeStr
                         ? parseLogDate(currentTimeStr)
                         : undefined,
-                    content: cleanContent(rawContent),
+                    ...parseContent(rawContent, { syntax: 'mixed' }),
                     // 将捕获到的频道名称作为第一条消息的 meta 信息存入
                     meta: channelInfo ? { channel: channelInfo } : undefined,
                 });

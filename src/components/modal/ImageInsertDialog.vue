@@ -172,7 +172,9 @@ watch(
                 ? `当前资源：${resource.sourceUrl}`
                 : resource?.blob
                   ? '当前资源：本地图片'
-                  : '当前资源缺失，可选择文件或链接替换。';
+                  : resource?.provenance?.original
+                    ? `当前资源没有可下载链接：${resource.provenance.original}`
+                    : '当前资源缺失，可选择文件或链接替换。';
         } catch {
             if (active)
                 resourceInfo.value = '当前资源读取失败，可选择文件或链接替换。';

@@ -4,7 +4,11 @@ import {
 } from './resourceCoordination';
 import { liveQuery } from 'dexie';
 import { projectDatabase, type ProjectDatabase } from './database';
-import { imageMetadata, type ImageResourceRecord } from '@/types/resource';
+import {
+    imageMetadata,
+    type ImageResourceMetadata,
+    type ImageResourceRecord,
+} from '@/types/resource';
 import type { ProjectFile } from '@/types/projectFile';
 import { generateId } from '@/utils/id';
 import { blobToBase64, resourceFileToRecord } from './resourceEncoding';
@@ -245,6 +249,25 @@ export function createResourceRepository(
 
     return {
         get,
+        addImported: (resources: ImageResourceMetadata[]) =>
+            withResourceOperation(async () => {
+                const records: ImageResourceRecord[] = resources.map(
+                    (resource) => ({
+                        ...imageMetadata(resource),
+                        sourceUrl: resource.sourceUrl
+                            ? normalizeImageUrl(resource.sourceUrl)
+                            : undefined,
+                        resourceId: generateId(),
+                        updatedAt: Date.now(),
+                    }),
+                );
+                await database.transaction('rw', database.resources, () =>
+                    database.resources.bulkAdd(records),
+                );
+                const ids = records.map((record) => record.resourceId);
+                protectResources(ids);
+                return ids;
+            }),
         addLocal: (file: Blob, name: string) =>
             withResourceOperation(async () => {
                 const id = await addLocal(file, name);

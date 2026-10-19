@@ -11,6 +11,7 @@ export const directUrlSource: LogSourceAdapter = {
             name: decodeURIComponent(name),
             text: await context.readText(url.href),
             format: request.format,
+            baseUrl: url.href,
             source: { provider: 'url', id: url.href },
         };
     },
