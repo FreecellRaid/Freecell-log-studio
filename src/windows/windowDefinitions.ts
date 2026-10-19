@@ -50,6 +50,7 @@ export const windowDefinitions: Readonly<
     },
     help: modal,
     remoteImport: modal,
+    imageInsert: modal,
 };
 
 export function isWorkspaceView(win: WindowInstance): boolean {

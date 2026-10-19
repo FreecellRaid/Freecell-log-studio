@@ -38,6 +38,7 @@ describe('asynchronous project operations', () => {
         pinia = createPinia();
         setActivePinia(pinia);
         vi.stubGlobal('window', { confirm: vi.fn(() => true) });
+        vi.stubGlobal('navigator', {});
         vi.stubGlobal('alert', vi.fn());
         vi.mocked(projectRepository.initialize).mockResolvedValue({
             key: 'localStorage-projects-v1',
@@ -219,7 +220,7 @@ describe('asynchronous project operations', () => {
             body: { appendChild: vi.fn(), removeChild: vi.fn() },
         });
         vi.stubGlobal('URL', { createObjectURL, revokeObjectURL: vi.fn() });
-        manager.exportCurrentProject();
+        await manager.exportCurrentProject();
         const blob = createObjectURL.mock.calls[0][0] as Blob;
         const exported = JSON.parse(await blob.text());
         expect(exported).toMatchObject({

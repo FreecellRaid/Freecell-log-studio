@@ -124,7 +124,7 @@ export function useFileImport() {
                 );
             }
 
-            const applied = projectManager.replaceWorkspaceWithProject(
+            const applied = await projectManager.replaceWorkspaceWithProject(
                 projectFiles[0].project,
                 {
                     confirmIfNeeded: true,

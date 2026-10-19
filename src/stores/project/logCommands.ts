@@ -342,6 +342,10 @@ export const useLogCommands = defineStore('logCommands', () => {
             target.content !== mergedContent || removeIds.size > 0,
             () => {
                 target.content = mergedContent;
+                target.images = toMerge.flatMap(
+                    (message) =>
+                        message.images?.map((image) => ({ ...image })) ?? [],
+                );
                 chunk.messages = chunk.messages.filter(
                     (m) => !removeIds.has(m.messageId),
                 );

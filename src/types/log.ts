@@ -1,3 +1,5 @@
+import type { ImageAttachment } from './resource';
+
 export type RoleType = 'gm' | 'pl' | 'ob' | 'bot' | 'npc' | 'unknown';
 
 export function isRoleType(value: unknown): value is RoleType {
@@ -26,6 +28,7 @@ export interface Message {
     account: string;
     time: Date;
     content: string;
+    images?: ImageAttachment[];
     isOoc: boolean;
     isCommand: boolean;
     role: RoleType;
@@ -48,6 +51,7 @@ export interface MessageFilter {
     content?: StringFilterValue;
     isOoc?: boolean;
     isCommand?: boolean;
+    hasImage?: boolean;
     role?: RoleType | RoleType[];
     note?: StringFilterValue;
 }

@@ -1,6 +1,12 @@
+import { withResourceOperation } from './resourceCoordination';
 import type { ProjectFile } from '@/types/projectFile';
 import { migrateProjectFileTo, validateProjectFile } from './projectFile';
-import { ProjectDatabase, type LegacyMigrationReport } from './database';
+import {
+    ProjectDatabase,
+    projectDatabase,
+    type LegacyMigrationReport,
+} from './database';
+import { createResourceRepository } from './resourceStorage';
 
 export const PROJECTS_STORAGE_KEY = 'freecell-log-studio.projects';
 const MIGRATION_KEY = 'localStorage-projects-v1' as const;
@@ -60,7 +66,8 @@ export function createProjectRepository(
         legacyStorage?: () => Pick<Storage, 'getItem'>;
     } = {},
 ) {
-    const database = options.database ?? new ProjectDatabase();
+    const database = options.database ?? projectDatabase;
+    const resources = createResourceRepository({ database });
     const legacyStorage =
         options.legacyStorage ?? (() => globalThis.localStorage);
     let initialization: Promise<LegacyMigrationReport> | undefined;
@@ -128,20 +135,26 @@ export function createProjectRepository(
                 }
             }
         }
-        // 工程、回读验证与迁移标记在同一事务中提交；多页面并发也只迁移一次。
+        const staged: Awaited<ReturnType<typeof resources.stageProject>>[] = [];
+        for (const project of projects.sort(
+            (a, b) => Date.parse(b.time) - Date.parse(a.time),
+        ))
+            staged.push(await resources.stageProject(project, true));
+        // 工程、资源、回读验证与迁移标记在同一事务中提交。
         return database.transaction(
             'rw',
             database.projects,
             database.migrations,
+            database.resources,
             async () => {
                 const completed = await database.migrations.get(MIGRATION_KEY);
                 if (completed) return completed;
                 let importedCount = 0;
-                for (const project of projects.sort(
-                    (a, b) => Date.parse(b.time) - Date.parse(a.time),
-                )) {
+                for (const { project, records } of staged) {
                     if (await database.projects.get(project.projectId))
                         continue;
+                    for (const record of records)
+                        await database.resources.add(record);
                     await database.projects.add(project);
                     const saved = await database.projects.get(
                         project.projectId,
@@ -168,7 +181,7 @@ export function createProjectRepository(
     }
 
     async function initialize(): Promise<LegacyMigrationReport> {
-        initialization ??= migrateLegacy()
+        initialization ??= withResourceOperation(migrateLegacy)
             .then((report) => {
                 if (!report.completedAt) initialization = undefined;
                 return report;
@@ -216,9 +229,21 @@ export function createProjectRepository(
         save: async (project: ProjectFile) => {
             assertProject(project);
             const snapshot = JSON.parse(JSON.stringify(project)) as ProjectFile;
-            return run(async () => {
-                await database.projects.put(snapshot);
-            });
+            return run(() =>
+                withResourceOperation(async () => {
+                    const staged = await resources.stageProject(snapshot);
+                    await database.transaction(
+                        'rw',
+                        database.projects,
+                        database.resources,
+                        async () => {
+                            for (const record of staged.records)
+                                await database.resources.add(record);
+                            await database.projects.put(staged.project);
+                        },
+                    );
+                }),
+            );
         },
         delete: (projectId: string) =>
             run(() =>

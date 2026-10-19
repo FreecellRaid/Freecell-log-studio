@@ -14,6 +14,7 @@ export const useClipboardStore = defineStore('clipboard', () => {
         dataType.value = 'messages';
         copiedMessages.value = messages.map((m) => ({
             ...m,
+            images: m.images?.map((image) => ({ ...image })),
             meta: m.meta ? cloneLogMetadata(m.meta) : undefined,
             time: new Date(m.time.getTime()),
             messageIndex: -1,
@@ -29,6 +30,7 @@ export const useClipboardStore = defineStore('clipboard', () => {
             ...c,
             messages: c.messages.map((m) => ({
                 ...m,
+                images: m.images?.map((image) => ({ ...image })),
                 meta: m.meta ? cloneLogMetadata(m.meta) : undefined,
                 time: new Date(m.time.getTime()),
             })),
@@ -43,6 +45,10 @@ export const useClipboardStore = defineStore('clipboard', () => {
             ...m,
             meta: m.meta ? cloneLogMetadata(m.meta) : undefined,
             messageId: generateId(),
+            images: m.images?.map((image) => ({
+                ...image,
+                imageId: generateId(),
+            })),
         }));
     }
 
@@ -59,6 +65,10 @@ export const useClipboardStore = defineStore('clipboard', () => {
                     ...m,
                     meta: m.meta ? cloneLogMetadata(m.meta) : undefined,
                     messageId: generateId(),
+                    images: m.images?.map((image) => ({
+                        ...image,
+                        imageId: generateId(),
+                    })),
                     chunkId: newChunkId,
                     time: new Date(m.time.getTime()),
                 })),

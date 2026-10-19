@@ -8,6 +8,10 @@ export function matchesMessageFilter(
 
     for (const [key, expectedValue] of Object.entries(filter)) {
         if (expectedValue === undefined || expectedValue === null) continue;
+        if (key === 'hasImage') {
+            if (Boolean(message.images?.length) !== expectedValue) return false;
+            continue;
+        }
 
         // timeStart/timeEnd 是范围过滤条件而非消息字段，对应的消息字段是 time
         const messageKey =

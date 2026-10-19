@@ -1,5 +1,6 @@
 import type { Message, Chunk, LogDocument, MessageFilter } from './log';
 import type { StyleRule, ViewSettings } from './style';
+import type { ImageAttachment, ImageResourceMetadata } from './resource';
 
 // 文件 DTO 与运行时类型分开；Blob、Date、RegExp 不直接进入 JSON。
 export const PROJECT_SCHEMA = 'freecell-project' as const;
@@ -13,25 +14,10 @@ export type JsonValue =
     | JsonValue[]
     | { [key: string]: JsonValue };
 
-export interface ImageAttachmentFile {
-    imageId: string;
-    resourceId: string;
-    name: string;
-}
+export type ImageAttachmentFile = ImageAttachment;
 
-export interface ImageResourceFile {
-    type: 'image';
-    sourceUrl?: string;
-    mimeType?: string;
-    byteLength?: number;
-    width?: number;
-    height?: number;
+export interface ImageResourceFile extends ImageResourceMetadata {
     data?: { encoding: 'base64'; value: string };
-    // 仅记录来源，不授予本地文件访问能力；也用于缺失资源的追溯。
-    provenance?: {
-        kind: 'upload' | 'url' | 'cq' | 'html';
-        original: string;
-    };
 }
 
 export interface RegExpFile {

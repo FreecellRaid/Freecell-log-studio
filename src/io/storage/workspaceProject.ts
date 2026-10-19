@@ -3,23 +3,8 @@ import type { ProjectFile } from '@/types/projectFile';
 import { generateId } from '@/utils/id';
 import { migrateProjectFileTo, restoreMessageFilter } from './projectFile';
 
-// 临时桥接现有编辑器运行时。图片资源接入前明确拒绝，不能打开后保存成无图工程。
+// 文件中的 Blob 在资源仓库恢复，运行时消息仅持有附件引用。
 export function projectFileToWorkspace(file: ProjectFile): WorkspaceProject {
-    if (
-        Object.keys(file.resources).length ||
-        file.documents.some((doc) =>
-            doc.chunks.some((chunk) =>
-                chunk.messages.some((message) => message.images.length),
-            ),
-        )
-    ) {
-        throw new Error(
-            '此工程包含图片资源，当前编辑器尚未接入图片资源层，不能打开以免丢失图片。',
-        );
-    }
-    if (file.styleRules.some((rule) => rule.filter.hasImage !== undefined)) {
-        throw new Error('此工程包含图片筛选规则，需在图片功能接入后打开。');
-    }
     return {
         version: 2,
         projectId: file.projectId,
@@ -29,12 +14,11 @@ export function projectFileToWorkspace(file: ProjectFile): WorkspaceProject {
             ...doc,
             chunks: doc.chunks.map((chunk) => ({
                 ...chunk,
-                messages: chunk.messages.map(
-                    ({ images: _images, ...message }) => ({
-                        ...message,
-                        time: new Date(message.time),
-                    }),
-                ),
+                messages: chunk.messages.map((message) => ({
+                    ...message,
+                    images: message.images.map((image) => ({ ...image })),
+                    time: new Date(message.time),
+                })),
             })),
         })),
         styleRules: file.styleRules.map((rule) => ({
@@ -42,7 +26,53 @@ export function projectFileToWorkspace(file: ProjectFile): WorkspaceProject {
             filter: restoreMessageFilter(rule.filter),
         })),
         viewSettings: { ...file.viewSettings },
+        resources: file.resources,
     };
+}
+
+export function workspaceProjectToFile(
+    workspace: WorkspaceProject,
+): ProjectFile {
+    const resources = { ...workspace.resources };
+    workspace.documents.forEach((doc) =>
+        doc.chunks.forEach((chunk) =>
+            chunk.messages.forEach((message) => {
+                message.images?.forEach((image) => {
+                    resources[image.resourceId] ??= { type: 'image' };
+                });
+            }),
+        ),
+    );
+    return migrateProjectFileTo(
+        JSON.parse(
+            JSON.stringify(
+                {
+                    ...workspace,
+                    schema: 'freecell-project',
+                    version: 3,
+                    resources,
+                    documents: workspace.documents.map((doc) => ({
+                        ...doc,
+                        chunks: doc.chunks.map((chunk) => ({
+                            ...chunk,
+                            messages: chunk.messages.map((message) => ({
+                                ...message,
+                                images: message.images ?? [],
+                            })),
+                        })),
+                    })),
+                },
+                (_key, value: unknown) =>
+                    value instanceof RegExp
+                        ? {
+                              type: 'regexp',
+                              source: value.source,
+                              flags: value.flags,
+                          }
+                        : value,
+            ),
+        ),
+    ).project;
 }
 
 export function tryReadWorkspaceProject(text: string): WorkspaceProject | null {

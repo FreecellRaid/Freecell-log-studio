@@ -1,3 +1,9 @@
+import { protectResources } from '@/io/storage/resourceCoordination';
+import {
+    cleanupResources,
+    retryAfterResourceCleanup,
+} from '@/io/storage/resourceCleanup';
+import { currentResourceRoots } from './resourceRoots';
 import { computed } from 'vue';
 import { useClipboardStore } from '@/stores/editor/clipboardStore';
 import { useHistoryStore } from '@/stores/editor/historyStore';
@@ -11,11 +17,16 @@ import {
     sanitizeProjectFilename,
 } from '@/io/storage/project';
 import { projectRepository } from '@/io/storage/projectStorage';
+import { stringifyProjectFile } from '@/io/storage/projectFile';
 import {
-    migrateProjectFileTo,
-    stringifyProjectFile,
-} from '@/io/storage/projectFile';
-import { projectFileToWorkspace } from '@/io/storage/workspaceProject';
+    projectFileToWorkspace,
+    workspaceProjectToFile,
+} from '@/io/storage/workspaceProject';
+import {
+    resourceRepository,
+    referencedResourceIds,
+} from '@/io/storage/resourceStorage';
+import { useResourceTasksStore } from '@/stores/io/resourceTasksStore';
 import { useProjectStorageStore } from '@/stores/io/projectStorageStore';
 import type { ProjectFile as SerializedProject } from '@/types/projectFile';
 
@@ -45,6 +56,7 @@ export function useProjectManager() {
     const windowStore = useWindowStore();
     const activeContext = useActiveContext();
     const storageState = useProjectStorageStore();
+    const resourceTasks = useResourceTasksStore();
 
     const hasWorkspaceState = computed(() => {
         return (
@@ -71,9 +83,9 @@ export function useProjectManager() {
         return project;
     }
 
-    function replaceWorkspaceWithProject(
+    async function replaceWorkspaceWithProject(
         project: ProjectFile,
-        options: { confirmIfNeeded?: boolean } = {},
+        options: { confirmIfNeeded?: boolean; resourcesReady?: boolean } = {},
     ) {
         const shouldConfirm =
             options.confirmIfNeeded !== false && hasWorkspaceState.value;
@@ -85,6 +97,14 @@ export function useProjectManager() {
             )
         ) {
             return false;
+        }
+
+        if (!options.resourcesReady) {
+            const file = workspaceProjectToFile(project);
+            if (referencedResourceIds(file).size)
+                project = projectFileToWorkspace(
+                    await resourceRepository.importProject(file),
+                );
         }
 
         logStore.replaceDocuments(project.documents);
@@ -104,14 +124,16 @@ export function useProjectManager() {
         );
         windowStore.focusStack = [];
         windowStore.setFocus(windowStore.currentActiveView.windowId);
+        for (const [id, resource] of Object.entries(project.resources ?? {})) {
+            if (resource.sourceUrl) resourceTasks.enqueue(id);
+        }
 
         return true;
     }
 
     async function saveCurrentProjectToLocal() {
-        const project = migrateProjectFileTo(
-            createCurrentProjectFile(),
-        ).project;
+        const project = workspaceProjectToFile(createCurrentProjectFile());
+        protectResources(referencedResourceIds(project));
         const checkpoint = historyStore.createSaveCheckpoint();
         const documents = logStore.documents;
         storageState.pendingSaves++;
@@ -119,7 +141,10 @@ export function useProjectManager() {
             .catch(() => undefined)
             .then(async () => {
                 await storageState.initialize();
-                await projectRepository.save(project);
+                await retryAfterResourceCleanup(
+                    () => projectRepository.save(project),
+                    currentResourceRoots,
+                );
                 // 保存的是调用时的快照；异步期间的新修改仍然未保存。
                 if (
                     logStore.projectId === project.projectId &&
@@ -127,6 +152,11 @@ export function useProjectManager() {
                 ) {
                     logStore.setProjectTime(project.time);
                     historyStore.markSaved(checkpoint);
+                }
+                try {
+                    await cleanupResources(currentResourceRoots);
+                } catch (error) {
+                    console.warn('工程已保存，资源清理未完成', error);
                 }
             });
         saveQueue = operation;
@@ -137,11 +167,22 @@ export function useProjectManager() {
         }
     }
 
-    function exportCurrentProject() {
-        const project = migrateProjectFileTo(
-            createCurrentProjectFile(),
-        ).project;
-        downloadProjectJson(project);
+    async function exportCurrentProject() {
+        const project = workspaceProjectToFile(createCurrentProjectFile());
+        protectResources(referencedResourceIds(project));
+        const pending = [...referencedResourceIds(project)].filter((id) =>
+            ['queued', 'loading'].includes(
+                resourceTasks.states[id]?.status ?? '',
+            ),
+        ).length;
+        if (
+            pending &&
+            !window.confirm(
+                `仍有 ${pending} 张图片正在保存。是否先导出已保存图片和其余链接？取消后可等待下载完成再导出。`,
+            )
+        )
+            return;
+        downloadProjectJson(await resourceRepository.exportProject(project));
     }
 
     async function getStoredProjects() {
@@ -160,6 +201,7 @@ export function useProjectManager() {
             projectFileToWorkspace(targetProject),
             {
                 confirmIfNeeded: true,
+                resourcesReady: true,
             },
         );
     }

@@ -73,6 +73,7 @@ function cloneMessageFilter(filter: MessageFilter): MessageFilter {
     if (filter.isCommand !== undefined) {
         clonedFilter.isCommand = filter.isCommand;
     }
+    if (filter.hasImage !== undefined) clonedFilter.hasImage = filter.hasImage;
     if (isRoleType(filter.role) || isRoleTypeArray(filter.role)) {
         clonedFilter.role = cloneFilterValue(filter.role);
     }
@@ -104,6 +105,9 @@ export function cloneDocuments(documents: LogDocument[]): LogDocument[] {
                 account: message.account,
                 time: new Date(message.time.getTime()),
                 content: message.content,
+                ...(message.images
+                    ? { images: message.images.map((image) => ({ ...image })) }
+                    : {}),
                 isOoc: message.isOoc,
                 isCommand: message.isCommand,
                 role: message.role,
