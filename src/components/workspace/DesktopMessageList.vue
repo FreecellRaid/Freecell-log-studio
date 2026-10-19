@@ -19,6 +19,7 @@
                         :active="active"
                         :size-dependencies="[
                             msg.content,
+                            msg.images,
                             msg.messageId === editingMessageId,
                             msg.messageId === editingMessageId
                                 ? editingContent

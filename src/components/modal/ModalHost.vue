@@ -8,11 +8,16 @@
             :layer="index"
             :is-top="windowStore.topModal?.windowId === win.windowId"
             :labelled-by="
-                win.windowName === 'help' ? 'help-title' : 'remote-import-title'
+                win.windowName === 'help'
+                    ? 'help-title'
+                    : win.windowName === 'imageInsert'
+                      ? 'image-insert-title'
+                      : 'remote-import-title'
             "
         >
             <HelpDocument v-if="win.windowName === 'help'" />
             <RemoteImportDialog v-else-if="win.windowName === 'remoteImport'" />
+            <ImageInsertDialog v-else-if="win.windowName === 'imageInsert'" />
         </ModalFrame>
     </Teleport>
 </template>
@@ -23,6 +28,7 @@ import { useUiStore } from '@/stores/ui/uiStore';
 import HelpDocument from '@/components/modal/HelpDocument.vue';
 import RemoteImportDialog from '@/components/modal/RemoteImportDialog.vue';
 import ModalFrame from '@/components/modal/ModalFrame.vue';
+import ImageInsertDialog from '@/components/modal/ImageInsertDialog.vue';
 
 const windowStore = useWindowStore();
 const uiStore = useUiStore();

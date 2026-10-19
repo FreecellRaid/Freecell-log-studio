@@ -8,12 +8,21 @@
         <div class="export-item" @click="handleExportProject">
             导出为工程文件
         </div>
+        <p v-if="hasImages" class="image-export-note">
+            图片目前随工程文件打包；其他导出仅包含文字。
+        </p>
     </div>
 </template>
 <script setup lang="ts">
+import { computed } from 'vue';
+import { useLogStore } from '@/stores/project/logStore';
 import { useExport } from '@/composables/application/useExporter';
 import { useProjectManager } from '@/composables/application/useProjectManager';
 const projectManager = useProjectManager();
+const log = useLogStore();
+const hasImages = computed(() =>
+    log.allMessages.some((message) => message.images?.length),
+);
 
 const {
     exportAsText,
@@ -67,9 +76,9 @@ async function handleExportDocx() {
     }
 }
 
-function handleExportProject() {
+async function handleExportProject() {
     try {
-        projectManager.exportCurrentProject();
+        await projectManager.exportCurrentProject();
     } catch (error) {
         console.error(error);
         alert(
@@ -95,5 +104,11 @@ function handleExportProject() {
 .export-item:hover {
     background: var(--hover-bg);
     color: var(--icon-color-strong);
+}
+.image-export-note {
+    margin: 4px 12px 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-muted);
 }
 </style>

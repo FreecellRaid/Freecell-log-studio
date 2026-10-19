@@ -81,13 +81,22 @@
                 @keydown.enter.exact.prevent="emitCommit('note')"
             />
         </div>
+        <div class="prop-item full-width">
+            <button type="button" @click="imageInsert.open(message.messageId)">
+                插入图片
+            </button>
+            <MessageImages :message="message" />
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
 import ToggleButton from '@/components/common/ToggleButton.vue';
+import MessageImages from '@/components/common/MessageImages.vue';
+import { useImageInsertStore } from '@/stores/editor/imageInsertStore';
 import type { Message, RoleType } from '@/types/log';
 import { formatDate } from '@/utils/date';
+const imageInsert = useImageInsertStore();
 
 export type MessageDetailTextField =
     | 'playerName'

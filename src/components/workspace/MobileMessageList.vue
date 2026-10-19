@@ -57,10 +57,15 @@
                 :style="getMessageStyle(message).contentStyle"
             >
                 <MarkdownContent
-                    :content="message.content || '空消息'"
+                    :content="
+                        message.content ||
+                        (message.images?.length ? '' : '空消息')
+                    "
                     :enabled="styleStore.viewSettings.enableMarkdown"
                 />
             </div>
+
+            <MessageImages :message="message" />
 
             <footer class="mobile-message-tags">
                 <span v-if="message.isOoc">场外</span>
@@ -93,6 +98,13 @@
                 <button
                     class="mobile-action-button"
                     type="button"
+                    @click.stop="imageInsert.open(message.messageId)"
+                >
+                    插入图片
+                </button>
+                <button
+                    class="mobile-action-button"
+                    type="button"
                     @click.stop="mergeWithNext(message.messageId)"
                 >
                     合并
@@ -111,6 +123,9 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import MessageImages from '@/components/common/MessageImages.vue';
+import { useImageInsertStore } from '@/stores/editor/imageInsertStore';
+const imageInsert = useImageInsertStore();
 import { useMobileMessageReorder } from '@/composables/interaction/useMobileMessageReorder';
 import { useLogCommands } from '@/stores/project/logCommands';
 import { useMobileUiStore } from '@/stores/ui/mobileUiStore';

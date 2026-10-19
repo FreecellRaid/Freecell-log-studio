@@ -23,6 +23,15 @@
         <div class="message-actions">
             <button
                 class="action-button"
+                type="button"
+                title="插入图片"
+                aria-label="插入图片"
+                @click.stop="imageInsert.open(message.messageId)"
+            >
+                <ImagePlus class="ui-icon" />
+            </button>
+            <button
+                class="action-button"
                 title="在下方插入新消息"
                 @click.stop="$emit('actionInsert')"
             >
@@ -87,6 +96,7 @@
                 :enabled="styleStore.viewSettings.enableMarkdown"
             />
         </div>
+        <MessageImages :message="message" />
     </div>
 </template>
 
@@ -97,7 +107,9 @@ import { useStyleStore } from '@/stores/project/styleStore';
 import { useUiStore } from '@/stores/ui/uiStore';
 import { formatDate } from '@/utils/date';
 import { computeStyleForMessage } from '@/editor/styleEngine';
-import { Trash2, Plus, Scissors, ChevronsDown } from '@lucide/vue';
+import { Trash2, Plus, Scissors, ChevronsDown, ImagePlus } from '@lucide/vue';
+import MessageImages from '@/components/common/MessageImages.vue';
+import { useImageInsertStore } from '@/stores/editor/imageInsertStore';
 import { vClickOutside } from '@/directives/clickOutside';
 import MarkdownContent from '@/components/common/MarkdownContent.vue';
 
@@ -137,6 +149,7 @@ const emit = defineEmits<{
 
 const styleStore = useStyleStore();
 const uiStore = useUiStore();
+const imageInsert = useImageInsertStore();
 
 const computedStyles = computed(function () {
     return computeStyleForMessage(props.message, styleStore.activeRules);
@@ -273,6 +286,10 @@ watch(
 }
 
 .message-item:hover .message-actions {
+    opacity: 1;
+    pointer-events: auto;
+}
+.message-item:focus-within .message-actions {
     opacity: 1;
     pointer-events: auto;
 }
