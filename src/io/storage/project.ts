@@ -453,6 +453,16 @@ export function normalizeProjectFile(
         throw new Error('无效的工程文件：根结构错误');
     }
 
+    // 当前 UI 尚未接入资源存储；不能把新文件降级后丢弃图片。
+    if (
+        rawProject.schema !== undefined ||
+        (rawProject.version !== undefined &&
+            rawProject.version !== 1 &&
+            rawProject.version !== 2)
+    ) {
+        throw new Error('当前工程读取流程不支持该 schema 或版本');
+    }
+
     const documents = normalizeDocuments(rawProject.documents);
     const projectId =
         options.regenerateProjectId || typeof rawProject.projectId !== 'string'

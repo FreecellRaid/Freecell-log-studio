@@ -1,0 +1,554 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Freecell Project v3",
+    "type": "object",
+    "properties": {
+        "schema": {
+            "const": "freecell-project"
+        },
+        "version": {
+            "const": 3
+        },
+        "projectId": {
+            "type": "string",
+            "minLength": 1
+        },
+        "projectName": {
+            "type": "string"
+        },
+        "time": {
+            "$ref": "#/$defs/date"
+        },
+        "documents": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/document"
+            }
+        },
+        "resources": {
+            "type": "object",
+            "propertyNames": {
+                "type": "string",
+                "minLength": 1
+            },
+            "additionalProperties": {
+                "$ref": "#/$defs/resource"
+            }
+        },
+        "styleRules": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/rule"
+            }
+        },
+        "viewSettings": {
+            "$ref": "#/$defs/view"
+        }
+    },
+    "required": [
+        "schema",
+        "version",
+        "projectId",
+        "projectName",
+        "time",
+        "documents",
+        "resources",
+        "styleRules",
+        "viewSettings"
+    ],
+    "additionalProperties": false,
+    "$defs": {
+        "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+        },
+        "json": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "null"
+                },
+                {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/json"
+                    }
+                },
+                {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/$defs/json"
+                    }
+                }
+            ]
+        },
+        "role": {
+            "enum": [
+                "gm",
+                "pl",
+                "ob",
+                "bot",
+                "npc",
+                "unknown"
+            ]
+        },
+        "regexp": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "regexp"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "flags": {
+                    "type": "string",
+                    "pattern": "^[dgimsuvy]*$"
+                }
+            },
+            "required": [
+                "type",
+                "source",
+                "flags"
+            ],
+            "additionalProperties": false
+        },
+        "stringFilter": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "$ref": "#/$defs/regexp"
+                }
+            ]
+        },
+        "filter": {
+            "type": "object",
+            "properties": {
+                "messageId": {
+                    "$ref": "#/$defs/stringFilter"
+                },
+                "chunkId": {
+                    "$ref": "#/$defs/stringFilter"
+                },
+                "playerName": {
+                    "$ref": "#/$defs/stringFilter"
+                },
+                "account": {
+                    "$ref": "#/$defs/stringFilter"
+                },
+                "content": {
+                    "$ref": "#/$defs/stringFilter"
+                },
+                "note": {
+                    "$ref": "#/$defs/stringFilter"
+                },
+                "time": {
+                    "$ref": "#/$defs/date"
+                },
+                "timeStart": {
+                    "$ref": "#/$defs/date"
+                },
+                "timeEnd": {
+                    "$ref": "#/$defs/date"
+                },
+                "isOoc": {
+                    "type": "boolean"
+                },
+                "isCommand": {
+                    "type": "boolean"
+                },
+                "hasImage": {
+                    "type": "boolean"
+                },
+                "messageIndex": {
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimum": 0
+                        },
+                        {
+                            "type": "array",
+                            "items": {
+                                "type": "integer",
+                                "minimum": 0
+                            }
+                        }
+                    ]
+                },
+                "role": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/role"
+                        },
+                        {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/role"
+                            }
+                        }
+                    ]
+                }
+            },
+            "required": [],
+            "additionalProperties": false
+        },
+        "attachment": {
+            "type": "object",
+            "properties": {
+                "imageId": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "resourceId": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "name": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "imageId",
+                "resourceId",
+                "name"
+            ],
+            "additionalProperties": false
+        },
+        "resource": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "image"
+                },
+                "sourceUrl": {
+                    "type": "string",
+                    "pattern": "^https?://"
+                },
+                "mimeType": {
+                    "type": "string",
+                    "pattern": "^image/[a-zA-Z0-9.+-]+$"
+                },
+                "byteLength": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "width": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "height": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "encoding": {
+                            "const": "base64"
+                        },
+                        "value": {
+                            "type": "string",
+                            "minLength": 4,
+                            "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                        }
+                    },
+                    "required": [
+                        "encoding",
+                        "value"
+                    ],
+                    "additionalProperties": false
+                },
+                "provenance": {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "enum": [
+                                "upload",
+                                "url",
+                                "cq",
+                                "html"
+                            ]
+                        },
+                        "original": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "kind",
+                        "original"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "additionalProperties": false,
+            "allOf": [
+                {
+                    "if": {
+                        "required": [
+                            "data"
+                        ]
+                    },
+                    "then": {
+                        "required": [
+                            "mimeType",
+                            "byteLength"
+                        ]
+                    }
+                }
+            ]
+        },
+        "message": {
+            "type": "object",
+            "properties": {
+                "messageId": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "originalMessageId": {
+                    "type": "string"
+                },
+                "meta": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/$defs/json"
+                    }
+                },
+                "chunkId": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "messageIndex": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "playerName": {
+                    "type": "string"
+                },
+                "account": {
+                    "type": "string"
+                },
+                "time": {
+                    "$ref": "#/$defs/date"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/attachment"
+                    }
+                },
+                "isOoc": {
+                    "type": "boolean"
+                },
+                "isCommand": {
+                    "type": "boolean"
+                },
+                "role": {
+                    "$ref": "#/$defs/role"
+                },
+                "note": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "messageId",
+                "chunkId",
+                "messageIndex",
+                "playerName",
+                "account",
+                "time",
+                "content",
+                "images",
+                "isOoc",
+                "isCommand",
+                "role",
+                "note"
+            ],
+            "additionalProperties": false
+        },
+        "chunk": {
+            "type": "object",
+            "properties": {
+                "chunkId": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "docId": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "chunkName": {
+                    "type": "string"
+                },
+                "chunkIndex": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/message"
+                    }
+                }
+            },
+            "required": [
+                "chunkId",
+                "docId",
+                "chunkName",
+                "chunkIndex",
+                "messages"
+            ],
+            "additionalProperties": false
+        },
+        "document": {
+            "type": "object",
+            "properties": {
+                "docId": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "source": {
+                    "type": "object",
+                    "properties": {
+                        "provider": {
+                            "type": "string"
+                        },
+                        "id": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "provider",
+                        "id"
+                    ],
+                    "additionalProperties": false
+                },
+                "docName": {
+                    "type": "string"
+                },
+                "docIndex": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "chunks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/chunk"
+                    }
+                },
+                "isExpanded": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "docId",
+                "docName",
+                "docIndex",
+                "chunks"
+            ],
+            "additionalProperties": false
+        },
+        "rule": {
+            "type": "object",
+            "properties": {
+                "ruleId": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "ruleName": {
+                    "type": "string"
+                },
+                "filter": {
+                    "$ref": "#/$defs/filter"
+                },
+                "style": {
+                    "type": "object",
+                    "properties": {
+                        "color": {
+                            "type": "string"
+                        },
+                        "bold": {
+                            "const": true
+                        },
+                        "italic": {
+                            "const": true
+                        }
+                    },
+                    "required": [],
+                    "additionalProperties": false
+                },
+                "area": {
+                    "enum": [
+                        "all",
+                        "playerName",
+                        "content"
+                    ]
+                },
+                "priority": {
+                    "type": "number"
+                },
+                "isActive": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "ruleId",
+                "ruleName",
+                "filter",
+                "style",
+                "area",
+                "priority",
+                "isActive"
+            ],
+            "additionalProperties": false
+        },
+        "view": {
+            "type": "object",
+            "properties": {
+                "hideOoc": {
+                    "type": "boolean"
+                },
+                "hideCommand": {
+                    "type": "boolean"
+                },
+                "enableMarkdown": {
+                    "type": "boolean"
+                },
+                "colorMode": {
+                    "enum": [
+                        "playerName",
+                        "account"
+                    ]
+                }
+            },
+            "required": [
+                "hideOoc",
+                "hideCommand",
+                "enableMarkdown",
+                "colorMode"
+            ],
+            "additionalProperties": false
+        }
+    }
+}

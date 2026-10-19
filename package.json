@@ -16,6 +16,7 @@
     "dependencies": {
         "@lucide/vue": "^1.7.0",
         "@vueuse/core": "^14.3.0",
+        "ajv": "^8.20.0",
         "docx": "^9.6.1",
         "jschardet": "^3.1.4",
         "mammoth": "^1.12.1",
