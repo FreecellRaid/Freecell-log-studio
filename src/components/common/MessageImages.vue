@@ -6,48 +6,40 @@
         @pointerdown.stop
         @dragstart.prevent.stop
     >
-        <figure v-for="(image, index) in message.images" :key="image.imageId">
-            <ImageAttachmentView :attachment="image" />
-            <figcaption>
-                <input
-                    :value="image.name"
-                    aria-label="图片名称"
-                    placeholder="图片名称"
-                    @change="rename(image.imageId, $event)"
-                />
-                <button
-                    type="button"
-                    title="图片上移"
-                    :disabled="index === 0"
-                    @click="move(index, -1)"
-                >
-                    ↑
-                </button>
-                <button
-                    type="button"
-                    title="图片下移"
-                    :disabled="index === message.images.length - 1"
-                    @click="move(index, 1)"
-                >
-                    ↓
-                </button>
-                <button
-                    type="button"
-                    title="移除图片"
-                    @click="remove(image.imageId)"
-                >
-                    移除
-                </button>
-            </figcaption>
-        </figure>
+        <div
+            v-for="image in message.images"
+            :key="image.imageId"
+            class="image-card"
+        >
+            <button
+                type="button"
+                class="image-open"
+                :aria-label="`编辑图片：${image.name || '图片'}`"
+                @click="editor.open(message.messageId, image.imageId)"
+            >
+                <ImageAttachmentView :attachment="image" compact />
+            </button>
+            <button
+                type="button"
+                class="view-action-btn"
+                :aria-label="`删除图片：${image.name || '图片'}`"
+                title="删除图片"
+                @click.stop="remove(image.imageId)"
+            >
+                <X aria-hidden="true" class="ui-icon" />
+            </button>
+        </div>
     </div>
 </template>
 <script setup lang="ts">
+import { X } from '@lucide/vue';
+import { useImageInsertStore } from '@/stores/editor/imageInsertStore';
 import type { Message } from '@/types/log';
 import { useLogCommands } from '@/stores/project/logCommands';
 import ImageAttachmentView from './ImageAttachmentView.vue';
 const props = defineProps<{ message: Message }>();
 const commands = useLogCommands();
+const editor = useImageInsertStore();
 function commit(images: NonNullable<Message['images']>) {
     commands.updateMessage(props.message.chunkId, props.message.messageId, {
         images,
@@ -58,52 +50,46 @@ function remove(id: string) {
         (props.message.images ?? []).filter((image) => image.imageId !== id),
     );
 }
-function rename(id: string, event: Event) {
-    const name = (event.target as HTMLInputElement).value;
-    commit(
-        (props.message.images ?? []).map((image) =>
-            image.imageId === id ? { ...image, name } : image,
-        ),
-    );
-}
-function move(index: number, offset: number) {
-    const images = [...(props.message.images ?? [])];
-    [images[index], images[index + offset]] = [
-        images[index + offset]!,
-        images[index]!,
-    ];
-    commit(images);
-}
 </script>
 <style scoped>
 .message-images {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
     margin-top: 10px;
-}
-figure {
-    margin: 0;
-    width: 100%;
-    max-width: 480px;
-}
-figcaption {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 5px;
-}
-input {
-    flex: 1;
     min-width: 0;
-    color: var(--text-primary);
-    background: var(--bg-input);
-    border: 1px solid var(--border-color);
-    padding: 4px 6px;
 }
-button {
-    min-height: 28px;
-    padding: 2px 6px;
-    font-size: 12px;
+.image-card {
+    position: relative;
+    width: 144px;
+    height: 108px;
+    max-width: 100%;
+    flex: 0 0 auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg-secondary);
+}
+.image-open {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    cursor: pointer;
+    background: transparent;
+}
+.image-open:focus-visible {
+    outline: 2px solid var(--text-primary);
+    outline-offset: -3px;
+}
+.view-action-btn {
+    position: absolute;
+    top: 0px;
+    right: 2px;
+    cursor: pointer;
+}
+.view-action-btn:hover {
+    background-color: transparent;
 }
 </style>

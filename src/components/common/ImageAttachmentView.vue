@@ -1,55 +1,64 @@
 <template>
-    <div ref="container" class="image-attachment-view">
-        <div class="image-preview" :style="ratio">
+    <div ref="container" class="image-attachment-view" :class="{ compact }">
+        <div class="image-preview" :style="compact ? undefined : ratio">
             <img
                 v-if="source"
                 :src="source"
-                :alt="attachment.name || '图片'"
+                :alt="compact ? '' : attachment.name || '图片'"
                 decoding="async"
                 draggable="false"
                 @load="imageError = false"
                 @error="imageError = true"
             />
-            <span v-else>{{ attachment.name || '图片' }}</span>
+            <span v-else>
+                {{ compact ? '暂无预览' : attachment.name || '图片' }}
+            </span>
         </div>
-        <p v-if="imageError || failure" class="image-state" role="status">
-            {{ failure || '图片无法显示。' }}
-        </p>
-        <p v-else-if="!source" class="image-state">
-            {{
-                visible ? '图片资源缺失或正在读取…' : attachment.name || '图片'
-            }}
-        </p>
-        <p
-            v-if="task?.status === 'queued' || task?.status === 'loading'"
-            class="image-state"
-            role="status"
-        >
-            正在保存图片副本…
-            <button
-                type="button"
-                @click.stop="tasks.cancel(attachment.resourceId)"
+        <span v-if="compact && (imageError || failure)" class="compact-state">
+            图片无法显示
+        </span>
+        <template v-if="!compact">
+            <p v-if="imageError || failure" class="image-state" role="status">
+                {{ failure || '图片无法显示。' }}
+            </p>
+            <p v-else-if="!source" class="image-state">
+                {{
+                    visible
+                        ? '图片资源缺失或正在读取…'
+                        : attachment.name || '图片'
+                }}
+            </p>
+            <p
+                v-if="task?.status === 'queued' || task?.status === 'loading'"
+                class="image-state"
+                role="status"
             >
-                停止下载
-            </button>
-        </p>
-        <p
-            v-if="task?.status === 'error' || task?.status === 'cancelled'"
-            class="image-state"
-            role="status"
-        >
-            {{
-                task.status === 'cancelled'
-                    ? '下载已停止，保留原链接。'
-                    : `副本未保存：${task.error}`
-            }}
-            <button
-                type="button"
-                @click.stop="tasks.enqueue(attachment.resourceId, true)"
+                正在保存图片副本…
+                <button
+                    type="button"
+                    @click.stop="tasks.cancel(attachment.resourceId)"
+                >
+                    停止下载
+                </button>
+            </p>
+            <p
+                v-if="task?.status === 'error' || task?.status === 'cancelled'"
+                class="image-state"
+                role="status"
             >
-                重试
-            </button>
-        </p>
+                {{
+                    task.status === 'cancelled'
+                        ? '下载已停止，保留原链接。'
+                        : `副本未保存：${task.error}`
+                }}
+                <button
+                    type="button"
+                    @click.stop="tasks.enqueue(attachment.resourceId, true)"
+                >
+                    重试
+                </button>
+            </p>
+        </template>
     </div>
 </template>
 <script setup lang="ts">
@@ -58,7 +67,7 @@ import type { ImageAttachment } from '@/types/resource';
 import { resourceRepository } from '@/io/storage/resourceStorage';
 import { imageUrlCache } from '@/io/storage/imageUrlCache';
 import { useResourceTasksStore } from '@/stores/io/resourceTasksStore';
-const props = defineProps<{ attachment: ImageAttachment }>();
+const props = defineProps<{ attachment: ImageAttachment; compact?: boolean }>();
 const tasks = useResourceTasksStore();
 const task = computed(() => tasks.states[props.attachment.resourceId]);
 const container = ref<HTMLElement | null>(null);
@@ -156,5 +165,26 @@ img {
 }
 .image-state button {
     margin-left: 8px;
+}
+.compact {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+}
+.compact .image-preview,
+.compact img {
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    border-radius: 0;
+}
+.compact-state {
+    position: absolute;
+    inset: auto 0 0;
+    background: var(--bg-secondary);
+    color: var(--text-muted);
+    font-size: 12px;
+    padding: 4px;
 }
 </style>

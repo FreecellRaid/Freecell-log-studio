@@ -19,6 +19,8 @@ export const useImageInsertStore = defineStore('imageInsert', () => {
         projectId: string;
         messageId: string;
         documents: LogDocument[];
+        imageId?: string;
+        resourceId?: string;
     } | null>(null);
     const loading = ref(false);
     const error = ref('');
@@ -27,16 +29,101 @@ export const useImageInsertStore = defineStore('imageInsert', () => {
     const commands = useLogCommands();
     const windows = useWindowStore();
     const tasks = useResourceTasksStore();
-    function open(messageId: string) {
+    function open(messageId: string, imageId?: string) {
+        const image = log.messagesById
+            .get(messageId)
+            ?.images?.find((item) => item.imageId === imageId);
+        if (imageId && !image) return;
         attempt++;
         target.value = {
             projectId: log.projectId,
             messageId,
             documents: log.documents,
+            imageId,
+            resourceId: image?.resourceId,
         };
         loading.value = false;
         error.value = '';
         windows.openModal('imageInsert');
+    }
+    async function saveEdit(input: {
+        name: string;
+        position: number;
+        file?: File;
+        url?: string;
+    }) {
+        if (loading.value || !target.value?.imageId) return;
+        const destination = target.value;
+        const ticket = ++attempt;
+        loading.value = true;
+        error.value = '';
+        try {
+            if (!Number.isInteger(input.position) || input.position < 1)
+                throw new Error('请输入有效的图片顺序。');
+            let resourceId = destination.resourceId!;
+            if (input.file) {
+                resourceId = await retryAfterResourceCleanup(
+                    () =>
+                        resourceRepository.addLocal(
+                            input.file!,
+                            input.file!.name,
+                        ),
+                    currentResourceRoots,
+                );
+            } else if (input.url !== undefined) {
+                const url = normalizeImageUrl(input.url);
+                resourceId = await retryAfterResourceCleanup(
+                    () => resourceRepository.addRemote(url),
+                    currentResourceRoots,
+                );
+            }
+            if (ticket !== attempt) return;
+            const message = log.messagesById.get(destination.messageId);
+            const images = [...(message?.images ?? [])];
+            const index = images.findIndex(
+                (image) => image.imageId === destination.imageId,
+            );
+            if (
+                log.projectId !== destination.projectId ||
+                log.documents !== destination.documents ||
+                !message ||
+                index < 0 ||
+                images[index]!.resourceId !== destination.resourceId
+            )
+                throw new Error(
+                    '目标图片已变更、删除或工作区已切换，请重新打开编辑。',
+                );
+            if (input.position > images.length)
+                throw new Error('图片顺序超出了当前图片数量。');
+            const original = images[index]!;
+            const updated = {
+                ...original,
+                resourceId,
+                name: input.name.trim() || '图片',
+            };
+            if (
+                original.resourceId !== updated.resourceId ||
+                original.name !== updated.name ||
+                index !== input.position - 1
+            ) {
+                images.splice(index, 1);
+                images.splice(input.position - 1, 0, updated);
+                commands.updateMessage(message.chunkId, message.messageId, {
+                    images,
+                });
+            }
+            if (input.url !== undefined && !input.file)
+                tasks.enqueue(resourceId);
+            close();
+        } catch (reason) {
+            if (ticket === attempt)
+                error.value =
+                    reason instanceof Error
+                        ? reason.message
+                        : '图片保存失败，请重试。';
+        } finally {
+            if (ticket === attempt) loading.value = false;
+        }
     }
     function cancel() {
         attempt++;
@@ -112,5 +199,5 @@ export const useImageInsertStore = defineStore('imageInsert', () => {
             if (ticket === attempt) loading.value = false;
         }
     }
-    return { target, loading, error, open, close, cancel, insert };
+    return { target, loading, error, open, close, cancel, insert, saveEdit };
 });
