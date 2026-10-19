@@ -1,15 +1,12 @@
 <template>
-    <div
-        v-if="message.images?.length"
-        class="message-images"
-        @click.stop
-        @pointerdown.stop
-        @dragstart.prevent.stop
-    >
+    <div v-if="message.images?.length" class="message-images">
         <div
             v-for="image in message.images"
             :key="image.imageId"
             class="image-card"
+            @click.stop
+            @pointerdown.stop
+            @dragstart.prevent.stop
         >
             <button
                 type="button"
