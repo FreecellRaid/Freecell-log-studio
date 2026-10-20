@@ -45,13 +45,21 @@
                 </div>
 
                 <div class="col-role">
-                    <PopoverSelect
-                        :model-value="item.role"
-                        :options="roleOptions"
-                        @update:model-value="
-                            (role) => updateRole(item.id, role)
+                    <select
+                        :value="item.role"
+                        class="role-select"
+                        @change="
+                            (e) =>
+                                updateRole(item.id, getRoleFromSelectEvent(e))
                         "
-                    />
+                    >
+                        <option value="pl">玩家</option>
+                        <option value="npc">NPC</option>
+                        <option value="gm">主持人</option>
+                        <option value="bot">骰子</option>
+                        <option value="ob">观众</option>
+                        <option value="unknown">其他</option>
+                    </select>
                 </div>
 
                 <div class="col-color">
@@ -90,22 +98,11 @@ import { useLogCommands } from '@/stores/project/logCommands';
 import type { RoleType } from '@/types/log';
 import type { ColorMode, StyleRule } from '@/types/style';
 import { useWindowStore } from '@/stores/ui/windowStore';
-import PopoverSelect from '@/components/common/PopoverSelect.vue';
-import type { PopoverOption } from '@/components/common/PopoverSelect.vue';
 import {
     buildIdentityStats,
     collectMessageIdsByIdentity,
 } from '@/editor/identity';
 import { vClickOutside } from '@/directives/clickOutside';
-
-const roleOptions: PopoverOption<RoleType>[] = [
-    { label: '玩家', value: 'pl' },
-    { label: 'NPC', value: 'npc' },
-    { label: '主持人', value: 'gm' },
-    { label: '骰子', value: 'bot' },
-    { label: '观众', value: 'ob' },
-    { label: '其他', value: 'unknown' },
-];
 
 interface IdentityListItem {
     id: string;
@@ -188,6 +185,11 @@ function getMessageIdsForIdentity(id: string) {
         localDisplayMode.value,
         id,
     );
+}
+
+function getRoleFromSelectEvent(event: Event): RoleType {
+    const value = (event.target as HTMLSelectElement).value;
+    return value as RoleType;
 }
 
 const vFocus = {
@@ -319,5 +321,17 @@ const vFocus = {
     height: 40px;
     cursor: pointer;
     opacity: 0;
+}
+
+.role-select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 4px 2px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 12px;
+    outline: none;
 }
 </style>
