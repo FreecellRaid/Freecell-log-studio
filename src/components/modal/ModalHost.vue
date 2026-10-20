@@ -1,5 +1,6 @@
 <template>
-    <Teleport to="#editor">
+    <!-- #editor 由 App 在同一轮挂载，延后解析以确保目标已经插入 DOM。 -->
+    <Teleport defer to="#editor">
         <ModalFrame
             v-for="(win, index) in windowStore.openModals"
             :key="win.windowId"

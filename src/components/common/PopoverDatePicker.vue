@@ -78,7 +78,7 @@
             </button>
         </div>
 
-        <Teleport to="body">
+        <Teleport defer to="#editor">
             <div
                 v-show="isOpen"
                 ref="dropdownRef"
