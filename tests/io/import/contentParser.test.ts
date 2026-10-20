@@ -39,10 +39,12 @@ describe('content extraction', () => {
             expect(result.content).toContain('&#91;');
         },
     );
-    it('preserves unknown and malformed CQ codes', () => {
+    it('removes unsupported CQ codes while preserving incomplete text', () => {
         const text =
             '[CQ:at,qq=123] [CQ:unknown,value=x] [CQ:image,file=broken';
-        expect(parseContent(text, { syntax: 'cq' })).toEqual({ content: text });
+        expect(parseContent(text, { syntax: 'cq' })).toEqual({
+            content: '[CQ:image,file=broken',
+        });
     });
     it('supports an HTTP URL in the CQ file field and prefers url when present', () => {
         const result = parseContent(
@@ -99,12 +101,32 @@ describe('content extraction', () => {
                 '![地图](https://example.com/a.png) <img src="example.png">',
         });
     });
-    it('preserves unknown angle-bracket text in mixed syntax', () => {
+    it.each(['html', 'mixed'] as const)(
+        'extracts plain text from unsupported HTML tags in %s syntax',
+        (syntax) => {
+            expect(
+                parseContent('说明 <account>123</account> 保留', {
+                    syntax,
+                }),
+            ).toEqual({ content: '说明 123 保留' });
+        },
+    );
+    it('extracts supported images inside unsupported HTML containers while removing other CQ codes', () => {
+        const result = parseContent(
+            '<section><custom>正文[CQ:face,id=1]</custom><figure><img src="map.png" alt="地图"></figure></section>',
+            { syntax: 'mixed' },
+        );
+        expect(result.content).toBe('正文');
+        expect(result.resources).toHaveLength(1);
+        expect(result.resources?.[0]).toMatchObject({
+            name: '地图',
+            url: 'map.png',
+        });
         expect(
-            parseContent('说明 <account>123</account> 保留', {
+            parseContent('[CQ:at,qq=123][CQ:unknown,value=x]', {
                 syntax: 'mixed',
             }),
-        ).toEqual({ content: '说明 <account>123</account> 保留' });
+        ).toEqual({ content: '' });
     });
     it('keeps plain text and explicit CQ examples inside HTML literal', () => {
         const text = `${image}<img src="a.png">`;

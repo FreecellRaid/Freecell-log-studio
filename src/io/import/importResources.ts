@@ -9,8 +9,7 @@ import { generateId } from '@/utils/id';
 export interface ImportResourceOptions {
     baseUrl?: string;
     signal?: AbortSignal;
-    // The application can retry a failed batch after quota cleanup without
-    // introducing store dependencies into the import service.
+    // 由应用层在配额不足时清理并重试，避免导入服务依赖状态仓库。
     persistResources?: (
         resources: ImageResourceMetadata[],
     ) => Promise<string[]>;
@@ -33,7 +32,7 @@ export async function prepareImportResources(
                         new URL(resource.url, options.baseUrl).href,
                     );
             } catch {
-                /* Keep unresolved images as editable placeholders. */
+                /* 无法解析的图片保留为可编辑占位，避免丢失来源信息。 */
             }
             let index = sourceUrl ? byUrl.get(sourceUrl) : undefined;
             if (index === undefined) {

@@ -6,7 +6,7 @@ import type {
     ParsedContent,
 } from '@/types/import';
 
-// CQ escapes are decoded once, after splitting attributes on literal commas.
+// 先按原始逗号拆分 CQ 属性，再统一解码一次，避免转义字符变成分隔符。
 function decodeCq(text: string, attribute = false): string {
     return text.replace(/&#91;|&#93;|&amp;|&#44;/g, (value) => {
         if (value === '&#91;') return '[';
@@ -56,8 +56,7 @@ export function parseContent(
                     source: 'cq',
                 });
             } else {
-                // Unsupported codes remain readable rather than silently disappearing.
-                output.push(match[0]);
+                // 其他 CQ 码暂时删除，后续可在此增加转为文字或资源的解析分支。
             }
             cursor = match.index! + match[0].length;
         }
@@ -71,23 +70,6 @@ export function parseContent(
         const output: string[] = [];
         let text = '';
         let hidden = 0;
-        const known = new Set([
-            'img',
-            'br',
-            'span',
-            'div',
-            'p',
-            'a',
-            'b',
-            'i',
-            'u',
-            'strong',
-            'em',
-            'style',
-            'script',
-            'head',
-            'template',
-        ]);
         const blocks = new Set(['p', 'div']);
         const flush = () => {
             output.push(
@@ -97,11 +79,11 @@ export function parseContent(
             );
             text = '';
         };
-        // htmlparser2 never loads URLs or executes scripts. Text callbacks may split
-        // entities into several chunks, so assemble them before CQ recognition.
+        // htmlparser2 不加载资源或执行脚本。文本回调可能被拆分，
+        // 因此先拼接文字，再识别 CQ 码，最后只解码一次实体。
         const parser = new Parser(
             {
-                onopentag(name, attributes, implied) {
+                onopentag(name, attributes) {
                     if (
                         ['script', 'style', 'head', 'template'].includes(name)
                     ) {
@@ -109,14 +91,8 @@ export function parseContent(
                         return;
                     }
                     if (hidden) return;
-                    if (options.syntax === 'mixed' && !known.has(name)) {
-                        if (!implied)
-                            text += raw.slice(
-                                parser.startIndex,
-                                parser.endIndex + 1,
-                            );
-                        return;
-                    }
+                    // 图片和换行在此解析；其他标签暂时去除，只保留文本回调中的文字。
+                    // 后续可在这里扩展链接、表情等类型的解析。
                     if (name === 'img') {
                         flush();
                         resources.push({
@@ -138,7 +114,7 @@ export function parseContent(
                 ontext(value) {
                     if (!hidden) text += value;
                 },
-                onclosetag(name, implied) {
+                onclosetag(name) {
                     if (
                         ['script', 'style', 'head', 'template'].includes(name)
                     ) {
@@ -146,13 +122,7 @@ export function parseContent(
                         return;
                     }
                     if (hidden) return;
-                    if (options.syntax === 'mixed' && !known.has(name)) {
-                        if (!implied)
-                            text += raw.slice(
-                                parser.startIndex,
-                                parser.endIndex + 1,
-                            );
-                    } else if (blocks.has(name)) text += '\n';
+                    if (blocks.has(name)) text += '\n';
                 },
             },
             { decodeEntities: false },
