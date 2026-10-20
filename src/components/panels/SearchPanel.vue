@@ -52,6 +52,15 @@
                 >
                     <div class="advanced-options">
                         <div class="form-group">
+                            <label>备注</label>
+                            <input
+                                class="form-control"
+                                v-model="searchStore.filter.note"
+                                type="text"
+                                placeholder="匹配备注..."
+                            />
+                        </div>
+                        <div class="form-group">
                             <label>角色名</label>
                             <MultiTagSelect
                                 v-model="searchStore.filter.playerName"
@@ -68,12 +77,11 @@
                             />
                         </div>
                         <div class="form-group">
-                            <label>备注</label>
-                            <input
-                                class="form-control"
-                                v-model="searchStore.filter.note"
-                                type="text"
-                                placeholder="匹配备注..."
+                            <label>身份</label>
+                            <MultiTagSelect
+                                v-model="roleFilterValue"
+                                :options="roleOptions"
+                                placeholder="可下拉选择身份，支持多选"
                             />
                         </div>
                         <div class="time-filter-group">
@@ -93,14 +101,6 @@
                             </div>
                         </div>
                         <div class="form-row">
-                            <div class="form-group flex-1">
-                                <label>身份</label>
-                                <MultiTagSelect
-                                    v-model="roleFilterValue"
-                                    :options="roleOptions"
-                                    placeholder="可下拉选择身份，支持多选"
-                                />
-                            </div>
                             <div class="form-group flex-1">
                                 <div class="boolean-filter-grid">
                                     <div class="form-group boolean-filter-item">

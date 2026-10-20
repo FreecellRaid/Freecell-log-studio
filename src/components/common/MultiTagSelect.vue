@@ -34,7 +34,7 @@
             <ChevronDown class="chevron" :class="{ 'is-open': isOpen }" />
         </div>
 
-        <Teleport to="body">
+        <Teleport to="#editor">
             <Transition name="dropdown">
                 <div
                     v-if="isOpen"
@@ -349,7 +349,6 @@ watch(isOpen, (openState) => {
     border: 1px solid var(--border-color);
     border-radius: 4px;
     cursor: text;
-    transition: border-color 0.15s;
 }
 
 .tag-control:hover {

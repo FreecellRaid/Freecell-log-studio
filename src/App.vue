@@ -1,14 +1,13 @@
 <template>
-    <div
-        :inert="Boolean(windowStore.topModal)"
-        :aria-hidden="windowStore.topModal ? true : undefined"
-    >
-        <component
-            :is="isMobile ? MobileEditor : DesktopEditor"
-            :class="[{ 'dark-mode': uiStore.isDarkMode }]"
-        />
+    <div id="editor" :class="[{ 'dark-mode': uiStore.isDarkMode }]">
+        <div
+            :inert="Boolean(windowStore.topModal)"
+            :aria-hidden="windowStore.topModal ? true : undefined"
+        >
+            <component :is="isMobile ? MobileEditor : DesktopEditor" />
+        </div>
+        <ModalHost />
     </div>
-    <ModalHost />
 </template>
 
 <script setup lang="ts">

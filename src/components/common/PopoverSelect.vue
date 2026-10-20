@@ -11,7 +11,7 @@
             <ChevronDown class="chevron" :class="{ 'is-open': isOpen }" />
         </button>
 
-        <Teleport to="body">
+        <Teleport to="#editor">
             <Transition name="popover-dropdown">
                 <div
                     v-if="isOpen"
