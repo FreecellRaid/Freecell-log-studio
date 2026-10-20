@@ -29,6 +29,7 @@
                 {{ styleStore.viewSettings.hideCommand ? '隐藏' : '显示' }}
             </div>
         </div>
+        <ResourceDownloadStatus />
 
         <div v-if="activeChunk || activeExportFormat" class="status-right">
             <template v-if="activeChunk">
@@ -92,6 +93,7 @@ import {
     Palette,
 } from '@lucide/vue';
 import { computed } from 'vue';
+import ResourceDownloadStatus from './ResourceDownloadStatus.vue';
 import { flattenLogToRows } from '@/io/export/flattener';
 import { renderExportDocument } from '@/io/export/exportRender';
 import { useExportStore } from '@/stores/io/exportStore';
@@ -252,7 +254,8 @@ const currentSelectedIndex = computed<number | null>(function () {
 }
 
 .status-right {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    overflow: hidden;
     margin-left: auto;
 }
 

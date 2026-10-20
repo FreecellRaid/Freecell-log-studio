@@ -18,12 +18,26 @@ export const useResourceTasksStore = defineStore('resourceTasks', () => {
     const queue: string[] = [];
     const controllers = new Map<string, AbortController>();
     let active = 0;
-    const pendingCount = computed(
-        () =>
-            Object.values(states).filter(
-                (task) => task.status === 'queued' || task.status === 'loading',
-            ).length,
-    );
+    function summarize(ids: Iterable<string> = Object.keys(states)) {
+        const summary = {
+            total: 0,
+            queued: 0,
+            loading: 0,
+            ready: 0,
+            error: 0,
+            cancelled: 0,
+            pending: 0,
+        };
+        for (const id of new Set(ids)) {
+            const task = states[id];
+            if (!task) continue;
+            summary.total++;
+            summary[task.status]++;
+        }
+        summary.pending = summary.queued + summary.loading;
+        return summary;
+    }
+    const pendingCount = computed(() => summarize().pending);
     function pump() {
         while (active < 3 && queue.length) {
             const id = queue.shift()!;
@@ -34,6 +48,7 @@ export const useResourceTasksStore = defineStore('resourceTasks', () => {
             void (async () => {
                 try {
                     const record = await resourceRepository.get(id);
+                    controller.signal.throwIfAborted();
                     if (!record) throw new Error('图片资源缺失。');
                     if (!record.blob)
                         await retryAfterResourceCleanup(
@@ -44,6 +59,7 @@ export const useResourceTasksStore = defineStore('resourceTasks', () => {
                                 ),
                             currentResourceRoots,
                         );
+                    controller.signal.throwIfAborted();
                     states[id] = { status: 'ready' };
                 } catch (error) {
                     states[id] = {
@@ -85,5 +101,30 @@ export const useResourceTasksStore = defineStore('resourceTasks', () => {
             states[id] = { status: 'cancelled' };
         }
     }
-    return { states, pendingCount, enqueue, cancel };
+    function cancelAll(ids: Iterable<string> = Object.keys(states)) {
+        const selected = [...new Set(ids)];
+        // 先移除等待任务，避免活动任务结束后又从队列启动已停止的任务。
+        for (const id of selected)
+            if (states[id]?.status === 'queued') cancel(id);
+        for (const id of selected)
+            if (states[id]?.status === 'loading') cancel(id);
+    }
+    function retryFailed(ids: Iterable<string> = Object.keys(states)) {
+        for (const id of new Set(ids))
+            if (states[id]?.status === 'error') enqueue(id, true);
+    }
+    function resumeCancelled(ids: Iterable<string> = Object.keys(states)) {
+        for (const id of new Set(ids))
+            if (states[id]?.status === 'cancelled') enqueue(id, true);
+    }
+    return {
+        states,
+        pendingCount,
+        summarize,
+        enqueue,
+        cancel,
+        cancelAll,
+        retryFailed,
+        resumeCancelled,
+    };
 });
