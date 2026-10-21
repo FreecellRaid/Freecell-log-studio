@@ -13,6 +13,7 @@ import { useExportStore } from '@/stores/io/exportStore';
 import { useSelectionStore } from '@/stores/editor/selectionStore';
 import { useWorkspaceActions } from '@/composables/application/useWorkspaceActions';
 import type { Chunk } from '@/types/log';
+import { useResourcePanelStore } from '@/stores/editor/resourcePanelStore';
 import { useSearchStore } from '@/stores/editor/searchStore';
 
 export type CommandType =
@@ -91,6 +92,16 @@ export function useCommandDispatcher() {
             case 'chunkList':
                 handleChunkListCommands(command);
                 break;
+            case 'resources': {
+                const resources = useResourcePanelStore();
+                if (command === 'selectAll') resources.selectAll();
+                if (command === 'cancel') resources.clearSelection();
+                if (command === 'delete') resources.deleteSelected();
+                if (command === 'selectNext') resources.selectAdjacent('next');
+                if (command === 'selectPrevious')
+                    resources.selectAdjacent('previous');
+                break;
+            }
             case 'search':
                 handleSearchCommands(command, payload);
                 break;

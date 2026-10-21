@@ -69,6 +69,22 @@
                 >
                     <TextInitial class="ui-icon" />
                 </div>
+                <div
+                    class="nav-item"
+                    :class="{
+                        active:
+                            windowStore.selectedLeftPanel === 'resources' &&
+                            windowStore.isWindowOpen('resources'),
+                    }"
+                    title="资源管理"
+                    role="button"
+                    tabindex="0"
+                    @click="handleNavClick('resources')"
+                    @keydown.enter="handleNavClick('resources')"
+                    @keydown.space.prevent="handleNavClick('resources')"
+                >
+                    <Images class="ui-icon" />
+                </div>
             </div>
             <div class="nav-bottom">
                 <div
@@ -129,6 +145,12 @@
                 >
                     <ExportFormatPanel />
                 </div>
+                <div
+                    v-else-if="windowStore.selectedLeftPanel === 'resources'"
+                    class="panel-slot"
+                >
+                    <ResourcePanel />
+                </div>
             </div>
         </aside>
 
@@ -143,6 +165,7 @@
 <script setup lang="ts">
 import {
     FolderOpen,
+    Images,
     Moon,
     Palette,
     Search,
@@ -159,6 +182,7 @@ import ChunkListPanel from '@/components/panels/ChunkListPanel.vue';
 import ExportFormatPanel from '@/components/panels/ExportFormatPanel.vue';
 import IdentityPanel from '@/components/panels/IdentityPanel.vue';
 import RuleEditorPanel from '@/components/panels/RuleEditorPanel.vue';
+import ResourcePanel from '@/components/panels/ResourcePanel.vue';
 import SearchPanel from '@/components/panels/SearchPanel.vue';
 
 const SettingsPopover = defineAsyncComponent(

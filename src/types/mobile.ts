@@ -4,6 +4,7 @@ export type MobileBottomPanelName =
     | 'chunkList'
     | 'identity'
     | 'ruleEditor'
+    | 'resources'
     | 'search'
     | 'exportFormat';
 

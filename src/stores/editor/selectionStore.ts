@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
-type SelectionType = 'message' | 'chunk' | 'rule' | 'format';
+type SelectionType = 'message' | 'chunk' | 'rule' | 'format' | 'resource';
 
 interface SelectionState {
     selectionType: SelectionType;

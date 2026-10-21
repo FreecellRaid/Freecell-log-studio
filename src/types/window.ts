@@ -1,6 +1,7 @@
 export type WindowName =
     | 'chunkList'
     | 'identity'
+    | 'resources'
     | 'search'
     | 'exportFormat'
     | 'ruleEditor'

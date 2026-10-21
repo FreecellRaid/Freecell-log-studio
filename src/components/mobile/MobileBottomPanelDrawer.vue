@@ -24,6 +24,9 @@
                 <ExportFormatPanel
                     v-else-if="windowStore.selectedLeftPanel === 'exportFormat'"
                 />
+                <ResourcePanel
+                    v-else-if="windowStore.selectedLeftPanel === 'resources'"
+                />
             </div>
         </section>
     </div>
@@ -37,6 +40,7 @@ import ChunkListPanel from '@/components/panels/ChunkListPanel.vue';
 import ExportFormatPanel from '@/components/panels/ExportFormatPanel.vue';
 import IdentityPanel from '@/components/panels/IdentityPanel.vue';
 import RuleEditorPanel from '@/components/panels/RuleEditorPanel.vue';
+import ResourcePanel from '@/components/panels/ResourcePanel.vue';
 import SearchPanel from '@/components/panels/SearchPanel.vue';
 
 const mobileUiStore = useMobileUiStore();
@@ -49,6 +53,10 @@ const closeGesture = useSwipeGesture({
             target instanceof Element
                 ? target.closest('.mobile-drawer-body')
                 : null;
+        const resourceList =
+            target instanceof Element ? target.closest('.resource-list') : null;
+        if (resourceList instanceof HTMLElement && resourceList.scrollTop > 0)
+            return false;
         return !(body instanceof HTMLElement) || body.scrollTop === 0;
     },
     onSwipe: mobileUiStore.closeOverlay,
@@ -84,5 +92,10 @@ const closeGesture = useSwipeGesture({
 .mobile-drawer-body :deep(.panel-header),
 .mobile-drawer-body :deep(.header-title) {
     min-height: 44px;
+}
+
+.mobile-drawer-body :deep(.resource-panel) {
+    height: min(68dvh, 640px);
+    min-height: 0;
 }
 </style>

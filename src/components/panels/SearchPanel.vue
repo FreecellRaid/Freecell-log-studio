@@ -596,6 +596,11 @@ const truncate = (str: string, len: number) => {
     overflow: hidden;
 }
 
+.ui-icon {
+    width: 16px;
+    height: 16px;
+}
+
 .action-button {
     background: none;
     border: none;

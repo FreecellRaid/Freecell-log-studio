@@ -37,6 +37,7 @@ const bottomPanelNames: MobileBottomPanelName[] = [
     'identity',
     'ruleEditor',
     'search',
+    'resources',
     'exportFormat',
 ];
 

@@ -20,6 +20,7 @@
 <script setup lang="ts">
 import {
     FolderOpen,
+    Images,
     Palette,
     Search,
     TextInitial,
@@ -38,10 +39,11 @@ const bottomPanels: Array<{
     icon: typeof FolderOpen;
 }> = [
     { name: 'chunkList', label: '场景', icon: FolderOpen },
-    { name: 'identity', label: '身份', icon: UserRound },
+    { name: 'identity', label: '角色', icon: UserRound },
     { name: 'ruleEditor', label: '染色', icon: Palette },
     { name: 'search', label: '搜索', icon: Search },
     { name: 'exportFormat', label: '模板', icon: TextInitial },
+    { name: 'resources', label: '资源', icon: Images },
 ];
 
 function togglePanel(panelName: PanelWindowName) {
@@ -67,7 +69,7 @@ function togglePanel(panelName: PanelWindowName) {
     height: calc(58px + env(safe-area-inset-bottom));
     padding: 0 4px env(safe-area-inset-bottom);
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     border-top: 1px solid var(--border-color);
     background: var(--bg-topbar);
 }

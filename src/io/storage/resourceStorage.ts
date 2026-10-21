@@ -320,6 +320,20 @@ export function createResourceRepository(
             }),
         exportProject: (file: ProjectFile) =>
             withResourceOperation(() => exportProject(file)),
+        // 列表只保留元数据和副本标志，缩略图由可见行按需读取。
+        observeSummaries: (ids: string[]) =>
+            liveQuery(async () => {
+                const records = await database.resources.bulkGet(ids);
+                return records.map((record) =>
+                    record
+                        ? {
+                              ...imageMetadata(record),
+                              resourceId: record.resourceId,
+                              hasLocalCopy: !!record.blob,
+                          }
+                        : undefined,
+                );
+            }),
         observe: (id: string) => liveQuery(() => database.resources.get(id)),
     };
 }

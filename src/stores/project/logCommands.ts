@@ -249,6 +249,30 @@ export const useLogCommands = defineStore('logCommands', () => {
         );
     }
 
+    function removeImageResources(resourceIds: Set<string>) {
+        return executeEdit(
+            () =>
+                logStore.allMessages.some((message) =>
+                    message.images?.some((image) =>
+                        resourceIds.has(image.resourceId),
+                    ),
+                ),
+            () => {
+                for (const message of logStore.allMessages) {
+                    if (
+                        message.images?.some((image) =>
+                            resourceIds.has(image.resourceId),
+                        )
+                    )
+                        message.images = message.images.filter(
+                            (image) => !resourceIds.has(image.resourceId),
+                        );
+                }
+            },
+            { syncSystemRules: false },
+        );
+    }
+
     function batchUpdateMessages(
         targetIds: Set<string>,
         updates: MessageUpdates,
@@ -746,6 +770,7 @@ export const useLogCommands = defineStore('logCommands', () => {
         moveMessages,
         reorderMessageInChunk,
         batchDeleteMessages,
+        removeImageResources,
         batchUpdateMessages,
         renameIdentity,
         mergeMessages,

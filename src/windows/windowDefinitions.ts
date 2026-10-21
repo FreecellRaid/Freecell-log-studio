@@ -37,6 +37,7 @@ export const windowDefinitions: Readonly<
     chunkList: panel,
     identity: panel,
     search: panel,
+    resources: { ...panel, participatesInSelection: false },
     exportFormat: panel,
     ruleEditor: panel,
     inspector: panel,
