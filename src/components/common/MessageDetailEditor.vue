@@ -82,10 +82,14 @@
             />
         </div>
         <div class="prop-item full-width">
-            <button type="button" @click="imageInsert.open(message.messageId)">
+            <label>包含 {{ message.images?.length ?? 0 }} 张图片</label>
+            <MessageImages :message="message" />
+            <button
+                class="text-button"
+                @click="imageInsert.open(message.messageId)"
+            >
                 插入图片
             </button>
-            <MessageImages :message="message" />
         </div>
     </div>
 </template>
@@ -120,10 +124,12 @@ const props = withDefaults(
         values: MessageDetailValues;
         showMeta?: boolean;
         contentRows?: number;
+        imageSummaryOnly?: boolean;
     }>(),
     {
         showMeta: true,
         contentRows: 5,
+        imageSummaryOnly: false,
     },
 );
 

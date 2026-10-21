@@ -188,7 +188,6 @@ watch(isOpen, (openState) => {
     box-sizing: border-box;
     padding: 5px 8px;
     min-height: 28px;
-    background: var(--bg-topbar);
     border: 1px solid var(--border-color);
     border-radius: 4px;
     color: var(--text-primary);

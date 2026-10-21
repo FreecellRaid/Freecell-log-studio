@@ -565,10 +565,8 @@ function toggle() {
     box-sizing: border-box;
     padding: 3px 6px 3px 8px;
     min-height: 30px;
-    background: var(--bg-topbar);
     border: 1px solid var(--border-color);
     border-radius: 4px;
-    transition: border-color 0.15s;
 }
 
 .date-trigger:hover,
@@ -592,7 +590,7 @@ function toggle() {
     background: transparent;
     border: none;
     color: var(--text-primary);
-    font-size: 12px;
+    font-size: 14px;
     text-align: center;
     outline: none;
     font-variant-numeric: tabular-nums;

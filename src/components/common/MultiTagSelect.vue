@@ -345,7 +345,6 @@ watch(isOpen, (openState) => {
     align-items: center;
     padding: 3px 24px 3px 6px;
     min-height: 30px;
-    background: var(--bg-topbar);
     border: 1px solid var(--border-color);
     border-radius: 4px;
     cursor: text;

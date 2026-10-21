@@ -30,6 +30,7 @@ interface PanelFilterState {
     role: RoleType[];
     isOoc: boolean | undefined;
     isCommand: boolean | undefined;
+    hasImage: boolean | undefined;
     /** 日期（yyyy-mm-dd）或带时间（yyyy-mm-ddThh:mm:ss），空串表示不过滤 */
     timeStart: string;
     timeEnd: string;
@@ -47,6 +48,7 @@ export const useSearchStore = defineStore('searchPanel', () => {
         role: [],
         isOoc: undefined,
         isCommand: undefined,
+        hasImage: undefined,
         timeStart: '',
         timeEnd: '',
     });
@@ -71,6 +73,8 @@ export const useSearchStore = defineStore('searchPanel', () => {
         if (filter.isCommand !== undefined) {
             activeFilter.isCommand = filter.isCommand;
         }
+        if (filter.hasImage !== undefined)
+            activeFilter.hasImage = filter.hasImage;
         if (filter.timeStart) {
             const start = parseTimeFilterValue(filter.timeStart, false);
             if (start) activeFilter.timeStart = start;
@@ -102,6 +106,7 @@ export const useSearchStore = defineStore('searchPanel', () => {
         filter.role = [];
         filter.isOoc = undefined;
         filter.isCommand = undefined;
+        filter.hasImage = undefined;
         filter.timeStart = '';
         filter.timeEnd = '';
     }

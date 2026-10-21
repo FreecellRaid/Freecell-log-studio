@@ -84,24 +84,24 @@
                                 placeholder="可下拉选择身份，支持多选"
                             />
                         </div>
-                        <div class="time-filter-group">
-                            <div class="form-group">
-                                <label>开始时间</label>
-                                <PopoverDatePicker
-                                    v-model="searchStore.filter.timeStart"
-                                    placeholder="选择开始日期"
-                                />
-                            </div>
-                            <div class="form-group">
-                                <label>结束时间</label>
-                                <PopoverDatePicker
-                                    v-model="searchStore.filter.timeEnd"
-                                    placeholder="选择结束日期"
-                                />
-                            </div>
+
+                        <div class="form-group">
+                            <label>开始时间</label>
+                            <PopoverDatePicker
+                                v-model="searchStore.filter.timeStart"
+                                placeholder="选择开始日期"
+                            />
                         </div>
+                        <div class="form-group">
+                            <label>结束时间</label>
+                            <PopoverDatePicker
+                                v-model="searchStore.filter.timeEnd"
+                                placeholder="选择结束日期"
+                            />
+                        </div>
+
                         <div class="form-row">
-                            <div class="form-group flex-1">
+                            <div class="form-group">
                                 <div class="boolean-filter-grid">
                                     <div class="form-group boolean-filter-item">
                                         <label>场外</label>
@@ -115,6 +115,15 @@
                                         <PopoverSelect
                                             v-model="
                                                 searchStore.filter.isCommand
+                                            "
+                                            :options="booleanOptions"
+                                        />
+                                    </div>
+                                    <div class="form-group boolean-filter-item">
+                                        <label>包含图片</label>
+                                        <PopoverSelect
+                                            v-model="
+                                                searchStore.filter.hasImage
                                             "
                                             :options="booleanOptions"
                                         />
@@ -420,11 +429,6 @@ const truncate = (str: string, len: number) => {
     min-width: 0;
 }
 
-.time-filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
 .search-controls {
     flex-shrink: 0;
     padding: 12px;
@@ -474,7 +478,7 @@ const truncate = (str: string, len: number) => {
 
 .boolean-filter-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
 }
 

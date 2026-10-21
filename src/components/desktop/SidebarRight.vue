@@ -49,6 +49,7 @@
                     <div class="property-grid">
                         <MessageDetailEditor
                             :message="message"
+                            image-summary-only
                             :values="getMessageValues(message)"
                             @text-input="
                                 (field, value) =>
