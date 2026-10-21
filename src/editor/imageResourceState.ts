@@ -68,7 +68,7 @@ export function resolveImageResourceState(input: {
         ready: '可离线预览，并随工程文件一起备份。',
         queued: '图片已加入下载队列，可继续编辑其他内容。',
         loading: '正在保存图片副本，原始链接会继续保留。',
-        error: `${task?.error || '下载失败。'} 可打开原图自行保存，再上传本地副本。`,
+        error: `${task?.error || '下载失败，'} 可打开原图自行保存，再上传本地副本。`,
         cancelled: '原始链接仍然保留，可继续下载或上传本地副本。',
         remote: '链接图片可直接预览；内嵌到 DOCX 需要先保存本地副本。',
         placeholder: '没有可下载的链接，可上传本地副本补全图片。',

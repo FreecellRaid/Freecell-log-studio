@@ -64,10 +64,10 @@ export const useResourceTasksStore = defineStore('resourceTasks', () => {
                                 : 'error',
                             error:
                                 error instanceof TypeError
-                                    ? '无法保存副本，可能是跨域限制或网络错误。'
+                                    ? '无法保存副本，请重试或手动下载后上传'
                                     : error instanceof Error
                                       ? error.message
-                                      : '图片下载失败，可能是链接失效或跨域限制。',
+                                      : '图片下载失败，请重试或手动下载后上传',
                         };
                 } finally {
                     active--;

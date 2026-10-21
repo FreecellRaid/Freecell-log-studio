@@ -84,7 +84,7 @@
                     type="button"
                     class="text-button"
                     :disabled="uploading"
-                    title="补全所有引用此资源的图片，并保留原始链接"
+                    title="补全此图片的本地副本，并保留原始链接"
                     @click="copyInput?.click()"
                 >
                     <Upload class="ui-icon" aria-hidden="true" />
@@ -174,7 +174,7 @@ const description = computed(() =>
     props.attachment
         ? state.value.description
         : props.previewSrc
-          ? '保存后可管理图片副本，链接资源不会自动下载。'
+          ? '保存后可管理图片本地副本'
           : '选择本地文件或输入图片链接，上方将显示预览。',
 );
 watch([() => props.previewSrc, source], () => {

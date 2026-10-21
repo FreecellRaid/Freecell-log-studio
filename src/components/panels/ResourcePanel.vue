@@ -38,13 +38,6 @@
                 <Trash2 class="ui-icon" />
             </button>
         </div>
-        <p
-            v-if="panel.feedback || readError"
-            class="resource-feedback"
-            role="status"
-        >
-            {{ readError || panel.feedback }}
-        </p>
         <p v-if="!panel.resources.length" class="panel-empty-hint">
             项目中暂无图片资源
         </p>
@@ -52,7 +45,7 @@
             v-else
             class="resource-list"
             :items="panel.resources"
-            :item-size="112"
+            :item-size="92"
             key-field="resourceId"
             role="listbox"
             aria-label="项目图片资源"
@@ -181,7 +174,7 @@ function status(id: string) {
 .resource-row {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     padding: 16px 12px;
     box-sizing: border-box;
     cursor: pointer;
