@@ -361,14 +361,14 @@
                         </label>
                         <div class="form-row two-col">
                             <button
-                                class="action-btn"
+                                class="text-button action-btn"
                                 type="button"
                                 @click="bindSelectedIds(rule)"
                             >
                                 绑定选中
                             </button>
                             <button
-                                class="action-btn"
+                                class="text-button action-btn"
                                 type="button"
                                 @click="clearIds(rule)"
                             >
@@ -735,17 +735,9 @@ const clearIds = (rule: StyleRule) => {
 
 .action-btn {
     width: 100%;
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    border-radius: 4px;
     padding: 6px 8px;
     font-size: 13px;
-    cursor: pointer;
-}
-
-.action-btn:hover {
-    background: var(--hover-bg);
+    line-height: normal;
 }
 
 .binding-status {

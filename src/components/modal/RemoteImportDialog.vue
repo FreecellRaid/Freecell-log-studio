@@ -23,12 +23,14 @@
             <div class="remote-import-actions">
                 <button
                     v-if="store.canDownloadOriginal"
+                    class="text-button"
                     type="button"
                     @click="store.downloadOriginal()"
                 >
                     下载原始文件
                 </button>
                 <button
+                    class="text-button is-primary"
                     type="submit"
                     :disabled="store.loading || !store.input.trim()"
                 >
@@ -50,7 +52,7 @@ const store = useRemoteImportStore();
 label {
     display: block;
     margin-bottom: 8px;
-    font-size: 13px;
+    font-size: 14px;
 }
 
 input {
@@ -61,7 +63,7 @@ input {
     color: var(--text-primary);
     padding: 8px;
     border-radius: 4px;
-    font-size: 13px;
+    font-size: 14px;
     outline: none;
 }
 
@@ -69,8 +71,7 @@ input::placeholder {
     color: var(--text-muted);
 }
 
-input:focus-visible,
-button:focus-visible {
+input:focus-visible {
     outline: 1px solid var(--active-accent);
     outline-offset: -1px;
 }
@@ -92,22 +93,9 @@ p {
     gap: 10px;
     margin-top: 16px;
 }
-
-button {
+.remote-import-actions .text-button {
+    font-size: 13px;
+    line-height: normal;
     padding: 6px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    color: inherit;
-    background: var(--bg-topbar);
-    cursor: pointer;
-}
-
-button:disabled {
-    opacity: 0.5;
-    cursor: default;
-}
-
-button:hover:not(:disabled) {
-    background: var(--hover-bg);
 }
 </style>

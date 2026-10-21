@@ -155,7 +155,7 @@
                     <div class="quick-row">
                         <button
                             type="button"
-                            class="quick-button"
+                            class="text-button quick-button"
                             :disabled="!modelValue"
                             @click="clearValue"
                         >
@@ -163,7 +163,7 @@
                         </button>
                         <button
                             type="button"
-                            class="quick-button"
+                            class="text-button quick-button"
                             :class="{ 'is-active': isTodaySelected }"
                             @click="selectToday"
                         >
@@ -756,31 +756,8 @@ function toggle() {
 .quick-button {
     flex: 1;
     padding: 5px 0;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    background: var(--bg-sidebar);
-    color: var(--text-primary);
     font-size: 12px;
-    cursor: pointer;
-    text-align: center;
-}
-
-.quick-button:hover {
-    background: var(--hover-bg);
-}
-
-.quick-button.is-active {
-    color: var(--active-accent);
-    border-color: var(--active-accent);
-}
-
-.quick-button:disabled {
-    opacity: 0.45;
-    cursor: default;
-}
-
-.quick-button:disabled:hover {
-    background: var(--bg-sidebar);
+    line-height: normal;
 }
 
 .quick-button.is-active {

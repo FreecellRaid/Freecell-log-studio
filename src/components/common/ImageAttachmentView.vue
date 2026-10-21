@@ -58,7 +58,7 @@
                 <button
                     v-if="sourceUrl && !pending"
                     type="button"
-                    class="resource-button primary"
+                    class="text-button is-primary"
                     :disabled="uploading"
                     @click="tasks.enqueue(record.resourceId, true)"
                 >
@@ -74,7 +74,7 @@
                 <button
                     v-if="pending && !uploading"
                     type="button"
-                    class="resource-button"
+                    class="text-button"
                     @click="tasks.cancel(record.resourceId)"
                 >
                     <Square class="ui-icon" aria-hidden="true" />
@@ -82,7 +82,7 @@
                 </button>
                 <button
                     type="button"
-                    class="resource-button"
+                    class="text-button"
                     :disabled="uploading"
                     title="补全所有引用此资源的图片，并保留原始链接"
                     @click="copyInput?.click()"
@@ -342,8 +342,7 @@ img {
     gap: 6px 12px;
 }
 .resource-status,
-.original-link,
-.resource-button {
+.original-link {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -379,33 +378,15 @@ p {
     flex-wrap: wrap;
     gap: 8px;
 }
-.resource-button {
+.resource-buttons .text-button {
     font: inherit;
-    justify-content: center;
+    gap: 6px;
     min-height: 30px;
     padding: 5px 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    color: var(--text-primary);
-    background: var(--bg-workspace);
-    cursor: pointer;
 }
-.resource-button.primary {
-    background: var(--active-accent);
-    border-color: var(--active-accent);
-    color: var(--bg-topbar);
-}
-.resource-button:disabled {
-    opacity: 0.55;
-    cursor: default;
-}
-.resource-button:focus-visible,
 .original-link:focus-visible {
     outline: 2px solid var(--active-accent);
     outline-offset: 2px;
-}
-.resource-button:hover:not(:disabled) {
-    filter: brightness(0.94);
 }
 .ui-icon {
     width: 14px;

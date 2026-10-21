@@ -65,6 +65,7 @@
                 </div>
                 <input
                     v-if="mode === 'file'"
+                    class="file-input"
                     type="file"
                     aria-label="选择图片文件"
                     accept="image/png,image/jpeg,image/gif,image/webp"
@@ -93,8 +94,15 @@
         </form>
         <template #footer>
             <div class="image-buttons">
-                <button type="button" @click="store.close()">取消</button>
                 <button
+                    class="text-button"
+                    type="button"
+                    @click="store.close()"
+                >
+                    取消
+                </button>
+                <button
+                    class="text-button is-primary"
                     type="submit"
                     form="image-edit-form"
                     :disabled="
@@ -248,6 +256,14 @@ onUnmounted(store.cancel);
     align-items: center;
     gap: 12px;
 }
+.image-form input::file-selector-button {
+    font: inherit;
+    padding: 1px 6px;
+}
+.image-buttons .text-button {
+    font: inherit;
+    padding: 6px 12px;
+}
 .resource-method-header {
     justify-content: space-between;
     flex-wrap: wrap;
@@ -279,18 +295,11 @@ onUnmounted(store.cancel);
     border: 1px solid var(--border-color);
     border-radius: 4px;
 }
-.image-form input::file-selector-button {
-    font: inherit;
-}
 .image-buttons {
     width: 100%;
     justify-content: flex-end;
     font-size: 13px;
     line-height: 1.6;
-}
-.image-buttons button {
-    font: inherit;
-    padding: 6px 12px;
 }
 p {
     color: var(--text-muted);

@@ -113,6 +113,44 @@ body,
     stroke-width: 1.9;
 }
 
+/* 通用文字按钮。 */
+.text-button,
+.file-input::file-selector-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-workspace);
+    color: var(--text-primary);
+    font-family: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.text-button.is-primary {
+    background: var(--active-accent);
+    border-color: var(--active-accent);
+    color: var(--bg-topbar);
+}
+
+.text-button:hover:not(:disabled),
+.file-input:not(:disabled)::file-selector-button:hover {
+    filter: brightness(0.9);
+}
+
+.text-button:disabled,
+.file-input:disabled::file-selector-button {
+    opacity: 0.55;
+    cursor: default;
+}
+
+.text-button:focus-visible,
+.file-input:focus-visible::file-selector-button {
+    outline: 1px solid var(--active-accent);
+    outline-offset: 1px;
+}
+
 .icon-interactive {
     color: var(--icon-color);
     background: transparent;

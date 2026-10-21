@@ -92,7 +92,7 @@ defineEmits<{ close: [] }>();
 }
 .modal-footer {
     display: flex;
-    padding: 8px 20px;
+    padding: 0px 20px 14px 20px;
     font-size: 12px;
     color: var(--text-muted);
     flex-shrink: 0;

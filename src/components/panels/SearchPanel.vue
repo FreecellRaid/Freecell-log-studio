@@ -146,21 +146,21 @@
             </span>
             <div class="search-actions">
                 <button
-                    class="btn-primary"
+                    class="text-button"
                     :disabled="!jumpTarget"
                     @click="dispatch('jump')"
                 >
                     跳转
                 </button>
                 <button
-                    class="btn-primary"
+                    class="text-button"
                     :disabled="searchStore.searchResults.length === 0"
                     @click="selectAllMatches"
                 >
                     全选
                 </button>
                 <button
-                    class="btn-primary"
+                    class="text-button"
                     :disabled="
                         activeContext.selectedMessageIds.value.size === 0
                     "
@@ -496,17 +496,10 @@ const truncate = (str: string, len: number) => {
     align-items: center;
     gap: 8px;
 }
-
-.btn-primary {
+.search-actions .text-button {
     font-size: 12px;
-    color: var(--text-muted);
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-}
-
-.btn-primary:hover {
-    background-color: var(--hover-bg);
+    line-height: normal;
+    padding: 2px 6px;
 }
 
 .count-text {
