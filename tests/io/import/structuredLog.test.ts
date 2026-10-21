@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { reactive } from 'vue';
 import { importFiles } from '@/io/import/importService';
 import { buildWorkspaceProject } from '@/io/storage/project';
-import { tryParseLegacyProject } from '@/io/storage/legacyProject';
+import {
+    projectFileToWorkspace,
+    workspaceProjectToFile,
+} from '@/io/storage/workspaceProject';
+import { parseProjectFile } from '@/io/storage/projectFile';
 
 const protocol = {
     schema: 'freecell-log',
@@ -125,7 +129,10 @@ describe('log import service', () => {
                 colorMode: 'playerName',
             },
         });
-        const restored = tryParseLegacyProject(JSON.stringify(project));
+        const restored = projectFileToWorkspace(
+            parseProjectFile(JSON.stringify(workspaceProjectToFile(project)))
+                .project,
+        );
         expect(restored?.documents[0].source).toEqual(source);
         expect(restored?.documents[0].chunks[0].messages[0]).toMatchObject({
             originalMessageId: 'platform-id',

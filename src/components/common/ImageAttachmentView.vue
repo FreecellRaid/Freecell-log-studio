@@ -111,7 +111,14 @@
 </template>
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
-import { Download, ExternalLink, ImageOff, LoaderCircle, Square, Upload } from '@lucide/vue';
+import {
+    Download,
+    ExternalLink,
+    ImageOff,
+    LoaderCircle,
+    Square,
+    Upload,
+} from '@lucide/vue';
 import type { ImageAttachment } from '@/types/resource';
 import { useImageResource } from '@/composables/resources/useImageResource';
 import { resolveImageResourceState } from '@/editor/imageResourceState';
@@ -136,29 +143,54 @@ const { record, reading, source, sourceUrl, readError } = useImageResource(
     () => props.attachment?.resourceId,
     shouldObserve,
 );
-const task = computed(() => props.attachment ? tasks.states[props.attachment.resourceId] : undefined);
+const task = computed(() =>
+    props.attachment ? tasks.states[props.attachment.resourceId] : undefined,
+);
 const previewSource = computed(() => props.previewSrc || source.value);
-const state = computed(() => resolveImageResourceState({
-    resource: record.value ? { sourceUrl: record.value.sourceUrl, hasLocalCopy: !!record.value.blob } : undefined,
-    task: task.value,
-    reading: reading.value,
-    readError: readError.value,
-    uploading: uploading.value,
-}));
+const state = computed(() =>
+    resolveImageResourceState({
+        resource: record.value
+            ? {
+                  sourceUrl: record.value.sourceUrl,
+                  hasLocalCopy: !!record.value.blob,
+              }
+            : undefined,
+        task: task.value,
+        reading: reading.value,
+        readError: readError.value,
+        uploading: uploading.value,
+    }),
+);
 const pending = computed(() => state.value.pending);
 const warning = computed(() => !!props.attachment && state.value.warning);
-const statusLabel = computed(() => props.attachment ? state.value.label : props.previewSrc ? '待保存' : '未选择图片');
-const description = computed(() => props.attachment ? state.value.description : props.previewSrc
-    ? '保存后可管理图片副本，链接资源不会自动下载。'
-    : '选择本地文件或输入图片链接，上方将显示预览。');
-watch([() => props.previewSrc, source], () => { imageError.value = false; });
-// 切换目标时使旧上传失效，资源更新不会中断当前上传。
-watch([() => props.attachment?.resourceId, shouldObserve], () => {
-    revision++;
+const statusLabel = computed(() =>
+    props.attachment
+        ? state.value.label
+        : props.previewSrc
+          ? '待保存'
+          : '未选择图片',
+);
+const description = computed(() =>
+    props.attachment
+        ? state.value.description
+        : props.previewSrc
+          ? '保存后可管理图片副本，链接资源不会自动下载。'
+          : '选择本地文件或输入图片链接，上方将显示预览。',
+);
+watch([() => props.previewSrc, source], () => {
     imageError.value = false;
-    uploadError.value = '';
-    uploading.value = false;
-}, { flush: 'sync' });
+});
+// 切换目标时使旧上传失效，资源更新不会中断当前上传。
+watch(
+    [() => props.attachment?.resourceId, shouldObserve],
+    () => {
+        revision++;
+        imageError.value = false;
+        uploadError.value = '';
+        uploading.value = false;
+    },
+    { flush: 'sync' },
+);
 async function uploadCopy(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];

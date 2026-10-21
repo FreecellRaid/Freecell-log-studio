@@ -175,7 +175,9 @@ export function createResourceRepository(
         const resources: ProjectFile['resources'] = {};
         const records: ImageResourceRecord[] = [];
         const mapping = new Map<string, string>();
-        for (const originalId of collectDocumentResourceIds(project.documents)) {
+        for (const originalId of collectDocumentResourceIds(
+            project.documents,
+        )) {
             const file = project.resources[originalId] ?? {
                 type: 'image' as const,
             };
@@ -287,7 +289,9 @@ export function createResourceRepository(
         importProject: (file: ProjectFile) =>
             withResourceOperation(async () => {
                 const imported = await importProject(file);
-                protectResources(collectDocumentResourceIds(imported.documents));
+                protectResources(
+                    collectDocumentResourceIds(imported.documents),
+                );
                 return imported;
             }),
         exportProject: (file: ProjectFile) =>

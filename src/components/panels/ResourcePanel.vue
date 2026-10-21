@@ -123,13 +123,22 @@ import { resolveImageResourceState } from '@/editor/imageResourceState';
 const panel = useResourcePanelStore();
 const tasks = useResourceTasksStore();
 const windows = useWindowStore();
-const { summaries, reading, readError } = useResourceSummaries(() => panel.resources.map(item => item.resourceId));
+const { summaries, reading, readError } = useResourceSummaries(() =>
+    panel.resources.map((item) => item.resourceId),
+);
 function resourceState(id: string) {
-    return resolveImageResourceState({ resource: summaries.value.get(id), task: tasks.states[id], reading: reading.value, readError: readError.value });
+    return resolveImageResourceState({
+        resource: summaries.value.get(id),
+        task: tasks.states[id],
+        reading: reading.value,
+        readError: readError.value,
+    });
 }
 function status(id: string) {
     const state = resourceState(id);
-    return state.status === 'error' ? `下载失败：${state.error || '请重试'}` : state.label;
+    return state.status === 'error'
+        ? `下载失败：${state.error || '请重试'}`
+        : state.label;
 }
 </script>
 <style scoped>

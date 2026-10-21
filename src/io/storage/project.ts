@@ -1,8 +1,5 @@
 import { cloneLogMetadata } from '@/utils/logMetadata';
-import type {
-    StyleRule,
-    ViewSettings,
-} from '@/types/style';
+import type { StyleRule, ViewSettings } from '@/types/style';
 import type { LogDocument, MessageFilter, RoleType } from '@/types/log';
 import { isRoleType } from '@/types/log';
 import type { WorkspaceProject } from '@/types/project';

@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { buildWorkspaceProject } from '@/io/storage/project';
 import { normalizeLegacyProject } from '@/io/storage/legacyProject';
+import {
+    projectFileToWorkspace,
+    workspaceProjectToFile,
+} from '@/io/storage/workspaceProject';
+import { parseProjectFile } from '@/io/storage/projectFile';
 import type { StyleRule } from '@/types/style';
 
 const viewSettings = {
@@ -161,8 +166,9 @@ describe('project rule filter cloning', () => {
             styleRules: [original],
             viewSettings,
         });
-        const restored = normalizeLegacyProject(
-            JSON.parse(JSON.stringify(project)),
+        const restored = projectFileToWorkspace(
+            parseProjectFile(JSON.stringify(workspaceProjectToFile(project)))
+                .project,
         );
         expect(restored.styleRules[0].filter.timeStart).toEqual(
             original.filter.timeStart,

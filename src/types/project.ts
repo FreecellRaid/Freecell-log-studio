@@ -12,4 +12,3 @@ export interface WorkspaceProject {
     // 仅用于导入期间传递资源；编辑区本身不持有 Blob 或 Base64。
     resources?: Record<string, ImageResourceFile>;
 }
-

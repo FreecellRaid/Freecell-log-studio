@@ -1,9 +1,7 @@
 import { normalizeImageUrl } from '@/utils/imageUrl';
 import type { ImportRow } from '@/types/import';
 import type { ImageAttachment, ImageResourceMetadata } from '@/types/resource';
-import {
-    resourceRepository,
-} from '@/io/storage/resourceStorage';
+import { resourceRepository } from '@/io/storage/resourceStorage';
 import { generateId } from '@/utils/id';
 
 export interface ImportResourceOptions {

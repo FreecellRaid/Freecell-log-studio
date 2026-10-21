@@ -23,9 +23,7 @@ import {
     projectFileToWorkspace,
     workspaceProjectToFile,
 } from '@/io/storage/workspaceProject';
-import {
-    resourceRepository,
-} from '@/io/storage/resourceStorage';
+import { resourceRepository } from '@/io/storage/resourceStorage';
 import { useResourceTasksStore } from '@/stores/io/resourceTasksStore';
 import { useProjectStorageStore } from '@/stores/io/projectStorageStore';
 import type { ProjectFile as SerializedProject } from '@/types/projectFile';
@@ -167,7 +165,9 @@ export function useProjectManager() {
     async function exportCurrentProject() {
         const project = workspaceProjectToFile(createCurrentWorkspaceProject());
         protectResources(collectDocumentResourceIds(project.documents));
-        const pending = [...collectDocumentResourceIds(project.documents)].filter((id) =>
+        const pending = [
+            ...collectDocumentResourceIds(project.documents),
+        ].filter((id) =>
             ['queued', 'loading'].includes(
                 resourceTasks.states[id]?.status ?? '',
             ),

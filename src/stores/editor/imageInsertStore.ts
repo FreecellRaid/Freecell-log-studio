@@ -6,9 +6,7 @@ import { ref, shallowRef } from 'vue';
 import { useLogStore } from '@/stores/project/logStore';
 import { useLogCommands } from '@/stores/project/logCommands';
 import { useWindowStore } from '@/stores/ui/windowStore';
-import {
-    resourceRepository,
-} from '@/io/storage/resourceStorage';
+import { resourceRepository } from '@/io/storage/resourceStorage';
 import { generateId } from '@/utils/id';
 import type { ImageAttachment } from '@/types/resource';
 import type { LogDocument } from '@/types/log';

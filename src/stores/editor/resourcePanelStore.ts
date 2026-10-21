@@ -27,22 +27,23 @@ export const useResourcePanelStore = defineStore('resourcePanel', () => {
                 count: number;
             }
         >();
-        for (const { message, attachment: image } of iterateMessageImages(log.allMessages)) {
-                let group = groups.get(image.resourceId);
-                if (!group) {
-                    group = {
-                        resourceId: image.resourceId,
-                        attachment: image,
-                        names: [],
-                        messageIds: new Set(),
-                        count: 0,
-                    };
-                    groups.set(image.resourceId, group);
-                }
-                if (!group.names.includes(image.name))
-                    group.names.push(image.name);
-                group.messageIds.add(message.messageId);
-                group.count++;
+        for (const { message, attachment: image } of iterateMessageImages(
+            log.allMessages,
+        )) {
+            let group = groups.get(image.resourceId);
+            if (!group) {
+                group = {
+                    resourceId: image.resourceId,
+                    attachment: image,
+                    names: [],
+                    messageIds: new Set(),
+                    count: 0,
+                };
+                groups.set(image.resourceId, group);
+            }
+            if (!group.names.includes(image.name)) group.names.push(image.name);
+            group.messageIds.add(message.messageId);
+            group.count++;
         }
         return [...groups.values()];
     });

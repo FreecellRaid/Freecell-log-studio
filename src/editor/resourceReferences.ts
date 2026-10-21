@@ -8,7 +8,9 @@ interface ImageDocument {
     chunks: readonly { messages: readonly ImageMessage[] }[];
 }
 
-export function* iterateMessageImages<T extends ImageMessage>(messages: Iterable<T>) {
+export function* iterateMessageImages<T extends ImageMessage>(
+    messages: Iterable<T>,
+) {
     for (const message of messages)
         for (const attachment of message.images ?? [])
             yield { message, attachment };
@@ -20,8 +22,11 @@ export function* iterateDocumentImages(documents: Iterable<ImageDocument>) {
             yield* iterateMessageImages(chunk.messages);
 }
 
-export function collectDocumentResourceIds(documents: Iterable<ImageDocument>): Set<string> {
+export function collectDocumentResourceIds(
+    documents: Iterable<ImageDocument>,
+): Set<string> {
     const ids = new Set<string>();
-    for (const { attachment } of iterateDocumentImages(documents)) ids.add(attachment.resourceId);
+    for (const { attachment } of iterateDocumentImages(documents))
+        ids.add(attachment.resourceId);
     return ids;
 }

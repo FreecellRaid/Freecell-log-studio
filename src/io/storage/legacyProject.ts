@@ -2,7 +2,12 @@ import { cloneLogMetadata } from '@/utils/logMetadata';
 import type { WorkspaceProject } from '@/types/project';
 import type { LogDocument, MessageFilter, RoleType } from '@/types/log';
 import { isRoleType } from '@/types/log';
-import type { RuleStyle, StyleArea, StyleRule, ViewSettings } from '@/types/style';
+import type {
+    RuleStyle,
+    StyleArea,
+    StyleRule,
+    ViewSettings,
+} from '@/types/style';
 import { generateId } from '@/utils/id';
 import { stripFileExtension } from '@/utils/fileName';
 import { deriveDefaultProjectName } from './project';
@@ -337,16 +342,3 @@ export function normalizeLegacyProject(
         viewSettings: normalizeViewSettings(rawProject.viewSettings),
     };
 }
-
-export function tryParseLegacyProject(
-    jsonText: string,
-    options: { regenerateProjectId?: boolean } = {},
-): WorkspaceProject | null {
-    try {
-        const parsed = JSON.parse(jsonText) as unknown;
-        return normalizeLegacyProject(parsed, options);
-    } catch {
-        return null;
-    }
-}
-

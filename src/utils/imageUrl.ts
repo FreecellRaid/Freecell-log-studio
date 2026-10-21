@@ -13,4 +13,3 @@ export function normalizeImageUrl(input: string): string {
         throw new Error('图片链接须为不含用户名和密码的 HTTP(S) 地址。');
     return url.href;
 }
-

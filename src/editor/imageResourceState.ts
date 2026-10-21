@@ -1,11 +1,25 @@
 import type { ImageResourceSummary, ResourceTaskState } from '@/types/resource';
 import { normalizeImageUrl } from '@/utils/imageUrl';
 
-export type ImageResourceStatus = 'reading' | 'readError' | 'missing' | 'uploading' | 'ready' | 'queued' | 'loading' | 'error' | 'cancelled' | 'remote' | 'placeholder';
+export type ImageResourceStatus =
+    | 'reading'
+    | 'readError'
+    | 'missing'
+    | 'uploading'
+    | 'ready'
+    | 'queued'
+    | 'loading'
+    | 'error'
+    | 'cancelled'
+    | 'remote'
+    | 'placeholder';
 
 export function imageSourceUrl(url?: string): string {
-    try { return url ? normalizeImageUrl(url) : ''; }
-    catch { return ''; }
+    try {
+        return url ? normalizeImageUrl(url) : '';
+    } catch {
+        return '';
+    }
 }
 
 // 编辑器和项目资源列表共用状态优先级；已有副本不会被旧任务错误覆盖。
@@ -18,15 +32,33 @@ export function resolveImageResourceState(input: {
 }) {
     const { resource, task } = input;
     const sourceUrl = imageSourceUrl(resource?.sourceUrl);
-    const status: ImageResourceStatus = input.reading ? 'reading'
-        : input.readError ? 'readError'
-        : !resource ? 'missing'
-        : input.uploading ? 'uploading'
-        : resource.hasLocalCopy ? 'ready'
-        : task && task.status !== 'ready' ? task.status
-        : sourceUrl ? 'remote' : 'placeholder';
+    const status: ImageResourceStatus = input.reading
+        ? 'reading'
+        : input.readError
+          ? 'readError'
+          : !resource
+            ? 'missing'
+            : input.uploading
+              ? 'uploading'
+              : resource.hasLocalCopy
+                ? 'ready'
+                : task && task.status !== 'ready'
+                  ? task.status
+                  : sourceUrl
+                    ? 'remote'
+                    : 'placeholder';
     const labels: Record<ImageResourceStatus, string> = {
-        reading: '读取中', readError: '读取失败', missing: '资源缺失', uploading: '正在保存副本', ready: '已保存本地副本', queued: '等待下载', loading: '正在下载', error: '副本未保存', cancelled: '下载已停止', remote: '仅链接', placeholder: '待补全',
+        reading: '读取中',
+        readError: '读取失败',
+        missing: '资源缺失',
+        uploading: '正在保存副本',
+        ready: '已保存本地副本',
+        queued: '等待下载',
+        loading: '正在下载',
+        error: '副本未保存',
+        cancelled: '下载已停止',
+        remote: '仅链接',
+        placeholder: '待补全',
     };
     const descriptions: Record<ImageResourceStatus, string> = {
         reading: '正在读取资源信息…',
@@ -42,9 +74,20 @@ export function resolveImageResourceState(input: {
         placeholder: '没有可下载的链接，可上传本地副本补全图片。',
     };
     return {
-        status, label: labels[status], description: descriptions[status], sourceUrl,
+        status,
+        label: labels[status],
+        description: descriptions[status],
+        sourceUrl,
         pending: status === 'queued' || status === 'loading',
-        warning: status === 'readError' || status === 'missing' || status === 'error',
-        error: status === 'readError' ? input.readError : status === 'error' ? task?.error : undefined,
+        warning:
+            status === 'readError' ||
+            status === 'missing' ||
+            status === 'error',
+        error:
+            status === 'readError'
+                ? input.readError
+                : status === 'error'
+                  ? task?.error
+                  : undefined,
     };
 }
