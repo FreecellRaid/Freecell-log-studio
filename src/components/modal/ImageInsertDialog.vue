@@ -1,83 +1,30 @@
 <template>
     <ModalDialog
+        class="image-editor-dialog"
         :title="editing ? '编辑图片' : '插入图片'"
         title-id="image-insert-title"
         @close="store.close()"
     >
         <template #icon><ImagePlus class="ui-icon" /></template>
-        <form class="image-form" @submit.prevent="submit">
+        <form id="image-edit-form" class="image-form" @submit.prevent="submit">
             <ImageAttachmentView
-                v-if="attachment"
                 :attachment="attachment"
+                :preview-src="!attachment ? draftPreview : undefined"
                 class="edit-preview"
             />
-            <div class="image-methods">
-                <label v-if="editing">
-                    <input
-                        v-model="mode"
-                        type="radio"
-                        value="keep"
-                        :disabled="store.loading"
-                    />
-                    当前资源
-                </label>
+            <div class="image-fields" :class="{ 'single-field': !editing }">
                 <label>
+                    <strong>图片名称</strong>
                     <input
-                        v-model="mode"
-                        type="radio"
-                        value="file"
+                        v-model="name"
+                        aria-label="图片名称"
+                        type="text"
                         :disabled="store.loading"
+                        placeholder="输入图片名称"
                     />
-                    本地文件
                 </label>
-                <label>
-                    <input
-                        v-model="mode"
-                        type="radio"
-                        value="url"
-                        :disabled="store.loading"
-                    />
-                    图片链接
-                </label>
-            </div>
-            <label v-if="mode === 'file'">
-                <input
-                    type="file"
-                    accept="image/png,image/jpeg,image/gif,image/webp"
-                    :multiple="!editing"
-                    :disabled="store.loading"
-                    @change="selectFiles"
-                />
-            </label>
-            <label v-else-if="mode === 'url'">
-                <input
-                    v-model="url"
-                    type="url"
-                    placeholder="输入图片链接，如https://…"
-                    :disabled="store.loading"
-                    required
-                />
-            </label>
-            <label>
-                <input
-                    v-model="name"
-                    type="text"
-                    :disabled="store.loading"
-                    placeholder="输入图片名称"
-                />
-            </label>
-            <div v-if="editing" class="image-order-field">
-                <label for="image-order">
-                    排列顺序（共 {{ imageCount }} 张）
-                </label>
-                <div class="image-order">
-                    <button
-                        type="button"
-                        :disabled="store.loading || position <= 1"
-                        @click="position--"
-                    >
-                        前移
-                    </button>
+                <label v-if="editing" for="image-order">
+                    <strong>图片位置（共 {{ imageCount }} 张）</strong>
                     <input
                         id="image-order"
                         v-model.number="position"
@@ -88,36 +35,79 @@
                         :disabled="store.loading"
                         aria-label="图片排列顺序"
                     />
-                    <button
-                        type="button"
-                        :disabled="store.loading || position >= imageCount"
-                        @click="position++"
-                    >
-                        后移
-                    </button>
-                </div>
+                </label>
             </div>
-            <p v-if="editing" class="resource-info">{{ resourceInfo }}</p>
-            <p>支持 PNG、JPEG、GIF、WebP，每张不超过 20 MB。</p>
+            <div class="image-replacement">
+                <div class="resource-method-header">
+                    <strong>{{ editing ? '替换资源' : '选择资源' }}</strong>
+                    <div class="image-methods">
+                        <label>
+                            <input
+                                v-model="mode"
+                                type="radio"
+                                value="file"
+                                :disabled="store.loading"
+                                @change="methodTouched = true"
+                            />
+                            本地文件
+                        </label>
+                        <label>
+                            <input
+                                v-model="mode"
+                                type="radio"
+                                value="url"
+                                :disabled="store.loading"
+                                @change="methodTouched = true"
+                            />
+                            图片链接
+                        </label>
+                    </div>
+                </div>
+                <input
+                    v-if="mode === 'file'"
+                    type="file"
+                    aria-label="选择图片文件"
+                    accept="image/png,image/jpeg,image/gif,image/webp"
+                    :multiple="!editing"
+                    :disabled="store.loading"
+                    @change="selectFiles"
+                />
+                <input
+                    v-else
+                    v-model="url"
+                    aria-label="图片链接"
+                    type="url"
+                    placeholder="https://…"
+                    :disabled="store.loading"
+                    required
+                    @change="updateUrlPreview"
+                />
+                <p v-if="!editing" class="field-hint">
+                    支持 PNG、JPEG、GIF、WebP，每张不超过 20 MB。
+                </p>
+            </div>
             <p v-if="store.loading" role="status">正在保存图片…</p>
             <p v-if="store.error" class="image-error" role="alert">
                 {{ store.error }}
             </p>
+        </form>
+        <template #footer>
             <div class="image-buttons">
                 <button type="button" @click="store.close()">取消</button>
                 <button
                     type="submit"
+                    form="image-edit-form"
                     :disabled="
                         store.loading ||
-                        (mode === 'file'
-                            ? !files.length
-                            : mode === 'url' && !url.trim())
+                        (mode === 'url'
+                            ? !url.trim()
+                            : !editing && !files.length)
                     "
                 >
                     {{ editing ? '保存修改' : '插入图片' }}
                 </button>
             </div>
-        </form>
+        </template>
     </ModalDialog>
 </template>
 <script setup lang="ts">
@@ -126,7 +116,10 @@ import { ImagePlus } from '@lucide/vue';
 import ModalDialog from './ModalDialog.vue';
 import ImageAttachmentView from '@/components/common/ImageAttachmentView.vue';
 import { useLogStore } from '@/stores/project/logStore';
-import { resourceRepository } from '@/io/storage/resourceStorage';
+import {
+    resourceRepository,
+    normalizeImageUrl,
+} from '@/io/storage/resourceStorage';
 import { useImageInsertStore } from '@/stores/editor/imageInsertStore';
 const store = useImageInsertStore();
 const log = useLogStore();
@@ -141,8 +134,14 @@ const attachment = computed(() =>
 );
 const imageCount = computed(() => message.value?.images?.length ?? 0);
 const position = ref(1);
-const resourceInfo = ref('');
-const mode = ref<'keep' | 'file' | 'url'>('file');
+const mode = ref<'file' | 'url'>('file');
+const methodTouched = ref(false);
+const originalUrl = ref('');
+const filePreview = ref('');
+const urlPreview = ref('');
+const draftPreview = computed(() =>
+    mode.value === 'file' ? filePreview.value : urlPreview.value,
+);
 const files = ref<File[]>([]);
 const url = ref('');
 const name = ref('');
@@ -153,7 +152,10 @@ watch(
         onCleanup(() => {
             active = false;
         });
-        mode.value = target?.imageId ? 'keep' : 'file';
+        mode.value = 'file';
+        methodTouched.value = false;
+        originalUrl.value = '';
+        urlPreview.value = '';
         files.value = [];
         url.value = '';
         name.value = attachment.value?.name ?? '';
@@ -161,27 +163,37 @@ watch(
             (message.value?.images?.findIndex(
                 (image) => image.imageId === target?.imageId,
             ) ?? -1) + 1;
-        resourceInfo.value = '';
         if (!target?.resourceId) return;
         try {
             const resource = await resourceRepository.get(target.resourceId);
             if (!active) return;
-            if (mode.value === 'keep' && !url.value)
-                url.value = resource?.sourceUrl ?? '';
-            resourceInfo.value = resource?.sourceUrl
-                ? `当前资源：${resource.sourceUrl}`
-                : resource?.blob
-                  ? '当前资源：本地图片'
-                  : resource?.provenance?.original
-                    ? `当前资源没有可下载链接：${resource.provenance.original}`
-                    : '当前资源缺失，可选择文件或链接替换。';
+            originalUrl.value = resource?.sourceUrl ?? '';
+            if (!url.value) url.value = originalUrl.value;
+            if (!methodTouched.value)
+                mode.value = originalUrl.value ? 'url' : 'file';
         } catch {
-            if (active)
-                resourceInfo.value = '当前资源读取失败，可选择文件或链接替换。';
+            // 预览组件统一展示资源读取错误，替换链接仍可手动输入。
         }
     },
     { immediate: true },
 );
+watch(
+    () => files.value[0],
+    (file, _previous, onCleanup) => {
+        filePreview.value = file ? URL.createObjectURL(file) : '';
+        const current = filePreview.value;
+        onCleanup(() => {
+            if (current) URL.revokeObjectURL(current);
+        });
+    },
+);
+function updateUrlPreview() {
+    try {
+        urlPreview.value = normalizeImageUrl(url.value);
+    } catch {
+        urlPreview.value = '';
+    }
+}
 function selectFiles(event: Event) {
     files.value = Array.from((event.target as HTMLInputElement).files ?? []);
 }
@@ -192,7 +204,7 @@ function submit() {
             position: position.value,
             ...(mode.value === 'file'
                 ? { file: files.value[0] }
-                : mode.value === 'url'
+                : mode.value === 'url' && url.value.trim() !== originalUrl.value
                   ? { url: url.value }
                   : {}),
         });
@@ -207,50 +219,59 @@ function submit() {
 onUnmounted(store.cancel);
 </script>
 <style scoped>
-.image-form,
-.image-form > label,
-.image-order-field {
+.image-form {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 14px;
+    font-size: 13px;
+    line-height: 1.5;
 }
+.image-fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px;
+}
+.image-fields.single-field {
+    grid-template-columns: minmax(0, 1fr);
+}
+.image-fields label,
+.image-replacement {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+.resource-method-header,
 .image-methods,
-.image-order,
 .image-buttons {
     display: flex;
-    gap: 16px;
     align-items: center;
+    gap: 12px;
+}
+.resource-method-header {
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+.resource-method-header strong {
+    font-size: inherit;
+    font-weight: 600;
+    color: var(--text-primary);
 }
 .image-methods {
     flex-wrap: wrap;
-    gap: 10px;
-}
-.image-order input {
-    flex: 1;
-    min-width: 0;
-}
-.image-order button {
-    flex-shrink: 0;
-    padding: 6px 10px;
-}
-.edit-preview {
-    width: 100%;
-}
-.edit-preview :deep(.image-preview),
-.edit-preview :deep(img) {
-    max-height: 160px;
-}
-.resource-info {
-    overflow-wrap: anywhere;
-    font-size: 12px;
 }
 .image-methods label {
     display: flex;
-    gap: 6px;
     align-items: center;
+    gap: 6px;
+}
+.image-methods input[type='radio'] {
+    margin: 0;
 }
 .image-form input:not([type='radio']) {
+    font: inherit;
     width: 100%;
+    min-width: 0;
     box-sizing: border-box;
     padding: 8px;
     background: var(--bg-input);
@@ -258,17 +279,45 @@ onUnmounted(store.cancel);
     border: 1px solid var(--border-color);
     border-radius: 4px;
 }
+.image-form input::file-selector-button {
+    font: inherit;
+}
 .image-buttons {
+    width: 100%;
     justify-content: flex-end;
+    font-size: 13px;
+    line-height: 1.6;
 }
 .image-buttons button {
+    font: inherit;
     padding: 6px 12px;
 }
 p {
     color: var(--text-muted);
     margin: 0;
 }
+.field-hint {
+    font-size: 12px;
+}
 .image-error {
     color: var(--color-warning);
+}
+@media (max-width: 360px) {
+    .image-fields {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+.image-editor-dialog.modal-dialog {
+    max-height: min(92dvh, 760px);
+}
+
+input::placeholder {
+    color: var(--text-muted);
+}
+
+input:focus-visible,
+button:focus-visible {
+    outline: 1px solid var(--active-accent);
+    outline-offset: -1px;
 }
 </style>

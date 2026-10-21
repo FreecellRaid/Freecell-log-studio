@@ -10,6 +10,9 @@ import { useFileImport } from '@/composables/application/useImporter';
 import { migrateProjectFileTo } from '@/io/storage/projectFile';
 import { projectRepository } from '@/io/storage/projectStorage';
 import { buildLogDocument } from '@/io/import/parser';
+import { useResourceTasksStore } from '@/stores/io/resourceTasksStore';
+import { resourceRepository } from '@/io/storage/resourceStorage';
+import { workspaceProjectToFile } from '@/io/storage/workspaceProject';
 
 vi.mock('@/io/storage/projectStorage', () => ({
     projectRepository: {
@@ -69,6 +72,30 @@ describe('asynchronous project operations', () => {
         ).toBe(true);
     }
 
+    it('does not queue linked resources when restoring a snapshot or opening a project', async () => {
+        const manager = useProjectManager();
+        const project = manager.createCurrentProjectFile();
+        project.documents[0].chunks[0].messages[0].images = [
+            { imageId: 'image', resourceId: 'linked', name: '地图' },
+        ];
+        project.resources = {
+            linked: { type: 'image', sourceUrl: 'https://example.com/map.png' },
+        };
+        const downloading = vi.spyOn(resourceRepository, 'download');
+        expect(
+            await manager.replaceWorkspaceWithProject(project, {
+                resourcesReady: true,
+            }),
+        ).toBe(true);
+        expect(useResourceTasksStore().summarize().total).toBe(0);
+        vi.mocked(projectRepository.get).mockResolvedValueOnce(
+            workspaceProjectToFile(project),
+        );
+        expect(await manager.openStoredProject(project.projectId)).toBe(true);
+        expect(useLogStore().allMessages[0].images).toHaveLength(1);
+        expect(useResourceTasksStore().summarize().total).toBe(0);
+        expect(downloading).not.toHaveBeenCalled();
+    });
     it('marks only the submitted snapshot as saved when editing continues during a save', async () => {
         const wait = deferred();
         vi.mocked(projectRepository.save).mockReturnValueOnce(wait.promise);

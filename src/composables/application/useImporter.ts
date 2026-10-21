@@ -5,12 +5,8 @@ import { useStyleStore } from '@/stores/project/styleStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import type { Chunk, LogDocument } from '@/types/log';
 import { resourceRepository } from '@/io/storage/resourceStorage';
-import {
-    retryAfterResourceCleanup,
-    documentResourceIds,
-} from '@/io/storage/resourceCleanup';
+import { retryAfterResourceCleanup } from '@/io/storage/resourceCleanup';
 import { currentResourceRoots } from './resourceRoots';
-import { useResourceTasksStore } from '@/stores/io/resourceTasksStore';
 import { importRows } from '@/io/import/importService';
 import type { ImportResourceOptions } from '@/io/import/importResources';
 import { importFiles, preprocessText } from '@/io/import/importService';
@@ -53,28 +49,6 @@ export function useFileImport() {
             logStore.documents.length,
             resourceOptions(signal),
         );
-    }
-
-    async function startImageDownloads(documents: LogDocument[]) {
-        const projectId = logStore.projectId;
-        const tasks = useResourceTasksStore();
-        for (const id of new Set(documentResourceIds(documents))) {
-            try {
-                const resource = await resourceRepository.get(id);
-                if (
-                    projectId !== logStore.projectId ||
-                    !logStore.documents.some((doc) =>
-                        documents.some(
-                            (imported) => imported.docId === doc.docId,
-                        ),
-                    )
-                )
-                    return;
-                if (resource?.sourceUrl && !resource.blob) tasks.enqueue(id);
-            } catch (error) {
-                console.warn('图片副本任务未启动，可在图片编辑中重试。', error);
-            }
-        }
     }
 
     function getFirstChunk(): Chunk | null {
@@ -131,7 +105,6 @@ export function useFileImport() {
         const first = documents[0]?.chunks[0];
         if (focusImported && first) windowStore.setActiveChunk(first.chunkId);
         else openFirstChunkViewIfNeeded();
-        void startImageDownloads(documents);
         return documents.length;
     }
 

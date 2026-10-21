@@ -224,6 +224,77 @@ describe('image resource persistence', () => {
         );
     });
 
+    it('supplies a shared local copy while retaining the original URL, provenance and references', async () => {
+        const [id] = await resources.addImported([
+            {
+                type: 'image',
+                sourceUrl: 'https://example.com/map.png',
+                provenance: { kind: 'cq', original: '[CQ:image,file=map]' },
+            },
+        ]);
+        const project = file();
+        const images = [
+            { imageId: 'one', resourceId: id, name: '第一张' },
+            { imageId: 'two', resourceId: id, name: '第二张' },
+        ];
+        project.documents[0].chunks[0].messages[0].images = images;
+        await resources.saveLocalCopy(id, blob());
+        const record = (await resources.get(id))!;
+        expect(record.sourceUrl).toBe('https://example.com/map.png');
+        expect(record.provenance).toEqual({
+            kind: 'cq',
+            original: '[CQ:image,file=map]',
+        });
+        expect(record.blob?.size).toBe(blob().size);
+        expect(record.thumbnail).toBeInstanceOf(Blob);
+        const exported = await resources.exportProject(project);
+        expect(exported.documents[0].chunks[0].messages[0].images).toEqual(
+            images,
+        );
+        expect(exported.resources[id].data?.value).toBe(png);
+        expect(exported.resources[id].sourceUrl).toBe(
+            'https://example.com/map.png',
+        );
+        await expect(resources.saveLocalCopy(id, blob())).rejects.toThrow(
+            '已有本地副本',
+        );
+    });
+    it('retains the link when a supplied image is invalid or persistence fails', async () => {
+        const id = await resources.addRemote('https://example.com/map.png');
+        await expect(
+            resources.saveLocalCopy(id, new Blob(['invalid'])),
+        ).rejects.toThrow();
+        vi.spyOn(database.resources, 'update').mockRejectedValueOnce(
+            new Error('quota'),
+        );
+        await expect(resources.saveLocalCopy(id, blob())).rejects.toThrow(
+            'quota',
+        );
+        expect((await resources.get(id))?.blob).toBeUndefined();
+        expect((await resources.get(id))?.sourceUrl).toBe(
+            'https://example.com/map.png',
+        );
+        await expect(
+            resources.saveLocalCopy('missing', blob()),
+        ).rejects.toThrow('不存在');
+    });
+    it('does not overwrite a supplied local copy when an earlier download finishes', async () => {
+        let finish!: (response: Response) => void;
+        const fetch = vi.fn<typeof globalThis.fetch>().mockImplementationOnce(
+            () =>
+                new Promise((resolve) => {
+                    finish = resolve;
+                }),
+        );
+        resources = createResourceRepository({ database, prepare, fetch });
+        const id = await resources.addRemote('https://example.com/map.png');
+        const downloading = resources.download(id);
+        await vi.waitFor(() => expect(fetch).toHaveBeenCalledOnce());
+        await resources.saveLocalCopy(id, blob());
+        finish(new Response(new Blob([blob(), 'downloaded'])));
+        await downloading;
+        expect((await resources.get(id))?.blob?.size).toBe(blob().size);
+    });
     it('downloads once, retaining the source link and original bytes', async () => {
         const fetch = vi
             .fn<typeof globalThis.fetch>()

@@ -8,21 +8,12 @@
         <div class="export-item" @click="handleExportProject">
             导出为工程文件
         </div>
-        <p v-if="hasImages" class="image-export-note">
-            图片目前随工程文件打包；其他导出仅包含文字。
-        </p>
     </div>
 </template>
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useLogStore } from '@/stores/project/logStore';
 import { useExport } from '@/composables/application/useExporter';
 import { useProjectManager } from '@/composables/application/useProjectManager';
 const projectManager = useProjectManager();
-const log = useLogStore();
-const hasImages = computed(() =>
-    log.allMessages.some((message) => message.images?.length),
-);
 
 const {
     exportAsText,

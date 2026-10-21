@@ -65,7 +65,7 @@ describe('single-message image insertion', () => {
         useHistoryStore().redo();
         expect(useLogStore().allMessages[0].images).toHaveLength(1);
     });
-    it('inserts a URL immediately and keeps the attachment after background download failure', async () => {
+    it('inserts a URL without starting a background download', async () => {
         vi.mocked(resourceRepository.download).mockRejectedValue(
             new Error('CORS'),
         );
@@ -75,9 +75,8 @@ describe('single-message image insertion', () => {
         expect(useLogStore().allMessages[0].images![0].resourceId).toBe(
             'remote',
         );
-        await vi.waitFor(() =>
-            expect(useResourceTasksStore().states.remote?.status).toBe('error'),
-        );
+        expect(resourceRepository.download).not.toHaveBeenCalled();
+        expect(useResourceTasksStore().states.remote).toBeUndefined();
         expect(useLogStore().allMessages[0].images).toHaveLength(1);
     });
     it('does not attach a completed upload after cancellation', async () => {
@@ -177,7 +176,7 @@ describe('single-message image insertion', () => {
             ),
         ).toEqual(['shared', 'shared', 'other']);
     });
-    it('downloads a replacement link in the background', async () => {
+    it('replaces a link without automatically downloading it', async () => {
         prepareEdit();
         await useImageInsertStore().saveEdit({
             name: '链接',
@@ -190,9 +189,8 @@ describe('single-message image insertion', () => {
         expect(useLogStore().allMessages[0].images?.[0].resourceId).toBe(
             'remote',
         );
-        await vi.waitFor(() =>
-            expect(resourceRepository.download).toHaveBeenCalled(),
-        );
+        expect(resourceRepository.download).not.toHaveBeenCalled();
+        expect(useResourceTasksStore().states.remote).toBeUndefined();
     });
     it('does not create history for an unchanged edit', async () => {
         prepareEdit();

@@ -124,9 +124,6 @@ export function useProjectManager() {
         );
         windowStore.focusStack = [];
         windowStore.setFocus(windowStore.currentActiveView.windowId);
-        for (const [id, resource] of Object.entries(project.resources ?? {})) {
-            if (resource.sourceUrl) resourceTasks.enqueue(id);
-        }
 
         return true;
     }

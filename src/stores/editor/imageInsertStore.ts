@@ -5,7 +5,6 @@ import { ref, shallowRef } from 'vue';
 import { useLogStore } from '@/stores/project/logStore';
 import { useLogCommands } from '@/stores/project/logCommands';
 import { useWindowStore } from '@/stores/ui/windowStore';
-import { useResourceTasksStore } from '@/stores/io/resourceTasksStore';
 import {
     resourceRepository,
     normalizeImageUrl,
@@ -28,7 +27,6 @@ export const useImageInsertStore = defineStore('imageInsert', () => {
     const log = useLogStore();
     const commands = useLogCommands();
     const windows = useWindowStore();
-    const tasks = useResourceTasksStore();
     function open(messageId: string, imageId?: string) {
         const image = log.messagesById
             .get(messageId)
@@ -112,8 +110,6 @@ export const useImageInsertStore = defineStore('imageInsert', () => {
                     images,
                 });
             }
-            if (input.url !== undefined && !input.file)
-                tasks.enqueue(resourceId);
             close();
         } catch (reason) {
             if (ticket === attempt)
@@ -186,8 +182,6 @@ export const useImageInsertStore = defineStore('imageInsert', () => {
             commands.updateMessage(message.chunkId, message.messageId, {
                 images: [...(message.images ?? []), ...attachments],
             });
-            if (!input.files?.length)
-                attachments.forEach((image) => tasks.enqueue(image.resourceId));
             close();
         } catch (reason) {
             if (ticket === attempt)

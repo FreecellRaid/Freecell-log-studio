@@ -98,6 +98,23 @@ export function createResourceRepository(
         });
         return resourceId;
     }
+    async function saveLocalCopy(resourceId: string, file: Blob) {
+        const prepared = await prepare(file);
+        if (!database.isOpen()) await database.open();
+        await database.transaction('rw', database.resources, async () => {
+            const record = await database.resources.get(resourceId);
+            if (!record)
+                throw new Error('图片资源不存在，请重新选择要替换的图片。');
+            if (record.blob)
+                throw new Error('该资源已有本地副本，请刷新后查看。');
+            // 只补全图片数据，保留原始链接、来源和全部附件引用。
+            await database.resources.update(resourceId, {
+                ...prepared,
+                blob: file.slice(0, file.size, prepared.mimeType),
+                updatedAt: Date.now(),
+            });
+        });
+    }
     async function download(resourceId: string, signal?: AbortSignal) {
         const record = await get(resourceId);
         if (!record?.sourceUrl) throw new Error('图片没有可下载的来源链接。');
@@ -150,10 +167,17 @@ export function createResourceRepository(
             const prepared = await prepare(blob);
             if (controller.signal.aborted)
                 throw new DOMException('Aborted', 'AbortError');
-            await database.resources.update(resourceId, {
-                ...prepared,
-                blob: blob.slice(0, blob.size, prepared.mimeType),
-                updatedAt: Date.now(),
+            await database.transaction('rw', database.resources, async () => {
+                const current = await database.resources.get(resourceId);
+                controller.signal.throwIfAborted();
+                if (!current) throw new Error('图片资源已不存在。');
+                // 下载期间可能已由用户补全副本，不覆盖用户上传的内容。
+                if (current.blob) return;
+                await database.resources.update(resourceId, {
+                    ...prepared,
+                    blob: blob.slice(0, blob.size, prepared.mimeType),
+                    updatedAt: Date.now(),
+                });
             });
         } catch (error) {
             if (
@@ -279,6 +303,11 @@ export function createResourceRepository(
                 const id = await addRemote(url);
                 protectResources([id]);
                 return id;
+            }),
+        saveLocalCopy: (id: string, file: Blob) =>
+            withResourceOperation(async () => {
+                protectResources([id]);
+                await saveLocalCopy(id, file);
             }),
         download: (id: string, signal?: AbortSignal) =>
             withResourceOperation(() => download(id, signal)),

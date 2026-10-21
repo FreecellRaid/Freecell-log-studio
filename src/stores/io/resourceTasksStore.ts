@@ -43,6 +43,7 @@ export const useResourceTasksStore = defineStore('resourceTasks', () => {
             const id = queue.shift()!;
             active++;
             states[id] = { status: 'loading' };
+            const runningState = states[id];
             const controller = new AbortController();
             controllers.set(id, controller);
             void (async () => {
@@ -60,20 +61,25 @@ export const useResourceTasksStore = defineStore('resourceTasks', () => {
                             currentResourceRoots,
                         );
                     controller.signal.throwIfAborted();
-                    states[id] = { status: 'ready' };
+                    if (states[id] === runningState)
+                        states[id] = { status: 'ready' };
                 } catch (error) {
-                    states[id] = {
-                        status: controller.signal.aborted
-                            ? 'cancelled'
-                            : 'error',
-                        error:
-                            error instanceof Error
-                                ? error.message
-                                : '图片下载失败，可能是链接失效或跨域限制。',
-                    };
+                    if (states[id] === runningState)
+                        states[id] = {
+                            status: controller.signal.aborted
+                                ? 'cancelled'
+                                : 'error',
+                            error:
+                                error instanceof TypeError
+                                    ? '无法保存副本，可能是跨域限制或网络错误。'
+                                    : error instanceof Error
+                                      ? error.message
+                                      : '图片下载失败，可能是链接失效或跨域限制。',
+                        };
                 } finally {
                     active--;
-                    controllers.delete(id);
+                    if (controllers.get(id) === controller)
+                        controllers.delete(id);
                     pump();
                 }
             })();
@@ -117,6 +123,15 @@ export const useResourceTasksStore = defineStore('resourceTasks', () => {
         for (const id of new Set(ids))
             if (states[id]?.status === 'cancelled') enqueue(id, true);
     }
+    async function saveLocalCopy(id: string, file: Blob) {
+        cancel(id);
+        await retryAfterResourceCleanup(
+            () => resourceRepository.saveLocalCopy(id, file),
+            currentResourceRoots,
+        );
+        // 补全成功后，旧下载任务的延迟结束不能覆盖新的就绪状态。
+        states[id] = { status: 'ready' };
+    }
     return {
         states,
         pendingCount,
@@ -126,5 +141,6 @@ export const useResourceTasksStore = defineStore('resourceTasks', () => {
         cancelAll,
         retryFailed,
         resumeCancelled,
+        saveLocalCopy,
     };
 });

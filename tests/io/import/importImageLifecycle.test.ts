@@ -52,40 +52,25 @@ describe('image import application lifecycle', () => {
         disposePinia(pinia);
         vi.restoreAllMocks();
     });
-    it('starts downloads only after documents are applied and skips placeholders', async () => {
+    it('keeps prepared and applied links idle until an explicit download request', async () => {
         const importer = useFileImport();
         const documents = await importer.prepareLogDocuments([entry]);
         expect(useLogStore().documents).toHaveLength(0);
-        expect(resourceRepository.download).not.toHaveBeenCalled();
-        vi.mocked(resourceRepository.download).mockImplementation(async () => {
-            expect(useLogStore().allMessages[0].images).toHaveLength(2);
-        });
         importer.applyLogDocuments(documents);
+        expect(useLogStore().allMessages[0].images).toHaveLength(2);
+        expect(resourceRepository.download).not.toHaveBeenCalled();
+        expect(useResourceTasksStore().summarize().total).toBe(0);
+        useResourceTasksStore().enqueue('resource-0');
         await vi.waitFor(() =>
             expect(resourceRepository.download).toHaveBeenCalledOnce(),
         );
-        expect(vi.mocked(resourceRepository.download).mock.calls[0][0]).toBe(
-            'resource-0',
-        );
     });
-    it('does not wait for image downloading when importing a log', async () => {
-        let finish!: () => void;
-        vi.mocked(resourceRepository.download).mockImplementation(
-            () =>
-                new Promise<void>((resolve) => {
-                    finish = resolve;
-                }),
-        );
-        try {
-            expect(await useFileImport().importTextAndApply([entry])).toBe(1);
-            expect(useLogStore().allMessages[0].content).toBe('');
-            await vi.waitFor(() =>
-                expect(resourceRepository.download).toHaveBeenCalledOnce(),
-            );
-            expect(useResourceTasksStore().pendingCount).toBe(1);
-        } finally {
-            finish?.();
-        }
+    it('imports links without starting download tasks', async () => {
+        expect(await useFileImport().importTextAndApply([entry])).toBe(1);
+        expect(useLogStore().allMessages[0].content).toBe('');
+        expect(resourceRepository.download).not.toHaveBeenCalled();
+        expect(useResourceTasksStore().pendingCount).toBe(0);
+        expect(useResourceTasksStore().summarize().total).toBe(0);
     });
     it('supports resources in the direct ImportRow application entry point', async () => {
         await useFileImport().importRowsAndApply(
@@ -104,9 +89,7 @@ describe('image import application lifecycle', () => {
             'rows',
         );
         expect(useLogStore().allMessages[0].images?.[0].name).toBe('地图');
-        await vi.waitFor(() =>
-            expect(resourceRepository.download).toHaveBeenCalledOnce(),
-        );
+        expect(resourceRepository.download).not.toHaveBeenCalled();
     });
     it('does not partially apply a batch if a later log cannot be parsed', async () => {
         await expect(

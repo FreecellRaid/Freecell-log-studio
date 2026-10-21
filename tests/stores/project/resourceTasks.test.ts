@@ -4,7 +4,11 @@ import { useResourceTasksStore } from '@/stores/io/resourceTasksStore';
 import { resourceRepository } from '@/io/storage/resourceStorage';
 
 vi.mock('@/io/storage/resourceStorage', () => ({
-    resourceRepository: { get: vi.fn(), download: vi.fn() },
+    resourceRepository: {
+        get: vi.fn(),
+        download: vi.fn(),
+        saveLocalCopy: vi.fn(),
+    },
 }));
 
 describe('image download queue', () => {
@@ -194,5 +198,45 @@ describe('image download queue', () => {
             expect(store.states.a?.status).toBe('cancelled'),
         );
         expect(store.pendingCount).toBe(0);
+    });
+    it('marks a supplied local copy ready even when an old cancelled request finishes later', async () => {
+        let finish!: () => void;
+        vi.mocked(resourceRepository.download).mockImplementationOnce(
+            () =>
+                new Promise((resolve) => {
+                    finish = resolve;
+                }),
+        );
+        vi.mocked(resourceRepository.saveLocalCopy).mockResolvedValue();
+        const store = useResourceTasksStore();
+        store.enqueue('a');
+        await vi.waitFor(() =>
+            expect(resourceRepository.download).toHaveBeenCalledOnce(),
+        );
+        const file = new Blob(['copy']);
+        await store.saveLocalCopy('a', file);
+        expect(resourceRepository.saveLocalCopy).toHaveBeenCalledWith(
+            'a',
+            file,
+        );
+        expect(store.states.a?.status).toBe('ready');
+        finish();
+        await vi.waitFor(() =>
+            expect(
+                vi.mocked(resourceRepository.download).mock.results[0].value,
+            ).resolves.toBeUndefined(),
+        );
+        expect(store.states.a?.status).toBe('ready');
+    });
+    it('keeps the source task state when supplying a local copy fails', async () => {
+        const store = useResourceTasksStore();
+        store.states.a = { status: 'error', error: 'CORS' };
+        vi.mocked(resourceRepository.saveLocalCopy).mockRejectedValue(
+            new Error('图片无法解码'),
+        );
+        await expect(
+            store.saveLocalCopy('a', new Blob(['invalid'])),
+        ).rejects.toThrow('图片无法解码');
+        expect(store.states.a?.status).toBe('error');
     });
 });
