@@ -155,27 +155,30 @@
             </span>
             <div class="search-actions">
                 <button
-                    class="text-button"
+                    class="action-button"
                     :disabled="!jumpTarget"
                     @click="dispatch('jump')"
+                    title="跳转"
                 >
-                    跳转
+                    <CornerDownRight class="ui-icon" />
                 </button>
                 <button
-                    class="text-button"
+                    class="action-button"
                     :disabled="searchStore.searchResults.length === 0"
                     @click="selectAllMatches"
+                    title="全选"
                 >
-                    全选
+                    <SquareCheckBig class="ui-icon" />
                 </button>
                 <button
-                    class="text-button"
+                    class="action-button action-button-warning"
                     :disabled="
                         activeContext.selectedMessageIds.value.size === 0
                     "
                     @click="deleteSelectedMessages"
+                    title="删除"
                 >
-                    删除
+                    <Trash2 class="ui-icon" />
                 </button>
             </div>
         </div>
@@ -240,7 +243,14 @@
 </template>
 
 <script setup lang="ts">
-import { FunnelIcon, FunnelXIcon, RefreshCcw } from '@lucide/vue';
+import {
+    CornerDownRight,
+    FunnelIcon,
+    FunnelXIcon,
+    RefreshCcw,
+    SquareCheckBig,
+    Trash2,
+} from '@lucide/vue';
 import { computed, ref, watch, type CSSProperties } from 'vue';
 import { buildIdentityStats } from '@/editor/identity';
 import { useActiveContext } from '@/composables/application/useActiveContext';
@@ -584,5 +594,21 @@ const truncate = (str: string, len: number) => {
 .advanced-wrapper .advanced-options {
     min-height: 0;
     overflow: hidden;
+}
+
+.action-button {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    border-radius: 4px;
+    color: var(--icon-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-button:hover {
+    background: var(--hover-bg);
 }
 </style>
