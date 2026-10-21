@@ -29,8 +29,8 @@
         <button
             v-if="summary.pending"
             type="button"
-            title="停止当前工程的图片下载"
-            aria-label="停止当前工程的图片下载"
+            :title="imageResourceText.actions.stopProject"
+            :aria-label="imageResourceText.actions.stopProject"
             @click="tasks.cancelAll(resourceIds)"
         >
             <Square class="ui-icon" aria-hidden="true" />
@@ -38,8 +38,8 @@
         <button
             v-if="summary.error"
             type="button"
-            title="重试当前工程下载失败的图片"
-            aria-label="重试当前工程下载失败的图片"
+            :title="imageResourceText.actions.retryProject"
+            :aria-label="imageResourceText.actions.retryProject"
             @click="tasks.retryFailed(resourceIds)"
         >
             <RotateCw class="ui-icon" aria-hidden="true" />
@@ -47,8 +47,8 @@
         <button
             v-if="summary.cancelled"
             type="button"
-            title="继续当前工程已停止的图片下载"
-            aria-label="继续当前工程已停止的图片下载"
+            :title="imageResourceText.actions.resumeProject"
+            :aria-label="imageResourceText.actions.resumeProject"
             @click="tasks.resumeCancelled(resourceIds)"
         >
             <Play class="ui-icon" aria-hidden="true" />
@@ -56,6 +56,8 @@
     </div>
 </template>
 <script setup lang="ts">
+import { imageResourceText } from '@/data/imageResourceText';
+import { formatImageDownloadSummary } from '@/editor/imageResourceState';
 import { computed } from 'vue';
 import {
     CircleAlert,
@@ -74,17 +76,10 @@ const tasks = useResourceTasksStore();
 const log = useLogStore();
 const resourceIds = computed(() => collectDocumentResourceIds(log.documents));
 const summary = computed(() => tasks.summarize(resourceIds.value));
-const label = computed(() => {
-    const value = summary.value;
-    if (value.pending)
-        return `图片下载 ${value.ready}/${value.total}${value.error ? ` · 失败 ${value.error}` : ''}`;
-    if (value.error) return `图片下载失败 ${value.error}`;
-    if (value.cancelled) return `图片下载已停止 ${value.cancelled}`;
-    return `图片已保存 ${value.ready}`;
-});
+const label = computed(() => formatImageDownloadSummary(summary.value));
 const details = computed(() => {
     const value = summary.value;
-    const counts = `当前工程图片：已保存 ${value.ready}，下载中 ${value.loading}，排队 ${value.queued}，失败 ${value.error}，已停止 ${value.cancelled}`;
+    const counts = `当前项目图片：${formatImageDownloadSummary(value, true)}`;
     const errors = [
         ...new Set(
             [...resourceIds.value].flatMap((id) => {

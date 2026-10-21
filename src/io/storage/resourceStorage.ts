@@ -1,3 +1,4 @@
+import { imageResourceText } from '@/data/imageResourceText';
 import { normalizeImageUrl } from '@/utils/imageUrl';
 import { collectDocumentResourceIds } from '@/editor/resourceReferences';
 import {
@@ -75,8 +76,7 @@ export function createResourceRepository(
         if (!database.isOpen()) await database.open();
         await database.transaction('rw', database.resources, async () => {
             const record = await database.resources.get(resourceId);
-            if (!record)
-                throw new Error('图片资源不存在，请重新选择要替换的图片。');
+            if (!record) throw new Error(imageResourceText.errors.missing);
             if (record.blob)
                 throw new Error('该资源已有本地副本，请刷新后查看。');
             // 只补全图片数据，保留原始链接、来源和全部附件引用。
@@ -142,7 +142,7 @@ export function createResourceRepository(
             await database.transaction('rw', database.resources, async () => {
                 const current = await database.resources.get(resourceId);
                 controller.signal.throwIfAborted();
-                if (!current) throw new Error('图片资源已不存在。');
+                if (!current) throw new Error(imageResourceText.errors.missing);
                 // 下载期间可能已由用户补全副本，不覆盖用户上传的内容。
                 if (current.blob) return;
                 await database.resources.update(resourceId, {
@@ -159,8 +159,8 @@ export function createResourceRepository(
             )
                 throw new Error(
                     signal?.aborted
-                        ? '图片下载已取消。'
-                        : '图片下载超时，可稍后重试。',
+                        ? imageResourceText.errors.stopped
+                        : imageResourceText.errors.timeout,
                 );
             throw error;
         } finally {

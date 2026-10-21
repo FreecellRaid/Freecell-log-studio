@@ -175,7 +175,7 @@ export function useProjectManager() {
         if (
             pending &&
             !window.confirm(
-                `仍有 ${pending} 张图片正在保存。是否先导出已保存图片和其余链接？取消后可等待下载完成再导出。`,
+                `仍有 ${pending} 张图片正在等待下载或下载中。是否先导出已保存的本地副本和其余链接？取消后可等待下载完成再导出。`,
             )
         )
             return;

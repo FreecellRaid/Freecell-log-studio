@@ -87,7 +87,9 @@
                     支持 PNG、JPEG、GIF、WebP，每张不超过 20 MB。
                 </p>
             </div>
-            <p v-if="store.loading" role="status">正在保存图片…</p>
+            <p v-if="store.loading" role="status">
+                {{ imageResourceText.status.uploading }}
+            </p>
             <p v-if="store.error" class="image-error" role="alert">
                 {{ store.error }}
             </p>
@@ -119,6 +121,7 @@
     </ModalDialog>
 </template>
 <script setup lang="ts">
+import { imageResourceText } from '@/data/imageResourceText';
 import { normalizeImageUrl } from '@/utils/imageUrl';
 import { ref, computed, watch, onUnmounted } from 'vue';
 import { ImagePlus } from '@lucide/vue';

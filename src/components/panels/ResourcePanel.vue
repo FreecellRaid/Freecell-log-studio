@@ -15,11 +15,15 @@
             <button
                 class="action-button"
                 :disabled="!panel.selectedCount || panel.preparing"
-                title="将选中的远程图片下载为本地副本"
+                :title="imageResourceText.actions.batchDownloadTitle"
                 @click="panel.downloadSelected"
             >
                 <Download class="ui-icon" />
-                {{ panel.preparing ? '准备中…' : '批量下载' }}
+                {{
+                    panel.preparing
+                        ? '准备中…'
+                        : imageResourceText.actions.batchDownload
+                }}
             </button>
             <button
                 class="action-button"
@@ -88,15 +92,12 @@
                         </span>
                         <span
                             class="resource-state"
-                            :title="
-                                tasks.states[item.resourceId]?.error ||
-                                summaries.get(item.resourceId)?.sourceUrl
-                            "
+                            :title="resourceState(item.resourceId).description"
                             :class="{
                                 warning: resourceState(item.resourceId).warning,
                             }"
                         >
-                            {{ status(item.resourceId) }}
+                            {{ resourceState(item.resourceId).label }}
                         </span>
                     </div>
                 </div>
@@ -112,6 +113,7 @@ import { useResourcePanelStore } from '@/stores/editor/resourcePanelStore';
 import { useResourceTasksStore } from '@/stores/io/resourceTasksStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import { useResourceSummaries } from '@/composables/resources/useResourceSummaries';
+import { imageResourceText } from '@/data/imageResourceText';
 import { resolveImageResourceState } from '@/editor/imageResourceState';
 const panel = useResourcePanelStore();
 const tasks = useResourceTasksStore();
@@ -126,12 +128,6 @@ function resourceState(id: string) {
         reading: reading.value,
         readError: readError.value,
     });
-}
-function status(id: string) {
-    const state = resourceState(id);
-    return state.status === 'error'
-        ? `下载失败：${state.error || '请重试'}`
-        : state.label;
 }
 </script>
 <style scoped>

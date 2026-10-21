@@ -1,3 +1,4 @@
+import { imageResourceText } from '@/data/imageResourceText';
 import {
     computed,
     ref,
@@ -56,7 +57,7 @@ export function useImageResource(
                         readError.value =
                             error instanceof Error
                                 ? error.message
-                                : '图片读取失败，请重新打开编辑。';
+                                : imageResourceText.errors.read;
                     },
                 });
             onCleanup(() => {

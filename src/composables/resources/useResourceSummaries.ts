@@ -1,3 +1,4 @@
+import { imageResourceText } from '@/data/imageResourceText';
 import { ref, shallowRef, toValue, watch, type MaybeRefOrGetter } from 'vue';
 import { resourceRepository } from '@/io/storage/resourceStorage';
 import type { ImageResourceSummary } from '@/types/resource';
@@ -32,7 +33,7 @@ export function useResourceSummaries(ids: MaybeRefOrGetter<string[]>) {
                     error() {
                         if (!closed) {
                             reading.value = false;
-                            readError.value = '资源读取失败，请重新打开面板。';
+                            readError.value = imageResourceText.errors.read;
                         }
                     },
                 });

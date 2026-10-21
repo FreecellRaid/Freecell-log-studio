@@ -274,7 +274,7 @@ describe('image resource persistence', () => {
         );
         await expect(
             resources.saveLocalCopy('missing', blob()),
-        ).rejects.toThrow('不存在');
+        ).rejects.toThrow('资源缺失');
     });
     it('does not overwrite a supplied local copy when an earlier download finishes', async () => {
         let finish!: (response: Response) => void;

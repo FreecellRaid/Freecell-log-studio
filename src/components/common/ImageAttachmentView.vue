@@ -52,7 +52,7 @@
                 {{ description }}
             </p>
             <p v-if="imageError && !readError" class="preview-error">
-                预览暂时无法显示，可打开原图查看或上传本地副本。
+                {{ imageResourceText.description.previewError }}
             </p>
             <div v-if="record && !record.blob" class="resource-buttons">
                 <button
@@ -63,13 +63,7 @@
                     @click="tasks.enqueue(record.resourceId, true)"
                 >
                     <Download class="ui-icon" aria-hidden="true" />
-                    {{
-                        task?.status === 'error'
-                            ? '重试下载'
-                            : task?.status === 'cancelled'
-                              ? '继续下载'
-                              : '下载远程图片'
-                    }}
+                    {{ state.downloadLabel }}
                 </button>
                 <button
                     v-if="pending && !uploading"
@@ -78,23 +72,27 @@
                     @click="tasks.cancel(record.resourceId)"
                 >
                     <Square class="ui-icon" aria-hidden="true" />
-                    停止下载
+                    {{ imageResourceText.actions.stop }}
                 </button>
                 <button
                     type="button"
                     class="text-button"
                     :disabled="uploading"
-                    title="补全此图片的本地副本，并保留原始链接"
+                    :title="imageResourceText.actions.uploadTitle"
                     @click="copyInput?.click()"
                 >
                     <Upload class="ui-icon" aria-hidden="true" />
-                    {{ uploading ? '正在保存…' : '上传本地副本' }}
+                    {{
+                        uploading
+                            ? imageResourceText.status.uploading
+                            : imageResourceText.actions.upload
+                    }}
                 </button>
                 <input
                     ref="copyInput"
                     type="file"
                     accept="image/png,image/jpeg,image/gif,image/webp"
-                    aria-label="上传本地副本"
+                    :aria-label="imageResourceText.actions.upload"
                     hidden
                     @change="uploadCopy"
                 />
@@ -121,6 +119,7 @@ import {
 } from '@lucide/vue';
 import type { ImageAttachment } from '@/types/resource';
 import { useImageResource } from '@/composables/resources/useImageResource';
+import { imageResourceText } from '@/data/imageResourceText';
 import { resolveImageResourceState } from '@/editor/imageResourceState';
 import { useResourceTasksStore } from '@/stores/io/resourceTasksStore';
 
@@ -167,15 +166,15 @@ const statusLabel = computed(() =>
     props.attachment
         ? state.value.label
         : props.previewSrc
-          ? '待保存'
-          : '未选择图片',
+          ? imageResourceText.status.draft
+          : imageResourceText.status.empty,
 );
 const description = computed(() =>
     props.attachment
         ? state.value.description
         : props.previewSrc
-          ? '保存后可管理图片本地副本'
-          : '选择本地文件或输入图片链接，上方将显示预览。',
+          ? imageResourceText.description.draft
+          : imageResourceText.description.empty,
 );
 watch([() => props.previewSrc, source], () => {
     imageError.value = false;
@@ -210,7 +209,7 @@ async function uploadCopy(event: Event) {
             uploadError.value =
                 error instanceof Error
                     ? error.message
-                    : '本地副本保存失败，请重试。';
+                    : imageResourceText.errors.upload;
     } finally {
         if (ticket === revision) uploading.value = false;
         input.value = '';

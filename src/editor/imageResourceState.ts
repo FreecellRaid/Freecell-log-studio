@@ -1,3 +1,4 @@
+import { imageResourceText } from '@/data/imageResourceText';
 import type { ImageResourceSummary, ResourceTaskState } from '@/types/resource';
 import { normalizeImageUrl } from '@/utils/imageUrl';
 
@@ -47,37 +48,22 @@ export function resolveImageResourceState(input: {
                   : sourceUrl
                     ? 'remote'
                     : 'placeholder';
-    const labels: Record<ImageResourceStatus, string> = {
-        reading: '读取中',
-        readError: '读取失败',
-        missing: '资源缺失',
-        uploading: '正在保存副本',
-        ready: '已保存本地副本',
-        queued: '等待下载',
-        loading: '正在下载',
-        error: '副本未保存',
-        cancelled: '下载已停止',
-        remote: '仅链接',
-        placeholder: '待补全',
-    };
     const descriptions: Record<ImageResourceStatus, string> = {
-        reading: '正在读取资源信息…',
-        readError: input.readError || '图片读取失败，请重新打开编辑。',
-        missing: '资源记录已缺失，可在下方替换当前图片。',
-        uploading: '正在验证并保存本地图片，请稍候。',
-        ready: '可离线预览，并随工程文件一起备份。',
-        queued: '图片已加入下载队列，可继续编辑其他内容。',
-        loading: '正在保存图片副本，原始链接会继续保留。',
-        error: `${task?.error || '下载失败，'} 可打开原图自行保存，再上传本地副本。`,
-        cancelled: '原始链接仍然保留，可继续下载或上传本地副本。',
-        remote: '链接图片可直接预览；内嵌到 DOCX 需要先保存本地副本。',
-        placeholder: '没有可下载的链接，可上传本地副本补全图片。',
+        ...imageResourceText.description,
+        readError: input.readError || imageResourceText.errors.read,
+        error: `${task?.error || imageResourceText.errors.download} ${imageResourceText.description.manualUpload}`,
     };
     return {
         status,
-        label: labels[status],
+        label: imageResourceText.status[status],
         description: descriptions[status],
         sourceUrl,
+        downloadLabel:
+            task?.status === 'error'
+                ? imageResourceText.actions.retry
+                : task?.status === 'cancelled'
+                  ? imageResourceText.actions.resume
+                  : imageResourceText.actions.download,
         pending: status === 'queued' || status === 'loading',
         warning:
             status === 'readError' ||
@@ -90,4 +76,25 @@ export function resolveImageResourceState(input: {
                   ? task?.error
                   : undefined,
     };
+}
+
+// 汇总沿用单张图片状态名称，优先显示需要关注的下载任务。
+export function formatImageDownloadSummary(
+    summary: Record<ResourceTaskState['status'], number>,
+    includeZero = false,
+): string {
+    const statuses: ResourceTaskState['status'][] = [
+        'loading',
+        'queued',
+        'error',
+        'cancelled',
+        'ready',
+    ];
+    return statuses
+        .filter((status) => includeZero || summary[status] > 0)
+        .map(
+            (status) =>
+                `${imageResourceText.status[status]} ${summary[status]}`,
+        )
+        .join(' · ');
 }

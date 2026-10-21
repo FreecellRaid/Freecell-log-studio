@@ -1,3 +1,4 @@
+import { imageResourceText } from '@/data/imageResourceText';
 import type { ResourceTaskState } from '@/types/resource';
 import { protectResources } from '@/io/storage/resourceCoordination';
 import { retryAfterResourceCleanup } from '@/io/storage/resourceCleanup';
@@ -43,7 +44,8 @@ export const useResourceTasksStore = defineStore('resourceTasks', () => {
                 try {
                     const record = await resourceRepository.get(id);
                     controller.signal.throwIfAborted();
-                    if (!record) throw new Error('图片资源缺失。');
+                    if (!record)
+                        throw new Error(imageResourceText.errors.missing);
                     if (!record.blob)
                         await retryAfterResourceCleanup(
                             () =>
@@ -64,10 +66,10 @@ export const useResourceTasksStore = defineStore('resourceTasks', () => {
                                 : 'error',
                             error:
                                 error instanceof TypeError
-                                    ? '无法保存副本，请重试或手动下载后上传'
+                                    ? imageResourceText.errors.network
                                     : error instanceof Error
                                       ? error.message
-                                      : '图片下载失败，请重试或手动下载后上传',
+                                      : imageResourceText.errors.download,
                         };
                 } finally {
                     active--;
