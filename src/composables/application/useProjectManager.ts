@@ -1,3 +1,4 @@
+import { collectDocumentResourceIds } from '@/editor/resourceReferences';
 import { protectResources } from '@/io/storage/resourceCoordination';
 import {
     cleanupResources,
@@ -10,10 +11,10 @@ import { useHistoryStore } from '@/stores/editor/historyStore';
 import { useLogStore } from '@/stores/project/logStore';
 import { useStyleStore } from '@/stores/project/styleStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
-import type { ProjectFile } from '@/types/project';
+import type { WorkspaceProject } from '@/types/project';
 import { useActiveContext } from '@/composables/application/useActiveContext';
 import {
-    buildProjectFile,
+    buildWorkspaceProject,
     sanitizeProjectFilename,
 } from '@/io/storage/project';
 import { projectRepository } from '@/io/storage/projectStorage';
@@ -24,7 +25,6 @@ import {
 } from '@/io/storage/workspaceProject';
 import {
     resourceRepository,
-    referencedResourceIds,
 } from '@/io/storage/resourceStorage';
 import { useResourceTasksStore } from '@/stores/io/resourceTasksStore';
 import { useProjectStorageStore } from '@/stores/io/projectStorageStore';
@@ -69,9 +69,9 @@ export function useProjectManager() {
         );
     });
 
-    function createCurrentProjectFile() {
+    function createCurrentWorkspaceProject() {
         const time = new Date().toISOString();
-        const project = buildProjectFile({
+        const project = buildWorkspaceProject({
             projectId: logStore.projectId,
             projectName: logStore.projectName,
             time,
@@ -84,7 +84,7 @@ export function useProjectManager() {
     }
 
     async function replaceWorkspaceWithProject(
-        project: ProjectFile,
+        project: WorkspaceProject,
         options: { confirmIfNeeded?: boolean; resourcesReady?: boolean } = {},
     ) {
         const shouldConfirm =
@@ -101,7 +101,7 @@ export function useProjectManager() {
 
         if (!options.resourcesReady) {
             const file = workspaceProjectToFile(project);
-            if (referencedResourceIds(file).size)
+            if (collectDocumentResourceIds(file.documents).size)
                 project = projectFileToWorkspace(
                     await resourceRepository.importProject(file),
                 );
@@ -129,8 +129,8 @@ export function useProjectManager() {
     }
 
     async function saveCurrentProjectToLocal() {
-        const project = workspaceProjectToFile(createCurrentProjectFile());
-        protectResources(referencedResourceIds(project));
+        const project = workspaceProjectToFile(createCurrentWorkspaceProject());
+        protectResources(collectDocumentResourceIds(project.documents));
         const checkpoint = historyStore.createSaveCheckpoint();
         const documents = logStore.documents;
         storageState.pendingSaves++;
@@ -165,9 +165,9 @@ export function useProjectManager() {
     }
 
     async function exportCurrentProject() {
-        const project = workspaceProjectToFile(createCurrentProjectFile());
-        protectResources(referencedResourceIds(project));
-        const pending = [...referencedResourceIds(project)].filter((id) =>
+        const project = workspaceProjectToFile(createCurrentWorkspaceProject());
+        protectResources(collectDocumentResourceIds(project.documents));
+        const pending = [...collectDocumentResourceIds(project.documents)].filter((id) =>
             ['queued', 'loading'].includes(
                 resourceTasks.states[id]?.status ?? '',
             ),
@@ -210,7 +210,7 @@ export function useProjectManager() {
     return {
         hasWorkspaceState,
         storageState,
-        createCurrentProjectFile,
+        createCurrentWorkspaceProject,
         replaceWorkspaceWithProject,
         saveCurrentProjectToLocal,
         exportCurrentProject,

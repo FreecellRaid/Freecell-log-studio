@@ -1,6 +1,6 @@
 import Ajv from 'ajv';
 import schema from './schemas/project-v3.schema.json';
-import { normalizeProjectFile } from './project';
+import { normalizeLegacyProject } from './legacyProject';
 import type { MessageFilter } from '@/types/log';
 import {
     PROJECT_SCHEMA,
@@ -256,7 +256,7 @@ export function migrateProjectFileTo(value: unknown): ProjectFileReadResult {
             { path: '/version', message: '不支持的工程 schema 或版本' },
         ]);
     }
-    const legacy = normalizeProjectFile(value);
+    const legacy = normalizeLegacyProject(value);
     // 旧 normalizer 不认识 RegExp；单独保留原规则中的正则，避免迁移时静默丢失。
     const rawRules = (
         Array.isArray(value.styleRules)

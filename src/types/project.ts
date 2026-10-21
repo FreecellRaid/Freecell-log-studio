@@ -2,8 +2,7 @@ import type { ViewSettings, StyleRule } from './style';
 import type { LogDocument } from './log';
 import type { ImageResourceFile } from './projectFile';
 
-export interface ProjectFile {
-    version: 2;
+export interface WorkspaceProject {
     projectId: string;
     projectName: string;
     time: string;
@@ -14,6 +13,3 @@ export interface ProjectFile {
     resources?: Record<string, ImageResourceFile>;
 }
 
-export interface StoredProjectsIndex {
-    projects: ProjectFile[];
-}

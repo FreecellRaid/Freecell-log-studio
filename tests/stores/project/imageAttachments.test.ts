@@ -7,7 +7,7 @@ import { useClipboardStore } from '@/stores/editor/clipboardStore';
 import { buildLogDocument } from '@/io/import/parser';
 import { matchesMessageFilter } from '@/editor/filter';
 import { workspaceProjectToFile } from '@/io/storage/workspaceProject';
-import { buildProjectFile } from '@/io/storage/project';
+import { buildWorkspaceProject } from '@/io/storage/project';
 import { useStyleStore } from '@/stores/project/styleStore';
 
 describe('image attachment editing', () => {
@@ -85,7 +85,7 @@ describe('image attachment editing', () => {
             },
         ]);
         const file = workspaceProjectToFile(
-            buildProjectFile({
+            buildWorkspaceProject({
                 projectId: log.projectId,
                 projectName: 'test',
                 documents: log.documents,

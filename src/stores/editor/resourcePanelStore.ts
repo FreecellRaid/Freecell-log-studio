@@ -1,3 +1,4 @@
+import { iterateMessageImages } from '@/editor/resourceReferences';
 import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import { useLogStore } from '@/stores/project/logStore';
@@ -26,8 +27,7 @@ export const useResourcePanelStore = defineStore('resourcePanel', () => {
                 count: number;
             }
         >();
-        for (const message of log.allMessages) {
-            for (const image of message.images ?? []) {
+        for (const { message, attachment: image } of iterateMessageImages(log.allMessages)) {
                 let group = groups.get(image.resourceId);
                 if (!group) {
                     group = {
@@ -43,7 +43,6 @@ export const useResourcePanelStore = defineStore('resourcePanel', () => {
                     group.names.push(image.name);
                 group.messageIds.add(message.messageId);
                 group.count++;
-            }
         }
         return [...groups.values()];
     });

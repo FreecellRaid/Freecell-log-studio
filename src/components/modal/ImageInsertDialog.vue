@@ -119,6 +119,7 @@
     </ModalDialog>
 </template>
 <script setup lang="ts">
+import { normalizeImageUrl } from '@/utils/imageUrl';
 import { ref, computed, watch, onUnmounted } from 'vue';
 import { ImagePlus } from '@lucide/vue';
 import ModalDialog from './ModalDialog.vue';
@@ -126,7 +127,6 @@ import ImageAttachmentView from '@/components/common/ImageAttachmentView.vue';
 import { useLogStore } from '@/stores/project/logStore';
 import {
     resourceRepository,
-    normalizeImageUrl,
 } from '@/io/storage/resourceStorage';
 import { useImageInsertStore } from '@/stores/editor/imageInsertStore';
 const store = useImageInsertStore();

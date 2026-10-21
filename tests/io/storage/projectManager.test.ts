@@ -74,7 +74,7 @@ describe('asynchronous project operations', () => {
 
     it('does not queue linked resources when restoring a snapshot or opening a project', async () => {
         const manager = useProjectManager();
-        const project = manager.createCurrentProjectFile();
+        const project = manager.createCurrentWorkspaceProject();
         project.documents[0].chunks[0].messages[0].images = [
             { imageId: 'image', resourceId: 'linked', name: '地图' },
         ];
@@ -181,7 +181,7 @@ describe('asynchronous project operations', () => {
     it('awaits restoration and honors a canceled confirmation', async () => {
         const manager = useProjectManager();
         const file = migrateProjectFileTo(
-            manager.createCurrentProjectFile(),
+            manager.createCurrentWorkspaceProject(),
         ).project;
         file.projectName = 'saved name';
         vi.mocked(projectRepository.get).mockResolvedValue(file);
@@ -215,7 +215,7 @@ describe('asynchronous project operations', () => {
     it('imports a text-only v3 export with a new project ID', async () => {
         const manager = useProjectManager();
         const file = migrateProjectFileTo(
-            manager.createCurrentProjectFile(),
+            manager.createCurrentWorkspaceProject(),
         ).project;
         expect(
             await useFileImport().importTextAndApply([

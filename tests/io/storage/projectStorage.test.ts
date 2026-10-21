@@ -5,14 +5,14 @@ import {
     createProjectRepository,
     PROJECTS_STORAGE_KEY,
 } from '@/io/storage/projectStorage';
-import { buildProjectFile } from '@/io/storage/project';
+import { buildWorkspaceProject } from '@/io/storage/project';
 import { migrateProjectFileTo } from '@/io/storage/projectFile';
 import { projectFileToWorkspace } from '@/io/storage/workspaceProject';
 import { buildLogDocument } from '@/io/import/parser';
 import { reactive } from 'vue';
 
 function project(id = 'project-1', time = '2026-10-19T08:00:00Z') {
-    return buildProjectFile({
+    return buildWorkspaceProject({
         projectId: id,
         projectName: id,
         time,

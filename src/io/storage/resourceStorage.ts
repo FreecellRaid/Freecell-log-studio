@@ -1,3 +1,5 @@
+import { normalizeImageUrl } from '@/utils/imageUrl';
+import { collectDocumentResourceIds } from '@/editor/resourceReferences';
 import {
     protectResources,
     withResourceOperation,
@@ -17,36 +19,6 @@ import {
     MAX_IMAGE_BYTES,
     prepareImage,
 } from './imageProcessing';
-
-export function referencedResourceIds(
-    project: Pick<ProjectFile, 'documents'>,
-): Set<string> {
-    return new Set(
-        project.documents.flatMap((doc) =>
-            doc.chunks.flatMap((chunk) =>
-                chunk.messages.flatMap((message) =>
-                    message.images.map((image) => image.resourceId),
-                ),
-            ),
-        ),
-    );
-}
-
-export function normalizeImageUrl(input: string): string {
-    let url: URL;
-    try {
-        url = new URL(input.trim());
-    } catch {
-        throw new Error('请输入完整的 HTTP 或 HTTPS 图片链接。');
-    }
-    if (
-        !['http:', 'https:'].includes(url.protocol) ||
-        url.username ||
-        url.password
-    )
-        throw new Error('图片链接须为不含用户名和密码的 HTTP(S) 地址。');
-    return url.href;
-}
 
 async function sameBlob(a: Blob, b: Blob): Promise<boolean> {
     if (a.size !== b.size) return false;
@@ -203,7 +175,7 @@ export function createResourceRepository(
         const resources: ProjectFile['resources'] = {};
         const records: ImageResourceRecord[] = [];
         const mapping = new Map<string, string>();
-        for (const originalId of referencedResourceIds(project)) {
+        for (const originalId of collectDocumentResourceIds(project.documents)) {
             const file = project.resources[originalId] ?? {
                 type: 'image' as const,
             };
@@ -254,7 +226,7 @@ export function createResourceRepository(
     async function exportProject(file: ProjectFile) {
         const project = JSON.parse(JSON.stringify(file)) as ProjectFile;
         const resources: ProjectFile['resources'] = {};
-        for (const id of referencedResourceIds(project)) {
+        for (const id of collectDocumentResourceIds(project.documents)) {
             const record = await get(id);
             resources[id] = record
                 ? imageMetadata(record)
@@ -315,7 +287,7 @@ export function createResourceRepository(
         importProject: (file: ProjectFile) =>
             withResourceOperation(async () => {
                 const imported = await importProject(file);
-                protectResources(referencedResourceIds(imported));
+                protectResources(collectDocumentResourceIds(imported.documents));
                 return imported;
             }),
         exportProject: (file: ProjectFile) =>

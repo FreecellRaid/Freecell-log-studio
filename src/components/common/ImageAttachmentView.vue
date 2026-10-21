@@ -110,21 +110,11 @@
     </div>
 </template>
 <script setup lang="ts">
-import { computed, ref, shallowRef, onMounted, onUnmounted, watch } from 'vue';
-import {
-    Download,
-    ExternalLink,
-    ImageOff,
-    LoaderCircle,
-    Square,
-    Upload,
-} from '@lucide/vue';
-import type { ImageAttachment, ImageResourceRecord } from '@/types/resource';
-import {
-    resourceRepository,
-    normalizeImageUrl,
-} from '@/io/storage/resourceStorage';
-import { imageUrlCache } from '@/io/storage/imageUrlCache';
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
+import { Download, ExternalLink, ImageOff, LoaderCircle, Square, Upload } from '@lucide/vue';
+import type { ImageAttachment } from '@/types/resource';
+import { useImageResource } from '@/composables/resources/useImageResource';
+import { resolveImageResourceState } from '@/editor/imageResourceState';
 import { useResourceTasksStore } from '@/stores/io/resourceTasksStore';
 
 const props = defineProps<{
@@ -136,130 +126,39 @@ const tasks = useResourceTasksStore();
 const container = ref<HTMLElement | null>(null);
 const copyInput = ref<HTMLInputElement>();
 const visible = ref(false);
-const record = shallowRef<ImageResourceRecord>();
-const reading = ref(true);
-const source = ref('');
-const readError = ref('');
 const imageError = ref(false);
 const uploadError = ref('');
 const uploading = ref(false);
 let revision = 0;
 let observer: IntersectionObserver | undefined;
-const task = computed(() =>
-    props.attachment ? tasks.states[props.attachment.resourceId] : undefined,
-);
-const previewSource = computed(() => props.previewSrc || source.value);
-watch(
-    () => props.previewSrc,
-    () => {
-        imageError.value = false;
-    },
-);
-const pending = computed(
-    () => task.value?.status === 'queued' || task.value?.status === 'loading',
-);
-const sourceUrl = computed(() => {
-    try {
-        return record.value?.sourceUrl
-            ? normalizeImageUrl(record.value.sourceUrl)
-            : '';
-    } catch {
-        return '';
-    }
-});
-const warning = computed(
-    () =>
-        !!readError.value ||
-        (!reading.value && !!props.attachment && !record.value) ||
-        (!record.value?.blob && task.value?.status === 'error'),
-);
-const statusLabel = computed(() => {
-    if (!props.attachment) return props.previewSrc ? '待保存' : '未选择图片';
-    if (reading.value) return '读取中';
-    if (readError.value) return '读取失败';
-    if (!record.value) return '资源缺失';
-    if (uploading.value) return '正在保存副本';
-    if (record.value.blob) return '已保存本地副本';
-    if (task.value?.status === 'queued') return '等待下载';
-    if (task.value?.status === 'loading') return '正在下载';
-    if (task.value?.status === 'error') return '副本未保存';
-    if (task.value?.status === 'cancelled') return '下载已停止';
-    return sourceUrl.value ? '仅链接' : '待补全';
-});
-const description = computed(() => {
-    if (!props.attachment)
-        return props.previewSrc
-            ? '保存后可管理图片副本，链接资源不会自动下载。'
-            : '选择本地文件或输入图片链接，上方将显示预览。';
-    if (reading.value) return '正在读取资源信息…';
-    if (readError.value) return readError.value;
-    if (!record.value) return '资源记录已缺失，可在下方替换当前图片。';
-    if (uploading.value) return '正在验证并保存本地图片，请稍候。';
-    if (record.value.blob) return '可离线预览，并随工程文件一起备份。';
-    if (task.value?.status === 'queued')
-        return '图片已加入下载队列，可继续编辑其他内容。';
-    if (task.value?.status === 'loading')
-        return '正在保存图片副本，原始链接会继续保留。';
-    if (task.value?.status === 'error')
-        return `${task.value.error || '下载失败。'} 可打开原图自行保存，再上传本地副本。`;
-    if (task.value?.status === 'cancelled')
-        return '原始链接仍然保留，可继续下载或上传本地副本。';
-    return sourceUrl.value
-        ? '链接图片可直接预览；内嵌到 DOCX 需要先保存本地副本。'
-        : '没有可下载的链接，可上传本地副本补全图片。';
-});
-// 缩略图按可见性订阅，编辑视图持续订阅；预览和操作共用同一份资源记录。
 const shouldObserve = computed(() => !props.compact || visible.value);
-watch(
-    [() => props.attachment?.resourceId, shouldObserve],
-    ([id, show], _previous, onCleanup) => {
-        revision++;
-        record.value = undefined;
-        source.value = '';
-        readError.value = '';
-        imageError.value = false;
-        uploadError.value = '';
-        uploading.value = false;
-        reading.value = true;
-        if (!id) {
-            reading.value = false;
-            return;
-        }
-        if (!show) return;
-        let lease: ReturnType<typeof imageUrlCache.acquire> | undefined;
-        const subscription = resourceRepository.observe(id).subscribe({
-            next(value) {
-                record.value = value;
-                reading.value = false;
-                const blob = value?.thumbnail ?? value?.blob;
-                lease?.release();
-                lease = undefined;
-                const previousSource = source.value;
-                if (blob) {
-                    lease = imageUrlCache.acquire(
-                        `${id}:${value!.updatedAt}:preview`,
-                        blob,
-                    );
-                    source.value = lease.url;
-                } else source.value = sourceUrl.value;
-                if (previousSource !== source.value) imageError.value = false;
-            },
-            error(error: unknown) {
-                reading.value = false;
-                readError.value =
-                    error instanceof Error
-                        ? error.message
-                        : '图片读取失败，请重新打开编辑。';
-            },
-        });
-        onCleanup(() => {
-            revision++;
-            subscription.unsubscribe();
-            lease?.release();
-        });
-    },
-    { immediate: true },
+const { record, reading, source, sourceUrl, readError } = useImageResource(
+    () => props.attachment?.resourceId,
+    shouldObserve,
 );
+const task = computed(() => props.attachment ? tasks.states[props.attachment.resourceId] : undefined);
+const previewSource = computed(() => props.previewSrc || source.value);
+const state = computed(() => resolveImageResourceState({
+    resource: record.value ? { sourceUrl: record.value.sourceUrl, hasLocalCopy: !!record.value.blob } : undefined,
+    task: task.value,
+    reading: reading.value,
+    readError: readError.value,
+    uploading: uploading.value,
+}));
+const pending = computed(() => state.value.pending);
+const warning = computed(() => !!props.attachment && state.value.warning);
+const statusLabel = computed(() => props.attachment ? state.value.label : props.previewSrc ? '待保存' : '未选择图片');
+const description = computed(() => props.attachment ? state.value.description : props.previewSrc
+    ? '保存后可管理图片副本，链接资源不会自动下载。'
+    : '选择本地文件或输入图片链接，上方将显示预览。');
+watch([() => props.previewSrc, source], () => { imageError.value = false; });
+// 切换目标时使旧上传失效，资源更新不会中断当前上传。
+watch([() => props.attachment?.resourceId, shouldObserve], () => {
+    revision++;
+    imageError.value = false;
+    uploadError.value = '';
+    uploading.value = false;
+}, { flush: 'sync' });
 async function uploadCopy(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];

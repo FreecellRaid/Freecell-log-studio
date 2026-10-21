@@ -1,21 +1,9 @@
-import type { LogDocument } from '@/types/log';
-import type { DocumentFile } from '@/types/projectFile';
+import { collectDocumentResourceIds } from '@/editor/resourceReferences';
 import { projectDatabase, type ProjectDatabase } from '@/io/storage/database';
 import {
     pendingResourceIds,
     withExclusiveResourceCleanup,
 } from './resourceCoordination';
-
-export function documentResourceIds(documents: LogDocument[] | DocumentFile[]) {
-    return documents.flatMap((doc) =>
-        doc.chunks.flatMap((chunk) =>
-            chunk.messages.flatMap(
-                (message) =>
-                    message.images?.map((image) => image.resourceId) ?? [],
-            ),
-        ),
-    );
-}
 
 // 调用方必须持有跨页面独占锁；仅供受锁保护的入口和事务测试使用。
 export async function deleteUnreferencedResources(
@@ -30,7 +18,7 @@ export async function deleteUnreferencedResources(
             const roots = new Set(protectedIds);
             const projects = await database.projects.toArray();
             for (const project of projects)
-                for (const id of documentResourceIds(project.documents))
+                for (const id of collectDocumentResourceIds(project.documents))
                     roots.add(id);
             const unused = (
                 await database.resources.toCollection().primaryKeys()

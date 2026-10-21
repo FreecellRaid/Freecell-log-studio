@@ -100,11 +100,7 @@
                                 summaries.get(item.resourceId)?.sourceUrl
                             "
                             :class="{
-                                warning:
-                                    tasks.states[item.resourceId]?.status ===
-                                        'error' &&
-                                    !summaries.get(item.resourceId)
-                                        ?.hasLocalCopy,
+                                warning: resourceState(item.resourceId).warning,
                             }"
                         >
                             {{ status(item.resourceId) }}
@@ -116,62 +112,24 @@
     </section>
 </template>
 <script setup lang="ts">
-import { shallowRef, ref, watch } from 'vue';
 import { Download, SquareCheckBig, Trash2 } from '@lucide/vue';
 import { RecycleScroller } from 'vue-virtual-scroller';
 import ImageAttachmentView from '@/components/common/ImageAttachmentView.vue';
 import { useResourcePanelStore } from '@/stores/editor/resourcePanelStore';
 import { useResourceTasksStore } from '@/stores/io/resourceTasksStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
-import { resourceRepository } from '@/io/storage/resourceStorage';
-import type { ImageResourceMetadata } from '@/types/resource';
+import { useResourceSummaries } from '@/composables/resources/useResourceSummaries';
+import { resolveImageResourceState } from '@/editor/imageResourceState';
 const panel = useResourcePanelStore();
 const tasks = useResourceTasksStore();
 const windows = useWindowStore();
-const summaries = shallowRef(
-    new Map<string, ImageResourceMetadata & { hasLocalCopy: boolean }>(),
-);
-const readError = ref('');
-const reading = ref(false);
-watch(
-    () => panel.resources.map((item) => item.resourceId),
-    (ids, _old, onCleanup) => {
-        summaries.value = new Map();
-        readError.value = '';
-        reading.value = !!ids.length;
-        if (!ids.length) return;
-        const subscription = resourceRepository
-            .observeSummaries(ids)
-            .subscribe({
-                next(records) {
-                    summaries.value = new Map(
-                        records
-                            .filter((record) => !!record)
-                            .map((record) => [record.resourceId, record]),
-                    );
-                    reading.value = false;
-                },
-                error() {
-                    reading.value = false;
-                    readError.value = '资源读取失败，请重新打开面板。';
-                },
-            });
-        onCleanup(() => subscription.unsubscribe());
-    },
-    { immediate: true },
-);
+const { summaries, reading, readError } = useResourceSummaries(() => panel.resources.map(item => item.resourceId));
+function resourceState(id: string) {
+    return resolveImageResourceState({ resource: summaries.value.get(id), task: tasks.states[id], reading: reading.value, readError: readError.value });
+}
 function status(id: string) {
-    if (reading.value) return '读取中…';
-    if (readError.value) return '读取失败';
-    const record = summaries.value.get(id);
-    if (!record) return '资源缺失';
-    if (record.hasLocalCopy) return '已保存本地副本';
-    const task = tasks.states[id];
-    if (task?.status === 'queued') return '等待下载';
-    if (task?.status === 'loading') return '正在下载';
-    if (task?.status === 'error') return `下载失败：${task.error || '请重试'}`;
-    if (task?.status === 'cancelled') return '下载已停止';
-    return record.sourceUrl ? '仅链接' : '待补全';
+    const state = resourceState(id);
+    return state.status === 'error' ? `下载失败：${state.error || '请重试'}` : state.label;
 }
 </script>
 <style scoped>

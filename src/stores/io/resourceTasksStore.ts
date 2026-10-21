@@ -1,3 +1,4 @@
+import type { ResourceTaskState } from '@/types/resource';
 import { protectResources } from '@/io/storage/resourceCoordination';
 import { retryAfterResourceCleanup } from '@/io/storage/resourceCleanup';
 import { currentResourceRoots } from '@/composables/application/resourceRoots';
@@ -6,15 +7,7 @@ import { reactive, computed } from 'vue';
 import { resourceRepository } from '@/io/storage/resourceStorage';
 
 export const useResourceTasksStore = defineStore('resourceTasks', () => {
-    const states = reactive<
-        Record<
-            string,
-            {
-                status: 'queued' | 'loading' | 'ready' | 'error' | 'cancelled';
-                error?: string;
-            }
-        >
-    >({});
+    const states = reactive<Record<string, ResourceTaskState>>({});
     const queue: string[] = [];
     const controllers = new Map<string, AbortController>();
     let active = 0;

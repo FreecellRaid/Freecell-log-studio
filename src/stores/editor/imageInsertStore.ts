@@ -1,3 +1,4 @@
+import { normalizeImageUrl } from '@/utils/imageUrl';
 import { retryAfterResourceCleanup } from '@/io/storage/resourceCleanup';
 import { currentResourceRoots } from '@/composables/application/resourceRoots';
 import { defineStore } from 'pinia';
@@ -7,7 +8,6 @@ import { useLogCommands } from '@/stores/project/logCommands';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import {
     resourceRepository,
-    normalizeImageUrl,
 } from '@/io/storage/resourceStorage';
 import { generateId } from '@/utils/id';
 import type { ImageAttachment } from '@/types/resource';

@@ -1,10 +1,10 @@
+import { normalizeImageUrl } from '@/utils/imageUrl';
 import 'fake-indexeddb/auto';
 import Dexie from 'dexie';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { ProjectDatabase } from '@/io/storage/database';
 import {
     createResourceRepository,
-    normalizeImageUrl,
 } from '@/io/storage/resourceStorage';
 import { createProjectRepository } from '@/io/storage/projectStorage';
 import { imageMimeType, MAX_IMAGE_BYTES } from '@/io/storage/imageProcessing';

@@ -36,3 +36,12 @@ export function imageMetadata(
         provenance: provenance ? { ...provenance } : undefined,
     };
 }
+
+export interface ImageResourceSummary extends ImageResourceMetadata {
+    resourceId: string;
+    hasLocalCopy: boolean;
+}
+export interface ResourceTaskState {
+    status: 'queued' | 'loading' | 'ready' | 'error' | 'cancelled';
+    error?: string;
+}

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { buildProjectFile, normalizeProjectFile } from '@/io/storage/project';
+import { buildWorkspaceProject } from '@/io/storage/project';
+import { normalizeLegacyProject } from '@/io/storage/legacyProject';
 import type { StyleRule } from '@/types/style';
 
 const viewSettings = {
@@ -10,8 +11,8 @@ const viewSettings = {
 };
 
 describe('project style rule persistence', () => {
-    it('migrates v1 color rules to v2 style rules', () => {
-        const project = normalizeProjectFile({
+    it('migrates v1 color rules into runtime style rules', () => {
+        const project = normalizeLegacyProject({
             version: 1,
             projectId: 'project-1',
             projectName: 'legacy',
@@ -31,7 +32,7 @@ describe('project style rule persistence', () => {
             viewSettings,
         });
 
-        expect(project.version).toBe(2);
+        expect(project).not.toHaveProperty('version');
         expect(project.styleRules).toEqual([
             {
                 ruleId: 'rule-1',
@@ -47,7 +48,7 @@ describe('project style rule persistence', () => {
     });
 
     it('normalizes v2 effects and invalid areas safely', () => {
-        const project = normalizeProjectFile({
+        const project = normalizeLegacyProject({
             version: 2,
             projectId: 'project-2',
             projectName: 'current',
@@ -68,7 +69,7 @@ describe('project style rule persistence', () => {
         });
     });
 
-    it('writes only the v2 structure and clones style objects', () => {
+    it('builds unversioned runtime data and clones style objects', () => {
         const styleRules = [
             {
                 ruleId: 'rule-3',
@@ -80,7 +81,7 @@ describe('project style rule persistence', () => {
                 isActive: true,
             },
         ];
-        const project = buildProjectFile({
+        const project = buildWorkspaceProject({
             projectId: 'project-3',
             projectName: 'current',
             documents: [],
@@ -88,7 +89,7 @@ describe('project style rule persistence', () => {
             viewSettings,
         });
 
-        expect(project.version).toBe(2);
+        expect(project).not.toHaveProperty('version');
         expect(project).not.toHaveProperty('colorRules');
         expect(project.styleRules).not.toBe(styleRules);
         expect(project.styleRules[0].style).not.toBe(styleRules[0].style);
@@ -118,7 +119,7 @@ describe('project rule filter cloning', () => {
 
     it('isolates mutable filter values from the saved project', () => {
         const original = rule();
-        const project = buildProjectFile({
+        const project = buildWorkspaceProject({
             projectId: 'range-project',
             projectName: 'range',
             documents: [],
@@ -153,14 +154,14 @@ describe('project rule filter cloning', () => {
 
     it('restores time range dates after a project JSON round trip', () => {
         const original = rule();
-        const project = buildProjectFile({
+        const project = buildWorkspaceProject({
             projectId: 'range-project',
             projectName: 'range',
             documents: [],
             styleRules: [original],
             viewSettings,
         });
-        const restored = normalizeProjectFile(
+        const restored = normalizeLegacyProject(
             JSON.parse(JSON.stringify(project)),
         );
         expect(restored.styleRules[0].filter.timeStart).toEqual(

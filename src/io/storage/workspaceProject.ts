@@ -1,4 +1,5 @@
-import type { ProjectFile as WorkspaceProject } from '@/types/project';
+import { collectDocumentResourceIds } from '@/editor/resourceReferences';
+import type { WorkspaceProject } from '@/types/project';
 import type { ProjectFile } from '@/types/projectFile';
 import { generateId } from '@/utils/id';
 import { migrateProjectFileTo, restoreMessageFilter } from './projectFile';
@@ -6,7 +7,6 @@ import { migrateProjectFileTo, restoreMessageFilter } from './projectFile';
 // 文件中的 Blob 在资源仓库恢复，运行时消息仅持有附件引用。
 export function projectFileToWorkspace(file: ProjectFile): WorkspaceProject {
     return {
-        version: 2,
         projectId: file.projectId,
         projectName: file.projectName,
         time: file.time,
@@ -34,15 +34,8 @@ export function workspaceProjectToFile(
     workspace: WorkspaceProject,
 ): ProjectFile {
     const resources = { ...workspace.resources };
-    workspace.documents.forEach((doc) =>
-        doc.chunks.forEach((chunk) =>
-            chunk.messages.forEach((message) => {
-                message.images?.forEach((image) => {
-                    resources[image.resourceId] ??= { type: 'image' };
-                });
-            }),
-        ),
-    );
+    for (const id of collectDocumentResourceIds(workspace.documents))
+        resources[id] ??= { type: 'image' };
     return migrateProjectFileTo(
         JSON.parse(
             JSON.stringify(

@@ -4,7 +4,7 @@ import { setSSRHandler } from '@vueuse/core';
 import { useFileImport } from '@/composables/application/useImporter';
 import { useImportSettingsStore } from '@/stores/io/importSettingsStore';
 import { useLogStore } from '@/stores/project/logStore';
-import { buildProjectFile } from '@/io/storage/project';
+import { buildWorkspaceProject } from '@/io/storage/project';
 
 const storageKey = 'freecell-log-studio.import.stripOocParentheses';
 const log = [
@@ -144,7 +144,7 @@ describe('import preferences', () => {
             const settings = useImportSettingsStore();
             settings.stripOocParentheses = false;
             await useFileImport().importTextAndApply([entry]);
-            const project = buildProjectFile({
+            const project = buildWorkspaceProject({
                 projectId: 'project-1',
                 projectName: 'saved-project',
                 time: '2026-04-08T00:00:00.000Z',

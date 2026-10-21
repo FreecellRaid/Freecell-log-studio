@@ -68,11 +68,11 @@ import {
 } from '@lucide/vue';
 import { useResourceTasksStore } from '@/stores/io/resourceTasksStore';
 import { useLogStore } from '@/stores/project/logStore';
-import { documentResourceIds } from '@/io/storage/resourceCleanup';
+import { collectDocumentResourceIds } from '@/editor/resourceReferences';
 
 const tasks = useResourceTasksStore();
 const log = useLogStore();
-const resourceIds = computed(() => new Set(documentResourceIds(log.documents)));
+const resourceIds = computed(() => collectDocumentResourceIds(log.documents));
 const summary = computed(() => tasks.summarize(resourceIds.value));
 const label = computed(() => {
     const value = summary.value;
