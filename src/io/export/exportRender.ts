@@ -3,6 +3,12 @@ import type {
     ExportRow,
     ExportRowType,
     ExportStyle,
+    ExportResource,
+    ExportResourceContext,
+} from '@/types/export';
+import {
+    DEFAULT_IMAGE_PLACEHOLDER,
+    DEFAULT_IMAGE_TEMPLATE,
 } from '@/types/export';
 import { getPlaceholderValue, parseTemplate } from './templateParser';
 
@@ -18,6 +24,14 @@ export type RenderedExportSegment =
           style?: ExportStyle;
       }
     | {
+          type: 'image';
+          imageName: string;
+          resourceId: string;
+          resource?: ExportResource;
+          value: string;
+          style?: never;
+      }
+    | {
           type: 'newline';
       }
     | {
@@ -25,7 +39,7 @@ export type RenderedExportSegment =
       };
 
 export interface RenderedExportBlock {
-    type: Exclude<ExportRowType, 'image'>;
+    type: ExportRowType;
     segments: RenderedExportSegment[];
     trailingSegments: RenderedExportSegment[];
     plainText: string;
@@ -55,9 +69,10 @@ function resolvePlaceholderValue(
     row: ExportRow,
     key: string,
     format: ExportFormat,
+    resources?: ExportResourceContext,
 ): string {
-    if (row.type === 'message') {
-        return getPlaceholderValue(key, row, format);
+    if (row.type === 'message' || row.type === 'image') {
+        return getPlaceholderValue(key, row, format, resources);
     }
 
     if (key === 'name') {
@@ -89,10 +104,24 @@ function renderPlaceholderSegments(
     key: string,
     row: ExportRow,
     format: ExportFormat,
+    resources?: ExportResourceContext,
 ) {
-    const value = resolvePlaceholderValue(row, key, format);
+    if (key === 'image' && row.type === 'image') {
+        const resource = resources?.resources.get(row.image.resourceId);
+        segments.push({
+            type: 'image',
+            imageName: row.image.name,
+            resourceId: row.image.resourceId,
+            resource,
+            value: resource?.sourceUrl || DEFAULT_IMAGE_PLACEHOLDER,
+        });
+        return;
+    }
+    const value = resolvePlaceholderValue(row, key, format, resources);
     const style =
-        row.type === 'message' ? getMessageTokenStyle(key, row) : undefined;
+        row.type === 'message' || row.type === 'image'
+            ? getMessageTokenStyle(key, row)
+            : undefined;
 
     if (key === 'content') {
         if (value) {
@@ -108,12 +137,19 @@ function renderTemplateSegments(
     template: string,
     row: ExportRow,
     format: ExportFormat,
+    resources?: ExportResourceContext,
 ): RenderedExportSegment[] {
     const segments: RenderedExportSegment[] = [];
 
     for (const token of parseTemplate(template)) {
         if (token.type === 'placeholder') {
-            renderPlaceholderSegments(segments, token.value, row, format);
+            renderPlaceholderSegments(
+                segments,
+                token.value,
+                row,
+                format,
+                resources,
+            );
             continue;
         }
 
@@ -154,6 +190,7 @@ export function renderSegmentsToPlainText(
 export function renderExportDocument(
     rows: ExportRow[],
     format: ExportFormat,
+    resources?: ExportResourceContext,
 ): RenderedExportDocument {
     const blocks: RenderedExportBlock[] = [];
 
@@ -200,16 +237,26 @@ export function renderExportDocument(
             continue;
         }
 
-        if (row.type === 'message') {
-            const segments = renderTemplateSegments(
-                format.messageTemplate,
+        if (row.type === 'message' || row.type === 'image') {
+            let segments = renderTemplateSegments(
+                row.type === 'image'
+                    ? (format.imageTemplate ?? DEFAULT_IMAGE_TEMPLATE)
+                    : format.messageTemplate,
                 row,
                 format,
+                resources,
             );
+            if (
+                row.type === 'image' &&
+                !segments.some((segment) => segment.type === 'image') &&
+                !renderSegmentsToPlainText(segments).trim()
+            )
+                segments = [{ type: 'text', value: DEFAULT_IMAGE_PLACEHOLDER }];
             const trailingSegments = renderTemplateSegments(
                 format.messageSeparator,
                 row,
                 format,
+                resources,
             );
 
             blocks.push({

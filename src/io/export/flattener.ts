@@ -58,15 +58,26 @@ export function flattenLogToRows(
                 if (msg.isCommand && viewSettings.hideCommand) return;
                 const computed = computeStyleForMessage(msg, activeRules);
 
-                rows.push({
-                    type: 'message',
+                const context = {
                     playerName: msg.playerName,
                     account: Account,
                     time: Time,
-                    content: normalizeExportContentNewlines(msg.content),
                     nameStyle: mapCssToExportStyle(computed.nameStyle),
                     contentStyle: mapCssToExportStyle(computed.contentStyle),
-                });
+                };
+                // 纯图片消息不额外生成空正文行；空文本消息保留原有行为。
+                if (msg.content || !msg.images?.length)
+                    rows.push({
+                        ...context,
+                        type: 'message',
+                        content: normalizeExportContentNewlines(msg.content),
+                    });
+                for (const image of msg.images ?? [])
+                    rows.push({
+                        ...context,
+                        type: 'image',
+                        image: { ...image },
+                    });
             });
         });
     });

@@ -274,6 +274,24 @@
                             "
                         ></textarea>
                     </div>
+                    <div class="form-group">
+                        <label>图片消息模板</label>
+                        <textarea
+                            class="form-control"
+                            :value="getFormatDraftValue(fmt, 'imageTemplate')"
+                            aria-label="图片消息模板"
+                            rows="3"
+                            @input="
+                                updateFormatDraft(fmt, 'imageTemplate', $event)
+                            "
+                            v-click-outside="
+                                () => commitFormatDraft(fmt, 'imageTemplate')
+                            "
+                            @keydown.enter.exact.prevent="
+                                commitFormatDraft(fmt, 'imageTemplate')
+                            "
+                        ></textarea>
+                    </div>
                 </div>
             </div>
         </div>
@@ -302,6 +320,7 @@ type FormatDraftField = Extract<
     | 'playerNameFormat'
     | 'accountFormat'
     | 'messageTemplate'
+    | 'imageTemplate'
 >;
 const formatDrafts = useDraftValues<FormatDraftField>();
 const previewedFormatIds = computed(() => {

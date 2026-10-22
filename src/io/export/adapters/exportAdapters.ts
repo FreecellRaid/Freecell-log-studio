@@ -28,8 +28,12 @@ function renderSegmentsToText(segments: RenderedExportSegment[]): string {
         .join('');
 }
 
-export function textAdapter(rows: ExportRow[], format: ExportFormat): string {
-    const rendered = renderExportDocument(rows, format);
+export function textAdapter(
+    rows: ExportRow[],
+    format: ExportFormat,
+    options: ExportAdapterOptions = {},
+): string {
+    const rendered = renderExportDocument(rows, format, options.resources);
 
     return rendered.blocks
         .map(
@@ -108,7 +112,7 @@ function renderHtmlBody(
     format: ExportFormat,
     options: ExportAdapterOptions = {},
 ): string {
-    const rendered = renderExportDocument(rows, format);
+    const rendered = renderExportDocument(rows, format, options.resources);
 
     return rendered.blocks
         .map((block) => {

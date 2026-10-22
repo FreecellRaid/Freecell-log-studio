@@ -1,6 +1,7 @@
 import { useLogStore } from '@/stores/project/logStore';
 import { useStyleStore } from '@/stores/project/styleStore';
 import { useExportStore } from '@/stores/io/exportStore';
+import { prepareExportResources } from '@/io/export/exportResources';
 import { flattenLogToRows } from '@/io/export/flattener';
 import { sanitizeProjectFilename } from '@/io/storage/project';
 import {
@@ -37,11 +38,14 @@ export function useExport() {
         mimeType: string,
     ) {
         const rows = buildRows();
-        const content = await adapter(rows, format, {
-            enableMarkdown: styleStore.viewSettings.enableMarkdown,
-        });
-
+        const snapshotFormat = { ...format };
+        const enableMarkdown = styleStore.viewSettings.enableMarkdown;
         const rawFileName = logStore.projectName || 'export_log';
+        const resources = await prepareExportResources(rows);
+        const content = await adapter(rows, snapshotFormat, {
+            enableMarkdown,
+            resources,
+        });
         const finalFileName = `${sanitizeProjectFilename(rawFileName)}${fileExtension}`;
 
         downloadFile(content, finalFileName, mimeType);
@@ -49,15 +53,17 @@ export function useExport() {
 
     // ===== 对外接口 =====
 
-    function buildClipboardContent(
+    async function buildClipboardContent(
         format: ExportFormat = exportStore.activeFormat,
-    ): { text: string; html: string } {
+    ): Promise<{ text: string; html: string }> {
         const rows = buildRows();
+        const snapshotFormat = { ...format };
+        const enableMarkdown = styleStore.viewSettings.enableMarkdown;
+        const resources = await prepareExportResources(rows);
+        const options = { enableMarkdown, resources };
         return {
-            text: textAdapter(rows, format),
-            html: htmlAdapter(rows, format, {
-                enableMarkdown: styleStore.viewSettings.enableMarkdown,
-            }),
+            text: textAdapter(rows, snapshotFormat, options),
+            html: htmlAdapter(rows, snapshotFormat, options),
         };
     }
 
@@ -75,7 +81,7 @@ export function useExport() {
     const copyExportToClipboard = async (
         format: ExportFormat = exportStore.activeFormat,
     ) => {
-        const content = buildClipboardContent(format);
+        const content = await buildClipboardContent(format);
         await writeExportToClipboard(content);
     };
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ExportFormat, ExportRow } from '@/types/export';
+import type { ExportFormat, ExportRow, ExportMessageRow } from '@/types/export';
 import { htmlAdapter, textAdapter } from '@/io/export/adapters/exportAdapters';
 import { getPlaceholderValue } from '@/io/export/templateParser';
 
@@ -10,13 +10,14 @@ const format: ExportFormat = {
     playerNameFormat: '{{name}}',
     accountFormat: '{{account}}',
     timeFormat: '{{time}}',
+    imageTemplate: '{{image}}',
     messageTemplate: '{{name}}: {{content}}',
     messageSeparator: '\n',
     docSeparator: '',
     chunkSeparator: '',
 };
 
-const rows: ExportRow[] = [
+const rows: ExportMessageRow[] = [
     {
         type: 'message',
         playerName: 'Alice',

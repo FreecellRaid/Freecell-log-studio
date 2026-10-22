@@ -296,7 +296,7 @@ export function createResourceRepository(
             }),
         exportProject: (file: ProjectFile) =>
             withResourceOperation(() => exportProject(file)),
-        // 列表只保留元数据和副本标志，缩略图由可见行按需读取。
+        // 列表只保留元数据和副本标志，缩略图由可见行按需读取
         observeSummaries: (ids: string[]) =>
             liveQuery(async () => {
                 const records = await database.resources.bulkGet(ids);
@@ -310,6 +310,9 @@ export function createResourceRepository(
                         : undefined,
                 );
             }),
+        // 导出预览使用原图，独立于面板的轻量摘要订阅
+        observeExportResources: (ids: string[]) =>
+            liveQuery(() => database.resources.bulkGet(ids)),
         observe: (id: string) => liveQuery(() => database.resources.get(id)),
     };
 }

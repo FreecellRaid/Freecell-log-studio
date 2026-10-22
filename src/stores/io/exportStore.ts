@@ -1,5 +1,9 @@
 import { defineStore } from 'pinia';
-import type { ExportFormat } from '@/types/export';
+import {
+    DEFAULT_IMAGE_TEMPLATE,
+    normalizeExportFormat,
+    type ExportFormat,
+} from '@/types/export';
 import { generateId } from '@/utils/id';
 
 export const EXPORT_PRESET_IDS = [
@@ -23,6 +27,20 @@ export const PRESETS: ExportFormat[] = [
         timeFormat: '{{time}}',
         docSeparator: '=== {{name}} ===\n',
         chunkSeparator: '\n',
+        imageTemplate: '{{time}}{{name}} [图片：{{imageName}}]',
+        messageTemplate: '{{time}}{{name}} {{content}}',
+        messageSeparator: '\n',
+    },
+    {
+        formatId: 'classicTrpgLogWithImage',
+        formatName: '经典染色器格式(含图片)',
+        fileExtension: '.docx',
+        playerNameFormat: '<{{name}}>:',
+        accountFormat: '',
+        timeFormat: '{{time}}',
+        docSeparator: '=== {{name}} ===\n',
+        chunkSeparator: '\n',
+        imageTemplate: '{{time}}{{name}} {{image}}',
         messageTemplate: '{{time}}{{name}} {{content}}',
         messageSeparator: '\n',
     },
@@ -35,19 +53,8 @@ export const PRESETS: ExportFormat[] = [
         timeFormat: '',
         docSeparator: '=== {{name}} ===\n',
         chunkSeparator: '--- {{name}} ---\n',
-        messageTemplate: '{{name}} \t {{content}}',
-        messageSeparator: '\n',
-    },
-    {
-        formatId: 'echoWorkshop',
-        formatName: '回声工坊格式',
-        fileExtension: '.txt',
-        playerNameFormat: '[{{name}}]',
-        accountFormat: '',
-        timeFormat: '',
-        docSeparator: '--- {{name}} ---',
-        chunkSeparator: '',
-        messageTemplate: '{{name}}:{{content}}',
+        imageTemplate: '{{name}}\t[图片：{{imageName}}]',
+        messageTemplate: '{{name}}\t{{content}}',
         messageSeparator: '\n',
     },
     {
@@ -59,6 +66,7 @@ export const PRESETS: ExportFormat[] = [
         timeFormat: '{{time}}',
         docSeparator: '\n',
         chunkSeparator: '',
+        imageTemplate: '{{name}}{{account}} {{time}}\n[图片：{{imageName}}]',
         messageTemplate: '{{name}}{{account}} {{time}}\n{{content}}',
         messageSeparator: '\n\n',
     },
@@ -71,6 +79,7 @@ export const PRESETS: ExportFormat[] = [
         timeFormat: '*{{time}}*',
         docSeparator: '# {{name}}\n',
         chunkSeparator: '## {{name}}\n',
+        imageTemplate: '![{{imageName}}]({{imageUrl}})\n',
         messageTemplate: '{{name}} {{account}} {{time}}\n\n> {{content}}',
         messageSeparator: '\n---\n',
     },
@@ -83,6 +92,7 @@ export const PRESETS: ExportFormat[] = [
         timeFormat: '*{{time}}*',
         docSeparator: '# {{name}}\n',
         chunkSeparator: '## {{name}}\n',
+        imageTemplate: '![{{imageName}}]({{imageUrl}})\n',
         messageTemplate: '{{name}} {{account}} {{time}}\n\n> {{content}}',
         messageSeparator: '\n---\n',
     },
@@ -95,9 +105,23 @@ export const PRESETS: ExportFormat[] = [
         timeFormat: '{{time}}',
         docSeparator: '[b]{{name}}[/b]\n',
         chunkSeparator: '[b]{{name}}[/b]\n',
+        imageTemplate: '[img]{{imageUrl}}[/img]',
         messageTemplate:
             '[color=silver]{{time}}[/color]{{name}}\n[color={{contentColor}}]{{content}}[/color]',
         messageSeparator: '\n\n',
+    },
+    {
+        formatId: 'echoWorkshop',
+        formatName: '回声工坊格式',
+        fileExtension: '.txt',
+        playerNameFormat: '[{{name}}]',
+        accountFormat: '',
+        timeFormat: '',
+        docSeparator: '--- {{name}} ---',
+        chunkSeparator: '',
+        imageTemplate: '{{name}}:[图片：{{imageName}}]',
+        messageTemplate: '{{name}}:{{content}}',
+        messageSeparator: '\n',
     },
     {
         formatId: 'magic',
@@ -108,6 +132,7 @@ export const PRESETS: ExportFormat[] = [
         timeFormat: 't_{{time}}',
         docSeparator: '// === MODULE: {{name}} ===\n',
         chunkSeparator: '/** @scene {{name}} */\n',
+        imageTemplate: 'let {{imageName}} = "{{imageUrl}}"',
         messageTemplate:
             'const {{time}} = ({{account}}: {{name}}) => {\n  return `{{content}}`;\n};',
         messageSeparator: '\n',
@@ -122,7 +147,7 @@ export const useExportStore = defineStore('export', {
             ? JSON.parse(storedFormats)
             : PRESETS.map((preset) => ({ ...preset }));
 
-        // 补齐新预设，同时保留用户对已有模板的编辑。
+        // 保留已有编辑，只同步更新有关图片的新配置
         for (const preset of PRESETS) {
             if (
                 !formats.some((format) => format.formatId === preset.formatId)
@@ -132,7 +157,7 @@ export const useExportStore = defineStore('export', {
         }
 
         return {
-            formats,
+            formats: formats.map(normalizeExportFormat),
             activeFormatId: storedActiveId || 'standard',
         };
     },
@@ -160,6 +185,7 @@ export const useExportStore = defineStore('export', {
                 timeFormat: '{{time}}',
                 docSeparator: '',
                 chunkSeparator: '',
+                imageTemplate: DEFAULT_IMAGE_TEMPLATE,
                 messageTemplate: '{{name}}: {{content}}',
                 messageSeparator: '\n',
             };
@@ -177,9 +203,9 @@ export const useExportStore = defineStore('export', {
                 (f: ExportFormat) => f.formatId === format.formatId,
             );
             if (index > -1) {
-                this.formats[index] = { ...format };
+                this.formats[index] = normalizeExportFormat(format);
             } else {
-                this.formats.push({ ...format });
+                this.formats.push(normalizeExportFormat(format));
             }
             this.saveToLocal();
         },

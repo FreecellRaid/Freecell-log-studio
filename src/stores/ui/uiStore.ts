@@ -42,7 +42,7 @@ function uiStore() {
     const legacyUiSettings = readLegacyUiSettings();
     const leftPanelWidth = useLocalStorage(
         'freecell-log-studio.ui.leftPanelWidth',
-        232,
+        280,
     );
     const rightPanelWidth = useLocalStorage(
         'freecell-log-studio.ui.rightPanelWidth',

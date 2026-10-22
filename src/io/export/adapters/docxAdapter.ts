@@ -265,7 +265,7 @@ export async function docxAdapter(
     format: ExportFormat,
     options: ExportAdapterOptions = {},
 ): Promise<Blob> {
-    const rendered = renderExportDocument(rows, format);
+    const rendered = renderExportDocument(rows, format, options.resources);
     const paragraphs = rendered.blocks.flatMap((block) =>
         createParagraphsForBlock(
             [...block.segments, ...block.trailingSegments],

@@ -1,4 +1,8 @@
-import type { ExportRow, ExportFormat } from '@/types/export';
+import type {
+    ExportRow,
+    ExportFormat,
+    ExportResourceContext,
+} from '@/types/export';
 
 type TokenType = 'text' | 'placeholder' | 'newline' | 'tab';
 
@@ -41,6 +45,7 @@ export function getPlaceholderValue(
     key: string,
     row: ExportRow,
     format: ExportFormat,
+    resources?: ExportResourceContext,
 ): string {
     switch (key) {
         case 'name':
@@ -66,7 +71,14 @@ export function getPlaceholderValue(
                 ? renderFieldFormat(format.timeFormat, 'time', row.time, row)
                 : '';
         case 'content':
-            return row.content || '';
+            return row.type === 'image' ? '' : row.content || '';
+        case 'imageName':
+            return row.type === 'image' ? row.image.name : '';
+        case 'imageUrl':
+            return row.type === 'image'
+                ? resources?.resources.get(row.image.resourceId)?.sourceUrl ||
+                      ''
+                : '';
         case 'nameColor':
             return row.nameStyle?.color ?? '';
         case 'contentColor':

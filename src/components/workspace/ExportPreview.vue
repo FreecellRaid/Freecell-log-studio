@@ -44,6 +44,13 @@
             v-if="activeFormat"
             class="message-list-container export-preview-content"
         >
+            <p
+                v-if="reading || readError"
+                class="preview-resource-status"
+                role="status"
+            >
+                {{ readError || '正在读取图片资源…' }}
+            </p>
             <div v-if="rowsWithId.length === 0" class="view-empty-hint">
                 当前没有可导出的内容。
             </div>
@@ -62,6 +69,9 @@
                             :size-dependencies="[
                                 row.plainText,
                                 row.trailingPlainText,
+                                row.segments,
+                                imageRevisions[row.rowId] || 0,
+                                activeFormat.imageTemplate,
                                 activeFormat.messageTemplate,
                                 activeFormat.messageSeparator,
                                 activeFormat.docSeparator,
@@ -69,109 +79,24 @@
                             ]"
                             :data-index="index"
                         >
-                            <div class="preview-row">
-                                <div
-                                    v-if="row.type !== 'message'"
-                                    class="separator-preview"
-                                >
-                                    <span
-                                        v-for="(segment, tIdx) in row.segments"
-                                        :key="'block-' + tIdx"
-                                    >
-                                        <template
-                                            v-if="
-                                                segment.type === 'text' ||
-                                                segment.type === 'content'
-                                            "
-                                        >
-                                            <span
-                                                :style="
-                                                    getSegmentStyle(segment)
-                                                "
-                                            >
-                                                {{ segment.value }}
-                                            </span>
-                                        </template>
-                                        <br
-                                            v-else-if="
-                                                segment.type === 'newline'
-                                            "
-                                        />
-                                        <span
-                                            v-else-if="segment.type === 'tab'"
-                                            class="tab-space"
-                                        ></span>
-                                    </span>
-                                </div>
-
-                                <div v-else class="message-preview">
-                                    <template
-                                        v-for="(segment, tIdx) in row.segments"
-                                        :key="'msg-' + tIdx"
-                                    >
-                                        <MarkdownContent
-                                            v-if="segment.type === 'content'"
-                                            :content="segment.value"
-                                            :enabled="enableMarkdown"
-                                            :style="getSegmentStyle(segment)"
-                                        />
-                                        <template
-                                            v-else-if="segment.type === 'text'"
-                                        >
-                                            <span
-                                                :style="
-                                                    getSegmentStyle(segment)
-                                                "
-                                            >
-                                                {{ segment.value }}
-                                            </span>
-                                        </template>
-                                        <br
-                                            v-else-if="
-                                                segment.type === 'newline'
-                                            "
-                                        />
-                                        <span
-                                            v-else-if="segment.type === 'tab'"
-                                            class="tab-space"
-                                        ></span>
-                                    </template>
-
-                                    <span class="message-separator">
-                                        <span
-                                            v-for="(
-                                                segment, tIdx
-                                            ) in row.trailingSegments"
-                                            :key="'sep-' + tIdx"
-                                        >
-                                            <template
-                                                v-if="
-                                                    segment.type === 'text' ||
-                                                    segment.type === 'content'
-                                                "
-                                            >
-                                                <span
-                                                    :style="
-                                                        getSegmentStyle(segment)
-                                                    "
-                                                >
-                                                    {{ segment.value }}
-                                                </span>
-                                            </template>
-                                            <br
-                                                v-else-if="
-                                                    segment.type === 'newline'
-                                                "
-                                            />
-                                            <span
-                                                v-else-if="
-                                                    segment.type === 'tab'
-                                                "
-                                                class="tab-space"
-                                            ></span>
-                                        </span>
-                                    </span>
-                                </div>
+                            <div
+                                class="preview-row"
+                                :class="{
+                                    'separator-preview':
+                                        row.type === 'documentSeparator' ||
+                                        row.type === 'chunkSeparator',
+                                }"
+                            >
+                                <ExportPreviewSegments
+                                    :segments="row.segments"
+                                    :enable-markdown="enableMarkdown"
+                                    @resize="notifyImageResize(row.rowId)"
+                                />
+                                <ExportPreviewSegments
+                                    :segments="row.trailingSegments"
+                                    :enable-markdown="enableMarkdown"
+                                    @resize="notifyImageResize(row.rowId)"
+                                />
                             </div>
                         </DynamicScrollerItem>
                     </template>
@@ -183,13 +108,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, toValue, type MaybeRefOrGetter } from 'vue';
+import { computed, reactive, watch, toValue, type MaybeRefOrGetter } from 'vue';
 import { useResponsiveMode } from '@/composables/ui/useResponsiveMode';
 import { Eye, X, SquareSplitHorizontal } from '@lucide/vue';
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
-import MarkdownContent from '@/components/common/MarkdownContent.vue';
-import type { RenderedExportSegment } from '@/io/export/exportRender';
+import ExportPreviewSegments from './ExportPreviewSegments.vue';
+import { useExportResources } from '@/composables/resources/useExportResources';
 import { renderExportDocument } from '@/io/export/exportRender';
 import { flattenLogToRows } from '@/io/export/flattener';
 import { useExportStore } from '@/stores/io/exportStore';
@@ -208,9 +133,8 @@ const { isMobile } = useResponsiveMode();
 
 const effectiveWindowId = computed(() => props.windowId);
 const isActive = computed(() => windowStore.activeFocus === props.windowId);
-const { activeFormat, rowsWithId, enableMarkdown } = useExportPreview(
-    () => props.originalId,
-);
+const { activeFormat, rowsWithId, enableMarkdown, reading, readError } =
+    useExportPreview(() => props.originalId);
 
 function handleFocus() {
     // 移动端的可见视图是平台投影，点击时不改变桌面 pane 的选择。
@@ -224,22 +148,17 @@ function handleSplit() {
 function handleClose() {
     windowStore.unregisterWindow(effectiveWindowId.value);
 }
-function getSegmentStyle(
-    segment: RenderedExportSegment,
-): Record<string, string> {
-    if (
-        (segment.type !== 'text' && segment.type !== 'content') ||
-        !segment.style
-    )
-        return {};
-
-    const css: Record<string, string> = {};
-    if (segment.style.color) css.color = segment.style.color;
-    if (segment.style.bold) css.fontWeight = 'bold';
-    if (segment.style.italic) css.fontStyle = 'italic';
-
-    return css;
+const imageRevisions = reactive<Record<string, number>>({});
+function notifyImageResize(rowId: string) {
+    imageRevisions[rowId] = (imageRevisions[rowId] || 0) + 1;
 }
+watch(
+    () => props.originalId,
+    () => {
+        for (const key of Object.keys(imageRevisions))
+            delete imageRevisions[key];
+    },
+);
 
 function useExportPreview(formatId: MaybeRefOrGetter<string>) {
     const exportStore = useExportStore();
@@ -249,24 +168,32 @@ function useExportPreview(formatId: MaybeRefOrGetter<string>) {
     const activeFormat = computed(() =>
         exportStore.formatById(toValue(formatId)),
     );
-    const rowsWithId = computed(() => {
-        if (!activeFormat.value) return [];
-        const rows = flattenLogToRows(
-            logStore.documents,
-            styleStore.viewSettings,
-            styleStore.activeRules,
-        );
-        return renderExportDocument(rows, activeFormat.value).blocks.map(
-            (block, index) => ({
-                ...block,
-                rowId: `${block.type}-${index}`,
-            }),
-        );
-    });
+    const rows = computed(() =>
+        activeFormat.value
+            ? flattenLogToRows(
+                  logStore.documents,
+                  styleStore.viewSettings,
+                  styleStore.activeRules,
+              )
+            : [],
+    );
+    const { context, reading, readError } = useExportResources(rows);
+    const rowsWithId = computed(() =>
+        activeFormat.value
+            ? renderExportDocument(
+                  rows.value,
+                  activeFormat.value,
+                  context.value,
+              ).blocks.map((block, index) => ({
+                  ...block,
+                  rowId: `${block.type}-${index}`,
+              }))
+            : [],
+    );
     const enableMarkdown = computed(
         () => styleStore.viewSettings.enableMarkdown,
     );
-    return { activeFormat, rowsWithId, enableMarkdown };
+    return { activeFormat, rowsWithId, enableMarkdown, reading, readError };
 }
 </script>
 
@@ -313,6 +240,15 @@ function useExportPreview(formatId: MaybeRefOrGetter<string>) {
 
 .preview-row {
     padding: 0 20px;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-wrap: anywhere;
+}
+.preview-resource-status {
+    padding: 0 20px;
+    color: var(--text-muted);
+    font-size: 12px;
 }
 
 .tab-space {
