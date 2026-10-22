@@ -182,6 +182,18 @@
                     "description": "样式规则叠加后的内容颜色；未设置颜色时为空字符串"
                 },
                 {
+                    "term": "{{imageName}}",
+                    "description": "图片附件名称"
+                },
+                {
+                    "term": "{{imageUrl}}",
+                    "description": "图片附件链接"
+                },
+                {
+                    "term": "{{image}}",
+                    "description": "图片附件本身"
+                },
+                {
                     "term": "\\t",
                     "description": "制表符"
                 },
