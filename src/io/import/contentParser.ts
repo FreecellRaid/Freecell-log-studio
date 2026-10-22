@@ -25,6 +25,11 @@ export function parseContent(
         text: string,
         decodeText: (text: string) => string = decodeCq,
     ): string {
+        // QQ 图片表情会在 CQ 图片前附加 faceType 元信息
+        text = text.replace(
+            /<faceType=\d+(?:,[^<>\r\n]*)?>(?=\[CQ:image(?:,[^\]\r\n]*)?\])/g,
+            '',
+        );
         let cursor = 0;
         const output: string[] = [];
         for (const match of text.matchAll(
