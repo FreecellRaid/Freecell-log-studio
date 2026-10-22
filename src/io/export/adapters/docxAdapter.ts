@@ -1,4 +1,14 @@
-import { AlignmentType, Document, Packer, Paragraph, Tab, TextRun } from 'docx';
+import { imageFallback, type ImageExportSegment } from './imageSources';
+import { prepareDocxImage, type DocxImageData } from './docxImages';
+import {
+    AlignmentType,
+    Document,
+    Packer,
+    Paragraph,
+    Tab,
+    TextRun,
+    ImageRun,
+} from 'docx';
 import type {
     ExportAdapterOptions,
     ExportFormat,
@@ -32,59 +42,14 @@ function createEmptyParagraph() {
     return new Paragraph({ alignment: AlignmentType.LEFT });
 }
 
-function createParagraphFromSegments(
+type DocxRun = TextRun | ImageRun;
+type ImageRunResolver = (segment: ImageExportSegment) => Promise<DocxRun>;
+async function createParagraphFromSegments(
     segments: RenderedExportSegment[],
-): Paragraph {
-    if (segments.length === 0) {
-        return createEmptyParagraph();
-    }
-
-    const runs: TextRun[] = [];
-    let pendingBreaks = 0;
-
-    const pushRun = (run: TextRun) => {
-        if (pendingBreaks > 0) {
-            runs.push(new TextRun({ break: pendingBreaks }));
-            pendingBreaks = 0;
-        }
-
-        runs.push(run);
-    };
-
-    for (const segment of segments) {
-        if (segment.type === 'newline') {
-            pendingBreaks += 1;
-            continue;
-        }
-
-        if (segment.type === 'tab') {
-            pushRun(new TextRun({ children: [new Tab()] }));
-            continue;
-        }
-
-        if (!segment.value) {
-            continue;
-        }
-
-        const lines = segment.value.split('\n');
-        lines.forEach((line, index) => {
-            if (index > 0) pendingBreaks += 1;
-            if (line) {
-                pushRun(
-                    new TextRun({
-                        text: line,
-                        ...applyStyle(segment.style),
-                    }),
-                );
-            }
-        });
-    }
-
-    if (pendingBreaks > 0) {
-        runs.push(new TextRun({ break: pendingBreaks }));
-    }
-
-    return runs.length > 0
+    resolveImage: ImageRunResolver,
+): Promise<Paragraph> {
+    const runs = await createRunsFromSegments(segments, resolveImage);
+    return runs.length
         ? new Paragraph({ children: runs, alignment: AlignmentType.LEFT })
         : createEmptyParagraph();
 }
@@ -206,32 +171,39 @@ function markdownToRuns(content: string, baseStyle?: ExportStyle): TextRun[] {
     );
 }
 
-function createParagraphsForBlock(
+async function createParagraphsForBlock(
     segments: RenderedExportSegment[],
     options: ExportAdapterOptions,
-): Paragraph[] {
+    resolveImage: ImageRunResolver,
+): Promise<Paragraph[]> {
     if (!options.enableMarkdown) {
-        return [createParagraphFromSegments(segments)];
+        return [await createParagraphFromSegments(segments, resolveImage)];
     }
 
     const contentIndex = segments.findIndex(
         (segment) => segment.type === 'content',
     );
     if (contentIndex < 0) {
-        return [createParagraphFromSegments(segments)];
+        return [await createParagraphFromSegments(segments, resolveImage)];
     }
 
     const contentSegment = segments[contentIndex];
     if (contentSegment.type !== 'content') {
-        return [createParagraphFromSegments(segments)];
+        return [await createParagraphFromSegments(segments, resolveImage)];
     }
 
     const markdownRuns = markdownToRuns(
         contentSegment.value,
         contentSegment.style,
     );
-    const prefix = createRunsFromSegments(segments.slice(0, contentIndex));
-    const suffix = createRunsFromSegments(segments.slice(contentIndex + 1));
+    const prefix = await createRunsFromSegments(
+        segments.slice(0, contentIndex),
+        resolveImage,
+    );
+    const suffix = await createRunsFromSegments(
+        segments.slice(contentIndex + 1),
+        resolveImage,
+    );
 
     return [
         new Paragraph({
@@ -241,22 +213,38 @@ function createParagraphsForBlock(
     ];
 }
 
-function createRunsFromSegments(segments: RenderedExportSegment[]): TextRun[] {
-    const runs: TextRun[] = [];
+async function createRunsFromSegments(
+    segments: RenderedExportSegment[],
+    resolveImage: ImageRunResolver,
+): Promise<DocxRun[]> {
+    const runs: DocxRun[] = [];
+    let pendingBreaks = 0;
+    const push = (run: DocxRun) => {
+        if (pendingBreaks) {
+            runs.push(new TextRun({ break: pendingBreaks }));
+            pendingBreaks = 0;
+        }
+        runs.push(run);
+    };
     for (const segment of segments) {
-        if (segment.type === 'newline') {
-            runs.push(new TextRun({ break: 1 }));
-        } else if (segment.type === 'tab') {
-            runs.push(new TextRun({ children: [new Tab()] }));
-        } else if (segment.value) {
-            runs.push(
-                new TextRun({
-                    text: segment.value,
-                    ...applyStyle(segment.style),
-                }),
-            );
+        if (segment.type === 'newline') pendingBreaks++;
+        else if (segment.type === 'tab')
+            push(new TextRun({ children: [new Tab()] }));
+        else if (segment.type === 'image') push(await resolveImage(segment));
+        else if (segment.value) {
+            segment.value.split('\n').forEach((line, index) => {
+                if (index) pendingBreaks++;
+                if (line)
+                    push(
+                        new TextRun({
+                            text: line,
+                            ...applyStyle(segment.style),
+                        }),
+                    );
+            });
         }
     }
+    if (pendingBreaks) runs.push(new TextRun({ break: pendingBreaks }));
     return runs;
 }
 
@@ -266,12 +254,37 @@ export async function docxAdapter(
     options: ExportAdapterOptions = {},
 ): Promise<Blob> {
     const rendered = renderExportDocument(rows, format, options.resources);
-    const paragraphs = rendered.blocks.flatMap((block) =>
-        createParagraphsForBlock(
-            [...block.segments, ...block.trailingSegments],
-            options,
-        ),
-    );
+    const images = new Map<string, Promise<DocxImageData | undefined>>();
+    const resolveImage: ImageRunResolver = async (segment) => {
+        if (!images.has(segment.resourceId))
+            images.set(
+                segment.resourceId,
+                segment.resource?.blob
+                    ? prepareDocxImage(segment.resource).catch(() => undefined)
+                    : Promise.resolve(undefined),
+            );
+        const image = await images.get(segment.resourceId);
+        if (image)
+            return new ImageRun({
+                type: image.type,
+                data: image.data,
+                transformation: { width: image.width, height: image.height },
+                altText: {
+                    name: segment.imageName || '图片',
+                    description: segment.imageName,
+                },
+            });
+        return new TextRun({ text: imageFallback(segment) });
+    };
+    const paragraphs: Paragraph[] = [];
+    for (const block of rendered.blocks)
+        paragraphs.push(
+            ...(await createParagraphsForBlock(
+                [...block.segments, ...block.trailingSegments],
+                options,
+                resolveImage,
+            )),
+        );
 
     const doc = new Document({ sections: [{ children: paragraphs }] });
     return await Packer.toBlob(doc);

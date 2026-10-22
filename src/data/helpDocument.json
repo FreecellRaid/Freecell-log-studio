@@ -48,7 +48,7 @@
                 },
                 {
                     "term": "文本清洗",
-                    "description": "普通文本适配器删除 CQ 码和部分 HTML 标签；图片、语音和引用没有专门的展示"
+                    "description": "提取 CQ 图片和 HTML img，其他 CQ 码暂时删除，HTML 保留可见纯文本；图片显示在正文之后"
                 },
                 {
                     "term": "工程导入",
@@ -218,7 +218,7 @@
                 },
                 {
                     "term": "Markdown 限制",
-                    "description": "DOCX 的列表、引用和表格转为文本布局，不嵌入 Markdown 图片或生成可点击超链接；TEXT 不包含染色和富文本样式"
+                    "description": "图片附件可单独导出：HTML/DOC 内嵌本地副本，DOCX 内嵌并缩小大图，WebP 转为 PNG；TEXT 输出 Data URI。"
                 }
             ]
         },

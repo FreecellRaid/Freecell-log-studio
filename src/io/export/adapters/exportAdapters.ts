@@ -4,6 +4,11 @@ import type {
     ExportRow,
     ExportStyle,
 } from '@/types/export';
+import {
+    createImageSourceResolver,
+    type ImageExportSegment,
+} from './imageSources';
+import { DEFAULT_IMAGE_PLACEHOLDER } from '@/types/export';
 import { renderMarkdownToHtml } from '@/editor/markdown';
 import {
     renderExportDocument,
@@ -12,36 +17,48 @@ import {
 
 // ===== TEXT ADAPTER =====
 
-function renderSegmentsToText(segments: RenderedExportSegment[]): string {
-    return segments
-        .map((segment) => {
-            if (segment.type === 'newline') {
-                return '\n';
-            }
+type ImageSourceResolver = ReturnType<typeof createImageSourceResolver>;
+async function renderSegmentsToText(
+    segments: RenderedExportSegment[],
+    resolveImage: ImageSourceResolver,
+): Promise<string> {
+    return (
+        await Promise.all(
+            segments.map(async (segment) => {
+                if (segment.type === 'image') return resolveImage(segment);
+                if (segment.type === 'newline') {
+                    return '\n';
+                }
 
-            if (segment.type === 'tab') {
-                return '\t';
-            }
+                if (segment.type === 'tab') {
+                    return '\t';
+                }
 
-            return segment.value;
-        })
-        .join('');
+                return segment.value;
+            }),
+        )
+    ).join('');
 }
 
-export function textAdapter(
+export async function textAdapter(
     rows: ExportRow[],
     format: ExportFormat,
     options: ExportAdapterOptions = {},
-): string {
+): Promise<string> {
     const rendered = renderExportDocument(rows, format, options.resources);
 
-    return rendered.blocks
-        .map(
-            (block) =>
-                renderSegmentsToText(block.segments) +
-                renderSegmentsToText(block.trailingSegments),
-        )
-        .join('');
+    const resolveImage = createImageSourceResolver(options.resources);
+    const blocks = await Promise.all(
+        rendered.blocks.map(
+            async (block) =>
+                (await renderSegmentsToText(block.segments, resolveImage)) +
+                (await renderSegmentsToText(
+                    block.trailingSegments,
+                    resolveImage,
+                )),
+        ),
+    );
+    return blocks.join('');
 }
 
 // ===== HTML ADAPTER =====
@@ -79,69 +96,100 @@ function renderSegmentsToHtml(segments: RenderedExportSegment[]): string {
             const css = styleToCss(segment.style);
 
             return css
-                ? `<span style="${css}">${escapedValue}</span>`
+                ? `<span style="${escapeHtml(css)}">${escapedValue}</span>`
                 : escapedValue;
         })
         .join('');
 }
 
-function renderSegmentsToHtmlWithOptions(
+async function renderSegmentsToHtmlWithOptions(
     segments: RenderedExportSegment[],
     options: ExportAdapterOptions,
-): string {
-    return segments
-        .map((segment) => {
-            if (segment.type !== 'content' || !options.enableMarkdown) {
-                return renderSegmentsToHtml([segment]);
-            }
+    resolveImage: ImageSourceResolver,
+): Promise<string> {
+    return (
+        await Promise.all(
+            segments.map(async (segment) => {
+                if (segment.type === 'image')
+                    return renderImageToHtml(segment, resolveImage);
+                if (segment.type !== 'content' || !options.enableMarkdown) {
+                    return renderSegmentsToHtml([segment]);
+                }
 
-            const css = styleToCss(segment.style);
-            const styleAttribute = css ? ` style="${css}"` : '';
-            const html = renderMarkdownToHtml(segment.value).trimEnd();
-            const inlineMatch = html.match(/^<p>([\s\S]*)<\/p>$/);
-            if (inlineMatch) {
-                return `<span class="markdown-content"${styleAttribute}>${inlineMatch[1]}</span>`;
-            }
-            return `<div class="markdown-content"${styleAttribute}>${html}</div>`;
-        })
-        .join('');
+                const css = styleToCss(segment.style);
+                const styleAttribute = css ? ` style="${escapeHtml(css)}"` : '';
+                const html = renderMarkdownToHtml(segment.value).trimEnd();
+                const inlineMatch = html.match(/^<p>([\s\S]*)<\/p>$/);
+                if (inlineMatch) {
+                    return `<span class="markdown-content"${styleAttribute}>${inlineMatch[1]}</span>`;
+                }
+                return `<div class="markdown-content"${styleAttribute}>${html}</div>`;
+            }),
+        )
+    ).join('');
 }
 
-function renderHtmlBody(
+async function renderImageToHtml(
+    segment: ImageExportSegment,
+    resolveImage: ImageSourceResolver,
+): Promise<string> {
+    const source = await resolveImage(segment);
+    if (source === DEFAULT_IMAGE_PLACEHOLDER) return escapeHtml(source);
+    // 属性独立转义，imageUrl token 仍按普通文本处理，不生成图片标签。
+    const resource = segment.resource;
+    const dimension = (value?: number) =>
+        value && Number.isFinite(value) && value > 0
+            ? Math.round(value)
+            : undefined;
+    const width = dimension(resource?.width);
+    const height = dimension(resource?.height);
+    const size = `${width ? ` width="${width}"` : ''}${height ? ` height="${height}"` : ''}`;
+    return `<img class="export-image" src="${escapeHtml(source)}" alt="${escapeHtml(segment.imageName || DEFAULT_IMAGE_PLACEHOLDER)}"${size} style="max-width:100%;height:auto;vertical-align:top"/>`;
+}
+
+async function renderHtmlBody(
     rows: ExportRow[],
     format: ExportFormat,
     options: ExportAdapterOptions = {},
-): string {
+): Promise<string> {
     const rendered = renderExportDocument(rows, format, options.resources);
 
-    return rendered.blocks
-        .map((block) => {
-            const htmlContent =
-                renderSegmentsToHtmlWithOptions(block.segments, options) +
-                renderSegmentsToHtmlWithOptions(
-                    block.trailingSegments,
-                    options,
-                );
+    const resolveImage = createImageSourceResolver(options.resources);
+    return (
+        await Promise.all(
+            rendered.blocks.map(async (block) => {
+                const htmlContent =
+                    (await renderSegmentsToHtmlWithOptions(
+                        block.segments,
+                        options,
+                        resolveImage,
+                    )) +
+                    (await renderSegmentsToHtmlWithOptions(
+                        block.trailingSegments,
+                        options,
+                        resolveImage,
+                    ));
 
-            if (block.type === 'documentSeparator') {
-                return `<div class="doc"><h3>${htmlContent}</h3></div>`;
-            }
+                if (block.type === 'documentSeparator') {
+                    return `<div class="doc"><h3>${htmlContent}</h3></div>`;
+                }
 
-            if (block.type === 'chunkSeparator') {
-                return `<div class="chunk"><h4>${htmlContent}</h4></div>`;
-            }
+                if (block.type === 'chunkSeparator') {
+                    return `<div class="chunk"><h4>${htmlContent}</h4></div>`;
+                }
 
-            return `<div class="msg">${htmlContent}</div>`;
-        })
-        .join('\n');
+                return `<div class="msg">${htmlContent}</div>`;
+            }),
+        )
+    ).join('\n');
 }
 
-export function htmlAdapter(
+export async function htmlAdapter(
     rows: ExportRow[],
     format: ExportFormat,
     options: ExportAdapterOptions = {},
-): string {
-    const body = renderHtmlBody(rows, format, options);
+): Promise<string> {
+    const body = await renderHtmlBody(rows, format, options);
 
     return `<!DOCTYPE html>
     <html><head><meta charset="utf-8">
@@ -166,12 +214,12 @@ export function htmlAdapter(
 
 // ===== DOC ADAPTER (Word 兼容 HTML) =====
 
-export function docAdapter(
+export async function docAdapter(
     rows: ExportRow[],
     format: ExportFormat,
     options: ExportAdapterOptions = {},
-): string {
-    const body = renderHtmlBody(rows, format, options);
+): Promise<string> {
+    const body = await renderHtmlBody(rows, format, options);
     // 复用 HTML Adapter，但添加特定的 Word 命名空间
     return `\ufeff<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
     <head><meta charset="utf-8"></head><body>${body}</body></html>`;

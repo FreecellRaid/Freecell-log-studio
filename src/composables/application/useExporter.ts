@@ -61,10 +61,11 @@ export function useExport() {
         const enableMarkdown = styleStore.viewSettings.enableMarkdown;
         const resources = await prepareExportResources(rows);
         const options = { enableMarkdown, resources };
-        return {
-            text: textAdapter(rows, snapshotFormat, options),
-            html: htmlAdapter(rows, snapshotFormat, options),
-        };
+        const [text, html] = await Promise.all([
+            textAdapter(rows, snapshotFormat, options),
+            htmlAdapter(rows, snapshotFormat, options),
+        ]);
+        return { text, html };
     }
 
     const exportAsText = async (

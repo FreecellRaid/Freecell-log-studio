@@ -28,7 +28,7 @@ const rows: ExportMessageRow[] = [
 ];
 
 describe('styled export adapters', () => {
-    it('resolves both colors in layout, field formats and message separators', () => {
+    it('resolves both colors in layout, field formats and message separators', async () => {
         const colorRows: ExportRow[] = [
             {
                 ...rows[0],
@@ -46,17 +46,17 @@ describe('styled export adapters', () => {
                 '{{name}}|{{account}}|{{time}}|{{nameColor}}|{{contentColor}}|{{content}}',
             messageSeparator: '|{{nameColor}}/{{contentColor}}\n',
         };
-        expect(textAdapter(colorRows, colorFormat)).toBe(
+        expect(await textAdapter(colorRows, colorFormat)).toBe(
             '#123456/#abcdef/Alice|#123456/#abcdef/alice|#123456/#abcdef/12:00|#123456|#abcdef|hello|#123456/#abcdef\n',
         );
-        expect(htmlAdapter(colorRows, colorFormat)).toContain(
+        expect(await htmlAdapter(colorRows, colorFormat)).toContain(
             '#123456/#abcdef/Alice',
         );
     });
 
-    it('exports empty colors for missing styles and document or chunk separators', () => {
+    it('exports empty colors for missing styles and document or chunk separators', async () => {
         expect(
-            textAdapter(
+            await textAdapter(
                 [
                     { type: 'documentSeparator', content: 'Doc' },
                     { type: 'chunkSeparator', content: 'Scene' },
@@ -81,7 +81,7 @@ describe('styled export adapters', () => {
         ).toBe('Doc[/]\nScene[/]\nAlice[/]hello\n[/]world\n');
     });
 
-    it('does not interpret placeholders or replacement patterns in user data', () => {
+    it('does not interpret placeholders or replacement patterns in user data', async () => {
         expect(
             getPlaceholderValue(
                 'name',
@@ -96,17 +96,17 @@ describe('styled export adapters', () => {
         ).toBe('{{nameColor}} $& #123456');
     });
 
-    it('keeps style in HTML output', () => {
-        const html = htmlAdapter(rows, format);
+    it('keeps style in HTML output', async () => {
+        const html = await htmlAdapter(rows, format);
         expect(html).toContain('color: #123456; font-weight: bold');
         expect(html).toContain('font-style: italic');
     });
 
-    it('keeps text output free of style markup', () => {
-        expect(textAdapter(rows, format)).toBe('Alice: hello\n');
+    it('keeps text output free of style markup', async () => {
+        expect(await textAdapter(rows, format)).toBe('Alice: hello\n');
     });
 
-    it('renders only message content as Markdown when enabled', () => {
+    it('renders only message content as Markdown when enabled', async () => {
         const markdownRows: ExportRow[] = [
             {
                 type: 'message',
@@ -115,23 +115,23 @@ describe('styled export adapters', () => {
             },
         ];
 
-        const html = htmlAdapter(markdownRows, format, {
+        const html = await htmlAdapter(markdownRows, format, {
             enableMarkdown: true,
         });
 
         expect(html).toContain('**Alice**');
         expect(html).toContain('<strong>hello</strong>');
-        expect(textAdapter(markdownRows, format)).toBe(
+        expect(await textAdapter(markdownRows, format)).toBe(
             '**Alice**: **hello**\n',
         );
     });
 
-    it('keeps Markdown source in non-text adapters when disabled', () => {
+    it('keeps Markdown source in non-text adapters when disabled', async () => {
         const markdownRows: ExportRow[] = [
             { type: 'message', playerName: 'Alice', content: '**hello**' },
         ];
 
-        const html = htmlAdapter(markdownRows, format, {
+        const html = await htmlAdapter(markdownRows, format, {
             enableMarkdown: false,
         });
 
