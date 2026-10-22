@@ -12,7 +12,7 @@ describe('图片模板兼容', () => {
         });
     });
     afterEach(() => vi.unstubAllGlobals());
-    it('旧用户模板与已编辑预设补齐图片字段，保留原有布局和默认选择', () => {
+    it('旧用户模板与已编辑预设同步图片模板，保留原有布局和默认选择', () => {
         const { imageTemplate: _unused, ...legacy } = PRESETS[0]!;
         storage.set(
             'app_export_formats',
@@ -30,7 +30,7 @@ describe('图片模板兼容', () => {
         const store = useExportStore();
         expect(store.formatById(legacy.formatId)).toMatchObject({
             messageTemplate: '用户布局',
-            imageTemplate: '{{image}}',
+            imageTemplate: PRESETS[0]!.imageTemplate,
         });
         expect(store.activeFormat.imageTemplate).toBe('【附件】');
         store.saveToLocal();
@@ -40,6 +40,33 @@ describe('图片模板兼容', () => {
                     typeof format.imageTemplate === 'string',
             ),
         ).toBe(true);
+    });
+    it('更新已有内置预设的图片模板，同时保留其他编辑', () => {
+        const preset = PRESETS[0]!;
+        storage.set(
+            'app_export_formats',
+            JSON.stringify([
+                {
+                    ...preset,
+                    imageTemplate: '旧版图片模板',
+                    messageTemplate: '用户布局',
+                },
+                {
+                    ...preset,
+                    formatId: 'custom',
+                    imageTemplate: '自定义图片模板',
+                },
+            ]),
+        );
+
+        const store = useExportStore();
+        expect(store.formatById(preset.formatId)).toMatchObject({
+            imageTemplate: preset.imageTemplate,
+            messageTemplate: '用户布局',
+        });
+        expect(store.formatById('custom')?.imageTemplate).toBe(
+            '自定义图片模板',
+        );
     });
     it('新模板默认包含图片 token，并保存自定义空模板', () => {
         const store = useExportStore();

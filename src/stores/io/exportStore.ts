@@ -147,11 +147,14 @@ export const useExportStore = defineStore('export', {
             ? JSON.parse(storedFormats)
             : PRESETS.map((preset) => ({ ...preset }));
 
-        // 保留已有编辑，只同步更新有关图片的新配置
+        // 保留已有编辑，但内置预设的图片模板始终同步到当前版本。
         for (const preset of PRESETS) {
-            if (
-                !formats.some((format) => format.formatId === preset.formatId)
-            ) {
+            const existingFormat = formats.find(
+                (format) => format.formatId === preset.formatId,
+            );
+            if (existingFormat) {
+                existingFormat.imageTemplate = preset.imageTemplate;
+            } else {
                 formats.push({ ...preset });
             }
         }
