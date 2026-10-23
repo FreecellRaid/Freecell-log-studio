@@ -210,6 +210,5 @@ onUnmounted(stopResize);
 
 .coloring-section :deep(> .panel-block-list) {
     overscroll-behavior: contain;
-    scrollbar-gutter: stable;
 }
 </style>

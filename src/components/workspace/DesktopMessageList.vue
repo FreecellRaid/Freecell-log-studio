@@ -8,7 +8,7 @@
             <DynamicScroller
                 ref="scrollerRef"
                 :items="messages"
-                :min-item-size="90"
+                :min-item-size="95"
                 key-field="messageId"
                 class="scroller"
             >

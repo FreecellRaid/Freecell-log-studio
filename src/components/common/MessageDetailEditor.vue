@@ -1,10 +1,9 @@
 <template>
-    <div class="message-detail-editor">
-        <div v-if="showMeta" class="prop-item-time">
-            <label>时间:</label>
-            <div>{{ formatDate(message.time) }}</div>
-        </div>
+    <div v-if="showMeta" class="prop-item-time">
+        <div>时间：{{ formatDate(message.time) }}</div>
+    </div>
 
+    <div class="message-detail-editor">
         <div class="prop-item">
             <label>玩家名</label>
             <input
@@ -84,12 +83,6 @@
         <div class="prop-item full-width">
             <label>包含 {{ message.images?.length ?? 0 }} 张图片</label>
             <MessageImages :message="message" />
-            <button
-                class="text-button"
-                @click="imageInsert.open(message.messageId)"
-            >
-                插入图片
-            </button>
         </div>
     </div>
 </template>
@@ -97,10 +90,9 @@
 <script setup lang="ts">
 import ToggleButton from '@/components/common/ToggleButton.vue';
 import MessageImages from '@/components/common/MessageImages.vue';
-import { useImageInsertStore } from '@/stores/editor/imageInsertStore';
+
 import type { Message, RoleType } from '@/types/log';
 import { formatDate } from '@/utils/date';
-const imageInsert = useImageInsertStore();
 
 export type MessageDetailTextField =
     | 'playerName'
@@ -178,9 +170,9 @@ void props;
 }
 
 .prop-item-time {
-    grid-column: span 2;
+    background-color: var(--hover-bg);
     display: flex;
-    gap: 4px;
+    padding: 8px 12px;
     font-size: 12px;
 }
 
@@ -204,7 +196,6 @@ void props;
 .prop-item select,
 .prop-item textarea {
     width: 100%;
-    box-sizing: border-box;
     background-color: var(--bg-primary);
     border: 1px solid var(--border-color);
     color: var(--text-primary);

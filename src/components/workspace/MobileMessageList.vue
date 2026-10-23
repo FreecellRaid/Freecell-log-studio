@@ -320,6 +320,7 @@ function getMessageStyle(message: Message) {
     margin-top: 10px;
     display: flex;
     gap: 16px;
+    height: 30px;
 }
 
 .mobile-action-button {

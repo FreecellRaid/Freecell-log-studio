@@ -12,7 +12,7 @@
                 <div class="header-title">
                     <h3>消息属性检查器</h3>
                     <div class="count" v-if="selectedItems.length > 0">
-                        ({{ selectedItems.length }})
+                        {{ selectedItems.length }}
                     </div>
                 </div>
                 <button
@@ -40,12 +40,6 @@
                     :key="message.messageId"
                     class="message-detail-card"
                 >
-                    <div class="card-header">
-                        <span class="id-badge">
-                            ID: {{ message.messageId }}
-                        </span>
-                    </div>
-
                     <div class="property-grid">
                         <MessageDetailEditor
                             :message="message"
@@ -181,6 +175,16 @@ function updateField(
 </script>
 
 <style scoped>
+.panel-header,
+.message-detail-card {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.count {
+    font-weight: normal;
+    font-size: 12px;
+}
+
 .sidebar-right-container {
     height: 100%;
     min-height: 0;
@@ -199,22 +203,5 @@ function updateField(
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    scrollbar-gutter: stable;
-}
-
-/* 消息详情卡片 */
-.message-detail-card {
-    border: 1px solid var(--border-color);
-    margin: 0px 10px 10px 10px;
-    background-color: var(--bg-workspace);
-    box-sizing: border-box;
-}
-
-.card-header {
-    padding: 6px 10px;
-    background-color: var(--hover-bg);
-    border-bottom: 1px solid var(--border-color);
-    font-family: monospace;
-    font-size: 11px;
 }
 </style>
