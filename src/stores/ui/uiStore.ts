@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { ref } from 'vue';
 import { useLocalStorage } from '@vueuse/core';
 
 // 侧边栏面板布局常量
@@ -40,6 +41,12 @@ function readLegacyUiSettings(): StoredUiSettings {
 
 function uiStore() {
     const legacyUiSettings = readLegacyUiSettings();
+    const coloringIdentityExpanded = ref(true);
+    const coloringRulesExpanded = ref(true);
+    const coloringSplitRatio = useLocalStorage(
+        'freecell-log-studio.ui.coloringSplitRatio',
+        0.5,
+    );
     const leftPanelWidth = useLocalStorage(
         'freecell-log-studio.ui.leftPanelWidth',
         280,
@@ -117,6 +124,9 @@ function uiStore() {
     );
 
     return {
+        coloringIdentityExpanded,
+        coloringRulesExpanded,
+        coloringSplitRatio,
         leftPanelWidth,
         rightPanelWidth,
         searchFilterMaxHeight,

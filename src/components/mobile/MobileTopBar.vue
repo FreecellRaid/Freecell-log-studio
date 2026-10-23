@@ -20,7 +20,7 @@
 
         <div class="mobile-project-summary">
             <h4>{{ logStore.projectName || '未命名工程' }}</h4>
-            <p>{{ logStore.totalMessages }} 条消息</p>
+            <p>({{ logStore.totalMessages }} 条消息)</p>
         </div>
         <div
             class="mobile-import-container"
@@ -125,7 +125,6 @@ function handleLinkImport() {
     padding: env(safe-area-inset-top) 10px 0;
     display: flex;
     align-items: center;
-    gap: 8px;
     background: var(--bg-topbar);
     border-bottom: 1px solid var(--border-color);
     flex-shrink: 0;
@@ -135,8 +134,8 @@ function handleLinkImport() {
     min-width: 0;
     flex: 1;
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    gap: 8px;
+    align-items: center;
 }
 
 .mobile-project-summary h4,
@@ -148,13 +147,11 @@ function handleLinkImport() {
 }
 
 .mobile-project-summary h4 {
-    font-size: 14px;
     line-height: 1.25;
 }
 
 .mobile-project-summary p {
-    font-size: 11px;
-    line-height: 1.2;
+    font-size: 14px;
     color: var(--text-secondary);
 }
 

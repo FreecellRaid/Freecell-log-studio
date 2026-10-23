@@ -2,8 +2,7 @@ export type MobileSheetName = 'message' | 'projectName' | 'chunkName' | null;
 
 export type MobileBottomPanelName =
     | 'chunkList'
-    | 'identity'
-    | 'ruleEditor'
+    | 'coloring'
     | 'resources'
     | 'search'
     | 'exportFormat';

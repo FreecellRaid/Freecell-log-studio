@@ -166,9 +166,9 @@ describe('workspace lifecycle consistency', () => {
         const id = store.currentActiveView.windowId;
         for (const name of [
             'chunkList',
-            'identity',
+            'coloring',
             'search',
-            'ruleEditor',
+            'resources',
             'exportFormat',
         ] as const) {
             store.registerWindow({

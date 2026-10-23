@@ -384,6 +384,9 @@ function handleDelete(id: string) {
 </script>
 
 <style scoped>
+.panel-header {
+    border-bottom: 1px solid var(--border-color);
+}
 .config-block {
     overflow: hidden;
 }

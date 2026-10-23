@@ -34,8 +34,7 @@ const mobileUiStore = useMobileUiStore();
 
 const bottomPanelNames: MobileBottomPanelName[] = [
     'chunkList',
-    'identity',
-    'ruleEditor',
+    'coloring',
     'search',
     'resources',
     'exportFormat',

@@ -98,7 +98,7 @@
                         >
                             {{ doc.docName }}
                         </span>
-                        <span class="doc-count">({{ doc.chunks.length }})</span>
+                        <span class="doc-count">{{ doc.chunks.length }}</span>
 
                         <div class="doc-actions">
                             <button
@@ -584,9 +584,20 @@ function withScrollAnchor(action: () => void) {
 
 <style scoped>
 .panel-header {
-    height: 42px;
-    /* 防止输入框和文字切换时抖动 */
-    box-sizing: border-box;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.header-title {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.header-title h3 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .header-action-button {
@@ -633,16 +644,12 @@ function withScrollAnchor(action: () => void) {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 4px 0;
-}
-
-.document-group {
-    margin-bottom: 2px;
 }
 
 .document-drop-zone {
     height: 4px;
-    position: relative;
+    width: 100%;
+    position: absolute;
 }
 
 .document-drop-zone.is-active::after {
@@ -685,6 +692,7 @@ function withScrollAnchor(action: () => void) {
     font-size: 11px;
     color: var(--text-muted);
     margin-left: 4px;
+    font-weight: normal;
 }
 
 .chunk-items-container {

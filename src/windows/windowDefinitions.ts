@@ -35,11 +35,10 @@ export const windowDefinitions: Readonly<
     Record<WindowName, Readonly<WindowDefinition>>
 > = {
     chunkList: panel,
-    identity: panel,
     search: panel,
     resources: { ...panel, participatesInSelection: false },
     exportFormat: panel,
-    ruleEditor: panel,
+    coloring: panel,
     inspector: panel,
     chunkView: view,
     exportPreview: { ...view, participatesInSelection: false },

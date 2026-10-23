@@ -25,23 +25,11 @@
                     class="nav-item"
                     :class="{
                         active:
-                            windowStore.selectedLeftPanel === 'identity' &&
-                            windowStore.isWindowOpen('identity'),
+                            windowStore.selectedLeftPanel === 'coloring' &&
+                            windowStore.isWindowOpen('coloring'),
                     }"
-                    title="身份管理"
-                    @click="handleNavClick('identity')"
-                >
-                    <UserRound class="ui-icon" />
-                </div>
-                <div
-                    class="nav-item"
-                    :class="{
-                        active:
-                            windowStore.selectedLeftPanel === 'ruleEditor' &&
-                            windowStore.isWindowOpen('ruleEditor'),
-                    }"
-                    title="样式规则"
-                    @click="handleNavClick('ruleEditor')"
+                    title="染色"
+                    @click="handleNavClick('coloring')"
                 >
                     <Palette class="ui-icon" />
                 </div>
@@ -122,16 +110,10 @@
                     <ChunkListPanel />
                 </div>
                 <div
-                    v-else-if="windowStore.selectedLeftPanel === 'identity'"
+                    v-else-if="windowStore.selectedLeftPanel === 'coloring'"
                     class="panel-slot"
                 >
-                    <IdentityPanel />
-                </div>
-                <div
-                    v-else-if="windowStore.selectedLeftPanel === 'ruleEditor'"
-                    class="panel-slot"
-                >
-                    <RuleEditorPanel />
+                    <ColoringPanel />
                 </div>
                 <div
                     v-else-if="windowStore.selectedLeftPanel === 'search'"
@@ -172,7 +154,6 @@ import {
     Settings,
     SunMedium,
     TextInitial,
-    UserRound,
 } from '@lucide/vue';
 import { defineAsyncComponent, ref, onMounted, onUnmounted } from 'vue';
 import { usePanelResize } from '@/composables/ui/usePanelResize';
@@ -180,8 +161,7 @@ import { useUiStore } from '@/stores/ui/uiStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import ChunkListPanel from '@/components/panels/ChunkListPanel.vue';
 import ExportFormatPanel from '@/components/panels/ExportFormatPanel.vue';
-import IdentityPanel from '@/components/panels/IdentityPanel.vue';
-import RuleEditorPanel from '@/components/panels/RuleEditorPanel.vue';
+import ColoringPanel from '@/components/panels/ColoringPanel.vue';
 import ResourcePanel from '@/components/panels/ResourcePanel.vue';
 import SearchPanel from '@/components/panels/SearchPanel.vue';
 

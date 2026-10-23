@@ -1,12 +1,22 @@
 <template>
-    <div class="panel" @pointerdown="windowStore.setFocus('identity')">
-        <div class="panel-header">
-            <div class="header-title">
-                <h3>{{ isPlayerMode ? '角色管理' : '账号管理' }}</h3>
-            </div>
+    <section class="panel">
+        <div class="panel-header" @click="expanded = !expanded">
             <button
-                class="panel-header-action-button icon-interactive"
-                @click="toggleDisplayMode"
+                type="button"
+                class="section-toggle"
+                :aria-expanded="expanded"
+                aria-controls="coloring-identities"
+                @click.stop="expanded = !expanded"
+            >
+                <span class="expand-icon" :class="{ 'is-expanded': expanded }">
+                    <ChevronRight class="ui-icon" />
+                </span>
+                <span>{{ isPlayerMode ? '角色' : '账号' }}管理</span>
+                <span class="section-count">{{ identityList.length }}</span>
+            </button>
+            <button
+                class="icon-button icon-interactive"
+                @click.stop="toggleDisplayMode"
                 :title="isPlayerMode ? '切换到按账号管理' : '切换到按角色管理'"
             >
                 <IdCard v-if="isPlayerMode" class="ui-icon" />
@@ -14,7 +24,11 @@
             </button>
         </div>
 
-        <div class="panel-block-list">
+        <div
+            v-show="expanded"
+            id="coloring-identities"
+            class="panel-block-list"
+        >
             <div class="list-header">
                 <span class="header-cell">名称/账号</span>
                 <span class="header-cell">发言</span>
@@ -86,18 +100,17 @@
                 暂无身份数据
             </div>
         </div>
-    </div>
+    </section>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { IdCard, UserRound } from '@lucide/vue';
+import { ChevronRight, IdCard, UserRound } from '@lucide/vue';
 import { useStyleStore } from '@/stores/project/styleStore';
 import { useLogStore } from '@/stores/project/logStore';
 import { useLogCommands } from '@/stores/project/logCommands';
 import type { RoleType } from '@/types/log';
 import type { ColorMode, StyleRule } from '@/types/style';
-import { useWindowStore } from '@/stores/ui/windowStore';
 import {
     buildIdentityStats,
     collectMessageIdsByIdentity,
@@ -111,10 +124,11 @@ interface IdentityListItem {
     rule: StyleRule;
 }
 
+const expanded = defineModel<boolean>('expanded', { default: true });
+
 const styleStore = useStyleStore();
 const logStore = useLogStore();
 const logCommands = useLogCommands();
-const windowStore = useWindowStore();
 const localDisplayMode = ref<ColorMode>(styleStore.viewSettings.colorMode);
 const editingId = ref<string | null>(null);
 const editBuffer = ref('');
@@ -214,7 +228,6 @@ const vFocus = {
 .list-header {
     font-size: 11px;
     color: var(--text-muted);
-    text-align: center;
     position: sticky;
     top: 0;
     background-color: var(--bg-sidebar);
@@ -247,7 +260,6 @@ const vFocus = {
 .col-count {
     display: flex;
     align-items: center;
-    justify-content: center;
     overflow: hidden;
     min-width: 0;
 }
