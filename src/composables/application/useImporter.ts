@@ -1,25 +1,28 @@
 import { ref } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
+import type { ImportRow, ImportTextEntry } from '@/types/import';
+import type { Chunk, LogDocument, LogSource } from '@/types/log';
+
 import { useLogStore } from '@/stores/project/logStore';
 import { useStyleStore } from '@/stores/project/styleStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
-import type { Chunk, LogDocument } from '@/types/log';
-import { resourceRepository } from '@/io/storage/resourceStorage';
-import { retryAfterResourceCleanup } from '@/io/storage/resourceCleanup';
-import { currentResourceRoots } from './resourceRoots';
-import { importRows } from '@/io/import/importService';
-import type { ImportResourceOptions } from '@/io/import/importResources';
-import { importFiles, preprocessText } from '@/io/import/importService';
-import type { ImportRow, ImportTextEntry } from '@/types/import';
-import type { LogSource } from '@/types/log';
-export { importFiles } from '@/io/import/importService';
-import { tryReadWorkspaceProject } from '@/io/storage/workspaceProject';
-import { stripFileExtension } from '@/utils/fileName';
-import { readImportFile } from '@/io/import/fileReader';
-import { useProjectManager } from '@/composables/application/useProjectManager';
 import { useHistoryStore } from '@/stores/editor/historyStore';
+import { useProjectManager } from '@/composables/application/useProjectManager';
 import { useImportSettingsStore } from '@/stores/io/importSettingsStore';
+
+import { resourceRepository } from '@/io/storage/resourceStorage';
+import { tryReadWorkspaceProject } from '@/io/storage/workspaceProject';
+import { retryAfterResourceCleanup } from '@/io/storage/resourceCleanup';
+
+import type { ImportResourceOptions } from '@/io/import/importResources';
+import { readImportFile } from '@/io/import/fileReader';
+import { importFiles, preprocessText } from '@/io/import/importService';
 import { stripOocParentheses } from '@/io/import/cleaner';
+import { importRows } from '@/io/import/importService';
+export { importFiles } from '@/io/import/importService';
+
+import { stripFileExtension } from '@/utils/fileName';
+import { currentResourceRoots } from './resourceRoots';
 
 export function useFileImport() {
     const logStore = useLogStore();
@@ -73,7 +76,7 @@ export function useFileImport() {
         return firstChunk;
     }
 
-    // 自动打开第一个场景进入编辑；先清掉指向已消失分块的孤儿视图
+    // 自动打开第一个场景进入编辑，先清掉指向已消失 chunk 的view
     function openFirstChunkViewIfNeeded() {
         const hasValidView = windowStore.pruneOrphanChunkViews((chunkId) =>
             Boolean(logStore.findChunkById(chunkId)),
@@ -131,7 +134,7 @@ export function useFileImport() {
         return applyDocuments([doc], true);
     }
 
-    // 远程日志只能追加日志，不能通过内容嗅探替换为工程文件。
+    // 远程日志只能追加日志，不能替换为工程文件
     async function importTextAndApply(
         entries: ImportTextEntry[],
     ): Promise<number> {
