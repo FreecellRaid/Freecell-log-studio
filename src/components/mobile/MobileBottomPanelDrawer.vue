@@ -12,11 +12,8 @@
                 <ChunkListPanel
                     v-if="windowStore.selectedLeftPanel === 'chunkList'"
                 />
-                <IdentityPanel
-                    v-else-if="windowStore.selectedLeftPanel === 'identity'"
-                />
-                <RuleEditorPanel
-                    v-else-if="windowStore.selectedLeftPanel === 'ruleEditor'"
+                <ColoringPanel
+                    v-else-if="windowStore.selectedLeftPanel === 'coloring'"
                 />
                 <SearchPanel
                     v-else-if="windowStore.selectedLeftPanel === 'search'"
@@ -38,8 +35,7 @@ import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import ChunkListPanel from '@/components/panels/ChunkListPanel.vue';
 import ExportFormatPanel from '@/components/panels/ExportFormatPanel.vue';
-import IdentityPanel from '@/components/panels/IdentityPanel.vue';
-import RuleEditorPanel from '@/components/panels/RuleEditorPanel.vue';
+import ColoringPanel from '@/components/panels/ColoringPanel.vue';
 import ResourcePanel from '@/components/panels/ResourcePanel.vue';
 import SearchPanel from '@/components/panels/SearchPanel.vue';
 
@@ -53,9 +49,16 @@ const closeGesture = useSwipeGesture({
             target instanceof Element
                 ? target.closest('.mobile-drawer-body')
                 : null;
-        const resourceList =
-            target instanceof Element ? target.closest('.resource-list') : null;
-        if (resourceList instanceof HTMLElement && resourceList.scrollTop > 0)
+        const scrollableList =
+            target instanceof Element
+                ? target.closest(
+                      '.resource-list, .coloring-panel .panel-block-list',
+                  )
+                : null;
+        if (
+            scrollableList instanceof HTMLElement &&
+            scrollableList.scrollTop > 0
+        )
             return false;
         return !(body instanceof HTMLElement) || body.scrollTop === 0;
     },
@@ -102,5 +105,19 @@ const closeGesture = useSwipeGesture({
 .mobile-drawer-body :deep(.resource-panel) {
     height: min(68dvh, 640px);
     min-height: 0;
+}
+.mobile-drawer-body :deep(.coloring-panel) {
+    height: 100%;
+    min-height: 0;
+}
+
+.mobile-drawer-body :deep(.coloring-section) {
+    height: auto;
+    min-height: 0;
+}
+
+.mobile-drawer-body :deep(.coloring-section > .panel-header) {
+    height: auto;
+    padding: 8px 12px;
 }
 </style>

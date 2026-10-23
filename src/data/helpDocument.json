@@ -109,11 +109,11 @@
         {
             "type": "tips",
             "icon": "UserRound",
-            "title": "身份管理",
+            "title": "角色/账号管理",
             "items": [
                 {
                     "term": "切换模式",
-                    "description": "点击标题旁图标可在角色/账号模式间切换"
+                    "description": "点击角色/账号标题旁图标可切换管理模式"
                 },
                 {
                     "term": "双击名称",
@@ -132,7 +132,7 @@
         {
             "type": "tips",
             "icon": "Palette",
-            "title": "样式规则",
+            "title": "自定义染色规则",
             "items": [
                 {
                     "term": "优先级",

@@ -1,19 +1,31 @@
 <template>
-    <div class="panel" @pointerdown="windowStore.setFocus('ruleEditor')">
-        <div class="panel-header">
-            <div class="header-title">
-                <h3>自定义样式规则</h3>
-            </div>
+    <section class="panel">
+        <div class="panel-header" @click="expanded = !expanded">
             <button
-                class="panel-header-action-button icon-interactive"
-                @click="handleCreateRule"
+                type="button"
+                class="section-toggle"
+                :aria-expanded="expanded"
+                aria-controls="coloring-rules"
+                @click.stop="expanded = !expanded"
+            >
+                <span class="expand-icon" :class="{ 'is-expanded': expanded }">
+                    <ChevronRight class="ui-icon" />
+                </span>
+                <span>自定义染色规则</span>
+                <span class="section-count">
+                    {{ styleStore.customRules.length }}
+                </span>
+            </button>
+            <button
+                class="icon-button icon-interactive"
+                @click.stop="handleCreateRule"
                 title="创建规则"
             >
                 <Plus class="ui-icon" />
             </button>
         </div>
 
-        <div class="panel-block-list">
+        <div v-show="expanded" id="coloring-rules" class="panel-block-list">
             <div
                 v-if="styleStore.customRules.length === 0"
                 class="panel-empty-hint"
@@ -387,7 +399,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 </template>
 
 <script setup lang="ts">
@@ -405,6 +417,8 @@ import { useWindowStore } from '@/stores/ui/windowStore';
 import { vClickOutside } from '@/directives/clickOutside';
 import ToggleButton from '@/components/common/ToggleButton.vue';
 
+const expanded = defineModel<boolean>('expanded', { default: true });
+
 const styleStore = useStyleStore();
 const logStore = useLogStore();
 const windowStore = useWindowStore();
@@ -412,8 +426,7 @@ const activeViewId = computed(() => {
     const view = windowStore.currentActiveView;
     return getWindowTargetId(view);
 });
-// 注意，这里传入的id不是响应式的！切换窗口会有bug
-const activeContext = useActiveContext(activeViewId.value);
+const activeContext = useActiveContext(activeViewId);
 const expandedRules = ref<Set<string>>(new Set());
 
 type RuleDraftField =
@@ -435,6 +448,7 @@ function toggleExpand(ruleId: string) {
 
 // 基础操作
 function handleCreateRule() {
+    expanded.value = true;
     styleStore.addCustomRule('新规则');
     // 自动展开新建的规则（获取最后一个）
     setTimeout(() => {
