@@ -9,6 +9,21 @@ function normalizeStringFilter(value: string) {
     return normalized === '' ? undefined : normalized;
 }
 
+function compileSearch(value: string, useRegex: boolean) {
+    // 正则中的首尾空格有意义，只有普通文本沿用原有的 trim 行为
+    const source = useRegex ? value : normalizeStringFilter(value);
+    if (!source) return { value: undefined, error: '' };
+    if (!useRegex) return { value: source, error: '' };
+    try {
+        return { value: new RegExp(source), error: '' };
+    } catch (error) {
+        return {
+            value: undefined,
+            error: error instanceof Error ? error.message : '无效的正则表达式',
+        };
+    }
+}
+
 // 解析时间过滤值；带 T 时间部分的精确到秒，纯日期作为结束条件时含当天全天
 function parseTimeFilterValue(value: string, isEnd: boolean): Date | null {
     // 统一分隔符，Safari 对空格分隔的日期时间解析不可靠
@@ -40,6 +55,8 @@ export const useSearchStore = defineStore('searchPanel', () => {
     const logStore = useLogStore();
 
     const quickSearch = ref('');
+    const contentRegex = ref(false);
+    const noteRegex = ref(false);
     const isAdvancedExpanded = ref(false);
     const filter = reactive<PanelFilterState>({
         playerName: [],
@@ -53,10 +70,22 @@ export const useSearchStore = defineStore('searchPanel', () => {
         timeEnd: '',
     });
 
+    const contentSearch = computed(() =>
+        compileSearch(quickSearch.value, contentRegex.value),
+    );
+    const noteSearch = computed(() =>
+        compileSearch(filter.note, noteRegex.value),
+    );
+    const contentError = computed(() => contentSearch.value.error);
+    const noteError = computed(() => noteSearch.value.error);
+    const hasSearchError = computed(() =>
+        Boolean(contentError.value || noteError.value),
+    );
+
     const normalizedFilter = computed<MessageFilter>(() => {
         const activeFilter: MessageFilter = {};
-        const content = normalizeStringFilter(quickSearch.value);
-        const note = normalizeStringFilter(filter.note);
+        const content = contentSearch.value.value;
+        const note = noteSearch.value.value;
 
         if (content) activeFilter.content = content;
         if (note) activeFilter.note = note;
@@ -88,11 +117,13 @@ export const useSearchStore = defineStore('searchPanel', () => {
     });
 
     const hasActiveFilter = computed(
-        () => Object.keys(normalizedFilter.value).length > 0,
+        () =>
+            hasSearchError.value ||
+            Object.keys(normalizedFilter.value).length > 0,
     );
 
     const searchResults = computed(() => {
-        if (!hasActiveFilter.value) return [];
+        if (!hasActiveFilter.value || hasSearchError.value) return [];
         return logStore.allMessages.filter((msg) =>
             matchesMessageFilter(msg, normalizedFilter.value),
         );
@@ -100,6 +131,8 @@ export const useSearchStore = defineStore('searchPanel', () => {
 
     function clearAllFilters() {
         quickSearch.value = '';
+        contentRegex.value = false;
+        noteRegex.value = false;
         filter.playerName = [];
         filter.account = [];
         filter.note = '';
@@ -113,6 +146,11 @@ export const useSearchStore = defineStore('searchPanel', () => {
 
     return {
         quickSearch,
+        contentRegex,
+        noteRegex,
+        contentError,
+        noteError,
+        hasSearchError,
         isAdvancedExpanded,
         filter,
         normalizedFilter,

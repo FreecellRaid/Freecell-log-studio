@@ -28,6 +28,8 @@ export function matchesMessageFilter(
             case 'messageId':
             case 'chunkId':
                 if (expectedValue instanceof RegExp) {
+                    // 全局或粘连正则的 test 会推进 lastIndex，每条消息应独立匹配。
+                    expectedValue.lastIndex = 0;
                     if (!expectedValue.test(String(messageValue))) return false;
                 } else if (Array.isArray(expectedValue)) {
                     // 数组OR逻辑，只要包含其中一个关键词

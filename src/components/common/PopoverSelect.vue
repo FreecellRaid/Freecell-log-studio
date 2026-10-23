@@ -195,6 +195,7 @@ watch(isOpen, (openState) => {
     text-align: left;
     cursor: pointer;
     transition: border-color 0.15s;
+    background-color: transparent;
 }
 
 .select-trigger:hover,
@@ -224,13 +225,13 @@ watch(isOpen, (openState) => {
 
 .select-dropdown {
     position: fixed;
-    z-index: 1000;
+    z-index: 100;
     max-height: 240px;
     overflow-y: auto;
     padding: 4px;
     background: var(--bg-topbar);
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: 4px;
     box-shadow: 0 6px 20px var(--box-shadow);
 }
 
