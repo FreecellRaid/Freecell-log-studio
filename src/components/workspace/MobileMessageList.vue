@@ -67,12 +67,6 @@
 
             <MessageImages :message="message" />
 
-            <footer class="mobile-message-tags">
-                <span v-if="message.isOoc">场外</span>
-                <span v-if="message.isCommand">指令</span>
-                <span v-if="message.note">{{ message.note }}</span>
-            </footer>
-
             <div
                 v-if="
                     activeContext.selectedMessageIds.value.has(
@@ -83,38 +77,43 @@
             >
                 <button
                     class="mobile-action-button"
-                    type="button"
-                    @click.stop="startMessageEdit(message)"
-                >
-                    编辑
-                </button>
-                <button
-                    class="mobile-action-button"
+                    title="在下方插入新消息"
                     type="button"
                     @click.stop="insertAfter(message)"
                 >
-                    插入
+                    <Plus class="ui-icon" />
                 </button>
                 <button
                     class="mobile-action-button"
+                    title="编辑消息"
+                    type="button"
+                    @click.stop="startMessageEdit(message)"
+                >
+                    <Pencil class="ui-icon" />
+                </button>
+                <button
+                    class="mobile-action-button"
+                    title="插入图片"
                     type="button"
                     @click.stop="imageInsert.open(message.messageId)"
                 >
-                    插入图片
+                    <ImagePlus class="ui-icon" />
                 </button>
                 <button
                     class="mobile-action-button"
+                    title="向下合并"
                     type="button"
                     @click.stop="mergeWithNext(message.messageId)"
                 >
-                    合并
+                    <ChevronsDown class="ui-icon" />
                 </button>
                 <button
                     class="mobile-action-button is-warning"
+                    title="删除"
                     type="button"
                     @click.stop="deleteMessage(message.messageId)"
                 >
-                    删除
+                    <Trash2 class="ui-icon" />
                 </button>
             </div>
         </article>
@@ -138,6 +137,7 @@ import { useActiveContext } from '@/composables/application/useActiveContext';
 import type { Chunk, Message } from '@/types/log';
 import { formatDate } from '@/utils/date';
 import MarkdownContent from '@/components/common/MarkdownContent.vue';
+import { Trash2, Plus, ChevronsDown, ImagePlus, Pencil } from '@lucide/vue';
 
 const props = defineProps<{
     windowId: string;
@@ -196,7 +196,6 @@ function mergeWithNext(messageId: string) {
     );
 }
 function deleteMessage(messageId: string) {
-    if (!window.confirm('确定要删除这条消息吗？')) return;
     logCommands.deleteMessage(props.chunk.chunkId, messageId);
     if (activeContext.selectedMessageIds.value.has(messageId))
         activeContext.clearMessageSelection();
@@ -317,20 +316,24 @@ function getMessageStyle(message: Message) {
     word-break: break-word;
 }
 
-.mobile-message-tags,
 .mobile-message-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
     margin-top: 10px;
-}
-
-.mobile-message-tags span {
-    font-size: 12px;
-    color: var(--text-secondary);
+    display: flex;
+    gap: 16px;
 }
 
 .mobile-action-button {
-    min-height: 36px;
+    background: none;
+    border: none;
+    padding: 2px;
+    cursor: pointer;
+    color: var(--icon-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.ui-icon {
+    width: 16px;
+    height: 16px;
 }
 </style>

@@ -89,9 +89,14 @@ const closeGesture = useSwipeGesture({
     min-height: min(68dvh, 640px);
 }
 
-.mobile-drawer-body :deep(.panel-header),
+.mobile-drawer-body :deep(.panel-header) {
+    height: 46px;
+    box-sizing: border-box;
+    padding: 0 12px;
+}
+
 .mobile-drawer-body :deep(.header-title) {
-    min-height: 44px;
+    margin-top: 0;
 }
 
 .mobile-drawer-body :deep(.resource-panel) {

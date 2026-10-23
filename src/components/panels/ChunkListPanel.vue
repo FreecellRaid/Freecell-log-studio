@@ -589,6 +589,17 @@ function withScrollAnchor(action: () => void) {
     box-sizing: border-box;
 }
 
+.header-title {
+    min-width: 0;
+    flex: 1;
+}
+
+.header-title h3 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .header-action-button {
     display: flex;
     align-items: center;
