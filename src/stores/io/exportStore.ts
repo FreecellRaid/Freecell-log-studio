@@ -1,4 +1,6 @@
 import { defineStore } from 'pinia';
+import { computed } from 'vue';
+import { useLocalStorage } from '@vueuse/core';
 import {
     DEFAULT_IMAGE_TEMPLATE,
     normalizeExportFormat,
@@ -139,100 +141,95 @@ export const PRESETS: ExportFormat[] = [
     },
 ];
 
-export const useExportStore = defineStore('export', {
-    state: () => {
-        const storedFormats = localStorage.getItem('app_export_formats');
-        const storedActiveId = localStorage.getItem('app_export_active_id');
-        const formats: ExportFormat[] = storedFormats
-            ? JSON.parse(storedFormats)
-            : PRESETS.map((preset) => ({ ...preset }));
+export const useExportStore = defineStore('export', () => {
+    const formats = useLocalStorage<ExportFormat[]>(
+        'app_export_formats',
+        () => PRESETS.map((preset) => ({ ...preset })),
+        { flush: 'sync', window: globalThis.window },
+    );
+    const activeFormatId = useLocalStorage('app_export_active_id', 'standard', {
+        flush: 'sync',
+        window: globalThis.window,
+    });
 
-        // 保留已有编辑，但内置预设的图片模板始终同步到当前版本。
-        for (const preset of PRESETS) {
-            const existingFormat = formats.find(
-                (format) => format.formatId === preset.formatId,
-            );
-            if (existingFormat) {
-                existingFormat.imageTemplate = preset.imageTemplate;
-            } else {
-                formats.push({ ...preset });
-            }
+    // 保留已有编辑，但内置预设的图片模板始终同步到当前版本。
+    for (const preset of PRESETS) {
+        const existingFormat = formats.value.find(
+            (format) => format.formatId === preset.formatId,
+        );
+        if (existingFormat) {
+            existingFormat.imageTemplate = preset.imageTemplate;
+        } else {
+            formats.value.push({ ...preset });
         }
+    }
+    formats.value = formats.value.map(normalizeExportFormat);
 
-        return {
-            formats: formats.map(normalizeExportFormat),
-            activeFormatId: storedActiveId || 'standard',
+    const activeFormat = computed(
+        () =>
+            formats.value.find(
+                (format) => format.formatId === activeFormatId.value,
+            ) || formats.value[0],
+    );
+
+    function createFormat() {
+        const newFmt: ExportFormat = {
+            formatId: generateId(),
+            formatName: '未命名模板',
+            fileExtension: '.txt',
+            playerNameFormat: '{{name}}',
+            accountFormat: '{{account}}',
+            timeFormat: '{{time}}',
+            docSeparator: '',
+            chunkSeparator: '',
+            imageTemplate: DEFAULT_IMAGE_TEMPLATE,
+            messageTemplate: '{{name}}: {{content}}',
+            messageSeparator: '\n',
         };
-    },
-    getters: {
-        activeFormat(state): ExportFormat {
-            return (
-                state.formats.find(
-                    (f: ExportFormat) => f.formatId === state.activeFormatId,
-                ) || state.formats[0]
-            );
-        },
-        formatById(state) {
-            return (id: string): ExportFormat | undefined =>
-                state.formats.find((f: ExportFormat) => f.formatId === id);
-        },
-    },
-    actions: {
-        createFormat() {
-            const newFmt: ExportFormat = {
-                formatId: generateId(),
-                formatName: '未命名模板',
-                fileExtension: '.txt',
-                playerNameFormat: '{{name}}',
-                accountFormat: '{{account}}',
-                timeFormat: '{{time}}',
-                docSeparator: '',
-                chunkSeparator: '',
-                imageTemplate: DEFAULT_IMAGE_TEMPLATE,
-                messageTemplate: '{{name}}: {{content}}',
-                messageSeparator: '\n',
-            };
-            this.formats.push(newFmt);
-            this.saveToLocal();
-            return newFmt;
-        },
+        formats.value.push(newFmt);
+        return newFmt;
+    }
 
-        setActive(id: string) {
-            this.activeFormatId = id;
-            this.saveToLocal();
-        },
-        saveFormat(format: ExportFormat) {
-            const index = this.formats.findIndex(
-                (f: ExportFormat) => f.formatId === format.formatId,
-            );
-            if (index > -1) {
-                this.formats[index] = normalizeExportFormat(format);
-            } else {
-                this.formats.push(normalizeExportFormat(format));
-            }
-            this.saveToLocal();
-        },
-        deleteFormat(id: string) {
-            if (
-                EXPORT_PRESET_IDS.includes(
-                    id as (typeof EXPORT_PRESET_IDS)[number],
-                )
-            )
-                return;
-            this.formats = this.formats.filter(
-                (f: ExportFormat) => f.formatId !== id,
-            );
-            if (this.activeFormatId === id) {
-                this.activeFormatId = 'standard';
-            }
-            this.saveToLocal();
-        },
-        saveToLocal() {
-            localStorage.setItem(
-                'app_export_formats',
-                JSON.stringify(this.formats),
-            );
-            localStorage.setItem('app_export_active_id', this.activeFormatId);
-        },
-    },
+    function setActive(id: string) {
+        activeFormatId.value = id;
+    }
+
+    function saveFormat(format: ExportFormat) {
+        const index = formats.value.findIndex(
+            (existing) => existing.formatId === format.formatId,
+        );
+        if (index > -1) {
+            formats.value[index] = normalizeExportFormat(format);
+        } else {
+            formats.value.push(normalizeExportFormat(format));
+        }
+    }
+
+    function deleteFormat(id: string) {
+        if (
+            EXPORT_PRESET_IDS.includes(id as (typeof EXPORT_PRESET_IDS)[number])
+        )
+            return;
+        formats.value = formats.value.filter(
+            (format) => format.formatId !== id,
+        );
+        if (activeFormatId.value === id) {
+            activeFormatId.value = 'standard';
+        }
+    }
+
+    function formatById(id: string) {
+        return formats.value.find((format) => format.formatId === id);
+    }
+
+    return {
+        formats,
+        activeFormatId,
+        activeFormat,
+        formatById,
+        createFormat,
+        setActive,
+        saveFormat,
+        deleteFormat,
+    };
 });

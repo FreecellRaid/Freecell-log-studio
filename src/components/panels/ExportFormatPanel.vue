@@ -368,7 +368,6 @@ function updateFormatDraft(
 function commitFormatDraft(fmt: ExportFormat, field: FormatDraftField) {
     formatDrafts.commit(fmt.formatId, field, (value) => {
         fmt[field] = value;
-        exportStore.saveToLocal();
     });
 }
 

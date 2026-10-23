@@ -6,9 +6,26 @@ describe('图片模板兼容', () => {
     beforeEach(() => {
         storage.clear();
         setActivePinia(createPinia());
-        vi.stubGlobal('localStorage', {
-            getItem: (key: string) => storage.get(key) ?? null,
-            setItem: (key: string, value: string) => storage.set(key, value),
+        class TestStorage {
+            getItem(key: string) {
+                return storage.get(key) ?? null;
+            }
+            setItem(key: string, value: string) {
+                storage.set(key, value);
+            }
+            removeItem(key: string) {
+                storage.delete(key);
+            }
+        }
+        vi.stubGlobal('Storage', TestStorage);
+        vi.stubGlobal('StorageEvent', class TestStorageEvent {});
+        const localStorage = new TestStorage();
+        vi.stubGlobal('localStorage', localStorage);
+        vi.stubGlobal('window', {
+            localStorage,
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+            dispatchEvent: vi.fn(),
         });
     });
     afterEach(() => vi.unstubAllGlobals());
@@ -28,18 +45,19 @@ describe('图片模板兼容', () => {
         );
         storage.set('app_export_active_id', 'custom');
         const store = useExportStore();
+        store.setActive('custom');
         expect(store.formatById(legacy.formatId)).toMatchObject({
             messageTemplate: '用户布局',
             imageTemplate: PRESETS[0]!.imageTemplate,
         });
         expect(store.activeFormat.imageTemplate).toBe('【附件】');
-        store.saveToLocal();
         expect(
             JSON.parse(storage.get('app_export_formats')!).every(
                 (format: { imageTemplate?: string }) =>
                     typeof format.imageTemplate === 'string',
             ),
         ).toBe(true);
+        expect(storage.get('app_export_active_id')).toBe('custom');
     });
     it('更新已有内置预设的图片模板，同时保留其他编辑', () => {
         const preset = PRESETS[0]!;
