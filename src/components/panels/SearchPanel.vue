@@ -55,14 +55,6 @@
                     <RegexIcon class="ui-icon" />
                 </button>
             </div>
-            <p
-                v-if="searchStore.contentError"
-                id="content-search-error"
-                class="search-error"
-                role="alert"
-            >
-                内容正则无效：{{ searchStore.contentError }}
-            </p>
 
             <transition name="slide">
                 <div
@@ -243,11 +235,12 @@
             >
                 {{
                     searchStore.hasSearchError
-                        ? '请修正无效的正则表达式'
+                        ? '正则表达式错误：'
                         : searchStore.hasActiveFilter
                           ? '未找到匹配的消息'
                           : '输入关键词开始搜索'
                 }}
+                {{ searchStore.contentError }}
             </div>
 
             <DynamicScroller
@@ -542,13 +535,6 @@ const truncate = (str: string, len: number) => {
     color: var(--text-primary);
 }
 
-.search-error {
-    margin: 4px 0 0;
-    color: var(--text-secondary);
-    font-size: 12px;
-    overflow-wrap: anywhere;
-}
-
 .form-control[aria-invalid='true'] {
     border-color: var(--active-accent);
 }
@@ -629,6 +615,7 @@ const truncate = (str: string, len: number) => {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    overflow-wrap: anywhere;
 }
 
 .scroller {
