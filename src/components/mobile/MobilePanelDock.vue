@@ -32,7 +32,7 @@ const bottomPanels: Array<{
     icon: typeof FolderOpen;
 }> = [
     { name: 'chunkList', label: '场景', icon: FolderOpen },
-    { name: 'coloring', label: '染色', icon: Palette },
+    { name: 'coloring', label: '样式', icon: Palette },
     { name: 'search', label: '搜索', icon: Search },
     { name: 'exportFormat', label: '模板', icon: TextInitial },
     { name: 'resources', label: '资源', icon: Images },

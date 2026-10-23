@@ -11,7 +11,7 @@
                 <span class="expand-icon" :class="{ 'is-expanded': expanded }">
                     <ChevronRight class="ui-icon" />
                 </span>
-                <span>自定义染色规则</span>
+                <span>自定义样式规则</span>
                 <span class="section-count">
                     {{ styleStore.customRules.length }}
                 </span>
