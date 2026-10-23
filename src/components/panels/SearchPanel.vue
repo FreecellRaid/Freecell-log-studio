@@ -31,6 +31,7 @@
         <div ref="controlsRef" class="search-controls" :style="controlsStyle">
             <div class="search-input-wrapper">
                 <input
+                    ref="searchInputRef"
                     v-model="searchStore.quickSearch"
                     type="text"
                     placeholder="搜索消息内容..."
@@ -302,7 +303,7 @@ import {
     SquareCheckBig,
     Trash2,
 } from '@lucide/vue';
-import { computed, ref, watch, type CSSProperties } from 'vue';
+import { computed, nextTick, ref, watch, type CSSProperties } from 'vue';
 import { buildIdentityStats } from '@/editor/identity';
 import { useActiveContext } from '@/composables/application/useActiveContext';
 import type { Message } from '@/types/log';
@@ -328,6 +329,20 @@ const searchStore = useSearchStore();
 const logStore = useLogStore();
 const uiStore = useUiStore();
 const { dispatch } = useCommandDispatcher();
+const searchInputRef = ref<HTMLInputElement | null>(null);
+
+watch(
+    () => searchStore.focusRequested,
+    async (requested) => {
+        if (!requested) return;
+        await nextTick();
+        if (!searchInputRef.value) return;
+        searchInputRef.value.focus();
+        searchInputRef.value.select();
+        searchStore.focusRequested = false;
+    },
+    { immediate: true, flush: 'post' },
+);
 
 const playerNameOptions = computed<SelectOption[]>(() =>
     buildIdentityOptions('playerName'),

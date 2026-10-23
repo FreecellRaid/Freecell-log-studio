@@ -10,10 +10,15 @@ export type WindowName =
     | 'exportPreview'
     | 'help'
     | 'remoteImport'
-    | 'imageInsert';
+    | 'imageInsert'
+    | 'replace';
 
 export type WorkspaceViewName = 'chunkView' | 'exportPreview' | 'defaultView';
-export type ModalWindowName = 'help' | 'remoteImport' | 'imageInsert';
+export type ModalWindowName =
+    | 'help'
+    | 'remoteImport'
+    | 'imageInsert'
+    | 'replace';
 export type PanelWindowName = Exclude<
     WindowName,
     WorkspaceViewName | ModalWindowName

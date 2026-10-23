@@ -55,6 +55,7 @@ export const useSearchStore = defineStore('searchPanel', () => {
     const logStore = useLogStore();
 
     const quickSearch = ref('');
+    const focusRequested = ref(false);
     const contentRegex = ref(false);
     const noteRegex = ref(false);
     const isAdvancedExpanded = ref(false);
@@ -146,6 +147,7 @@ export const useSearchStore = defineStore('searchPanel', () => {
 
     return {
         quickSearch,
+        focusRequested,
         contentRegex,
         noteRegex,
         contentError,

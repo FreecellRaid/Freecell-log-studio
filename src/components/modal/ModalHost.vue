@@ -12,22 +12,26 @@
                     ? 'help-title'
                     : win.windowName === 'imageInsert'
                       ? 'image-insert-title'
-                      : 'remote-import-title'
+                      : win.windowName === 'replace'
+                        ? 'replace-title'
+                        : 'remote-import-title'
             "
         >
             <HelpDocument v-if="win.windowName === 'help'" />
             <RemoteImportDialog v-else-if="win.windowName === 'remoteImport'" />
             <ImageInsertDialog v-else-if="win.windowName === 'imageInsert'" />
+            <ReplacementDialog v-else-if="win.windowName === 'replace'" />
         </ModalFrame>
     </Teleport>
 </template>
 
 <script setup lang="ts">
 import { useWindowStore } from '@/stores/ui/windowStore';
+import ModalFrame from '@/components/modal/ModalFrame.vue';
 import HelpDocument from '@/components/modal/HelpDocument.vue';
 import RemoteImportDialog from '@/components/modal/RemoteImportDialog.vue';
-import ModalFrame from '@/components/modal/ModalFrame.vue';
 import ImageInsertDialog from '@/components/modal/ImageInsertDialog.vue';
+import ReplacementDialog from '@/components/modal/ReplacementDialog.vue';
 
 const windowStore = useWindowStore();
 </script>

@@ -8,6 +8,38 @@ import {
 export function useKeyboardShortcuts() {
     const { dispatch } = useCommandDispatcher();
 
+    // 查找/替换在捕获阶段接管，包括输入框和弹窗内，避免浏览器先执行默认行为。
+    // 是否允许打开业务界面仍由 dispatcher 的弹窗优先级决定。
+    const handleBrowserShortcut = (event: KeyboardEvent) => {
+        if (event.isComposing) return;
+        const key = event.key.toLowerCase();
+        let command: CommandType | null = null;
+        if (
+            (event.ctrlKey || event.metaKey) &&
+            !event.altKey &&
+            !event.shiftKey &&
+            key === 'f'
+        )
+            command = 'openSearch';
+        else if (
+            (event.ctrlKey &&
+                !event.metaKey &&
+                !event.altKey &&
+                !event.shiftKey &&
+                key === 'h') ||
+            (event.metaKey &&
+                event.altKey &&
+                !event.ctrlKey &&
+                !event.shiftKey &&
+                (key === 'f' || event.code === 'KeyF'))
+        )
+            command = 'replace';
+        if (!command) return;
+        event.preventDefault();
+        event.stopPropagation();
+        dispatch(command);
+    };
+
     const handleKeyDown = (event: KeyboardEvent) => {
         const isModKey = event.ctrlKey || event.metaKey;
         const key = event.key.toLowerCase();
@@ -50,6 +82,12 @@ export function useKeyboardShortcuts() {
         }
     };
 
-    onMounted(() => window.addEventListener('keydown', handleKeyDown));
-    onUnmounted(() => window.removeEventListener('keydown', handleKeyDown));
+    onMounted(() => {
+        window.addEventListener('keydown', handleBrowserShortcut, true);
+        window.addEventListener('keydown', handleKeyDown);
+    });
+    onUnmounted(() => {
+        window.removeEventListener('keydown', handleBrowserShortcut, true);
+        window.removeEventListener('keydown', handleKeyDown);
+    });
 }
