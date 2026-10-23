@@ -4,7 +4,7 @@
         @pointerdown="windowStore.setFocus('coloring')"
     >
         <header class="panel-header">
-            <div class="header-title"><h3>角色管理与染色</h3></div>
+            <div class="header-title"><h3>角色管理与样式规则</h3></div>
         </header>
         <div ref="sections" class="coloring-sections">
             <IdentityPanel
@@ -19,7 +19,7 @@
                 :class="{ 'is-resizing': dragging }"
                 role="separator"
                 tabindex="0"
-                aria-label="调整角色与染色规则分区高度"
+                aria-label="调整角色与样式规则分区高度"
                 aria-orientation="horizontal"
                 :aria-valuenow="Math.round(splitRatio * 100)"
                 :aria-valuemin="Math.round(minRatio * 100)"

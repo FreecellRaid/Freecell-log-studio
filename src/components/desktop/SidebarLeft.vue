@@ -28,7 +28,7 @@
                             windowStore.selectedLeftPanel === 'coloring' &&
                             windowStore.isWindowOpen('coloring'),
                     }"
-                    title="染色"
+                    title="样式"
                     @click="handleNavClick('coloring')"
                 >
                     <Palette class="ui-icon" />
