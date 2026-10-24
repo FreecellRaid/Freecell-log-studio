@@ -1,24 +1,24 @@
 import { nextTick, toValue, watch, type MaybeRefOrGetter } from 'vue';
-import { useWindowStore } from '@/stores/ui/windowStore';
+import { useMessageRevealStore } from '@/stores/editor/messageRevealStore';
 import type { Message } from '@/types/log';
 
 export function useMessageReveal(options: {
-    windowId: MaybeRefOrGetter<string>;
+    paneId: MaybeRefOrGetter<string>;
     messages: MaybeRefOrGetter<Message[]>;
     ready: MaybeRefOrGetter<boolean>;
     reveal: (index: number, messageId: string) => boolean | Promise<boolean>;
 }) {
-    const windowStore = useWindowStore();
+    const revealStore = useMessageRevealStore();
     watch(
         () =>
             [
-                windowStore.pendingMessageReveal,
-                toValue(options.windowId),
+                revealStore.pending,
+                toValue(options.paneId),
                 toValue(options.messages).slice(),
                 toValue(options.ready),
             ] as const,
-        async ([request, windowId, messages, ready], _previous, onCleanup) => {
-            if (!request || request.windowId !== windowId || !ready) return;
+        async ([request, paneId, messages, ready], _previous, onCleanup) => {
+            if (!request || request.paneId !== paneId || !ready) return;
             const index = messages.findIndex(
                 (message) => message.messageId === request.messageId,
             );
@@ -30,8 +30,7 @@ export function useMessageReveal(options: {
             await nextTick();
             if (cancelled) return;
             const revealed = await options.reveal(index, request.messageId);
-            if (!cancelled && revealed)
-                windowStore.clearPendingMessageReveal(request.requestId);
+            if (!cancelled && revealed) revealStore.clear(request.requestId);
         },
         { flush: 'post', immediate: true },
     );

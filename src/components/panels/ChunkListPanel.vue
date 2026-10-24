@@ -149,13 +149,13 @@
                                 :class="{
                                     // 对自身的焦点判断
                                     'is-active':
-                                        windowStore.currentActiveWindow
-                                            .windowId === 'chunkList',
+                                        navigation.isCommandTarget('chunkList'),
                                     // 对view的焦点判断
                                     'is-active-chunk':
-                                        getWindowTargetId(
-                                            windowStore.currentActiveView,
-                                        ) === chunk.chunkId,
+                                        editorWorkspace.activePane.view.kind ===
+                                            'scene' &&
+                                        editorWorkspace.activePane.view
+                                            .chunkId === chunk.chunkId,
                                     // 选中判断
                                     'is-selected':
                                         activeContext.selectedChunkIds.value.has(
@@ -286,8 +286,9 @@
 </template>
 
 <script setup lang="ts">
+import { useWorkspaceStore } from '@/stores/ui/workspaceStore';
+
 import { vCommandScope } from '@/directives/commandScope';
-import { getWindowTargetId } from '@/types/window';
 import { ChevronRight, ChevronsDown, Plus, Trash2 } from '@lucide/vue';
 import { nextTick, reactive, ref, watch } from 'vue';
 import {
@@ -296,19 +297,20 @@ import {
 } from '@/composables/interaction/useDragDrop';
 import { useLogCommands } from '@/stores/project/logCommands';
 import { useLogStore } from '@/stores/project/logStore';
-import { useWindowStore } from '@/stores/ui/windowStore';
+import { useEditorNavigation } from '@/composables/application/useEditorNavigation';
 import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
 import type { Chunk, LogDocument } from '@/types/log';
-import { useActiveContext } from '@/composables/application/useActiveContext';
+import { useSelectionContext } from '@/composables/application/useSelectionContext';
 import { vClickOutside } from '@/directives/clickOutside';
 
 const logStore = useLogStore();
-const windowStore = useWindowStore();
+const navigation = useEditorNavigation();
+const editorWorkspace = useWorkspaceStore();
 const logCommands = useLogCommands();
 const editorSessionStore = useEditorSessionStore();
 const chunkDrag = useChunkDragDrop();
 const documentDrag = useDocumentDragDrop();
-const activeContext = useActiveContext('chunkList');
+const activeContext = useSelectionContext({ kind: 'chunkList' });
 
 const renameTarget = ref<{ kind: 'document' | 'chunk'; id: string } | null>(
     null,
@@ -449,14 +451,8 @@ function handleChunkSelect(chunkId: string, event: MouseEvent) {
     activeContext.handleChunkClickSelection(event, chunkId);
 
     if (!event.ctrlKey && !event.metaKey && !event.shiftKey) {
-        if (windowStore.hasSplitView) {
-            const activePaneIndex = windowStore.getActivePaneIndex();
-            windowStore.setPaneView(activePaneIndex, 'chunkView', chunkId);
-        } else {
-            // 单窗口模式，直接使用 setActiveChunk 切换视图
-            windowStore.setActiveChunk(chunkId);
-        }
-        windowStore.setFocus('chunkList');
+        navigation.showScene(chunkId);
+        navigation.activatePanel('chunkList');
     }
 }
 
@@ -478,9 +474,7 @@ function handleDelete(chunkId: string) {
         targets.forEach((id) => {
             logCommands.deleteChunk(id);
         });
-        windowStore.pruneOrphanChunkViews((id) =>
-            Boolean(logStore.findChunkById(id)),
-        );
+        navigation.pruneScenes((id) => Boolean(logStore.findChunkById(id)));
 
         if (selectedChunkIds.value.has(chunkId)) {
             clearSelection();

@@ -1,9 +1,10 @@
+import { useWorkspaceStore } from '@/stores/ui/workspaceStore';
 import { useProjectManager } from '@/composables/application/useProjectManager';
 import { useClipboardStore } from '@/stores/editor/clipboardStore';
 import { useHistoryStore } from '@/stores/editor/historyStore';
 import { useLogStore } from '@/stores/project/logStore';
 import { useStyleStore } from '@/stores/project/styleStore';
-import { useWindowStore } from '@/stores/ui/windowStore';
+import { useEditorNavigation } from '@/composables/application/useEditorNavigation';
 import { useSelectionStore } from '@/stores/editor/selectionStore';
 import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
 
@@ -12,7 +13,8 @@ export function useWorkspaceActions() {
     const styleStore = useStyleStore();
     const clipboardStore = useClipboardStore();
     const historyStore = useHistoryStore();
-    const windowStore = useWindowStore();
+    const navigation = useEditorNavigation();
+    const editorWorkspace = useWorkspaceStore();
     const selectionStore = useSelectionStore();
     const editorSessionStore = useEditorSessionStore();
     const projectManager = useProjectManager();
@@ -42,7 +44,6 @@ export function useWorkspaceActions() {
 
     function clearWorkspaceWithConfirmation(options?: {
         afterClear?: () => void;
-        focusTarget?: string;
     }) {
         if (!projectManager.hasWorkspaceState.value) return false;
         if (!window.confirm('确定要清空所有数据吗？本操作不可撤销。')) {
@@ -56,8 +57,9 @@ export function useWorkspaceActions() {
         editorSessionStore.stopEditing();
         historyStore.clearHistory();
         // 数据已清空，工作区里指向旧分块的视图一并移除，避免残留"未知场景"
-        windowStore.pruneOrphanChunkViews(() => false);
-        windowStore.setFocus(options?.focusTarget ?? 'defaultView');
+        editorWorkspace.reset();
+        navigation.reconcileContext();
+        navigation.focusWorkspace();
         options?.afterClear?.();
         return true;
     }

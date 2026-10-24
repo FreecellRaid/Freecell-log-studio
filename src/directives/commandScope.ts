@@ -1,8 +1,6 @@
 import type { ObjectDirective } from 'vue';
 import type { CommandContext } from '@/types/commandContext';
-import { commandContextOwner } from '@/types/commandContext';
-import { useCommandContextStore } from '@/stores/ui/commandContextStore';
-import { useWindowStore } from '@/stores/ui/windowStore';
+import { useEditorNavigation } from '@/composables/application/useEditorNavigation';
 
 const scopes = new WeakMap<
     HTMLElement,
@@ -17,8 +15,7 @@ const listenerOptions = { capture: true };
 // focusin 同时覆盖 Tab 和程序调用 focus()，不只跟随鼠标。
 export const vCommandScope: ObjectDirective<HTMLElement, CommandContext> = {
     mounted(element, binding) {
-        const windows = useWindowStore();
-        const commands = useCommandContextStore();
+        const navigation = useEditorNavigation();
         const scope = {
             context: binding.value,
             activate(event: Event) {
@@ -28,10 +25,7 @@ export const vCommandScope: ObjectDirective<HTMLElement, CommandContext> = {
                     target.closest('[data-command-scope]') !== element
                 )
                     return;
-                if (windows.blockingModal) return;
-                // 兼容原有布局和焦点样式，后续阶段可移除窗口依赖。
-                windows.setFocus(commandContextOwner(scope.context));
-                commands.activate(scope.context);
+                navigation.activateContext(scope.context);
             },
         };
         scopes.set(element, scope);

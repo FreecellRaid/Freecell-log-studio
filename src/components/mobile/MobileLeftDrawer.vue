@@ -51,7 +51,7 @@
                 <button
                     class="drawer-row"
                     type="button"
-                    @click="windowStore.openHelpDocument"
+                    @click="() => editorDialogs.open('help')"
                 >
                     <span class="drawer-row-icon">
                         <BookOpen class="ui-icon" />
@@ -218,6 +218,8 @@
 </template>
 
 <script setup lang="ts">
+import { useDialogStore } from '@/stores/ui/dialogStore';
+
 import { ref } from 'vue';
 import ToggleButton from '@/components/common/ToggleButton.vue';
 import {
@@ -245,7 +247,6 @@ import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
 import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
 import { useUiStore } from '@/stores/ui/uiStore';
 import { useImportSettingsStore } from '@/stores/io/importSettingsStore';
-import { useWindowStore } from '@/stores/ui/windowStore';
 import { useWorkspaceActions } from '@/composables/application/useWorkspaceActions';
 import { useSwipeGesture } from '@/composables/interaction/useSwipeGesture';
 
@@ -253,7 +254,7 @@ const logStore = useLogStore();
 const styleStore = useStyleStore();
 const uiStore = useUiStore();
 const importSettingsStore = useImportSettingsStore();
-const windowStore = useWindowStore();
+const editorDialogs = useDialogStore();
 const mobileUiStore = useMobileUiStore();
 const editorSessionStore = useEditorSessionStore();
 const workspaceActions = useWorkspaceActions();
@@ -291,7 +292,6 @@ async function openLatestStoredProject() {
 
 function clearAll() {
     workspaceActions.clearWorkspaceWithConfirmation({
-        focusTarget: 'defaultView',
         afterClear: mobileUiStore.reset,
     });
 }

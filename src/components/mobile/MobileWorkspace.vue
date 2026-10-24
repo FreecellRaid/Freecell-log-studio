@@ -1,14 +1,15 @@
 <template>
     <main class="mobile-main">
-        <WorkspaceView :instance="windowStore.lastFocusedView" />
+        <WorkspaceView :pane="editorWorkspace.activePane" />
     </main>
 </template>
 
 <script setup lang="ts">
-import { useWindowStore } from '@/stores/ui/windowStore';
+import { useWorkspaceStore } from '@/stores/ui/workspaceStore';
+
 import WorkspaceView from '@/components/workspace/WorkspaceView.vue';
 
-const windowStore = useWindowStore();
+const editorWorkspace = useWorkspaceStore();
 </script>
 
 <style scoped>

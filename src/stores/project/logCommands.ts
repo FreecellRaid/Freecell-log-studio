@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { useSelectionStore } from '@/stores/editor/selectionStore';
 import { useLogStore } from '@/stores/project/logStore';
 import { useHistoryStore } from '@/stores/editor/historyStore';
 import { useStyleStore } from '@/stores/project/styleStore';
@@ -42,6 +43,7 @@ export const useLogCommands = defineStore('logCommands', () => {
         historyStore.captureSnapshot();
         mutate();
         normalizeDocuments(logStore.documents);
+        useSelectionStore().reconcile(logStore.documents);
         options?.afterMutate?.();
         if (options?.syncProjectName) {
             if (!logStore.isProjectNameCustomized) {

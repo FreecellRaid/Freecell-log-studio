@@ -47,6 +47,8 @@
 </template>
 
 <script setup lang="ts">
+import { useDialogStore } from '@/stores/ui/dialogStore';
+
 import {
     HelpCircle,
     Keyboard,
@@ -58,7 +60,6 @@ import {
     CodeXml,
     Upload,
 } from '@lucide/vue';
-import { useWindowStore } from '@/stores/ui/windowStore';
 import ModalDialog from '@/components/modal/ModalDialog.vue';
 import helpDocumentJson from '@/data/helpDocument.json';
 
@@ -113,10 +114,10 @@ const iconComponents = {
     Keyboard,
 } satisfies Record<HelpIconName, unknown>;
 
-const windowStore = useWindowStore();
+const editorDialogs = useDialogStore();
 
 function handleClose() {
-    windowStore.closeHelpDocument();
+    editorDialogs.close('help');
 }
 </script>
 

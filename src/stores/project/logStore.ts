@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { useSelectionStore } from '@/stores/editor/selectionStore';
 import { ref, computed } from 'vue';
 import type { LogDocument, Message } from '@/types/log';
 import { generateId } from '@/utils/id';
@@ -65,6 +66,7 @@ export function newlogStore() {
 
     function clearData() {
         documents.value = [];
+        useSelectionStore().clearAllSelections();
         projectId.value = generateId();
         projectName.value = '';
         projectTime.value = '';
@@ -74,6 +76,7 @@ export function newlogStore() {
     function replaceDocuments(newDocuments: LogDocument[]) {
         normalizeDocuments(newDocuments);
         documents.value = newDocuments;
+        useSelectionStore().reconcile(newDocuments);
         syncProjectNameFromDocuments();
     }
 

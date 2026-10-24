@@ -403,17 +403,18 @@
 </template>
 
 <script setup lang="ts">
-import { getWindowTargetId } from '@/types/window';
+import { useWorkspaceStore } from '@/stores/ui/workspaceStore';
+
+import type { SelectionScope } from '@/types/selection';
 import { ChevronRight, Eye, EyeOff, Plus, Trash2 } from '@lucide/vue';
 import { ref, computed } from 'vue';
 import { useStyleStore } from '@/stores/project/styleStore';
 import { useLogStore } from '@/stores/project/logStore';
-import { useActiveContext } from '@/composables/application/useActiveContext';
+import { useSelectionContext } from '@/composables/application/useSelectionContext';
 import { useDraftValues } from '@/composables/application/useDraftValues';
 import type { StyleRule } from '@/types/style';
 import type { MessageFilter } from '@/types/log';
 import { matchesMessageFilter } from '@/editor/filter';
-import { useWindowStore } from '@/stores/ui/windowStore';
 import { vClickOutside } from '@/directives/clickOutside';
 import ToggleButton from '@/components/common/ToggleButton.vue';
 
@@ -421,12 +422,14 @@ const expanded = defineModel<boolean>('expanded', { default: true });
 
 const styleStore = useStyleStore();
 const logStore = useLogStore();
-const windowStore = useWindowStore();
-const activeViewId = computed(() => {
-    const view = windowStore.currentActiveView;
-    return getWindowTargetId(view);
+const editorWorkspace = useWorkspaceStore();
+const activeViewScope = computed<SelectionScope>(() => {
+    const view = editorWorkspace.activePane;
+    return view.view.kind === 'scene'
+        ? { kind: 'scene', chunkId: view.view.chunkId }
+        : { kind: 'none' };
 });
-const activeContext = useActiveContext(activeViewId);
+const activeContext = useSelectionContext(activeViewScope);
 const expandedRules = ref<Set<string>>(new Set());
 
 type RuleDraftField =

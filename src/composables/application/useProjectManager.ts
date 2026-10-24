@@ -1,3 +1,4 @@
+import { useWorkspaceStore } from '@/stores/ui/workspaceStore';
 import { collectDocumentResourceIds } from '@/editor/resourceReferences';
 import { protectResources } from '@/io/storage/resourceCoordination';
 import {
@@ -6,13 +7,16 @@ import {
 } from '@/io/storage/resourceCleanup';
 import { currentResourceRoots } from './resourceRoots';
 import { computed } from 'vue';
+import { useSelectionStore } from '@/stores/editor/selectionStore';
+import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
+import { useMessageRevealStore } from '@/stores/editor/messageRevealStore';
 import { useClipboardStore } from '@/stores/editor/clipboardStore';
 import { useHistoryStore } from '@/stores/editor/historyStore';
 import { useLogStore } from '@/stores/project/logStore';
 import { useStyleStore } from '@/stores/project/styleStore';
-import { useWindowStore } from '@/stores/ui/windowStore';
+import { useEditorNavigation } from '@/composables/application/useEditorNavigation';
 import type { WorkspaceProject } from '@/types/project';
-import { useActiveContext } from '@/composables/application/useActiveContext';
+import { useSelectionContext } from '@/composables/application/useSelectionContext';
 import {
     buildWorkspaceProject,
     sanitizeProjectFilename,
@@ -51,8 +55,9 @@ export function useProjectManager() {
     const styleStore = useStyleStore();
     const clipboardStore = useClipboardStore();
     const historyStore = useHistoryStore();
-    const windowStore = useWindowStore();
-    const activeContext = useActiveContext();
+    const navigation = useEditorNavigation();
+    const editorWorkspace = useWorkspaceStore();
+    const activeContext = useSelectionContext();
     const storageState = useProjectStorageStore();
     const resourceTasks = useResourceTasksStore();
 
@@ -115,13 +120,13 @@ export function useProjectManager() {
         styleStore.replaceRules(project.styleRules);
         styleStore.replaceViewSettings(project.viewSettings);
         clipboardStore.clearClipboard();
-        activeContext.clearSelection();
+        useSelectionStore().clearAllSelections();
+        useEditorSessionStore().stopEditing();
+        useMessageRevealStore().clear();
         historyStore.clearHistory();
-        windowStore.pruneOrphanChunkViews((id) =>
-            Boolean(logStore.findChunkById(id)),
-        );
-        windowStore.focusStack = [];
-        windowStore.setFocus(windowStore.currentActiveView.windowId);
+        navigation.pruneScenes((id) => Boolean(logStore.findChunkById(id)));
+        editorWorkspace.reset();
+        navigation.focusWorkspace();
 
         return true;
     }

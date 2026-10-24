@@ -235,7 +235,7 @@
             class="results-container"
             tabindex="0"
             aria-label="搜索结果"
-            @focus="windowStore.setFocus('search')"
+            @focus="navigation.activatePanel('search')"
         >
             <div
                 v-if="searchStore.searchResults.length === 0"
@@ -274,8 +274,7 @@
                                         msg.messageId,
                                     ),
                                 'is-active':
-                                    windowStore.currentActiveWindow.windowId ===
-                                    'search',
+                                    navigation.isCommandTarget('search'),
                             }"
                             @click="handleItemClick($event, msg.messageId)"
                         >
@@ -323,10 +322,10 @@ import {
 } from '@lucide/vue';
 import { computed, nextTick, ref, watch, type CSSProperties } from 'vue';
 import { buildIdentityStats } from '@/editor/identity';
-import { useActiveContext } from '@/composables/application/useActiveContext';
+import { useSelectionContext } from '@/composables/application/useSelectionContext';
 import { formatDate } from '@/utils/date';
 import { useCommandDispatcher } from '@/composables/application/useCommandDispatcher';
-import { useWindowStore } from '@/stores/ui/windowStore';
+import { useEditorNavigation } from '@/composables/application/useEditorNavigation';
 import { useSearchStore } from '@/stores/editor/searchStore';
 import { useLogStore } from '@/stores/project/logStore';
 import { useUiStore } from '@/stores/ui/uiStore';
@@ -340,8 +339,8 @@ import { isRoleType, type RoleType } from '@/types/log';
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 
-const windowStore = useWindowStore();
-const activeContext = useActiveContext('search');
+const navigation = useEditorNavigation();
+const activeContext = useSelectionContext({ kind: 'search' });
 const searchStore = useSearchStore();
 const logStore = useLogStore();
 const uiStore = useUiStore();
@@ -485,13 +484,13 @@ watch(
 const resultsRef = ref<HTMLElement | null>(null);
 
 function jumpToMessage(msgId: string) {
-    windowStore.setFocus('search');
+    navigation.activatePanel('search');
     dispatch('jump', { msgId });
 }
 
 function handleItemClick(event: MouseEvent, msgId: string) {
     resultsRef.value?.focus({ preventScroll: true });
-    windowStore.setFocus('search');
+    navigation.activatePanel('search');
 
     dispatch('select', {
         event,
@@ -501,17 +500,17 @@ function handleItemClick(event: MouseEvent, msgId: string) {
 }
 
 function selectAllMatches() {
-    windowStore.setFocus('search');
+    navigation.activatePanel('search');
     dispatch('selectAll');
 }
 
 function openReplacement() {
-    windowStore.setFocus('search');
+    navigation.activatePanel('search');
     dispatch('replace');
 }
 
 function deleteSelectedMessages() {
-    windowStore.setFocus('search');
+    navigation.activatePanel('search');
     dispatch('delete');
 }
 

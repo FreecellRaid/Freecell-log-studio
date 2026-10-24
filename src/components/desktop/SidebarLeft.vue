@@ -2,9 +2,7 @@
     <div
         class="sidebar-left-container"
         :class="{
-            'is-collapsed': !windowStore.isWindowOpen(
-                windowStore.selectedLeftPanel,
-            ),
+            'is-collapsed': !editorLayout.sidebarOpen,
         }"
     >
         <nav class="activity-bar">
@@ -13,8 +11,8 @@
                     class="nav-item"
                     :class="{
                         active:
-                            windowStore.selectedLeftPanel === 'chunkList' &&
-                            windowStore.isWindowOpen('chunkList'),
+                            editorLayout.sidebarOpen &&
+                            editorLayout.activePanel === 'chunkList',
                     }"
                     title="文件列表"
                     @click="handleNavClick('chunkList')"
@@ -25,8 +23,8 @@
                     class="nav-item"
                     :class="{
                         active:
-                            windowStore.selectedLeftPanel === 'coloring' &&
-                            windowStore.isWindowOpen('coloring'),
+                            editorLayout.sidebarOpen &&
+                            editorLayout.activePanel === 'coloring',
                     }"
                     title="样式"
                     @click="handleNavClick('coloring')"
@@ -37,8 +35,8 @@
                     class="nav-item"
                     :class="{
                         active:
-                            windowStore.selectedLeftPanel === 'search' &&
-                            windowStore.isWindowOpen('search'),
+                            editorLayout.sidebarOpen &&
+                            editorLayout.activePanel === 'search',
                     }"
                     title="搜索过滤"
                     @click="handleNavClick('search')"
@@ -49,8 +47,8 @@
                     class="nav-item"
                     :class="{
                         active:
-                            windowStore.selectedLeftPanel === 'exportFormat' &&
-                            windowStore.isWindowOpen('exportFormat'),
+                            editorLayout.sidebarOpen &&
+                            editorLayout.activePanel === 'exportFormat',
                     }"
                     title="导出模板"
                     @click="handleNavClick('exportFormat')"
@@ -61,8 +59,8 @@
                     class="nav-item"
                     :class="{
                         active:
-                            windowStore.selectedLeftPanel === 'resources' &&
-                            windowStore.isWindowOpen('resources'),
+                            editorLayout.sidebarOpen &&
+                            editorLayout.activePanel === 'resources',
                     }"
                     title="资源管理"
                     role="button"
@@ -98,37 +96,37 @@
         </nav>
 
         <aside
-            v-if="windowStore.isWindowOpen(windowStore.selectedLeftPanel)"
+            v-if="editorLayout.sidebarOpen"
             class="side-panel"
             :style="{ width: uiStore.leftPanelWidth + 'px' }"
         >
             <div class="panel-content">
                 <div
-                    v-if="windowStore.selectedLeftPanel === 'chunkList'"
+                    v-if="editorLayout.activePanel === 'chunkList'"
                     class="panel-slot"
                 >
                     <ChunkListPanel />
                 </div>
                 <div
-                    v-else-if="windowStore.selectedLeftPanel === 'coloring'"
+                    v-else-if="editorLayout.activePanel === 'coloring'"
                     class="panel-slot"
                 >
                     <ColoringPanel />
                 </div>
                 <div
-                    v-else-if="windowStore.selectedLeftPanel === 'search'"
+                    v-else-if="editorLayout.activePanel === 'search'"
                     class="panel-slot"
                 >
                     <SearchPanel />
                 </div>
                 <div
-                    v-else-if="windowStore.selectedLeftPanel === 'exportFormat'"
+                    v-else-if="editorLayout.activePanel === 'exportFormat'"
                     class="panel-slot"
                 >
                     <ExportFormatPanel />
                 </div>
                 <div
-                    v-else-if="windowStore.selectedLeftPanel === 'resources'"
+                    v-else-if="editorLayout.activePanel === 'resources'"
                     class="panel-slot"
                 >
                     <ResourcePanel />
@@ -137,7 +135,7 @@
         </aside>
 
         <div
-            v-if="windowStore.isWindowOpen(windowStore.selectedLeftPanel)"
+            v-if="editorLayout.sidebarOpen"
             class="resize-handle resize-handle-x resize-handle-overlay resize-handle-right-edge"
             @mousedown="startResize"
         ></div>
@@ -145,6 +143,8 @@
 </template>
 
 <script setup lang="ts">
+import { useLayoutStore } from '@/stores/ui/layoutStore';
+
 import {
     FolderOpen,
     Images,
@@ -158,7 +158,7 @@ import {
 import { defineAsyncComponent, ref, onMounted, onUnmounted } from 'vue';
 import { usePanelResize } from '@/composables/ui/usePanelResize';
 import { useUiStore } from '@/stores/ui/uiStore';
-import { useWindowStore } from '@/stores/ui/windowStore';
+import { useEditorNavigation } from '@/composables/application/useEditorNavigation';
 import ChunkListPanel from '@/components/panels/ChunkListPanel.vue';
 import ExportFormatPanel from '@/components/panels/ExportFormatPanel.vue';
 import ColoringPanel from '@/components/panels/ColoringPanel.vue';
@@ -170,7 +170,8 @@ const SettingsPopover = defineAsyncComponent(
 );
 
 const uiStore = useUiStore();
-const windowStore = useWindowStore();
+const navigation = useEditorNavigation();
+const editorLayout = useLayoutStore();
 const showSettings = ref(false);
 const closeSettings = () => {
     showSettings.value = false;
@@ -189,14 +190,11 @@ onMounted(() => {
 onUnmounted(() => {
     window.removeEventListener('click', closeSettings);
 });
-function handleNavClick(panelName: typeof windowStore.selectedLeftPanel) {
-    if (
-        windowStore.isWindowOpen(windowStore.selectedLeftPanel) &&
-        windowStore.selectedLeftPanel === panelName
-    ) {
-        windowStore.toggleLeftPanel();
+function handleNavClick(panelName: typeof editorLayout.activePanel) {
+    if (editorLayout.sidebarOpen && editorLayout.activePanel === panelName) {
+        navigation.togglePanel();
     } else {
-        windowStore.openLeftPanel(panelName);
+        navigation.openPanel(panelName);
     }
 }
 </script>

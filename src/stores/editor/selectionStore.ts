@@ -1,9 +1,12 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { readonly, ref } from 'vue';
+import { selectionScopeKey, type SelectionScope } from '@/types/selection';
+import type { LogDocument } from '@/types/log';
 
 type SelectionType = 'message' | 'chunk' | 'rule' | 'format' | 'resource';
 
 interface SelectionState {
+    scope: SelectionScope;
     selectionType: SelectionType;
     ids: Set<string>;
     anchorId?: string;
@@ -11,49 +14,58 @@ interface SelectionState {
 }
 
 function SelectionStore() {
+    const activeScope = ref<SelectionScope>({ kind: 'none' });
+    function activateScope(scope: SelectionScope) {
+        activeScope.value = { ...scope };
+    }
     const selections = ref<Map<string, SelectionState>>(new Map());
 
-    function _getKey(windowId: string, type: SelectionType): string {
-        return `${windowId}::${type}`;
+    function _getKey(scope: SelectionScope, type: SelectionType): string {
+        return `${selectionScopeKey(scope)}::${type}`;
     }
 
-    function getState(windowId: string, type: SelectionType): SelectionState {
-        if (windowId === 'defaultView') {
+    function getState(
+        scope: SelectionScope,
+        type: SelectionType,
+    ): SelectionState {
+        if (scope.kind === 'none') {
             return {
+                scope,
                 selectionType: type,
                 ids: new Set(),
             };
         }
 
-        const key = _getKey(windowId, type);
+        const key = _getKey(scope, type);
         if (!selections.value.has(key)) {
-            return createState(windowId, type);
+            return createState(scope, type);
         }
         return selections.value.get(key)!;
     }
 
     function createState(
-        windowId: string,
+        scope: SelectionScope,
         type: SelectionType,
     ): SelectionState {
-        const key = _getKey(windowId, type);
+        const key = _getKey(scope, type);
         const newState: SelectionState = {
+            scope,
             selectionType: type,
             ids: new Set(),
         };
         const newMap = new Map(selections.value);
         newMap.set(key, newState);
         selections.value = newMap;
-        return newState;
+        return selections.value.get(key)!;
     }
 
     function select(
-        windowId: string,
+        scope: SelectionScope,
         type: SelectionType,
         ids: string | string[],
         isMulti: boolean = false,
     ) {
-        const state = getState(windowId, type);
+        const state = getState(scope, type);
         const idList = Array.isArray(ids) ? ids : [ids];
 
         /**
@@ -73,14 +85,14 @@ function SelectionStore() {
         }
     }
 
-    function clearSelection(windowId: string, type?: SelectionType) {
-        if (windowId === 'defaultView') return;
+    function clearSelection(scope: SelectionScope, type?: SelectionType) {
+        if (scope.kind === 'none') return;
 
         const newMap = new Map(selections.value);
         let hasChanges = false;
 
         if (type) {
-            const key = _getKey(windowId, type);
+            const key = _getKey(scope, type);
             // 使用 delete 彻底移除键值对，防止内存泄露
             if (newMap.has(key)) {
                 newMap.delete(key);
@@ -88,7 +100,7 @@ function SelectionStore() {
             }
         } else {
             for (const key of newMap.keys()) {
-                if (key.startsWith(`${windowId}::`)) {
+                if (key.startsWith(`${selectionScopeKey(scope)}::`)) {
                     newMap.delete(key);
                     hasChanges = true;
                 }
@@ -101,33 +113,34 @@ function SelectionStore() {
 
     function clearAllSelections() {
         selections.value = new Map();
+        activeScope.value = { kind: 'none' };
     }
 
     function getSelectedIds(
-        windowId: string,
+        scope: SelectionScope,
         type: SelectionType,
     ): Set<string> {
-        return getState(windowId, type).ids;
+        return getState(scope, type).ids;
     }
 
     function getSelectedItems<T>(
-        windowId: string,
+        scope: SelectionScope,
         type: SelectionType,
         sourceItems: T[],
         idGetter: (item: T) => string,
     ): T[] {
-        const ids = getSelectedIds(windowId, type);
+        const ids = getSelectedIds(scope, type);
         if (ids.size === 0) return [];
         return sourceItems.filter((item) => ids.has(idGetter(item)));
     }
 
     function selectNext(
-        windowId: string,
+        scope: SelectionScope,
         type: SelectionType,
         items: any[],
         idGetter: (item: any) => string = (i: any) => i.id,
     ) {
-        const state = getState(windowId, type);
+        const state = getState(scope, type);
         if (!state.lastSelectedId || items.length === 0) return;
 
         const currentIndex = items.findIndex(
@@ -146,12 +159,12 @@ function SelectionStore() {
     }
 
     function selectPrevious(
-        windowId: string,
+        scope: SelectionScope,
         type: SelectionType,
         items: any[],
         idGetter: (item: any) => string = (i: any) => i.id,
     ) {
-        const state = getState(windowId, type);
+        const state = getState(scope, type);
         if (!state.lastSelectedId || items.length === 0) return;
 
         const currentIndex = items.findIndex(
@@ -171,20 +184,20 @@ function SelectionStore() {
 
     /**
      * 根据属性选中下一个匹配项
-     * @param windowId 窗口ID
+     * @param scope 窗口ID
      * @param type 类型
      * @param items 原始数据列表
      * @param propertyName 匹配的属性键名
      * @param idGetter 获取ID的方法
      */
     function selectNextByProperty<T>(
-        windowId: string,
+        scope: SelectionScope,
         type: SelectionType,
         items: T[],
         propertyName: keyof T,
         idGetter: (item: T) => string,
     ) {
-        const state = getState(windowId, type);
+        const state = getState(scope, type);
         const lastId = state.lastSelectedId;
         if (!lastId || items.length === 0) return;
 
@@ -209,12 +222,12 @@ function SelectionStore() {
     }
 
     function selectAll(
-        windowId: string,
+        scope: SelectionScope,
         type: SelectionType,
         items: any[],
         idGetter: (item: any) => string = (i: any) => i.id,
     ) {
-        const state = getState(windowId, type);
+        const state = getState(scope, type);
         const allIds = items.map((item) => idGetter(item));
         state.ids = new Set(allIds);
 
@@ -225,14 +238,14 @@ function SelectionStore() {
 
     // cmd/sft 点选
     function handleEventSelection<T>(
-        windowId: string,
+        scope: SelectionScope,
         type: SelectionType,
         event: MouseEvent,
         targetId: string,
         items: T[],
         idGetter: (item: T) => string,
     ) {
-        const state = getState(windowId, type);
+        const state = getState(scope, type);
         const isMulti = event.ctrlKey || event.metaKey;
         const isRange = event.shiftKey;
 
@@ -241,7 +254,7 @@ function SelectionStore() {
 
             const anchorId = state.anchorId || state.lastSelectedId;
             if (!anchorId) {
-                select(windowId, type, targetId, false);
+                select(scope, type, targetId, false);
                 state.anchorId = targetId;
             } else {
                 const anchorIndex = items.findIndex(
@@ -265,7 +278,7 @@ function SelectionStore() {
                     state.ids = newIds;
                     state.lastSelectedId = targetId;
                 } else {
-                    select(windowId, type, targetId, false);
+                    select(scope, type, targetId, false);
                 }
             }
         } else if (isMulti) {
@@ -279,12 +292,66 @@ function SelectionStore() {
             state.lastSelectedId = targetId;
             state.anchorId = targetId;
         } else {
-            select(windowId, type, targetId, false);
+            select(scope, type, targetId, false);
             state.anchorId = targetId;
         }
     }
 
+    // 选区由业务数据的生命周期清理，关闭视图或面板不删除仍有效的选区。
+    function reconcile(documents: readonly LogDocument[]) {
+        const chunks = new Map(
+            documents
+                .flatMap((doc) => doc.chunks)
+                .map((chunk) => [chunk.chunkId, chunk]),
+        );
+        const messageIds = new Set(
+            [...chunks.values()].flatMap((chunk) =>
+                chunk.messages.map((message) => message.messageId),
+            ),
+        );
+        for (const [key, state] of selections.value) {
+            if (
+                state.scope.kind === 'scene' &&
+                !chunks.has(state.scope.chunkId)
+            ) {
+                selections.value.delete(key);
+                continue;
+            }
+            const valid =
+                state.selectionType === 'chunk'
+                    ? new Set(chunks.keys())
+                    : state.selectionType === 'message'
+                      ? state.scope.kind === 'scene'
+                          ? new Set(
+                                chunks
+                                    .get(state.scope.chunkId)!
+                                    .messages.map(
+                                        (message) => message.messageId,
+                                    ),
+                            )
+                          : messageIds
+                      : null;
+            if (!valid) continue;
+            if ([...state.ids].some((id) => !valid.has(id)))
+                state.ids = new Set(
+                    [...state.ids].filter((id) => valid.has(id)),
+                );
+            if (state.anchorId && !valid.has(state.anchorId))
+                state.anchorId = undefined;
+            if (state.lastSelectedId && !valid.has(state.lastSelectedId))
+                state.lastSelectedId = undefined;
+        }
+        if (
+            activeScope.value.kind === 'scene' &&
+            !chunks.has(activeScope.value.chunkId)
+        )
+            activeScope.value = { kind: 'none' };
+    }
+
     return {
+        activeScope: readonly(activeScope),
+        activateScope,
+        reconcile,
         selections,
         getState,
         createState,

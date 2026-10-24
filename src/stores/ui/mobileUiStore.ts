@@ -1,18 +1,18 @@
+import { useLayoutStore } from '@/stores/ui/layoutStore';
 import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 import type { MobileOverlay, MobileSheetName } from '@/types/mobile';
-import { useWindowStore } from '@/stores/ui/windowStore';
+import { useEditorNavigation } from '@/composables/application/useEditorNavigation';
 
 export const useMobileUiStore = defineStore('mobileUi', () => {
-    const windowStore = useWindowStore();
+    const navigation = useEditorNavigation();
+    const editorLayout = useLayoutStore();
     const activeOverlay = ref<MobileOverlay>(null);
 
     const leftDrawerOpen = computed(
         () => activeOverlay.value?.kind === 'leftDrawer',
     );
-    const bottomPanelOpen = computed(() =>
-        windowStore.isWindowOpen(windowStore.selectedLeftPanel),
-    );
+    const bottomPanelOpen = computed(() => editorLayout.sidebarOpen);
     const activeSheet = computed<MobileSheetName>(() =>
         activeOverlay.value?.kind === 'sheet'
             ? activeOverlay.value.sheet
@@ -20,28 +20,28 @@ export const useMobileUiStore = defineStore('mobileUi', () => {
     );
 
     function openLeftDrawer() {
-        windowStore.closeLeftPanel();
+        navigation.closePanel();
         activeOverlay.value = { kind: 'leftDrawer' };
     }
 
     function openBottomPanel() {
         activeOverlay.value = null;
-        windowStore.openLeftPanel();
+        navigation.openPanel();
     }
 
     function toggleBottomPanel() {
-        if (bottomPanelOpen.value) windowStore.closeLeftPanel();
+        if (bottomPanelOpen.value) navigation.closePanel();
         else openBottomPanel();
     }
 
     function openSheet(sheet: Exclude<MobileSheetName, null>) {
-        windowStore.closeLeftPanel();
+        navigation.closePanel();
         activeOverlay.value = { kind: 'sheet', sheet };
     }
 
     function closeOverlay() {
         if (activeOverlay.value) activeOverlay.value = null;
-        else windowStore.closeLeftPanel();
+        else navigation.closePanel();
     }
 
     function reset() {

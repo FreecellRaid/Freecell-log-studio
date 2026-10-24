@@ -7,8 +7,8 @@
                 'is-active': isActive,
             },
         ]"
-        :data-focus-id="windowId"
-        v-command-scope="{ area: 'preview', windowId, formatId: originalId }"
+        :data-focus-id="paneId"
+        v-command-scope="{ area: 'preview', paneId, formatId: originalId }"
     >
         <header class="view-header">
             <div class="view-title">
@@ -20,7 +20,7 @@
             </div>
             <div class="view-actions">
                 <button
-                    v-if="!isMobile && !windowStore.hasSplitView"
+                    v-if="!isMobile && !editorWorkspace.isSplit"
                     class="view-action-btn"
                     title="向右分屏"
                     @click.stop="handleSplit"
@@ -33,7 +33,7 @@
                     type="button"
                     title="关闭预览"
                     aria-label="关闭预览"
-                    @click.stop="windowStore.unregisterWindow(windowId)"
+                    @click.stop="navigation.closePane(paneId)"
                 >
                     <X class="ui-icon" />
                 </button>
@@ -108,6 +108,8 @@
 </template>
 
 <script setup lang="ts">
+import { useWorkspaceStore } from '@/stores/ui/workspaceStore';
+
 import { vCommandScope } from '@/directives/commandScope';
 import { computed, reactive, watch, toValue, type MaybeRefOrGetter } from 'vue';
 import { useResponsiveMode } from '@/composables/ui/useResponsiveMode';
@@ -122,22 +124,23 @@ import { useExportStore } from '@/stores/io/exportStore';
 import { useLogStore } from '@/stores/project/logStore';
 import { useStyleStore } from '@/stores/project/styleStore';
 import { useUiStore } from '@/stores/ui/uiStore';
-import { useWindowStore } from '@/stores/ui/windowStore';
+import { useEditorNavigation } from '@/composables/application/useEditorNavigation';
 
 const uiStore = useUiStore();
-const windowStore = useWindowStore();
+const navigation = useEditorNavigation();
+const editorWorkspace = useWorkspaceStore();
 const props = defineProps<{
-    windowId: string;
+    paneId: string;
     originalId: string;
 }>();
 const { isMobile } = useResponsiveMode();
 
-const isActive = computed(() => windowStore.activeFocus === props.windowId);
+const isActive = computed(() => navigation.isCommandTarget(props.paneId));
 const { activeFormat, rowsWithId, enableMarkdown, reading, readError } =
     useExportPreview(() => props.originalId);
 
 function handleSplit() {
-    windowStore.openSplitView('exportPreview', props.originalId);
+    navigation.splitPane({ kind: 'preview', formatId: props.originalId });
 }
 
 const imageRevisions = reactive<Record<string, number>>({});

@@ -11,7 +11,12 @@ function emptyPane(): WorkspacePane {
     return { paneId: generateId(), view: { kind: 'empty' } };
 }
 function sameView(a: WorkspaceView, b: WorkspaceView) {
-    return a.kind === b.kind && JSON.stringify(a) === JSON.stringify(b);
+    if (a.kind !== b.kind) return false;
+    if (a.kind === 'scene')
+        return b.kind === 'scene' && a.chunkId === b.chunkId;
+    if (a.kind === 'preview')
+        return b.kind === 'preview' && a.formatId === b.formatId;
+    return true;
 }
 
 export const useWorkspaceStore = defineStore('workspace', () => {
@@ -105,7 +110,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     return {
         panes: readonly(panes),
         activePaneId: readonly(activePaneId),
-        activePane,
+        activePane: computed(() => readonly(activePane.value)),
         isSplit,
         direction: readonly(direction),
         ratio: readonly(ratio),

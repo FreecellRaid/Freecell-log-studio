@@ -1,8 +1,8 @@
 <template>
     <div id="editor" :class="[{ 'dark-mode': uiStore.isDarkMode }]">
         <div
-            :inert="Boolean(windowStore.topModal)"
-            :aria-hidden="windowStore.topModal ? true : undefined"
+            :inert="Boolean(editorDialogs.top)"
+            :aria-hidden="editorDialogs.top ? true : undefined"
         >
             <component :is="isMobile ? MobileEditor : DesktopEditor" />
         </div>
@@ -11,10 +11,14 @@
 </template>
 
 <script setup lang="ts">
+import { useDialogStore } from '@/stores/ui/dialogStore';
+
+import { useLayoutStore } from '@/stores/ui/layoutStore';
+
 import { defineAsyncComponent, onMounted, onUnmounted } from 'vue';
 import { useUiStore } from './stores/ui/uiStore.js';
 import { useResponsiveMode } from '@/composables/ui/useResponsiveMode.js';
-import { useWindowStore } from '@/stores/ui/windowStore';
+import { useEditorRuntime } from '@/composables/application/useEditorRuntime';
 import { useRemoteImportStore } from '@/stores/io/remoteImportStore.js';
 import { useHistoryStore } from '@/stores/editor/historyStore';
 import { useProjectStorageStore } from '@/stores/io/projectStorageStore';
@@ -42,10 +46,12 @@ const MobileEditor = defineAsyncComponent(
 
 const uiStore = useUiStore();
 const { isMobile } = useResponsiveMode();
-const windowStore = useWindowStore();
+const editorDialogs = useDialogStore();
+const editorLayout = useLayoutStore();
 const historyStore = useHistoryStore();
 const projectStorage = useProjectStorageStore();
-windowStore.initializeLayout(isMobile.value);
+editorLayout.initialize(isMobile.value);
+useEditorRuntime();
 
 onMounted(() => {
     // 后台迁移存档，不等待、不自动替换当前工作区；失败后存储入口仍可重试。

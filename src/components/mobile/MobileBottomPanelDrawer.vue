@@ -10,19 +10,19 @@
         <section class="mobile-bottom-drawer">
             <div class="mobile-drawer-body">
                 <ChunkListPanel
-                    v-if="windowStore.selectedLeftPanel === 'chunkList'"
+                    v-if="editorLayout.activePanel === 'chunkList'"
                 />
                 <ColoringPanel
-                    v-else-if="windowStore.selectedLeftPanel === 'coloring'"
+                    v-else-if="editorLayout.activePanel === 'coloring'"
                 />
                 <SearchPanel
-                    v-else-if="windowStore.selectedLeftPanel === 'search'"
+                    v-else-if="editorLayout.activePanel === 'search'"
                 />
                 <ExportFormatPanel
-                    v-else-if="windowStore.selectedLeftPanel === 'exportFormat'"
+                    v-else-if="editorLayout.activePanel === 'exportFormat'"
                 />
                 <ResourcePanel
-                    v-else-if="windowStore.selectedLeftPanel === 'resources'"
+                    v-else-if="editorLayout.activePanel === 'resources'"
                 />
             </div>
         </section>
@@ -30,9 +30,10 @@
 </template>
 
 <script setup lang="ts">
+import { useLayoutStore } from '@/stores/ui/layoutStore';
+
 import { useSwipeGesture } from '@/composables/interaction/useSwipeGesture';
 import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
-import { useWindowStore } from '@/stores/ui/windowStore';
 import ChunkListPanel from '@/components/panels/ChunkListPanel.vue';
 import ExportFormatPanel from '@/components/panels/ExportFormatPanel.vue';
 import ColoringPanel from '@/components/panels/ColoringPanel.vue';
@@ -40,7 +41,7 @@ import ResourcePanel from '@/components/panels/ResourcePanel.vue';
 import SearchPanel from '@/components/panels/SearchPanel.vue';
 
 const mobileUiStore = useMobileUiStore();
-const windowStore = useWindowStore();
+const editorLayout = useLayoutStore();
 const closeGesture = useSwipeGesture({
     direction: 'down',
     canStart: (event) => {

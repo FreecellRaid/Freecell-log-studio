@@ -5,8 +5,10 @@ import type { CommandContext } from '@/types/commandContext';
 import { useCommandContextStore } from '@/stores/ui/commandContextStore';
 import { vCommandScope } from '@/directives/commandScope';
 
-const windows = vi.hoisted(() => ({ blockingModal: false, setFocus: vi.fn() }));
-vi.mock('@/stores/ui/windowStore', () => ({ useWindowStore: () => windows }));
+const navigation = vi.hoisted(() => ({ activateContext: vi.fn() }));
+vi.mock('@/composables/application/useEditorNavigation', () => ({
+    useEditorNavigation: () => navigation,
+}));
 
 class ScopeElement extends EventTarget {
     closestScope: ScopeElement = this;
@@ -37,8 +39,10 @@ describe('command scopes', () => {
     beforeEach(() => {
         setActivePinia(createPinia());
         vi.stubGlobal('Element', ScopeElement);
-        windows.blockingModal = false;
-        windows.setFocus.mockClear();
+        navigation.activateContext.mockReset();
+        navigation.activateContext.mockImplementation((context) =>
+            useCommandContextStore().activate(context),
+        );
     });
     afterEach(() => vi.unstubAllGlobals());
 
@@ -47,7 +51,7 @@ describe('command scopes', () => {
         const search = new ScopeElement();
         const sceneContext: CommandContext = {
             area: 'scene',
-            windowId: 'view',
+            paneId: 'view',
             chunkId: 'chunk',
         };
         const searchContext: CommandContext = {
@@ -60,14 +64,16 @@ describe('command scopes', () => {
         expect(useCommandContextStore().current).toEqual(sceneContext);
         search.dispatchEvent(new Event('focusin'));
         expect(useCommandContextStore().current).toEqual(searchContext);
-        expect(windows.setFocus).toHaveBeenLastCalledWith('search');
+        expect(navigation.activateContext).toHaveBeenLastCalledWith(
+            searchContext,
+        );
     });
 
     it('uses updated targets and removes listeners when unmounted', () => {
         const element = new ScopeElement();
         const first: CommandContext = {
             area: 'scene',
-            windowId: 'view',
+            paneId: 'view',
             chunkId: 'old',
         };
         const next: CommandContext = { ...first, chunkId: 'new' };
@@ -78,25 +84,20 @@ describe('command scopes', () => {
         lifecycle('unmounted', element, next);
         useCommandContextStore().activate({
             area: 'empty',
-            windowId: 'defaultView',
+            paneId: 'defaultView',
         });
         element.dispatchEvent(new Event('pointerdown'));
         element.dispatchEvent(new Event('focusin'));
         expect(useCommandContextStore().current.area).toBe('empty');
     });
 
-    it('does not steal a nested scope or modal command context', () => {
+    it('does not steal a nested scope', () => {
         const element = new ScopeElement();
         const context: CommandContext = { area: 'panel', panel: 'search' };
         lifecycle('mounted', element, context);
         element.closestScope = new ScopeElement();
         element.dispatchEvent(new Event('focusin'));
-        expect(windows.setFocus).not.toHaveBeenCalled();
-        element.closestScope = element;
-        windows.blockingModal = true;
-        element.dispatchEvent(new Event('pointerdown'));
-        element.dispatchEvent(new Event('focusin'));
-        expect(windows.setFocus).not.toHaveBeenCalled();
+        expect(navigation.activateContext).not.toHaveBeenCalled();
         expect(useCommandContextStore().current.area).toBe('empty');
     });
 });

@@ -18,16 +18,17 @@
 </template>
 
 <script setup lang="ts">
+import { useDialogStore } from '@/stores/ui/dialogStore';
+import type { DialogName } from '@/types/editorLayout';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-import { useWindowStore } from '@/stores/ui/windowStore';
 
 const props = defineProps<{
-    windowId: string;
+    dialogName: DialogName;
     labelledBy: string;
     isTop: boolean;
     layer: number;
 }>();
-const windowStore = useWindowStore();
+const editorDialogs = useDialogStore();
 const dialog = ref<HTMLElement | null>(null);
 let previousFocus: HTMLElement | null = null;
 
@@ -55,7 +56,7 @@ function containFocus(event: FocusEvent) {
 }
 
 function close() {
-    if (props.isTop) windowStore.unregisterWindow(props.windowId);
+    if (props.isTop) editorDialogs.close(props.dialogName);
 }
 
 function handleKeydown(event: KeyboardEvent) {

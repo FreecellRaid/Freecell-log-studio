@@ -48,7 +48,7 @@ export const useResourcePanelStore = defineStore('resourcePanel', () => {
         return [...groups.values()];
     });
     const selectedIds = computed(() =>
-        selection.getSelectedIds('resources', 'resource'),
+        selection.getSelectedIds({ kind: 'resources' }, 'resource'),
     );
     const selectedCount = computed(
         () =>
@@ -57,17 +57,17 @@ export const useResourcePanelStore = defineStore('resourcePanel', () => {
             ).length,
     );
     const clearSelection = () =>
-        selection.clearSelection('resources', 'resource');
+        selection.clearSelection({ kind: 'resources' }, 'resource');
     const selectAll = () =>
         selection.selectAll(
-            'resources',
+            { kind: 'resources' },
             'resource',
             resources.value,
             (item) => item.resourceId,
         );
     function select(event: MouseEvent, id: string) {
         selection.handleEventSelection(
-            'resources',
+            { kind: 'resources' },
             'resource',
             event,
             id,
@@ -86,13 +86,17 @@ export const useResourcePanelStore = defineStore('resourcePanel', () => {
         const ids = new Set(selectedIds.value);
         if (ids.has(id)) ids.delete(id);
         else ids.add(id);
-        selection.select('resources', 'resource', [...ids]);
+        selection.select({ kind: 'resources' }, 'resource', [...ids]);
     }
     function selectAdjacent(direction: 'next' | 'previous') {
         if (!selectedCount.value) {
             const first = resources.value[0];
             if (first)
-                selection.select('resources', 'resource', first.resourceId);
+                selection.select(
+                    { kind: 'resources' },
+                    'resource',
+                    first.resourceId,
+                );
             return;
         }
         const method =
@@ -100,7 +104,7 @@ export const useResourcePanelStore = defineStore('resourcePanel', () => {
                 ? selection.selectNext
                 : selection.selectPrevious;
         method(
-            'resources',
+            { kind: 'resources' },
             'resource',
             resources.value,
             (item) => item.resourceId,
@@ -190,7 +194,7 @@ export const useResourcePanelStore = defineStore('resourcePanel', () => {
             const selected = selectedIds.value;
             if ([...selected].some((id) => !valid.has(id)))
                 selection.select(
-                    'resources',
+                    { kind: 'resources' },
                     'resource',
                     [...selected].filter((id) => valid.has(id)),
                 );

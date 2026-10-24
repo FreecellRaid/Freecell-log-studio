@@ -133,21 +133,24 @@ import { computeStyleForMessage } from '@/editor/styleEngine';
 import { useStyleStore } from '@/stores/project/styleStore';
 import { useUiStore } from '@/stores/ui/uiStore';
 import { useMessageReveal } from '@/composables/application/useMessageReveal';
-import { useActiveContext } from '@/composables/application/useActiveContext';
+import { useSelectionContext } from '@/composables/application/useSelectionContext';
 import type { Chunk, Message } from '@/types/log';
 import { formatDate } from '@/utils/date';
 import MarkdownContent from '@/components/common/MarkdownContent.vue';
 import { Trash2, Plus, ChevronsDown, ImagePlus, Pencil } from '@lucide/vue';
 
 const props = defineProps<{
-    windowId: string;
+    paneId: string;
     chunk: Chunk;
     messages: Message[];
 }>();
 
 const uiStore = useUiStore();
 const styleStore = useStyleStore();
-const activeContext = useActiveContext(() => props.windowId);
+const activeContext = useSelectionContext(() => ({
+    kind: 'scene',
+    chunkId: props.chunk.chunkId,
+}));
 
 const logCommands = useLogCommands();
 const mobileUiStore = useMobileUiStore();
@@ -160,7 +163,7 @@ const reorder = useMobileMessageReorder({
 });
 
 useMessageReveal({
-    windowId: () => props.windowId,
+    paneId: () => props.paneId,
     messages: () => props.messages,
     ready: () => Boolean(listRef.value),
     reveal: (_index, messageId) => {
@@ -181,7 +184,7 @@ function startMessageEdit(message: Message) {
             chunkId: props.chunk.chunkId,
             messageId: message.messageId,
         },
-        props.windowId,
+        props.paneId,
     );
     mobileUiStore.openSheet('message');
 }
@@ -208,7 +211,7 @@ watch(
             target?.kind === 'message' &&
             target.chunkId === props.chunk.chunkId
         ) {
-            editorSessionStore.startEditing(target, props.windowId);
+            editorSessionStore.startEditing(target, props.paneId);
             mobileUiStore.openSheet('message');
         }
     },

@@ -7,7 +7,7 @@
             :class="{
                 'is-active':
                     mobileUiStore.bottomPanelOpen &&
-                    windowStore.selectedLeftPanel === item.name,
+                    editorLayout.activePanel === item.name,
             }"
             @click="togglePanel(item.name)"
         >
@@ -18,16 +18,19 @@
 </template>
 
 <script setup lang="ts">
+import { useLayoutStore } from '@/stores/ui/layoutStore';
+
 import { FolderOpen, Images, Palette, Search, TextInitial } from '@lucide/vue';
 import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
-import { useWindowStore } from '@/stores/ui/windowStore';
-import type { PanelWindowName } from '@/types/window';
+import { useEditorNavigation } from '@/composables/application/useEditorNavigation';
+import type { LeftPanel } from '@/types/editorLayout';
 
 const mobileUiStore = useMobileUiStore();
-const windowStore = useWindowStore();
+const navigation = useEditorNavigation();
+const editorLayout = useLayoutStore();
 
 const bottomPanels: Array<{
-    name: PanelWindowName;
+    name: LeftPanel;
     label: string;
     icon: typeof FolderOpen;
 }> = [
@@ -38,15 +41,14 @@ const bottomPanels: Array<{
     { name: 'resources', label: '资源', icon: Images },
 ];
 
-function togglePanel(panelName: PanelWindowName) {
+function togglePanel(panelName: LeftPanel) {
     const isCurrentOpen =
-        mobileUiStore.bottomPanelOpen &&
-        windowStore.selectedLeftPanel === panelName;
+        mobileUiStore.bottomPanelOpen && editorLayout.activePanel === panelName;
     if (isCurrentOpen) {
         mobileUiStore.closeOverlay();
         return;
     }
-    windowStore.selectLeftPanel(panelName);
+    navigation.selectPanel(panelName);
     mobileUiStore.openBottomPanel();
 }
 </script>

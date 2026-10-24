@@ -157,18 +157,19 @@
 </template>
 
 <script setup lang="ts">
+import { useDialogStore } from '@/stores/ui/dialogStore';
+
 import { computed, onUnmounted } from 'vue';
 import { buildReplacementPreview } from '@/editor/replacement';
 import ModalDialog from './ModalDialog.vue';
 import { useReplacementStore } from '@/stores/editor/replacementStore';
 import { useLogStore } from '@/stores/project/logStore';
-import { useWindowStore } from '@/stores/ui/windowStore';
 import { useSearchStore } from '@/stores/editor/searchStore';
 import { ChevronRight, Replace } from '@lucide/vue';
 
 const store = useReplacementStore();
 const log = useLogStore();
-const windows = useWindowStore();
+const editorDialogs = useDialogStore();
 const search = useSearchStore();
 const previewSides = [
     { key: 'before', label: '修改前' },
@@ -183,7 +184,7 @@ const previewChanges = computed(() =>
 
 onUnmounted(store.reset);
 function close() {
-    windows.closeModal('replace');
+    editorDialogs.close('replace');
 }
 function updateFind() {
     store.options.find =
