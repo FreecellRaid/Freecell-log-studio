@@ -1,7 +1,7 @@
 <template>
     <div
         class="panel coloring-panel"
-        @pointerdown="windowStore.setFocus('coloring')"
+        v-command-scope="{ area: 'panel', panel: 'coloring' }"
     >
         <header class="panel-header">
             <div class="header-title"><h3>角色管理与样式规则</h3></div>
@@ -46,15 +46,14 @@
 </template>
 
 <script setup lang="ts">
+import { vCommandScope } from '@/directives/commandScope';
 import { computed, onUnmounted, ref, watch } from 'vue';
 import { useElementSize } from '@vueuse/core';
 import IdentityPanel from '@/components/panels/IdentityPanel.vue';
 import RuleEditorPanel from '@/components/panels/RuleEditorPanel.vue';
 import { useUiStore } from '@/stores/ui/uiStore';
-import { useWindowStore } from '@/stores/ui/windowStore';
 
 const uiStore = useUiStore();
-const windowStore = useWindowStore();
 const sections = ref<HTMLElement | null>(null);
 const { height } = useElementSize(sections);
 const bothExpanded = computed(

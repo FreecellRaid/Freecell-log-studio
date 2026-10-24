@@ -1,8 +1,7 @@
 <template>
     <section
         class="panel resource-panel"
-        @pointerdown.capture="windows.setFocus('resources')"
-        @focusin="windows.setFocus('resources')"
+        v-command-scope="{ area: 'panel', panel: 'resources' }"
     >
         <header class="panel-header">
             <div class="header-title"><h3>资源管理</h3></div>
@@ -106,6 +105,7 @@
     </section>
 </template>
 <script setup lang="ts">
+import { vCommandScope } from '@/directives/commandScope';
 import { Download, SquareCheckBig, Trash2 } from '@lucide/vue';
 import { RecycleScroller } from 'vue-virtual-scroller';
 import ImageAttachmentView from '@/components/common/ImageAttachmentView.vue';

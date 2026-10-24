@@ -14,9 +14,15 @@ import {
     windowDefinitions,
 } from '@/types/window';
 import { generateId } from '@/utils/id';
+import { useCommandContextStore } from './commandContextStore';
+import {
+    commandContextFromWindow,
+    commandContextOwner,
+} from '@/types/commandContext';
 
 function windowStore() {
     const selectionStore = useSelectionStore();
+    const commandContext = useCommandContextStore();
     const defaultWindow: WindowInstance = {
         windowId: 'defaultView',
         windowName: 'defaultView',
@@ -62,6 +68,8 @@ function windowStore() {
             (id) => id !== target && openWindows.value.has(id),
         );
         focusStack.value.push(target);
+        const context = commandContextFromWindow(win);
+        if (context && !blockingModal.value) commandContext.activate(context);
     }
 
     // 注册并打开一个窗口。
@@ -114,11 +122,20 @@ function windowStore() {
         }
         if (wasFocused) {
             const fallback = currentActiveWindow.value;
+            const commandOwner = commandContextOwner(commandContext.current);
             setFocus(
-                isWorkspaceView(fallback)
-                    ? currentActiveView.value.windowId
-                    : fallback.windowId,
+                windowDefinitions[win.windowName].group === 'modal' &&
+                    openWindows.value.has(commandOwner)
+                    ? commandOwner
+                    : isWorkspaceView(fallback)
+                      ? currentActiveView.value.windowId
+                      : fallback.windowId,
             );
+        }
+        // 被关闭的命令区域不能成为悬空目标。弹窗关闭不重建背景上下文。
+        if (commandContextOwner(commandContext.current) === windowId) {
+            const fallback = commandContextFromWindow(currentActiveView.value);
+            if (fallback) commandContext.activate(fallback);
         }
     }
 

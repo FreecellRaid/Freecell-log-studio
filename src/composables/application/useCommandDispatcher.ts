@@ -1,8 +1,8 @@
 import { getVisibleMessages } from '@/editor/messageVisibility';
 import { useStyleStore } from '@/stores/project/styleStore';
 import { useUiStore } from '@/stores/ui/uiStore';
-import { getWindowTargetId } from '@/types/window';
-import { windowDefinitions } from '@/types/window';
+import { computed } from 'vue';
+import { useCommandContextStore } from '@/stores/ui/commandContextStore';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import { useActiveContext } from '@/composables/application/useActiveContext';
 import { useHistoryStore } from '@/stores/editor/historyStore';
@@ -45,7 +45,16 @@ export type CommandType =
 
 export function useCommandDispatcher() {
     const windowStore = useWindowStore();
-    const activeContext = useActiveContext();
+    const commandContext = useCommandContextStore();
+    // 命令的选区目标也显式传入，避免再次从窗口焦点历史推断。
+    const activeContext = useActiveContext(
+        computed(() => {
+            const context = commandContext.current;
+            if (context.area === 'scene') return context.chunkId;
+            if (context.area === 'panel') return context.panel;
+            return 'defaultView';
+        }),
+    );
     const history = useHistoryStore();
     const clipboard = useClipboardStore();
     const logCommands = useLogCommands();
@@ -56,12 +65,17 @@ export function useCommandDispatcher() {
     const searchStore = useSearchStore();
 
     const dispatch = (command: CommandType, payload?: any) => {
-        const activeWin = windowStore.currentActiveWindow;
-        const { windowName } = activeWin;
-        const originalId = getWindowTargetId(activeWin);
+        const context = commandContext.current;
+        const windowName =
+            context.area === 'scene'
+                ? 'chunkView'
+                : context.area === 'panel'
+                  ? context.panel
+                  : null;
+        const originalId = context.area === 'scene' ? context.chunkId : '';
 
         // P0 Modal 开启时拦截其他业务命令
-        if (windowDefinitions[windowName].blocksCommands) {
+        if (windowStore.blockingModal) {
             if (command === 'cancel') return windowStore.closeTopModal();
             return;
         }

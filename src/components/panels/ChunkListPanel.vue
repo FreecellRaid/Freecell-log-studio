@@ -1,5 +1,5 @@
 <template>
-    <div class="panel" @pointerdown="windowStore.setFocus('chunkList')">
+    <div class="panel" v-command-scope="{ area: 'panel', panel: 'chunkList' }">
         <div class="panel-header">
             <div class="header-title">
                 <input
@@ -286,6 +286,7 @@
 </template>
 
 <script setup lang="ts">
+import { vCommandScope } from '@/directives/commandScope';
 import { getWindowTargetId } from '@/types/window';
 import { ChevronRight, ChevronsDown, Plus, Trash2 } from '@lucide/vue';
 import { nextTick, reactive, ref, watch } from 'vue';

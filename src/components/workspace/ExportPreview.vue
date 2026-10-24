@@ -8,7 +8,7 @@
             },
         ]"
         :data-focus-id="windowId"
-        @pointerdown="windowStore.setFocus(windowId)"
+        v-command-scope="{ area: 'preview', windowId, formatId: originalId }"
     >
         <header class="view-header">
             <div class="view-title">
@@ -108,6 +108,7 @@
 </template>
 
 <script setup lang="ts">
+import { vCommandScope } from '@/directives/commandScope';
 import { computed, reactive, watch, toValue, type MaybeRefOrGetter } from 'vue';
 import { useResponsiveMode } from '@/composables/ui/useResponsiveMode';
 import { Eye, X, SquareSplitHorizontal } from '@lucide/vue';

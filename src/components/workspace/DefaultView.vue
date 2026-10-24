@@ -3,7 +3,7 @@
         class="view"
         :class="{ 'is-active': windowStore.activeFocus === 'defaultView' }"
         data-focus-id="defaultView"
-        @pointerdown="windowStore.setFocus('defaultView')"
+        v-command-scope="{ area: 'empty', windowId: 'defaultView' }"
     >
         <header v-if="!isMobile" class="view-header">
             <div class="view-title">
@@ -44,6 +44,7 @@
 </template>
 
 <script setup lang="ts">
+import { vCommandScope } from '@/directives/commandScope';
 import { FolderOpen, LayoutDashboard, Upload } from '@lucide/vue';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import { useResponsiveMode } from '@/composables/ui/useResponsiveMode';

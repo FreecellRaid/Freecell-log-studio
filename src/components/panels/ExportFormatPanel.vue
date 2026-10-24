@@ -1,5 +1,8 @@
 <template>
-    <div class="panel" @pointerdown="windowStore.setFocus('exportFormat')">
+    <div
+        class="panel"
+        v-command-scope="{ area: 'panel', panel: 'exportFormat' }"
+    >
         <div class="panel-header">
             <div class="header-title">
                 <h3>导出模板</h3>
@@ -299,6 +302,7 @@
 </template>
 
 <script setup lang="ts">
+import { vCommandScope } from '@/directives/commandScope';
 import { computed, ref } from 'vue';
 import { Plus, ChevronRight, Trash2, Check, Eye } from '@lucide/vue';
 import { EXPORT_PRESET_IDS, useExportStore } from '@/stores/io/exportStore';

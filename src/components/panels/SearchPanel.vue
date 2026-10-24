@@ -2,7 +2,7 @@
     <div
         ref="panelRef"
         class="panel"
-        @pointerdown="windowStore.setFocus('search')"
+        v-command-scope="{ area: 'panel', panel: 'search' }"
     >
         <div class="panel-header">
             <div class="header-title">
@@ -311,6 +311,7 @@
 </template>
 
 <script setup lang="ts">
+import { vCommandScope } from '@/directives/commandScope';
 import {
     CornerDownRight,
     FunnelIcon,

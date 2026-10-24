@@ -3,7 +3,7 @@
         class="view chunk-view"
         :data-focus-id="windowId"
         :class="{ 'is-active': windowStore.activeFocus === windowId }"
-        @pointerdown="windowStore.setFocus(windowId)"
+        v-command-scope="{ area: 'scene', windowId, chunkId: originalId }"
     >
         <header class="view-header">
             <div class="view-title">
@@ -60,6 +60,7 @@
 </template>
 
 <script setup lang="ts">
+import { vCommandScope } from '@/directives/commandScope';
 import {
     defineAsyncComponent,
     computed,
