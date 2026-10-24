@@ -13,18 +13,7 @@
                     :style="getPaneStyle(pane.paneIndex)"
                     @pointerdown.capture="handlePaneClick(pane.paneIndex)"
                 >
-                    <component
-                        :is="
-                            getWorkspaceComponent(
-                                desktopWorkspaceAdapter,
-                                pane.instance,
-                            )
-                        "
-                        v-if="pane.instance"
-                        :key="pane.instance.windowId"
-                        v-bind="getWorkspaceProps(pane.instance)"
-                    />
-                    <DefaultView v-else />
+                    <WorkspaceView :instance="pane.instance" />
                 </div>
 
                 <div
@@ -46,13 +35,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useWindowStore } from '@/stores/ui/windowStore';
-import {
-    desktopWorkspaceAdapter,
-    getWorkspaceComponent,
-    getWorkspaceProps,
-} from '@/windows/workspaceAdapters';
 import FileImporter from '@/components/desktop/FileImporter.vue';
-import DefaultView from '@/components/workspace/DefaultView.vue';
+import WorkspaceView from '@/components/workspace/WorkspaceView.vue';
 
 const windowStore = useWindowStore();
 const workspacePanes = computed(() => windowStore.workspacePanes);

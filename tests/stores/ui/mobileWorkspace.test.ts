@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import { useWindowStore } from '@/stores/ui/windowStore';
-import { selectMobileView } from '@/windows/selectMobileView';
-import { windowDefinitions } from '@/windows/windowDefinitions';
+import { windowDefinitions } from '@/types/window';
 
 describe('mobile workspace projection', () => {
     beforeEach(() => setActivePinia(createPinia()));
@@ -11,35 +10,32 @@ describe('mobile workspace projection', () => {
         const store = useWindowStore();
         store.openLeftPanel();
         store.openHelpDocument();
-        expect(
-            selectMobileView(store.openWindows, store.focusStack)?.windowName,
-        ).toBe('defaultView');
+        expect(store.lastFocusedView.windowName).toBe('defaultView');
     });
 
-    it('shows a registered scene even when default view has focus', () => {
+    it('shows default view when it is the latest focused view', () => {
         const store = useWindowStore();
         store.setActiveChunk('scene');
         store.setFocus('defaultView');
-        expect(
-            selectMobileView(store.openWindows, store.focusStack),
-        ).toMatchObject({
-            windowName: 'chunkView',
-            target: { kind: 'chunk', chunkId: 'scene' },
+        expect(store.lastFocusedView).toMatchObject({
+            windowName: 'defaultView',
         });
     });
 
-    it('prioritizes preview while the desktop scene pane or a panel has focus', () => {
+    it('switches between scene and preview by focus while ignoring panels and modals', () => {
         const store = useWindowStore();
         store.setActiveChunk('scene');
         const sceneId = store.currentActiveView.windowId;
         store.openExportPreview('standard');
         const previewId = store.currentActiveView.windowId;
+        expect(store.lastFocusedView.windowId).toBe(previewId);
         store.setFocus(sceneId);
         store.openLeftPanel();
-        expect(
-            selectMobileView(store.openWindows, store.focusStack)?.windowId,
-        ).toBe(previewId);
+        store.openHelpDocument();
+        expect(store.lastFocusedView.windowId).toBe(sceneId);
         expect(store.currentActiveView.windowId).toBe(sceneId);
+        store.setFocus(previewId);
+        expect(store.lastFocusedView.windowId).toBe(previewId);
     });
 
     it('shows the latest focused preview, then the remaining preview after close', () => {
@@ -48,28 +44,23 @@ describe('mobile workspace projection', () => {
         const firstId = store.currentActiveView.windowId;
         store.openSplitView('exportPreview', 'markdown');
         const secondId = store.currentActiveView.windowId;
-        expect(
-            selectMobileView(store.openWindows, store.focusStack)?.windowId,
-        ).toBe(secondId);
+        expect(store.lastFocusedView.windowId).toBe(secondId);
         store.setFocus(firstId);
-        expect(
-            selectMobileView(store.openWindows, store.focusStack)?.windowId,
-        ).toBe(firstId);
+        expect(store.lastFocusedView.windowId).toBe(firstId);
         store.unregisterWindow(firstId);
-        expect(
-            selectMobileView(store.openWindows, store.focusStack)?.windowId,
-        ).toBe(secondId);
+        expect(store.lastFocusedView.windowId).toBe(secondId);
     });
 
-    it('includes open previews outside the currently rendered desktop pane', () => {
+    it('keeps an unfocused preview registered while displaying the focused scene', () => {
         const store = useWindowStore();
         store.openExportPreview('standard');
         const previewId = store.currentActiveView.windowId;
         store.setActiveChunk('scene');
         expect(store.currentActiveView.windowName).toBe('chunkView');
-        expect(
-            selectMobileView(store.openWindows, store.focusStack)?.windowId,
-        ).toBe(previewId);
+        expect(store.isWindowOpen(previewId)).toBe(true);
+        expect(store.lastFocusedView.windowId).toBe(
+            store.currentActiveView.windowId,
+        );
     });
 
     it('returns to scene then default as preview and scene windows close', () => {
@@ -78,23 +69,42 @@ describe('mobile workspace projection', () => {
         const sceneId = store.currentActiveView.windowId;
         store.openExportPreview('standard');
         store.unregisterWindow(store.currentActiveView.windowId);
-        expect(
-            selectMobileView(store.openWindows, store.focusStack)?.windowId,
-        ).toBe(sceneId);
+        expect(store.lastFocusedView.windowId).toBe(sceneId);
         store.unregisterWindow(sceneId);
-        expect(
-            selectMobileView(store.openWindows, store.focusStack)?.windowName,
-        ).toBe('defaultView');
+        expect(store.lastFocusedView.windowName).toBe('defaultView');
     });
 
-    it('uses latest registered matching window when focus history is empty or stale', () => {
+    it('falls back to default view when focus history is empty or stale', () => {
         const store = useWindowStore();
         store.openExportPreview('standard');
         store.openSplitView('exportPreview', 'markdown');
-        const latest = store.currentActiveView.windowId;
-        expect(selectMobileView(store.openWindows, ['missing'])?.windowId).toBe(
-            latest,
+        for (const focus of [[], ['missing']]) {
+            store.focusStack = focus;
+            expect(store.lastFocusedView.windowId).toBe('defaultView');
+        }
+    });
+
+    it('ignores stale entries above the most recently focused view', () => {
+        const store = useWindowStore();
+        store.setActiveChunk('scene');
+        store.focusStack.push('missing');
+        expect(store.lastFocusedView.windowId).toBe(
+            store.currentActiveView.windowId,
         );
+    });
+
+    it('returns to the scene when closing a preview while a panel has focus', () => {
+        const store = useWindowStore();
+        store.setActiveChunk('scene');
+        const sceneId = store.currentActiveView.windowId;
+        store.openExportPreview('standard');
+        const previewId = store.currentActiveView.windowId;
+        store.openLeftPanel();
+        store.unregisterWindow(previewId);
+        expect(store.lastFocusedView.windowId).toBe(sceneId);
+        store.closeLeftPanel();
+        expect(store.activeFocus).toBe(sceneId);
+        expect(store.currentActiveView.windowId).toBe(sceneId);
     });
 
     it('projects without mutating desktop layout or focus', () => {
@@ -105,7 +115,7 @@ describe('mobile workspace projection', () => {
         store.setFocus(sceneId);
         const layout = [...store.paneWindowIds];
         const focus = [...store.focusStack];
-        selectMobileView(store.openWindows, store.focusStack);
+        expect(store.lastFocusedView.windowId).toBe(sceneId);
         expect(store.paneWindowIds).toEqual(layout);
         expect(store.focusStack).toEqual(focus);
     });

@@ -8,11 +8,11 @@ import type {
     PaneDirection,
     WorkspacePane,
 } from '@/types/window';
-import { getWindowTargetId } from '@/types/window';
 import {
+    getWindowTargetId,
     isWorkspaceView,
     windowDefinitions,
-} from '@/windows/windowDefinitions';
+} from '@/types/window';
 import { generateId } from '@/utils/id';
 
 function windowStore() {
@@ -328,6 +328,15 @@ function windowStore() {
         return currentActiveView.value;
     });
 
+    // 按焦点历史选择 view，供单视图工作区使用；面板和弹窗不改变内容。
+    const lastFocusedView = computed((): WindowInstance => {
+        for (let i = focusStack.value.length - 1; i >= 0; i--) {
+            const win = openWindows.value.get(focusStack.value[i]);
+            if (win && isWorkspaceView(win)) return win;
+        }
+        return openWindows.value.get('defaultView')!;
+    });
+
     // 工作区活动视图由布局决定，与面板/弹窗焦点历史无关。
     const currentActiveView = computed(
         (): WindowInstance =>
@@ -456,6 +465,7 @@ function windowStore() {
         topModal,
         blockingModal,
         currentActiveView,
+        lastFocusedView,
         workspacePanes,
         paneWindowIds,
         hasSplitView,

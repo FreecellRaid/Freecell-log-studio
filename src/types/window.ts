@@ -28,7 +28,7 @@ export type WindowTarget =
     | { kind: 'chunk'; chunkId: string }
     | { kind: 'format'; formatId: string };
 
-// 实例记录业务身份和目标；行为与组件由定义和平台适配提供。
+// 实例记录业务身份和目标；行为由窗口定义提供，渲染由 WorkspaceView 负责。
 export type WindowInstance = { windowId: string } & (
     | {
           windowName: 'chunkView';
@@ -56,4 +56,62 @@ export interface WorkspacePane {
     paneIndex: 0 | 1;
     instance: WindowInstance | null;
     isActive: boolean;
+}
+
+export interface WindowDefinition {
+    group: 'panel' | 'view' | 'modal';
+    singleton: boolean;
+    allowSplit: boolean;
+    participatesInSelection: boolean;
+    blocksCommands: boolean;
+}
+
+const panel: WindowDefinition = {
+    group: 'panel',
+    singleton: true,
+    allowSplit: false,
+    participatesInSelection: true,
+    blocksCommands: false,
+};
+const view: WindowDefinition = {
+    group: 'view',
+    singleton: false,
+    allowSplit: true,
+    participatesInSelection: true,
+    blocksCommands: false,
+};
+
+const modal: WindowDefinition = {
+    group: 'modal',
+    singleton: true,
+    allowSplit: false,
+    participatesInSelection: false,
+    blocksCommands: true,
+};
+
+export const windowDefinitions: Readonly<
+    Record<WindowName, Readonly<WindowDefinition>>
+> = {
+    chunkList: panel,
+    search: panel,
+    resources: { ...panel, participatesInSelection: false },
+    exportFormat: panel,
+    coloring: panel,
+    inspector: panel,
+    chunkView: view,
+    exportPreview: { ...view, participatesInSelection: false },
+    defaultView: {
+        ...view,
+        singleton: true,
+        allowSplit: false,
+        participatesInSelection: false,
+    },
+    help: modal,
+    remoteImport: modal,
+    imageInsert: modal,
+    replace: modal,
+};
+
+export function isWorkspaceView(win: WindowInstance): boolean {
+    return windowDefinitions[win.windowName].group === 'view';
 }

@@ -3,7 +3,7 @@
         class="view chunk-view"
         :data-focus-id="windowId"
         :class="{ 'is-active': windowStore.activeFocus === windowId }"
-        @pointerdown="handleFocus"
+        @pointerdown="windowStore.setFocus(windowId)"
     >
         <header class="view-header">
             <div class="view-title">
@@ -89,9 +89,6 @@ const windowStore = useWindowStore();
 const mobileUiStore = useMobileUiStore();
 const editorSessionStore = useEditorSessionStore();
 
-function handleFocus() {
-    if (!isMobile.value) windowStore.setFocus(props.windowId);
-}
 function startChunkRename() {
     if (!chunk.value) return;
     editorSessionStore.startEditing(

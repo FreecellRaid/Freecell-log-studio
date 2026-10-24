@@ -3,7 +3,7 @@
         class="view"
         :class="{ 'is-active': windowStore.activeFocus === 'defaultView' }"
         data-focus-id="defaultView"
-        @pointerdown="handleFocus"
+        @pointerdown="windowStore.setFocus('defaultView')"
     >
         <header v-if="!isMobile" class="view-header">
             <div class="view-title">
@@ -50,10 +50,6 @@ import { useResponsiveMode } from '@/composables/ui/useResponsiveMode';
 
 const { isMobile } = useResponsiveMode();
 const windowStore = useWindowStore();
-
-function handleFocus() {
-    if (!isMobile.value) windowStore.setFocus('defaultView');
-}
 </script>
 
 <style scoped>

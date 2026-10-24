@@ -1,27 +1,14 @@
 <template>
     <main class="mobile-main">
-        <component
-            :is="getWorkspaceComponent(mobileWorkspaceAdapter, visibleView)"
-            :key="visibleView?.windowId ?? 'defaultView'"
-            v-bind="getWorkspaceProps(visibleView)"
-        />
+        <WorkspaceView :instance="windowStore.lastFocusedView" />
     </main>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
 import { useWindowStore } from '@/stores/ui/windowStore';
-import { selectMobileView } from '@/windows/selectMobileView';
-import {
-    mobileWorkspaceAdapter,
-    getWorkspaceComponent,
-    getWorkspaceProps,
-} from '@/windows/workspaceAdapters';
+import WorkspaceView from '@/components/workspace/WorkspaceView.vue';
 
 const windowStore = useWindowStore();
-const visibleView = computed(() =>
-    selectMobileView(windowStore.openWindows, windowStore.focusStack),
-);
 </script>
 
 <style scoped>

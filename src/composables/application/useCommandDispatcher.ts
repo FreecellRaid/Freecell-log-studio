@@ -2,7 +2,7 @@ import { getVisibleMessages } from '@/editor/messageVisibility';
 import { useStyleStore } from '@/stores/project/styleStore';
 import { useUiStore } from '@/stores/ui/uiStore';
 import { getWindowTargetId } from '@/types/window';
-import { windowDefinitions } from '@/windows/windowDefinitions';
+import { windowDefinitions } from '@/types/window';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import { useActiveContext } from '@/composables/application/useActiveContext';
 import { useHistoryStore } from '@/stores/editor/historyStore';
