@@ -2,7 +2,7 @@ import { getVisibleMessages } from '@/editor/messageVisibility';
 import { useStyleStore } from '@/stores/project/styleStore';
 import { useUiStore } from '@/stores/ui/uiStore';
 import { getWindowTargetId } from '@/types/window';
-import { windowDefinitions } from '@/windows/windowDefinitions';
+import { windowDefinitions } from '@/types/window';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import { useActiveContext } from '@/composables/application/useActiveContext';
 import { useHistoryStore } from '@/stores/editor/historyStore';
@@ -15,6 +15,7 @@ import { useWorkspaceActions } from '@/composables/application/useWorkspaceActio
 import type { Chunk } from '@/types/log';
 import { useResourcePanelStore } from '@/stores/editor/resourcePanelStore';
 import { useSearchStore } from '@/stores/editor/searchStore';
+import { useReplacementStore } from '@/stores/editor/replacementStore';
 
 export type CommandType =
     | 'select'
@@ -26,6 +27,7 @@ export type CommandType =
     | 'toggleLeft'
     | 'toggleRight'
     | 'openHelp'
+    | 'openSearch'
     | 'undo'
     | 'redo'
     | 'save'
@@ -38,7 +40,8 @@ export type CommandType =
     | 'merge'
     | 'selectNextSamePlayer'
     | 'jump'
-    | 'edit';
+    | 'edit'
+    | 'replace';
 
 export function useCommandDispatcher() {
     const windowStore = useWindowStore();
@@ -63,11 +66,46 @@ export function useCommandDispatcher() {
             return;
         }
 
+        if (command === 'replace') {
+            if (windowName !== 'search' && windowName !== 'chunkView') return;
+            const selected = activeContext.selectedMessageIds.value;
+            const candidates =
+                windowName === 'search'
+                    ? searchStore.searchResults
+                    : getVisibleMessages(
+                          logStore.findChunkById(originalId)?.messages ?? [],
+                          useStyleStore().viewSettings,
+                          useUiStore().showHidden,
+                      );
+            useReplacementStore().open(
+                candidates
+                    .filter((message) => selected.has(message.messageId))
+                    .map((message) => message.messageId),
+                windowName,
+                {
+                    content:
+                        windowName === 'search' && !searchStore.contentRegex
+                            ? searchStore.quickSearch.trim()
+                            : '',
+                    note:
+                        windowName === 'search' && !searchStore.noteRegex
+                            ? searchStore.filter.note.trim()
+                            : '',
+                },
+            );
+            return;
+        }
+
         // P1 全局级命令
         const globalActions: Partial<Record<CommandType, () => void>> = {
             toggleLeft: () => windowStore.toggleLeftPanel(),
             toggleRight: () => windowStore.toggleInspector(),
             openHelp: () => windowStore.openHelpDocument(),
+            openSearch: () => {
+                windowStore.openLeftPanel('search');
+                windowStore.setFocus('search');
+                searchStore.focusRequested = true;
+            },
             undo: () => history.undo(),
             redo: () => history.redo(),
             save: () => {

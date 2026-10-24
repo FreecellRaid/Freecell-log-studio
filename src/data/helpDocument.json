@@ -318,6 +318,14 @@
                     "description": "重做"
                 },
                 {
+                    "key": "Ctrl + F",
+                    "description": "打开或切换到搜索面板，聚焦并选中搜索词"
+                },
+                {
+                    "key": "Ctrl + H",
+                    "description": "替换当前消息区或搜索结果中选中消息的内容/备注，支持文字替换和整体覆盖，macOS 使用 cmd + opt + F"
+                },
+                {
                     "key": "Ctrl + E",
                     "description": "合并选中消息或场景，单选时向下合并"
                 },

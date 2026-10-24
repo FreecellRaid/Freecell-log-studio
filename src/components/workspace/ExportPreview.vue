@@ -7,8 +7,8 @@
                 'is-active': isActive,
             },
         ]"
-        :data-focus-id="effectiveWindowId"
-        @pointerdown="handleFocus"
+        :data-focus-id="windowId"
+        @pointerdown="windowStore.setFocus(windowId)"
     >
         <header class="view-header">
             <div class="view-title">
@@ -33,7 +33,7 @@
                     type="button"
                     title="关闭预览"
                     aria-label="关闭预览"
-                    @click.stop="handleClose"
+                    @click.stop="windowStore.unregisterWindow(windowId)"
                 >
                     <X class="ui-icon" />
                 </button>
@@ -131,23 +131,14 @@ const props = defineProps<{
 }>();
 const { isMobile } = useResponsiveMode();
 
-const effectiveWindowId = computed(() => props.windowId);
 const isActive = computed(() => windowStore.activeFocus === props.windowId);
 const { activeFormat, rowsWithId, enableMarkdown, reading, readError } =
     useExportPreview(() => props.originalId);
-
-function handleFocus() {
-    // 移动端的可见视图是平台投影，点击时不改变桌面 pane 的选择。
-    if (!isMobile.value) windowStore.setFocus(props.windowId);
-}
 
 function handleSplit() {
     windowStore.openSplitView('exportPreview', props.originalId);
 }
 
-function handleClose() {
-    windowStore.unregisterWindow(effectiveWindowId.value);
-}
 const imageRevisions = reactive<Record<string, number>>({});
 function notifyImageResize(rowId: string) {
     imageRevisions[rowId] = (imageRevisions[rowId] || 0) + 1;

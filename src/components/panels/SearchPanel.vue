@@ -10,38 +10,50 @@
             </div>
             <button
                 class="panel-header-action-button icon-interactive"
-                @click="searchStore.clearAllFilters"
-                title="清空筛选"
+                @click="
+                    searchStore.isAdvancedExpanded =
+                        !searchStore.isAdvancedExpanded
+                "
+                :title="
+                    searchStore.isAdvancedExpanded
+                        ? '收起高级筛选'
+                        : '展开高级筛选'
+                "
             >
-                <RefreshCcw class="ui-icon" />
+                <FunnelXIcon
+                    v-if="searchStore.isAdvancedExpanded"
+                    class="ui-icon"
+                />
+                <FunnelIcon v-else class="ui-icon" />
             </button>
         </div>
 
         <div ref="controlsRef" class="search-controls" :style="controlsStyle">
             <div class="search-input-wrapper">
                 <input
+                    ref="searchInputRef"
                     v-model="searchStore.quickSearch"
                     type="text"
                     placeholder="搜索消息内容..."
                     class="form-control main-search-input"
+                    :aria-invalid="Boolean(searchStore.contentError)"
+                    :aria-describedby="
+                        searchStore.contentError
+                            ? 'content-search-error'
+                            : undefined
+                    "
                 />
                 <button
-                    class="icon-button icon-interactive"
+                    class="icon-button regex-toggle"
+                    :class="{ 'is-active': searchStore.contentRegex }"
+                    :aria-pressed="searchStore.contentRegex"
+                    aria-label="启用正则"
+                    title="启用正则"
                     @click="
-                        searchStore.isAdvancedExpanded =
-                            !searchStore.isAdvancedExpanded
-                    "
-                    :title="
-                        searchStore.isAdvancedExpanded
-                            ? '收起高级筛选'
-                            : '展开高级筛选'
+                        searchStore.contentRegex = !searchStore.contentRegex
                     "
                 >
-                    <FunnelXIcon
-                        v-if="searchStore.isAdvancedExpanded"
-                        class="ui-icon"
-                    />
-                    <FunnelIcon v-else class="ui-icon" />
+                    <RegexIcon class="ui-icon" />
                 </button>
             </div>
 
@@ -53,12 +65,46 @@
                     <div class="advanced-options">
                         <div class="form-group">
                             <label>备注</label>
-                            <input
-                                class="form-control"
-                                v-model="searchStore.filter.note"
-                                type="text"
-                                placeholder="匹配备注..."
-                            />
+                            <div class="search-input-wrapper">
+                                <input
+                                    class="form-control main-search-input"
+                                    v-model="searchStore.filter.note"
+                                    type="text"
+                                    placeholder="搜索消息备注..."
+                                    :aria-invalid="
+                                        Boolean(searchStore.noteError)
+                                    "
+                                    :aria-describedby="
+                                        searchStore.noteError
+                                            ? 'note-search-error'
+                                            : undefined
+                                    "
+                                />
+
+                                <button
+                                    class="icon-button regex-toggle"
+                                    :class="{
+                                        'is-active': searchStore.noteRegex,
+                                    }"
+                                    :aria-pressed="searchStore.noteRegex"
+                                    aria-label="启用正则"
+                                    title="启用正则"
+                                    @click="
+                                        searchStore.noteRegex =
+                                            !searchStore.noteRegex
+                                    "
+                                >
+                                    <RegexIcon class="ui-icon" />
+                                </button>
+                            </div>
+                            <p
+                                v-if="searchStore.noteError"
+                                id="note-search-error"
+                                class="search-error"
+                                role="alert"
+                            >
+                                备注正则无效：{{ searchStore.noteError }}
+                            </p>
                         </div>
                         <div class="form-group">
                             <label>角色名</label>
@@ -151,7 +197,7 @@
             "
         >
             <span class="count-text">
-                找到 {{ searchStore.searchResults.length }} 条结果
+                找到 {{ searchStore.searchResults.length }} 条消息
             </span>
             <div class="search-actions">
                 <button
@@ -189,10 +235,13 @@
                 class="panel-empty-hint"
             >
                 {{
-                    searchStore.hasActiveFilter
-                        ? '未找到匹配的消息'
-                        : '输入关键词开始搜索'
+                    searchStore.hasSearchError
+                        ? '正则表达式错误：'
+                        : searchStore.hasActiveFilter
+                          ? '未找到匹配的消息'
+                          : '输入关键词开始搜索'
                 }}
+                {{ searchStore.contentError }}
             </div>
 
             <DynamicScroller
@@ -227,7 +276,10 @@
                                 <span class="result-name">
                                     {{ msg.playerName || '未知角色' }}
                                 </span>
-                                <span class="result-time">
+                                <span
+                                    v-if="uiStore.showTime"
+                                    class="result-time"
+                                >
                                     {{ formatDate(msg.time) }}
                                 </span>
                             </div>
@@ -247,11 +299,11 @@ import {
     CornerDownRight,
     FunnelIcon,
     FunnelXIcon,
-    RefreshCcw,
+    RegexIcon,
     SquareCheckBig,
     Trash2,
 } from '@lucide/vue';
-import { computed, ref, watch, type CSSProperties } from 'vue';
+import { computed, nextTick, ref, watch, type CSSProperties } from 'vue';
 import { buildIdentityStats } from '@/editor/identity';
 import { useActiveContext } from '@/composables/application/useActiveContext';
 import type { Message } from '@/types/log';
@@ -277,6 +329,20 @@ const searchStore = useSearchStore();
 const logStore = useLogStore();
 const uiStore = useUiStore();
 const { dispatch } = useCommandDispatcher();
+const searchInputRef = ref<HTMLInputElement | null>(null);
+
+watch(
+    () => searchStore.focusRequested,
+    async (requested) => {
+        if (!requested) return;
+        await nextTick();
+        if (!searchInputRef.value) return;
+        searchInputRef.value.focus();
+        searchInputRef.value.select();
+        searchStore.focusRequested = false;
+    },
+    { immediate: true, flush: 'post' },
+);
 
 const playerNameOptions = computed<SelectOption[]>(() =>
     buildIdentityOptions('playerName'),
@@ -447,12 +513,45 @@ const truncate = (str: string, len: number) => {
 }
 
 .search-input-wrapper {
+    position: relative;
     display: flex;
-    gap: 8px;
 }
 
 .main-search-input {
     flex: 1;
+    min-width: 0;
+    padding-right: 32px;
+}
+
+.regex-toggle {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 4px;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+}
+
+.regex-toggle .ui-icon {
+    width: 14px;
+    height: 14px;
+}
+
+.regex-toggle:hover {
+    background: var(--hover-bg);
+    color: var(--text-primary);
+}
+
+.regex-toggle.is-active {
+    border-color: var(--active-accent);
+    background: var(--selection-bg);
+    color: var(--text-primary);
+}
+
+.form-control[aria-invalid='true'] {
+    border-color: var(--active-accent);
 }
 
 .icon-button {
@@ -496,6 +595,10 @@ const truncate = (str: string, len: number) => {
     margin: 0;
 }
 
+.boolean-filter {
+    background-color: transparent;
+}
+
 .search-summary {
     flex-shrink: 0;
     padding: 4px 8px;
@@ -527,6 +630,7 @@ const truncate = (str: string, len: number) => {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    overflow-wrap: anywhere;
 }
 
 .scroller {
@@ -563,6 +667,9 @@ const truncate = (str: string, len: number) => {
 .result-name {
     font-weight: bold;
     color: var(--active-accent);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .result-content {
@@ -574,6 +681,9 @@ const truncate = (str: string, len: number) => {
 .result-time {
     color: var(--text-muted);
     font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* 动画 */

@@ -1,5 +1,5 @@
 import { getWindowTargetId } from '@/types/window';
-import { windowDefinitions } from '@/windows/windowDefinitions';
+import { windowDefinitions } from '@/types/window';
 import { computed, toValue } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import type { Message } from '@/types/log';

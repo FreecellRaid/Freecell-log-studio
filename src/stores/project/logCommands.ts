@@ -13,6 +13,7 @@ import type {
 import type { ColorMode } from '@/types/style';
 import { normalizeDocuments } from '@/editor/normalize';
 import { deriveDefaultProjectName } from '@/io/storage/project';
+import { planReplacement, type ReplacementOptions } from '@/editor/replacement';
 
 function hasKeys<T extends object>(value: T) {
     return Object.keys(value).length > 0;
@@ -302,6 +303,31 @@ export const useLogCommands = defineStore('logCommands', () => {
                 });
             },
         );
+    }
+
+    function replaceMessageText(
+        targetIds: Set<string>,
+        options: ReplacementOptions,
+    ) {
+        const changes = planReplacement(
+            logStore.allMessages.filter((message) =>
+                targetIds.has(message.messageId),
+            ),
+            options,
+        );
+        executeEdit(changes.length > 0, () => {
+            for (const change of changes) {
+                const message = logStore.messagesById.get(change.messageId)!;
+                message[options.field] = change.after;
+            }
+        });
+        return {
+            messages: changes.length,
+            occurrences: changes.reduce(
+                (sum, change) => sum + change.occurrences,
+                0,
+            ),
+        };
     }
 
     function renameIdentity(
@@ -772,6 +798,7 @@ export const useLogCommands = defineStore('logCommands', () => {
         batchDeleteMessages,
         removeImageResources,
         batchUpdateMessages,
+        replaceMessageText,
         renameIdentity,
         mergeMessages,
         mergeWithNextMessage,

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import { useWindowStore } from '@/stores/ui/windowStore';
 import { useCommandDispatcher } from '@/composables/application/useCommandDispatcher';
+import { useSearchStore } from '@/stores/editor/searchStore';
 import { useRemoteImportStore } from '@/stores/io/remoteImportStore';
 
 describe('shared modal lifecycle', () => {
@@ -69,5 +70,35 @@ describe('shared modal lifecycle', () => {
         windows.focusStack = [];
         expect(windows.topModal?.windowName).toBe('remoteImport');
         expect(windows.currentActiveWindow.windowName).toBe('remoteImport');
+    });
+    it('opens search from another panel and requests input focus without toggling it closed', () => {
+        const windows = useWindowStore();
+        const search = useSearchStore();
+        const { dispatch } = useCommandDispatcher();
+        windows.openLeftPanel('chunkList');
+        search.quickSearch = '保留关键词';
+        dispatch('openSearch');
+        expect(windows.selectedLeftPanel).toBe('search');
+        expect(windows.isWindowOpen('search')).toBe(true);
+        expect(windows.isWindowOpen('chunkList')).toBe(false);
+        expect(windows.activeFocus).toBe('search');
+        expect(search.focusRequested).toBe(true);
+        search.focusRequested = false;
+        dispatch('openSearch');
+        expect(windows.isWindowOpen('search')).toBe(true);
+        expect(search.focusRequested).toBe(true);
+        expect(search.quickSearch).toBe('保留关键词');
+        windows.closeLeftPanel();
+        dispatch('openSearch');
+        expect(windows.isWindowOpen('search')).toBe(true);
+    });
+
+    it('keeps search closed while a modal blocks business commands', () => {
+        const windows = useWindowStore();
+        windows.openHelpDocument();
+        useCommandDispatcher().dispatch('openSearch');
+        expect(windows.isWindowOpen('search')).toBe(false);
+        expect(useSearchStore().focusRequested).toBe(false);
+        expect(windows.topModal?.windowName).toBe('help');
     });
 });

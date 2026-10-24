@@ -602,7 +602,7 @@ function toggle() {
 
 .seg-input::placeholder {
     color: var(--text-muted);
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .seg-sep {
@@ -621,8 +621,6 @@ function toggle() {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    width: 22px;
-    height: 22px;
     border: none;
     border-radius: 4px;
     background: transparent;
