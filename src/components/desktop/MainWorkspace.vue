@@ -11,11 +11,7 @@
                 v-for="(pane, index) in workspacePanes"
                 :key="pane.paneId"
             >
-                <div
-                    class="workspace-pane"
-                    :style="getPaneStyle(index)"
-                    @pointerdown.capture="navigation.activatePane(pane.paneId)"
-                >
+                <div class="workspace-pane" :style="getPaneStyle(index)">
                     <WorkspaceView :pane="pane" />
                 </div>
 
@@ -38,14 +34,14 @@
 <script setup lang="ts">
 import { useWorkspaceStore } from '@/stores/ui/workspaceStore';
 
-import { computed } from 'vue';
-import { useEditorNavigation } from '@/composables/application/useEditorNavigation';
+import { computed, onUnmounted } from 'vue';
 import FileImporter from '@/components/desktop/FileImporter.vue';
 import WorkspaceView from '@/components/workspace/WorkspaceView.vue';
 
-const navigation = useEditorNavigation();
 const editorWorkspace = useWorkspaceStore();
 const workspacePanes = computed(() => editorWorkspace.panes);
+let stopResize: (() => void) | null = null;
+onUnmounted(() => stopResize?.());
 
 function getPaneStyle(index: number): Record<string, string> {
     const isHorizontal = editorWorkspace.direction === 'horizontal';
@@ -63,6 +59,7 @@ function getPaneStyle(index: number): Record<string, string> {
 
 function startResize(e: MouseEvent) {
     e.preventDefault();
+    stopResize?.();
     const isHorizontal = editorWorkspace.direction === 'horizontal';
     const container = (e.target as HTMLElement).parentElement;
     if (!container) return;
@@ -72,6 +69,9 @@ function startResize(e: MouseEvent) {
     const containerSize = isHorizontal
         ? container.clientWidth
         : container.clientHeight;
+    if (containerSize <= 0) return;
+    const previousCursor = document.body.style.cursor;
+    const previousUserSelect = document.body.style.userSelect;
 
     function onMouseMove(ev: MouseEvent) {
         const currentPos = isHorizontal ? ev.clientX : ev.clientY;
@@ -89,10 +89,12 @@ function startResize(e: MouseEvent) {
     function onMouseUp() {
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
+        document.body.style.cursor = previousCursor;
+        document.body.style.userSelect = previousUserSelect;
+        stopResize = null;
     }
 
+    stopResize = onMouseUp;
     document.body.style.cursor = isHorizontal ? 'col-resize' : 'row-resize';
     document.body.style.userSelect = 'none';
     document.addEventListener('mousemove', onMouseMove);

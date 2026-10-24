@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { effectScope, type EffectScope } from 'vue';
+import { effectScope, nextTick, type EffectScope } from 'vue';
 import { createPinia, setActivePinia } from 'pinia';
 import { useEditorRuntime } from '@/composables/application/useEditorRuntime';
 import { useEditorNavigation } from '@/composables/application/useEditorNavigation';
@@ -39,7 +39,73 @@ function setup() {
 }
 
 describe('editor lifecycle coordination', () => {
-    it('prunes a deleted scene and its selection for command-driven edits and undo', () => {
+    it('keeps scene panes, drafts and selections while moving a scene between documents', async () => {
+        const { first, last, workspace } = setup();
+        const paneId = workspace.activePaneId;
+        const selection = useSelectionStore();
+        const session = useEditorSessionStore();
+        selection.select({ kind: 'scene', chunkId: first.chunkId }, 'message', [
+            first.messageId,
+        ]);
+        session.startEditing(
+            {
+                kind: 'message',
+                chunkId: first.chunkId,
+                messageId: first.messageId,
+            },
+            paneId,
+        );
+        const targetDocId = useLogStore().findChunkById(last.chunkId)!.docId;
+        useLogCommands().moveChunk(first.chunkId, targetDocId, 0);
+        await nextTick();
+        expect(workspace.activePaneId).toBe(paneId);
+        expect(workspace.activePane.view).toEqual({
+            kind: 'scene',
+            chunkId: first.chunkId,
+        });
+        expect(session.activeTarget?.kind).toBe('message');
+        expect(
+            selection.getSelectedIds(
+                { kind: 'scene', chunkId: first.chunkId },
+                'message',
+            ).size,
+        ).toBe(1);
+        useHistoryStore().undo();
+        await nextTick();
+        expect(workspace.activePaneId).toBe(paneId);
+        expect(workspace.activePane.view.kind).toBe('scene');
+    });
+
+    it('ends a draft only when its owning pane closes or changes scene', () => {
+        const { first, last, navigation, workspace } = setup();
+        const session = useEditorSessionStore();
+        const owner = workspace.activePaneId;
+        session.startEditing(
+            {
+                kind: 'message',
+                chunkId: first.chunkId,
+                messageId: first.messageId,
+            },
+            owner,
+        );
+        navigation.splitPane({ kind: 'scene', chunkId: last.chunkId });
+        navigation.closePane(workspace.activePaneId);
+        expect(session.editingPaneId).toBe(owner);
+        navigation.showScene(last.chunkId);
+        expect(session.activeTarget).toBeNull();
+        session.startEditing(
+            {
+                kind: 'message',
+                chunkId: last.chunkId,
+                messageId: last.messageId,
+            },
+            owner,
+        );
+        navigation.closePane(owner);
+        expect(session.activeTarget).toBeNull();
+    });
+
+    it('prunes a deleted scene and its selection for command-driven edits and undo', async () => {
         const { first, last, navigation, workspace } = setup();
         navigation.splitPane({ kind: 'scene', chunkId: last.chunkId });
         const selection = useSelectionStore();
@@ -48,6 +114,7 @@ describe('editor lifecycle coordination', () => {
         ]);
         navigation.requestMessageReveal(last.chunkId, last.messageId);
         useLogCommands().deleteChunk(last.chunkId);
+        await nextTick();
         expect(workspace.panes).toHaveLength(1);
         expect(workspace.activePane.view).toEqual({
             kind: 'scene',
