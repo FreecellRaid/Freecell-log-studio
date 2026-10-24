@@ -5,7 +5,7 @@ import type { Chunk, LogDocument, LogSource } from '@/types/log';
 
 import { useLogStore } from '@/stores/project/logStore';
 import { useStyleStore } from '@/stores/project/styleStore';
-import { useWindowStore } from '@/stores/ui/windowStore';
+import { useEditorNavigation } from '@/composables/application/useEditorNavigation';
 import { useHistoryStore } from '@/stores/editor/historyStore';
 import { useProjectManager } from '@/composables/application/useProjectManager';
 import { useImportSettingsStore } from '@/stores/io/importSettingsStore';
@@ -27,7 +27,7 @@ import { currentResourceRoots } from './resourceRoots';
 export function useFileImport() {
     const logStore = useLogStore();
     const styleStore = useStyleStore();
-    const windowStore = useWindowStore();
+    const navigation = useEditorNavigation();
     const projectManager = useProjectManager();
     const historyStore = useHistoryStore();
     const importSettingsStore = useImportSettingsStore();
@@ -78,13 +78,13 @@ export function useFileImport() {
 
     // 自动打开第一个场景进入编辑，先清掉指向已消失 chunk 的view
     function openFirstChunkViewIfNeeded() {
-        const hasValidView = windowStore.pruneOrphanChunkViews((chunkId) =>
+        const hasValidView = navigation.pruneScenes((chunkId) =>
             Boolean(logStore.findChunkById(chunkId)),
         );
         if (hasValidView) return;
         const firstChunk = getFirstChunk();
         if (firstChunk) {
-            windowStore.setActiveChunk(firstChunk.chunkId);
+            navigation.showScene(firstChunk.chunkId);
         }
     }
 
@@ -106,7 +106,7 @@ export function useFileImport() {
         styleStore.syncSystemRulesFromMessages(logStore.allMessages);
         historyStore.clearHistory();
         const first = documents[0]?.chunks[0];
-        if (focusImported && first) windowStore.setActiveChunk(first.chunkId);
+        if (focusImported && first) navigation.showScene(first.chunkId);
         else openFirstChunkViewIfNeeded();
         return documents.length;
     }

@@ -4,26 +4,25 @@
             class="pane-layout"
             :class="{
                 'pane-layout-vertical':
-                    windowStore.paneDirection === 'vertical',
+                    editorWorkspace.direction === 'vertical',
             }"
         >
-            <template v-for="pane in workspacePanes" :key="pane.paneIndex">
-                <div
-                    class="workspace-pane"
-                    :style="getPaneStyle(pane.paneIndex)"
-                    @pointerdown.capture="handlePaneClick(pane.paneIndex)"
-                >
-                    <WorkspaceView :instance="pane.instance" />
+            <template
+                v-for="(pane, index) in workspacePanes"
+                :key="pane.paneId"
+            >
+                <div class="workspace-pane" :style="getPaneStyle(index)">
+                    <WorkspaceView :pane="pane" />
                 </div>
 
                 <div
-                    v-if="shouldRenderResizeHandle(pane.paneIndex)"
+                    v-if="index < workspacePanes.length - 1"
                     class="resize-handle pane-resize-handle"
                     :class="{
                         'resize-handle-y':
-                            windowStore.paneDirection === 'vertical',
+                            editorWorkspace.direction === 'vertical',
                         'resize-handle-x':
-                            windowStore.paneDirection === 'horizontal',
+                            editorWorkspace.direction === 'horizontal',
                     }"
                     @mousedown="startResize"
                 ></div>
@@ -33,48 +32,46 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useWindowStore } from '@/stores/ui/windowStore';
+import { useWorkspaceStore } from '@/stores/ui/workspaceStore';
+
+import { computed, onUnmounted } from 'vue';
 import FileImporter from '@/components/desktop/FileImporter.vue';
 import WorkspaceView from '@/components/workspace/WorkspaceView.vue';
 
-const windowStore = useWindowStore();
-const workspacePanes = computed(() => windowStore.workspacePanes);
+const editorWorkspace = useWorkspaceStore();
+const workspacePanes = computed(() => editorWorkspace.panes);
+let stopResize: (() => void) | null = null;
+onUnmounted(() => stopResize?.());
 
-function getPaneStyle(index: 0 | 1): Record<string, string> {
-    const isHorizontal = windowStore.paneDirection === 'horizontal';
+function getPaneStyle(index: number): Record<string, string> {
+    const isHorizontal = editorWorkspace.direction === 'horizontal';
     const size =
-        workspacePanes.value.length === 1 ? 100 : windowStore.paneSizes[index];
+        workspacePanes.value.length === 1
+            ? 100
+            : index === 0
+              ? editorWorkspace.ratio
+              : 100 - editorWorkspace.ratio;
 
     return isHorizontal
         ? { width: `${size}%`, height: '100%' }
         : { width: '100%', height: `${size}%` };
 }
 
-function handlePaneClick(paneIndex: 0 | 1) {
-    const pane = workspacePanes.value.find(
-        (item) => item.paneIndex === paneIndex,
-    );
-    if (pane?.instance) {
-        windowStore.setFocus(pane.instance.windowId);
-    }
-}
-
-function shouldRenderResizeHandle(paneIndex: 0 | 1) {
-    return paneIndex < workspacePanes.value.length - 1;
-}
-
 function startResize(e: MouseEvent) {
     e.preventDefault();
-    const isHorizontal = windowStore.paneDirection === 'horizontal';
+    stopResize?.();
+    const isHorizontal = editorWorkspace.direction === 'horizontal';
     const container = (e.target as HTMLElement).parentElement;
     if (!container) return;
 
     const startPos = isHorizontal ? e.clientX : e.clientY;
-    const startSizes = [...windowStore.paneSizes];
+    const startRatio = editorWorkspace.ratio;
     const containerSize = isHorizontal
         ? container.clientWidth
         : container.clientHeight;
+    if (containerSize <= 0) return;
+    const previousCursor = document.body.style.cursor;
+    const previousUserSelect = document.body.style.userSelect;
 
     function onMouseMove(ev: MouseEvent) {
         const currentPos = isHorizontal ? ev.clientX : ev.clientY;
@@ -84,19 +81,20 @@ function startResize(e: MouseEvent) {
         // 限制最小/最大比例防止窗格消失 (20% - 80%)
         const newLeftSize = Math.min(
             80,
-            Math.max(20, startSizes[0] + deltaPercent),
+            Math.max(20, startRatio + deltaPercent),
         );
-        const newRightSize = 100 - newLeftSize;
-        windowStore.paneSizes = [newLeftSize, newRightSize];
+        editorWorkspace.setRatio(newLeftSize);
     }
 
     function onMouseUp() {
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
+        document.body.style.cursor = previousCursor;
+        document.body.style.userSelect = previousUserSelect;
+        stopResize = null;
     }
 
+    stopResize = onMouseUp;
     document.body.style.cursor = isHorizontal ? 'col-resize' : 'row-resize';
     document.body.style.userSelect = 'none';
     document.addEventListener('mousemove', onMouseMove);

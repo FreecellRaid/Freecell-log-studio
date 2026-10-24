@@ -84,21 +84,21 @@ import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 
 import MessageItem from '@/components/workspace/MessageItem.vue';
-import { useActiveContext } from '@/composables/application/useActiveContext';
+import { useSelectionContext } from '@/composables/application/useSelectionContext';
 import { useMessageReveal } from '@/composables/application/useMessageReveal';
 import { useMessageDragDrop } from '@/composables/interaction/useDragDrop';
 import { useLogCommands } from '@/stores/project/logCommands';
 import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
-import { useWindowStore } from '@/stores/ui/windowStore';
+import { useEditorNavigation } from '@/composables/application/useEditorNavigation';
 import type { Chunk, Message } from '@/types/log';
 
 const props = defineProps<{
-    windowId: string;
+    paneId: string;
     chunk: Chunk;
     messages: Message[];
 }>();
 
-const effectiveWindowId = computed(() => props.windowId);
+const effectivePaneId = computed(() => props.paneId);
 const currentChunkId = computed(() => props.chunk.chunkId);
 const currentChunk = computed(() => props.chunk);
 const messages = computed(() => props.messages);
@@ -114,20 +114,26 @@ interface ScrollAnchor {
     scrollHeight: number;
 }
 
-const windowStore = useWindowStore();
+const navigation = useEditorNavigation();
 const logCommands = useLogCommands();
 const editorSessionStore = useEditorSessionStore();
-const activeContext = useActiveContext(effectiveWindowId);
-const dragDropTool = useMessageDragDrop(effectiveWindowId);
+const activeContext = useSelectionContext(() => ({
+    kind: 'scene',
+    chunkId: props.chunk.chunkId,
+}));
+const dragDropTool = useMessageDragDrop(() => ({
+    kind: 'scene',
+    chunkId: props.chunk.chunkId,
+}));
 
-const isViewFocused = computed(
-    () => windowStore.activeFocus === effectiveWindowId.value,
+const isViewFocused = computed(() =>
+    navigation.isCommandTarget(effectivePaneId.value),
 );
 
 const scrollerRef = ref<ScrollerInstance | null>(null);
 
 useMessageReveal({
-    windowId: effectiveWindowId,
+    paneId: effectivePaneId,
     messages,
     ready: () => Boolean(scrollerRef.value),
     reveal: (index) => {
@@ -184,7 +190,7 @@ const editingMessageId = computed(() => {
     const target = editorSessionStore.activeTarget;
     return target?.kind === 'message' &&
         target.chunkId === currentChunkId.value &&
-        editorSessionStore.editingWindowId === props.windowId
+        editorSessionStore.editingPaneId === props.paneId
         ? target.messageId
         : null;
 });
@@ -200,7 +206,7 @@ function handleStartEdit(message: Message) {
                 chunkId: currentChunkId.value,
                 messageId: message.messageId,
             },
-            props.windowId,
+            props.paneId,
         );
     });
 }

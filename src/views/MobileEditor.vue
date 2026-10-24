@@ -16,10 +16,14 @@
 </template>
 
 <script setup lang="ts">
+import { useDialogStore } from '@/stores/ui/dialogStore';
+
+import { useLayoutStore } from '@/stores/ui/layoutStore';
+
 import { onUnmounted } from 'vue';
 import { useSwipeGesture } from '@/composables/interaction/useSwipeGesture';
 import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
-import { useWindowStore } from '@/stores/ui/windowStore';
+import { useEditorNavigation } from '@/composables/application/useEditorNavigation';
 import type { MobileBottomPanelName } from '@/types/mobile';
 import MobileActiveSheet from '@/components/mobile/MobileActiveSheet.vue';
 import MobileBottomPanelDrawer from '@/components/mobile/MobileBottomPanelDrawer.vue';
@@ -29,7 +33,9 @@ import MobilePanelDock from '@/components/mobile/MobilePanelDock.vue';
 import MobileTopBar from '@/components/mobile/MobileTopBar.vue';
 import MobileWorkspace from '@/components/mobile/MobileWorkspace.vue';
 
-const windowStore = useWindowStore();
+const navigation = useEditorNavigation();
+const editorDialogs = useDialogStore();
+const editorLayout = useLayoutStore();
 const mobileUiStore = useMobileUiStore();
 
 const bottomPanelNames: MobileBottomPanelName[] = [
@@ -53,20 +59,20 @@ const editorGesture = useSwipeGesture([
             !hasOpenOverlay() &&
             event.touches[0].clientY >= window.innerHeight - 72,
         onSwipe: () => {
-            const activePanel = windowStore.selectedLeftPanel;
+            const activePanel = editorLayout.activePanel;
             const panel = bottomPanelNames.includes(
                 activePanel as MobileBottomPanelName,
             )
                 ? (activePanel as MobileBottomPanelName)
                 : 'chunkList';
-            windowStore.selectLeftPanel(panel);
+            navigation.selectPanel(panel);
             mobileUiStore.openBottomPanel();
         },
     },
 ]);
 
 function hasOpenOverlay() {
-    return Boolean(mobileUiStore.activeOverlay || windowStore.topModal);
+    return Boolean(mobileUiStore.activeOverlay || editorDialogs.top);
 }
 
 onUnmounted(mobileUiStore.reset);

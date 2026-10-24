@@ -4,7 +4,7 @@
             class="project-name project-entry"
             type="button"
             title="打开帮助文档"
-            @click="windowStore.openHelpDocument"
+            @click="() => editorDialogs.open('help')"
         >
             <div class="icon-project">
                 <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
@@ -132,10 +132,11 @@
 </template>
 
 <script setup lang="ts">
+import { useDialogStore } from '@/stores/ui/dialogStore';
+
 import { ref } from 'vue';
 import { Download, Trash2, Save, FolderOpen, Upload } from '@lucide/vue';
 import { useLogStore } from '@/stores/project/logStore';
-import { useWindowStore } from '@/stores/ui/windowStore';
 import { useFileImportInput } from '@/composables/application/useImporter';
 import { useProjectManager } from '@/composables/application/useProjectManager';
 import { useWorkspaceActions } from '@/composables/application/useWorkspaceActions';
@@ -147,7 +148,7 @@ import { useRemoteImportStore } from '@/stores/io/remoteImportStore';
 import ImportPopover from '@/components/popovers/ImportPopover.vue';
 
 const logStore = useLogStore();
-const windowStore = useWindowStore();
+const editorDialogs = useDialogStore();
 const { setFileInput, triggerImport, handleFileChange, importFromClipboard } =
     useFileImportInput();
 const projectManager = useProjectManager();

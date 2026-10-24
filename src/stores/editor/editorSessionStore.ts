@@ -21,10 +21,10 @@ export const useEditorSessionStore = defineStore('editorSession', () => {
     const logStore = useLogStore();
     const activeTarget = ref<EditorTarget | null>(null);
 
-    const editingWindowId = ref<string | null>(null);
+    const editingPaneId = ref<string | null>(null);
     const messageDraft = ref<MessageDraft | null>(null);
 
-    function startEditing(target: EditorTarget, windowId?: string) {
+    function startEditing(target: EditorTarget, paneId?: string) {
         if (
             target.kind === 'message' &&
             logStore.messagesById.get(target.messageId)?.chunkId !==
@@ -63,7 +63,7 @@ export const useEditorSessionStore = defineStore('editorSession', () => {
             }
             activeTarget.value = target;
         }
-        editingWindowId.value = windowId ?? null;
+        editingPaneId.value = paneId ?? null;
     }
 
     function updateMessageDraft<K extends keyof MessageDraft>(
@@ -76,7 +76,7 @@ export const useEditorSessionStore = defineStore('editorSession', () => {
     function stopEditing() {
         activeTarget.value = null;
         messageDraft.value = null;
-        editingWindowId.value = null;
+        editingPaneId.value = null;
     }
 
     watch(
@@ -98,7 +98,7 @@ export const useEditorSessionStore = defineStore('editorSession', () => {
 
     return {
         activeTarget,
-        editingWindowId,
+        editingPaneId,
         messageDraft,
         updateMessageDraft,
         startEditing,

@@ -1,16 +1,18 @@
+import { useDialogStore } from '@/stores/ui/dialogStore';
 import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import { resolveRemoteInput } from '@/io/import/remoteLink';
 import { readRemoteLog } from '@/io/import/remoteReader';
 import { useFileImport } from '@/composables/application/useImporter';
 import { useLogStore } from '@/stores/project/logStore';
-import { useWindowStore } from '@/stores/ui/windowStore';
+import { useEditorNavigation } from '@/composables/application/useEditorNavigation';
 import { useImportSettingsStore } from '@/stores/io/importSettingsStore';
 import type { ImportTextEntry } from '@/types/import';
 
 export const useRemoteImportStore = defineStore('remoteImport', () => {
-    const windowStore = useWindowStore();
-    const visible = computed(() => windowStore.isWindowOpen('remoteImport'));
+    const navigation = useEditorNavigation();
+    const editorDialogs = useDialogStore();
+    const visible = computed(() => editorDialogs.isOpen('remoteImport'));
     const input = ref('');
     const loading = ref(false);
     const error = ref('');
@@ -41,14 +43,14 @@ export const useRemoteImportStore = defineStore('remoteImport', () => {
     );
 
     function open() {
-        windowStore.openModal('remoteImport');
+        editorDialogs.open('remoteImport');
         error.value = '';
         message.value = '';
         originalEntry.value = undefined;
     }
 
     function close() {
-        if (visible.value) windowStore.closeModal('remoteImport');
+        if (visible.value) editorDialogs.close('remoteImport');
         else cancel();
     }
 
@@ -98,7 +100,7 @@ export const useRemoteImportStore = defineStore('remoteImport', () => {
                 );
             if (existing) {
                 const chunk = existing.chunks[0];
-                if (chunk) windowStore.setActiveChunk(chunk.chunkId);
+                if (chunk) navigation.showScene(chunk.chunkId);
                 message.value = '这份日志就在工作区中，已经为你导入好了哦～';
                 if (useImportSettingsStore().autoCloseRemoteImport) close();
                 return;
@@ -122,7 +124,7 @@ export const useRemoteImportStore = defineStore('remoteImport', () => {
             importer.applyLogDocuments(documents);
             message.value = '日志已导入，点击右上角关闭弹窗❛‿˂̵✧';
             const chunk = doc.chunks[0];
-            if (chunk) windowStore.setActiveChunk(chunk.chunkId);
+            if (chunk) navigation.showScene(chunk.chunkId);
             if (useImportSettingsStore().autoCloseRemoteImport) close();
         } catch (cause) {
             if (current !== revision) return;

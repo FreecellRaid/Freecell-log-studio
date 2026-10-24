@@ -2,7 +2,7 @@ import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, disposePinia, setActivePinia } from 'pinia';
 import { useImageInsertStore } from '@/stores/editor/imageInsertStore';
 import { useLogStore } from '@/stores/project/logStore';
-import { useWindowStore } from '@/stores/ui/windowStore';
+import { useDialogStore } from '@/stores/ui/dialogStore';
 import { useHistoryStore } from '@/stores/editor/historyStore';
 import { useResourceTasksStore } from '@/stores/io/resourceTasksStore';
 import { resourceRepository } from '@/io/storage/resourceStorage';
@@ -49,7 +49,7 @@ describe('single-message image insertion', () => {
 
     it('opens a blocking modal and appends a local attachment without modifying text', async () => {
         const store = useImageInsertStore();
-        expect(useWindowStore().topModal?.windowName).toBe('imageInsert');
+        expect(useDialogStore().top).toBe('imageInsert');
         await store.insert({
             files: [new File(['data'], 'map.png')],
             name: '地图',
@@ -59,7 +59,7 @@ describe('single-message image insertion', () => {
         expect(message.images).toEqual([
             expect.objectContaining({ resourceId: 'local', name: '地图' }),
         ]);
-        expect(useWindowStore().topModal).toBeNull();
+        expect(useDialogStore().top).toBeNull();
         useHistoryStore().undo();
         expect(useLogStore().allMessages[0].images?.length ?? 0).toBe(0);
         useHistoryStore().redo();

@@ -1,10 +1,12 @@
+import { useDialogStore } from '@/stores/ui/dialogStore';
 import { getVisibleMessages } from '@/editor/messageVisibility';
 import { useStyleStore } from '@/stores/project/styleStore';
 import { useUiStore } from '@/stores/ui/uiStore';
-import { getWindowTargetId } from '@/types/window';
-import { windowDefinitions } from '@/types/window';
-import { useWindowStore } from '@/stores/ui/windowStore';
-import { useActiveContext } from '@/composables/application/useActiveContext';
+import { computed } from 'vue';
+import { selectionScopeForCommand } from '@/types/commandContext';
+import { useCommandContextStore } from '@/stores/ui/commandContextStore';
+import { useEditorNavigation } from '@/composables/application/useEditorNavigation';
+import { useSelectionContext } from '@/composables/application/useSelectionContext';
 import { useHistoryStore } from '@/stores/editor/historyStore';
 import { useClipboardStore } from '@/stores/editor/clipboardStore';
 import { useLogCommands } from '@/stores/project/logCommands';
@@ -44,8 +46,18 @@ export type CommandType =
     | 'replace';
 
 export function useCommandDispatcher() {
-    const windowStore = useWindowStore();
-    const activeContext = useActiveContext();
+    const navigation = useEditorNavigation();
+    const editorDialogs = useDialogStore();
+    const commandContext = useCommandContextStore();
+    // 命令的选区目标也显式传入，避免再次从窗口焦点历史推断。
+    const activeContext = useSelectionContext(
+        computed(
+            () =>
+                selectionScopeForCommand(commandContext.current) ?? {
+                    kind: 'none',
+                },
+        ),
+    );
     const history = useHistoryStore();
     const clipboard = useClipboardStore();
     const logCommands = useLogCommands();
@@ -56,21 +68,26 @@ export function useCommandDispatcher() {
     const searchStore = useSearchStore();
 
     const dispatch = (command: CommandType, payload?: any) => {
-        const activeWin = windowStore.currentActiveWindow;
-        const { windowName } = activeWin;
-        const originalId = getWindowTargetId(activeWin);
+        const context = commandContext.current;
+        const commandArea =
+            context.area === 'scene'
+                ? 'scene'
+                : context.area === 'panel'
+                  ? context.panel
+                  : null;
+        const originalId = context.area === 'scene' ? context.chunkId : '';
 
         // P0 Modal 开启时拦截其他业务命令
-        if (windowDefinitions[windowName].blocksCommands) {
-            if (command === 'cancel') return windowStore.closeTopModal();
+        if (editorDialogs.isBlocking) {
+            if (command === 'cancel') return editorDialogs.closeTop();
             return;
         }
 
         if (command === 'replace') {
-            if (windowName !== 'search' && windowName !== 'chunkView') return;
+            if (commandArea !== 'search' && commandArea !== 'scene') return;
             const selected = activeContext.selectedMessageIds.value;
             const candidates =
-                windowName === 'search'
+                commandArea === 'search'
                     ? searchStore.searchResults
                     : getVisibleMessages(
                           logStore.findChunkById(originalId)?.messages ?? [],
@@ -81,14 +98,14 @@ export function useCommandDispatcher() {
                 candidates
                     .filter((message) => selected.has(message.messageId))
                     .map((message) => message.messageId),
-                windowName,
+                commandArea,
                 {
                     content:
-                        windowName === 'search' && !searchStore.contentRegex
+                        commandArea === 'search' && !searchStore.contentRegex
                             ? searchStore.quickSearch.trim()
                             : '',
                     note:
-                        windowName === 'search' && !searchStore.noteRegex
+                        commandArea === 'search' && !searchStore.noteRegex
                             ? searchStore.filter.note.trim()
                             : '',
                 },
@@ -98,12 +115,12 @@ export function useCommandDispatcher() {
 
         // P1 全局级命令
         const globalActions: Partial<Record<CommandType, () => void>> = {
-            toggleLeft: () => windowStore.toggleLeftPanel(),
-            toggleRight: () => windowStore.toggleInspector(),
-            openHelp: () => windowStore.openHelpDocument(),
+            toggleLeft: () => navigation.togglePanel(),
+            toggleRight: () => navigation.toggleInspector(),
+            openHelp: () => editorDialogs.open('help'),
             openSearch: () => {
-                windowStore.openLeftPanel('search');
-                windowStore.setFocus('search');
+                navigation.openPanel('search');
+                navigation.activatePanel('search');
                 searchStore.focusRequested = true;
             },
             undo: () => history.undo(),
@@ -113,7 +130,7 @@ export function useCommandDispatcher() {
             },
             export: () => {
                 const formatId = exportStore.activeFormat?.formatId;
-                if (formatId) windowStore.openExportPreview(formatId);
+                if (formatId) navigation.showPreview(formatId);
             },
         };
 
@@ -122,9 +139,9 @@ export function useCommandDispatcher() {
             return;
         }
 
-        // P2 基于 windowName 的分发
-        switch (windowName) {
-            case 'chunkView':
+        // P2 基于 commandArea 的分发
+        switch (commandArea) {
+            case 'scene':
                 handleChunkViewCommands(command, originalId, payload);
                 break;
             case 'chunkList':
@@ -235,7 +252,7 @@ export function useCommandDispatcher() {
         }
         if (cmd === 'selectNext') {
             selectionStore.selectNext(
-                chunkId,
+                { kind: 'scene', chunkId },
                 'message',
                 messages,
                 (m) => m.messageId,
@@ -244,7 +261,7 @@ export function useCommandDispatcher() {
 
         if (cmd === 'selectPrevious') {
             selectionStore.selectPrevious(
-                chunkId,
+                { kind: 'scene', chunkId },
                 'message',
                 messages,
                 (m) => m.messageId,
@@ -252,7 +269,7 @@ export function useCommandDispatcher() {
         }
         if (cmd === 'selectNextSamePlayer') {
             selectionStore.selectNextByProperty(
-                chunkId,
+                { kind: 'scene', chunkId },
                 'message',
                 messages,
                 'playerName',
@@ -262,7 +279,7 @@ export function useCommandDispatcher() {
     }
 
     function handleChunkListCommands(cmd: string) {
-        const chunkListFilter = useActiveContext('chunkList');
+        const chunkListFilter = useSelectionContext({ kind: 'chunkList' });
         const allChunks = logStore.allChunks;
         if (cmd === 'selectAll') {
             chunkListFilter.selectAllChunks();
@@ -342,7 +359,7 @@ export function useCommandDispatcher() {
         }
         if (cmd === 'selectNext') {
             selectionStore.selectNext(
-                'chunkList',
+                { kind: 'chunkList' },
                 'chunk',
                 allChunks,
                 (c) => c.chunkId,
@@ -350,7 +367,7 @@ export function useCommandDispatcher() {
         }
         if (cmd === 'selectPrevious') {
             selectionStore.selectPrevious(
-                'chunkList',
+                { kind: 'chunkList' },
                 'chunk',
                 allChunks,
                 (c) => c.chunkId,
@@ -359,7 +376,7 @@ export function useCommandDispatcher() {
     }
 
     function handleSearchCommands(cmd: CommandType, payload?: any) {
-        const searchFilter = useActiveContext('search');
+        const searchFilter = useSelectionContext({ kind: 'search' });
         if (cmd === 'select') {
             if (payload?.msgId && payload?.messages) {
                 searchFilter.handleMessageClickSelection(
@@ -391,21 +408,14 @@ export function useCommandDispatcher() {
 
             const chunkId = target.chunkId;
             selectionStore.select(
-                chunkId,
+                { kind: 'scene', chunkId },
                 'message',
                 [target.messageId],
                 false,
             );
 
-            if (windowStore.hasSplitView) {
-                const activePaneIndex = windowStore.getActivePaneIndex();
-                windowStore.setPaneView(activePaneIndex, 'chunkView', chunkId);
-                windowStore.requestMessageReveal(chunkId, target.messageId);
-                return;
-            }
-
-            windowStore.setActiveChunk(chunkId);
-            windowStore.requestMessageReveal(chunkId, target.messageId);
+            navigation.showScene(chunkId);
+            navigation.requestMessageReveal(chunkId, target.messageId);
             return;
         }
         if (cmd === 'cancel') {

@@ -83,6 +83,8 @@
 </template>
 
 <script setup lang="ts">
+import { useWorkspaceStore } from '@/stores/ui/workspaceStore';
+
 import {
     Command,
     Eye,
@@ -98,32 +100,29 @@ import { flattenLogToRows } from '@/io/export/flattener';
 import { renderExportDocument } from '@/io/export/exportRender';
 import { useExportStore } from '@/stores/io/exportStore';
 import { useLogStore } from '@/stores/project/logStore';
-import { useWindowStore } from '@/stores/ui/windowStore';
 import { useStyleStore } from '@/stores/project/styleStore';
-import { useActiveContext } from '@/composables/application/useActiveContext';
+import { useSelectionContext } from '@/composables/application/useSelectionContext';
 import { matchesMessageFilter } from '@/editor/filter';
 
 const logStore = useLogStore();
-const windowStore = useWindowStore();
+const editorWorkspace = useWorkspaceStore();
 const styleStore = useStyleStore();
 const exportStore = useExportStore();
-const activeContext = useActiveContext();
+const activeContext = useSelectionContext();
 
 const activeChunk = computed(function () {
-    if (windowStore.currentActiveView.windowName === 'chunkView') {
-        return logStore.findChunkById(
-            windowStore.currentActiveView.target.chunkId,
-        );
+    if (editorWorkspace.activePane.view.kind === 'scene') {
+        return logStore.findChunkById(editorWorkspace.activePane.view.chunkId);
     } else return null;
 });
 
 const activeExportFormat = computed(function () {
-    if (windowStore.currentActiveView.windowName !== 'exportPreview') {
+    if (editorWorkspace.activePane.view.kind !== 'preview') {
         return null;
     }
 
     return (
-        exportStore.formatById(windowStore.currentActiveView.target.formatId) ||
+        exportStore.formatById(editorWorkspace.activePane.view.formatId) ||
         exportStore.activeFormat
     );
 });

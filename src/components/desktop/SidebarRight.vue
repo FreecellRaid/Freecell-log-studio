@@ -1,6 +1,7 @@
 <template>
     <div
         class="sidebar-right-container"
+        v-command-scope="{ area: 'panel', panel: 'inspector' }"
         :style="{ width: uiStore.rightPanelWidth + 'px' }"
     >
         <div
@@ -20,7 +21,7 @@
                     class="panel-header-action-button icon-interactive"
                     title="关闭"
                     aria-label="关闭"
-                    @click="windowStore.closeInspector"
+                    @click="editorLayout.closeInspector"
                 >
                     <X class="ui-icon" />
                 </button>
@@ -75,6 +76,9 @@
 </template>
 
 <script setup lang="ts">
+import { vCommandScope } from '@/directives/commandScope';
+import { useLayoutStore } from '@/stores/ui/layoutStore';
+
 import { computed } from 'vue';
 import { X } from '@lucide/vue';
 import MessageDetailEditor from '@/components/common/MessageDetailEditor.vue';
@@ -82,20 +86,19 @@ import type {
     MessageDetailTextField,
     MessageDetailValues,
 } from '@/components/common/MessageDetailEditor.vue';
-import { useActiveContext } from '@/composables/application/useActiveContext';
+import { useSelectionContext } from '@/composables/application/useSelectionContext';
 import { useDraftValues } from '@/composables/application/useDraftValues';
 import { usePanelResize } from '@/composables/ui/usePanelResize';
 import { useLogStore } from '@/stores/project/logStore';
 import { useLogCommands } from '@/stores/project/logCommands';
 import { useUiStore } from '@/stores/ui/uiStore';
-import { useWindowStore } from '@/stores/ui/windowStore';
 import type { Message } from '@/types/log';
 
-const activeContext = useActiveContext();
+const activeContext = useSelectionContext();
 const logStore = useLogStore();
 const logCommands = useLogCommands();
 const uiStore = useUiStore();
-const windowStore = useWindowStore();
+const editorLayout = useLayoutStore();
 const { startResize } = usePanelResize({
     edge: 'left',
     getWidth: () => uiStore.rightPanelWidth,

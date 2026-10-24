@@ -7,11 +7,26 @@ import {
 // event => shortcut => command, dispatcher执行分发
 export function useKeyboardShortcuts() {
     const { dispatch } = useCommandDispatcher();
+    const { handleBrowserShortcut, handleKeyDown } =
+        createShortcutHandlers(dispatch);
 
+    onMounted(() => {
+        window.addEventListener('keydown', handleBrowserShortcut, true);
+        window.addEventListener('keydown', handleKeyDown);
+    });
+    onUnmounted(() => {
+        window.removeEventListener('keydown', handleBrowserShortcut, true);
+        window.removeEventListener('keydown', handleKeyDown);
+    });
+}
+
+export function createShortcutHandlers(
+    dispatch: (command: CommandType) => void,
+) {
     // 查找/替换在捕获阶段接管，包括输入框和弹窗内，避免浏览器先执行默认行为。
     // 是否允许打开业务界面仍由 dispatcher 的弹窗优先级决定。
     const handleBrowserShortcut = (event: KeyboardEvent) => {
-        if (event.isComposing) return;
+        if (event.defaultPrevented || event.isComposing) return;
         const key = event.key.toLowerCase();
         let command: CommandType | null = null;
         if (
@@ -41,13 +56,16 @@ export function useKeyboardShortcuts() {
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.defaultPrevented || event.isComposing) return;
         const isModKey = event.ctrlKey || event.metaKey;
         const key = event.key.toLowerCase();
         const shift = event.shiftKey;
         if (
             event.target instanceof HTMLInputElement ||
             event.target instanceof HTMLTextAreaElement ||
-            (event.target as HTMLElement).isContentEditable
+            event.target instanceof HTMLSelectElement ||
+            (event.target instanceof HTMLElement &&
+                event.target.isContentEditable)
         ) {
             return;
         }
@@ -82,12 +100,5 @@ export function useKeyboardShortcuts() {
         }
     };
 
-    onMounted(() => {
-        window.addEventListener('keydown', handleBrowserShortcut, true);
-        window.addEventListener('keydown', handleKeyDown);
-    });
-    onUnmounted(() => {
-        window.removeEventListener('keydown', handleBrowserShortcut, true);
-        window.removeEventListener('keydown', handleKeyDown);
-    });
+    return { handleBrowserShortcut, handleKeyDown };
 }

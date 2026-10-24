@@ -1,6 +1,7 @@
 import { computed, ref, type MaybeRefOrGetter } from 'vue';
+import type { SelectionScope } from '@/types/selection';
 import { useLogCommands } from '@/stores/project/logCommands';
-import { useActiveContext } from '@/composables/application/useActiveContext';
+import { useSelectionContext } from '@/composables/application/useSelectionContext';
 
 //消息拖拽逻辑
 //变为全局状态，确保跨组件拖拽时状态一致
@@ -13,10 +14,10 @@ const globalDraggedChunk = ref<string | null>(null);
 const globalDraggedDocument = ref<string | null>(null);
 
 export function useMessageDragDrop(
-    ownerId?: MaybeRefOrGetter<string | undefined>,
+    ownerScope?: MaybeRefOrGetter<SelectionScope | undefined>,
 ) {
     const logEditorStore = useLogCommands();
-    const activeContext = useActiveContext(ownerId);
+    const activeContext = useSelectionContext(ownerScope);
 
     function onDragOver(event: DragEvent) {
         event.preventDefault();

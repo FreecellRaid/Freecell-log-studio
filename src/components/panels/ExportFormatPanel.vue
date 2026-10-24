@@ -1,5 +1,8 @@
 <template>
-    <div class="panel" @pointerdown="windowStore.setFocus('exportFormat')">
+    <div
+        class="panel"
+        v-command-scope="{ area: 'panel', panel: 'exportFormat' }"
+    >
         <div class="panel-header">
             <div class="header-title">
                 <h3>导出模板</h3>
@@ -299,16 +302,19 @@
 </template>
 
 <script setup lang="ts">
+import { useWorkspaceStore } from '@/stores/ui/workspaceStore';
+import { vCommandScope } from '@/directives/commandScope';
 import { computed, ref } from 'vue';
 import { Plus, ChevronRight, Trash2, Check, Eye } from '@lucide/vue';
 import { EXPORT_PRESET_IDS, useExportStore } from '@/stores/io/exportStore';
-import { useWindowStore } from '@/stores/ui/windowStore';
+import { useEditorNavigation } from '@/composables/application/useEditorNavigation';
 import type { ExportFormat } from '@/types/export';
 import { vClickOutside } from '@/directives/clickOutside';
 import { useDraftValues } from '@/composables/application/useDraftValues';
 
 const exportStore = useExportStore();
-const windowStore = useWindowStore();
+const navigation = useEditorNavigation();
+const editorWorkspace = useWorkspaceStore();
 const expandedId = ref<string | null>(exportStore.activeFormatId);
 type FormatDraftField = Extract<
     keyof ExportFormat,
@@ -326,9 +332,9 @@ const formatDrafts = useDraftValues<FormatDraftField>();
 const previewedFormatIds = computed(() => {
     const ids = new Set<string>();
 
-    for (const win of windowStore.openWindows.values()) {
-        if (win.windowName === 'exportPreview') {
-            ids.add(win.target.formatId);
+    for (const pane of editorWorkspace.panes) {
+        if (pane.view.kind === 'preview') {
+            ids.add(pane.view.formatId);
         }
     }
 
@@ -337,7 +343,7 @@ const previewedFormatIds = computed(() => {
 
 function handleTogglePreview(formatId: string) {
     exportStore.setActive(formatId);
-    windowStore.openExportPreview(formatId);
+    navigation.showPreview(formatId);
 }
 
 function handleSelectFormat(id: string) {

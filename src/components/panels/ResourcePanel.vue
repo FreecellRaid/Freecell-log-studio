@@ -1,8 +1,7 @@
 <template>
     <section
         class="panel resource-panel"
-        @pointerdown.capture="windows.setFocus('resources')"
-        @focusin="windows.setFocus('resources')"
+        v-command-scope="{ area: 'panel', panel: 'resources' }"
     >
         <header class="panel-header">
             <div class="header-title"><h3>资源管理</h3></div>
@@ -60,9 +59,7 @@
                     class="resource-row"
                     :class="{
                         'is-selected': panel.selectedIds.has(item.resourceId),
-                        'is-active':
-                            windows.currentActiveWindow.windowId ===
-                            'resources',
+                        'is-active': navigation.isCommandTarget('resources'),
                     }"
                     role="option"
                     :aria-selected="panel.selectedIds.has(item.resourceId)"
@@ -106,18 +103,19 @@
     </section>
 </template>
 <script setup lang="ts">
+import { vCommandScope } from '@/directives/commandScope';
 import { Download, SquareCheckBig, Trash2 } from '@lucide/vue';
 import { RecycleScroller } from 'vue-virtual-scroller';
 import ImageAttachmentView from '@/components/common/ImageAttachmentView.vue';
 import { useResourcePanelStore } from '@/stores/editor/resourcePanelStore';
 import { useResourceTasksStore } from '@/stores/io/resourceTasksStore';
-import { useWindowStore } from '@/stores/ui/windowStore';
+import { useEditorNavigation } from '@/composables/application/useEditorNavigation';
 import { useResourceSummaries } from '@/composables/resources/useResourceSummaries';
 import { imageResourceText } from '@/data/imageResourceText';
 import { resolveImageResourceState } from '@/editor/imageResourceState';
 const panel = useResourcePanelStore();
 const tasks = useResourceTasksStore();
-const windows = useWindowStore();
+const navigation = useEditorNavigation();
 const { summaries, reading, readError } = useResourceSummaries(() =>
     panel.resources.map((item) => item.resourceId),
 );

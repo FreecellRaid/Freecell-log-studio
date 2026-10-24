@@ -11,10 +11,7 @@
                 <MainWorkspace />
             </section>
 
-            <aside
-                v-if="windowStore.isWindowOpen('inspector')"
-                class="sidebar-right"
-            >
+            <aside v-if="editorLayout.inspectorOpen" class="sidebar-right">
                 <SidebarRight />
             </aside>
         </main>
@@ -26,8 +23,9 @@
 </template>
 
 <script setup lang="ts">
+import { useLayoutStore } from '@/stores/ui/layoutStore';
+
 import { onMounted } from 'vue';
-import { useWindowStore } from '@/stores/ui/windowStore';
 import { useKeyboardShortcuts } from '@/composables/interaction/useKeyboardShortcuts';
 import { useScrollbarVisibility } from '@/composables/ui/useScrollbarVisibility';
 import TopMenuBar from '@/components/desktop/TopMenuBar.vue';
@@ -36,7 +34,7 @@ import MainWorkspace from '@/components/desktop/MainWorkspace.vue';
 import SidebarRight from '@/components/desktop/SidebarRight.vue';
 import StatusBar from '@/components/desktop/StatusBar.vue';
 
-const windowStore = useWindowStore();
+const editorLayout = useLayoutStore();
 useKeyboardShortcuts();
 onMounted(() => {
     useScrollbarVisibility();

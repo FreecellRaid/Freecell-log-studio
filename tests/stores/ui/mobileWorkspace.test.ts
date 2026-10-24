@@ -1,142 +1,68 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
-import { useWindowStore } from '@/stores/ui/windowStore';
-import { windowDefinitions } from '@/types/window';
+import { useWorkspaceStore } from '@/stores/ui/workspaceStore';
+import { useLayoutStore } from '@/stores/ui/layoutStore';
+import { useDialogStore } from '@/stores/ui/dialogStore';
+import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
+import { useEditorNavigation } from '@/composables/application/useEditorNavigation';
 
-describe('mobile workspace projection', () => {
-    beforeEach(() => setActivePinia(createPinia()));
+beforeEach(() => setActivePinia(createPinia()));
 
-    it('uses default view when no scene or preview is open', () => {
-        const store = useWindowStore();
-        store.openLeftPanel();
-        store.openHelpDocument();
-        expect(store.lastFocusedView.windowName).toBe('defaultView');
-    });
-
-    it('shows default view when it is the latest focused view', () => {
-        const store = useWindowStore();
-        store.setActiveChunk('scene');
-        store.setFocus('defaultView');
-        expect(store.lastFocusedView).toMatchObject({
-            windowName: 'defaultView',
+describe('shared mobile workspace', () => {
+    it('shows the active pane through tool and dialog interaction', () => {
+        const workspace = useWorkspaceStore();
+        const navigation = useEditorNavigation();
+        navigation.showScene('scene');
+        const sceneId = workspace.activePaneId;
+        navigation.showPreview('standard');
+        const previewId = workspace.activePaneId;
+        navigation.activatePane(sceneId);
+        navigation.openPanel('search');
+        useDialogStore().open('help');
+        expect(workspace.activePaneId).toBe(sceneId);
+        useDialogStore().closeTop();
+        navigation.activatePane(previewId);
+        expect(workspace.activePane.view).toEqual({
+            kind: 'preview',
+            formatId: 'standard',
         });
+        navigation.closePane(previewId);
+        expect(workspace.activePaneId).toBe(sceneId);
+        navigation.closePane(sceneId);
+        expect(workspace.activePane.view.kind).toBe('empty');
     });
 
-    it('switches between scene and preview by focus while ignoring panels and modals', () => {
-        const store = useWindowStore();
-        store.setActiveChunk('scene');
-        const sceneId = store.currentActiveView.windowId;
-        store.openExportPreview('standard');
-        const previewId = store.currentActiveView.windowId;
-        expect(store.lastFocusedView.windowId).toBe(previewId);
-        store.setFocus(sceneId);
-        store.openLeftPanel();
-        store.openHelpDocument();
-        expect(store.lastFocusedView.windowId).toBe(sceneId);
-        expect(store.currentActiveView.windowId).toBe(sceneId);
-        store.setFocus(previewId);
-        expect(store.lastFocusedView.windowId).toBe(previewId);
+    it('uses layout state for the bottom panel and keeps mobile overlays exclusive', () => {
+        const mobile = useMobileUiStore();
+        const layout = useLayoutStore();
+        layout.selectPanel('resources');
+        mobile.openBottomPanel();
+        expect(mobile.bottomPanelOpen).toBe(true);
+        expect(layout.activePanel).toBe('resources');
+        mobile.openLeftDrawer();
+        expect(mobile.leftDrawerOpen).toBe(true);
+        expect(mobile.bottomPanelOpen).toBe(false);
+        mobile.openBottomPanel();
+        expect(mobile.leftDrawerOpen).toBe(false);
+        mobile.openSheet('message');
+        expect(mobile.activeSheet).toBe('message');
+        expect(mobile.bottomPanelOpen).toBe(false);
+        mobile.closeOverlay();
+        expect(mobile.activeOverlay).toBeNull();
     });
 
-    it('shows the latest focused preview, then the remaining preview after close', () => {
-        const store = useWindowStore();
-        store.openExportPreview('standard');
-        const firstId = store.currentActiveView.windowId;
-        store.openSplitView('exportPreview', 'markdown');
-        const secondId = store.currentActiveView.windowId;
-        expect(store.lastFocusedView.windowId).toBe(secondId);
-        store.setFocus(firstId);
-        expect(store.lastFocusedView.windowId).toBe(firstId);
-        store.unregisterWindow(firstId);
-        expect(store.lastFocusedView.windowId).toBe(secondId);
-    });
-
-    it('keeps an unfocused preview registered while displaying the focused scene', () => {
-        const store = useWindowStore();
-        store.openExportPreview('standard');
-        const previewId = store.currentActiveView.windowId;
-        store.setActiveChunk('scene');
-        expect(store.currentActiveView.windowName).toBe('chunkView');
-        expect(store.isWindowOpen(previewId)).toBe(true);
-        expect(store.lastFocusedView.windowId).toBe(
-            store.currentActiveView.windowId,
-        );
-    });
-
-    it('returns to scene then default as preview and scene windows close', () => {
-        const store = useWindowStore();
-        store.setActiveChunk('scene');
-        const sceneId = store.currentActiveView.windowId;
-        store.openExportPreview('standard');
-        store.unregisterWindow(store.currentActiveView.windowId);
-        expect(store.lastFocusedView.windowId).toBe(sceneId);
-        store.unregisterWindow(sceneId);
-        expect(store.lastFocusedView.windowName).toBe('defaultView');
-    });
-
-    it('falls back to default view when focus history is empty or stale', () => {
-        const store = useWindowStore();
-        store.openExportPreview('standard');
-        store.openSplitView('exportPreview', 'markdown');
-        for (const focus of [[], ['missing']]) {
-            store.focusStack = focus;
-            expect(store.lastFocusedView.windowId).toBe('defaultView');
-        }
-    });
-
-    it('ignores stale entries above the most recently focused view', () => {
-        const store = useWindowStore();
-        store.setActiveChunk('scene');
-        store.focusStack.push('missing');
-        expect(store.lastFocusedView.windowId).toBe(
-            store.currentActiveView.windowId,
-        );
-    });
-
-    it('returns to the scene when closing a preview while a panel has focus', () => {
-        const store = useWindowStore();
-        store.setActiveChunk('scene');
-        const sceneId = store.currentActiveView.windowId;
-        store.openExportPreview('standard');
-        const previewId = store.currentActiveView.windowId;
-        store.openLeftPanel();
-        store.unregisterWindow(previewId);
-        expect(store.lastFocusedView.windowId).toBe(sceneId);
-        store.closeLeftPanel();
-        expect(store.activeFocus).toBe(sceneId);
-        expect(store.currentActiveView.windowId).toBe(sceneId);
-    });
-
-    it('projects without mutating desktop layout or focus', () => {
-        const store = useWindowStore();
-        store.setActiveChunk('scene');
-        const sceneId = store.currentActiveView.windowId;
-        store.openExportPreview('standard');
-        store.setFocus(sceneId);
-        const layout = [...store.paneWindowIds];
-        const focus = [...store.focusStack];
-        expect(store.lastFocusedView.windowId).toBe(sceneId);
-        expect(store.paneWindowIds).toEqual(layout);
-        expect(store.focusStack).toEqual(focus);
-    });
-
-    it('enforces singleton identity through definitions while allowing multiple scene instances', () => {
-        const store = useWindowStore();
-        store.registerWindow({ windowId: 'help-other', windowName: 'help' });
-        store.openHelpDocument();
-        expect(
-            [...store.openWindows.values()].filter(
-                (win) => win.windowName === 'help',
-            ),
-        ).toHaveLength(1);
-        expect(store.activeFocus).toBe('help');
-        expect(windowDefinitions.help.blocksCommands).toBe(true);
-        store.setActiveChunk('scene');
-        store.openSplitView('chunkView', 'scene');
-        expect(
-            [...store.openWindows.values()].filter(
-                (win) => win.windowName === 'chunkView',
-            ),
-        ).toHaveLength(2);
+    it('initializes layout once and preserves desktop split state on mobile projection', () => {
+        const layout = useLayoutStore();
+        const workspace = useWorkspaceStore();
+        layout.initialize(true);
+        layout.initialize(false);
+        expect(layout.sidebarOpen).toBe(false);
+        workspace.showScene('left');
+        workspace.splitPane({ kind: 'scene', chunkId: 'right' });
+        const before = JSON.stringify(workspace.panes);
+        const activeId = workspace.activePane.paneId;
+        useMobileUiStore().openBottomPanel();
+        expect(JSON.stringify(workspace.panes)).toBe(before);
+        expect(workspace.activePane.paneId).toBe(activeId);
     });
 });

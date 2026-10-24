@@ -1,9 +1,9 @@
 <template>
     <div
         class="view"
-        :class="{ 'is-active': windowStore.activeFocus === 'defaultView' }"
+        :class="{ 'is-active': navigation.isCommandTarget(paneId) }"
         data-focus-id="defaultView"
-        @pointerdown="windowStore.setFocus('defaultView')"
+        v-command-scope="{ area: 'empty', paneId }"
     >
         <header v-if="!isMobile" class="view-header">
             <div class="view-title">
@@ -44,12 +44,14 @@
 </template>
 
 <script setup lang="ts">
+import { vCommandScope } from '@/directives/commandScope';
 import { FolderOpen, LayoutDashboard, Upload } from '@lucide/vue';
-import { useWindowStore } from '@/stores/ui/windowStore';
+import { useEditorNavigation } from '@/composables/application/useEditorNavigation';
 import { useResponsiveMode } from '@/composables/ui/useResponsiveMode';
 
+defineProps<{ paneId: string }>();
 const { isMobile } = useResponsiveMode();
-const windowStore = useWindowStore();
+const navigation = useEditorNavigation();
 </script>
 
 <style scoped>

@@ -1,17 +1,17 @@
+import { useDialogStore } from '@/stores/ui/dialogStore';
 import { computed, reactive, ref, shallowRef } from 'vue';
 import { defineStore } from 'pinia';
 import type { LogDocument } from '@/types/log';
 import { planReplacement, type ReplacementOptions } from '@/editor/replacement';
 import { useLogStore } from '@/stores/project/logStore';
 import { useLogCommands } from '@/stores/project/logCommands';
-import { useWindowStore } from '@/stores/ui/windowStore';
 
 export const useReplacementStore = defineStore('replacement', () => {
     const log = useLogStore();
-    const windows = useWindowStore();
+    const editorDialogs = useDialogStore();
     const commands = useLogCommands();
     const targetIds = ref<string[]>([]);
-    const source = ref<'search' | 'chunkView'>('chunkView');
+    const source = ref<'search' | 'scene'>('scene');
     const options = reactive<ReplacementOptions>({
         field: 'content',
         mode: 'text',
@@ -42,7 +42,7 @@ export const useReplacementStore = defineStore('replacement', () => {
 
     function open(
         ids: string[],
-        from: 'search' | 'chunkView',
+        from: 'search' | 'scene',
         defaults: { content: string; note: string },
     ) {
         targetIds.value = [...new Set(ids)];
@@ -55,7 +55,7 @@ export const useReplacementStore = defineStore('replacement', () => {
         options.replacement = '';
         feedback.value = '';
         completed.value = false;
-        windows.openModal('replace');
+        editorDialogs.open('replace');
     }
 
     function reset() {

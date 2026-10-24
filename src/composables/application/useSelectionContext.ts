@@ -1,51 +1,32 @@
-import { getWindowTargetId } from '@/types/window';
-import { windowDefinitions } from '@/types/window';
 import { computed, toValue } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import type { Message } from '@/types/log';
 import { useLogStore } from '@/stores/project/logStore';
-import { useWindowStore } from '@/stores/ui/windowStore';
+import type { SelectionScope } from '@/types/selection';
 import { useSelectionStore } from '@/stores/editor/selectionStore';
 
-export function useActiveContext(
-    ownerId?: MaybeRefOrGetter<string | undefined>,
+export function useSelectionContext(
+    ownerScope?: MaybeRefOrGetter<SelectionScope | undefined>,
 ) {
     const logStore = useLogStore();
-    const windowStore = useWindowStore();
     const selectionStore = useSelectionStore();
 
-    const effectiveId = computed(() => {
-        let targetId = ownerId ? toValue(ownerId) : undefined;
-        if (!targetId) {
-            const stack = windowStore.focusStack;
-            for (let i = stack.length - 1; i >= 0; i--) {
-                const windowId = stack[i];
-                const win = windowStore.openWindows.get(windowId);
-                if (
-                    !win ||
-                    !windowDefinitions[win.windowName].participatesInSelection
-                )
-                    continue;
-                targetId = windowId;
-                break;
-            }
-        }
-
-        if (!targetId) return 'defaultView';
-        const win = windowStore.openWindows.get(targetId);
-        return win ? getWindowTargetId(win) : targetId;
-    });
+    const effectiveScope = computed(
+        () =>
+            (ownerScope ? toValue(ownerScope) : undefined) ??
+            selectionStore.activeScope,
+    );
     const selectedMessageIds = computed(() =>
-        selectionStore.getSelectedIds(effectiveId.value, 'message'),
+        selectionStore.getSelectedIds(effectiveScope.value, 'message'),
     );
 
     const selectedChunkIds = computed(() =>
-        selectionStore.getSelectedIds(effectiveId.value, 'chunk'),
+        selectionStore.getSelectedIds(effectiveScope.value, 'chunk'),
     );
 
     const lastSelectedMessageId = computed(
         () =>
-            selectionStore.getState(effectiveId.value, 'message')
+            selectionStore.getState(effectiveScope.value, 'message')
                 .lastSelectedId || null,
     );
 
@@ -89,7 +70,7 @@ export function useActiveContext(
         messages: Message[],
     ) {
         selectionStore.handleEventSelection(
-            effectiveId.value,
+            effectiveScope.value,
             'message',
             event,
             messageId,
@@ -99,11 +80,11 @@ export function useActiveContext(
     }
 
     function setMessagesSelection(ids: string[]) {
-        selectionStore.select(effectiveId.value, 'message', ids, false);
+        selectionStore.select(effectiveScope.value, 'message', ids, false);
     }
 
     function clearMessageSelection() {
-        selectionStore.clearSelection(effectiveId.value, 'message');
+        selectionStore.clearSelection(effectiveScope.value, 'message');
     }
 
     // Chunk 相关操作
@@ -111,7 +92,7 @@ export function useActiveContext(
         const allChunks = logStore.documents.flatMap((doc) => doc.chunks);
 
         selectionStore.handleEventSelection(
-            effectiveId.value,
+            effectiveScope.value,
             'chunk',
             event,
             chunkId,
@@ -121,30 +102,30 @@ export function useActiveContext(
     }
 
     function setChunkSelection(chunkIds: string[]) {
-        selectionStore.select(effectiveId.value, 'chunk', chunkIds, false);
+        selectionStore.select(effectiveScope.value, 'chunk', chunkIds, false);
     }
 
     function selectAllChunks() {
         const allIds = logStore.documents.flatMap((doc) =>
             doc.chunks.map((c) => c.chunkId),
         );
-        selectionStore.select(effectiveId.value, 'chunk', allIds, false);
+        selectionStore.select(effectiveScope.value, 'chunk', allIds, false);
     }
 
     function clearChunkSelection() {
-        selectionStore.clearSelection(effectiveId.value, 'chunk');
+        selectionStore.clearSelection(effectiveScope.value, 'chunk');
     }
 
     function selectAllInChunk(chunkId: string) {
         const chunk = logStore.findChunkById(chunkId);
         if (chunk) {
             const ids = chunk.messages.map((m) => m.messageId);
-            selectionStore.select(effectiveId.value, 'message', ids, false);
+            selectionStore.select(effectiveScope.value, 'message', ids, false);
         }
     }
 
     return {
-        effectiveId,
+        effectiveScope,
         selectedMessageIds,
         selectedChunkIds,
         lastSelectedMessageId,
@@ -162,6 +143,7 @@ export function useActiveContext(
         clearChunkSelection,
 
         selectAllInChunk,
-        clearSelection: () => selectionStore.clearSelection(effectiveId.value),
+        clearSelection: () =>
+            selectionStore.clearSelection(effectiveScope.value),
     };
 }

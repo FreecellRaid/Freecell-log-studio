@@ -1,9 +1,9 @@
 <template>
     <div
         class="view chunk-view"
-        :data-focus-id="windowId"
-        :class="{ 'is-active': windowStore.activeFocus === windowId }"
-        @pointerdown="windowStore.setFocus(windowId)"
+        :data-focus-id="paneId"
+        :class="{ 'is-active': navigation.isCommandTarget(paneId) }"
+        v-command-scope="{ area: 'scene', paneId, chunkId: originalId }"
     >
         <header class="view-header">
             <div class="view-title">
@@ -25,12 +25,15 @@
                     <Pencil class="ui-icon" />
                 </button>
                 <button
-                    v-if="!isMobile && !windowStore.hasSplitView && chunk"
+                    v-if="!isMobile && !editorWorkspace.isSplit && chunk"
                     class="view-action-btn"
                     type="button"
                     title="向右分屏"
                     @click.stop="
-                        windowStore.openSplitView('chunkView', originalId)
+                        navigation.splitPane({
+                            kind: 'scene',
+                            chunkId: originalId,
+                        })
                     "
                 >
                     <SquareSplitHorizontal class="ui-icon" />
@@ -40,7 +43,7 @@
                     type="button"
                     title="关闭场景"
                     aria-label="关闭场景"
-                    @click.stop="windowStore.unregisterWindow(windowId)"
+                    @click.stop="navigation.closePane(paneId)"
                 >
                     <X class="ui-icon" />
                 </button>
@@ -49,7 +52,7 @@
         <component
             v-if="chunk"
             :is="isMobile ? MobileMessageList : DesktopMessageList"
-            :window-id="windowId"
+            :pane-id="paneId"
             :chunk="chunk"
             :messages="messages"
         />
@@ -60,6 +63,9 @@
 </template>
 
 <script setup lang="ts">
+import { useWorkspaceStore } from '@/stores/ui/workspaceStore';
+
+import { vCommandScope } from '@/directives/commandScope';
 import {
     defineAsyncComponent,
     computed,
@@ -68,7 +74,7 @@ import {
 } from 'vue';
 import { FileText, Pencil, SquareSplitHorizontal, X } from '@lucide/vue';
 import { useResponsiveMode } from '@/composables/ui/useResponsiveMode';
-import { useWindowStore } from '@/stores/ui/windowStore';
+import { useEditorNavigation } from '@/composables/application/useEditorNavigation';
 import { useMobileUiStore } from '@/stores/ui/mobileUiStore';
 import { useEditorSessionStore } from '@/stores/editor/editorSessionStore';
 import { useLogStore } from '@/stores/project/logStore';
@@ -82,10 +88,11 @@ const DesktopMessageList = defineAsyncComponent(
 const MobileMessageList = defineAsyncComponent(
     () => import('@/components/workspace/MobileMessageList.vue'),
 );
-const props = defineProps<{ windowId: string; originalId: string }>();
+const props = defineProps<{ paneId: string; originalId: string }>();
 const { isMobile } = useResponsiveMode();
 const { chunk, messages } = useChunkView(() => props.originalId);
-const windowStore = useWindowStore();
+const navigation = useEditorNavigation();
+const editorWorkspace = useWorkspaceStore();
 const mobileUiStore = useMobileUiStore();
 const editorSessionStore = useEditorSessionStore();
 
@@ -93,7 +100,7 @@ function startChunkRename() {
     if (!chunk.value) return;
     editorSessionStore.startEditing(
         { kind: 'chunkName', chunkId: chunk.value.chunkId },
-        props.windowId,
+        props.paneId,
     );
     mobileUiStore.openSheet('chunkName');
 }

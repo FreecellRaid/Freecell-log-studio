@@ -1,3 +1,4 @@
+import { useDialogStore } from '@/stores/ui/dialogStore';
 import { normalizeImageUrl } from '@/utils/imageUrl';
 import { retryAfterResourceCleanup } from '@/io/storage/resourceCleanup';
 import { currentResourceRoots } from '@/composables/application/resourceRoots';
@@ -5,7 +6,6 @@ import { defineStore } from 'pinia';
 import { ref, shallowRef } from 'vue';
 import { useLogStore } from '@/stores/project/logStore';
 import { useLogCommands } from '@/stores/project/logCommands';
-import { useWindowStore } from '@/stores/ui/windowStore';
 import { resourceRepository } from '@/io/storage/resourceStorage';
 import { generateId } from '@/utils/id';
 import type { ImageAttachment } from '@/types/resource';
@@ -24,7 +24,7 @@ export const useImageInsertStore = defineStore('imageInsert', () => {
     let attempt = 0;
     const log = useLogStore();
     const commands = useLogCommands();
-    const windows = useWindowStore();
+    const editorDialogs = useDialogStore();
     function open(messageId: string, imageId?: string) {
         const image = log.messagesById
             .get(messageId)
@@ -40,7 +40,7 @@ export const useImageInsertStore = defineStore('imageInsert', () => {
         };
         loading.value = false;
         error.value = '';
-        windows.openModal('imageInsert');
+        editorDialogs.open('imageInsert');
     }
     async function saveEdit(input: {
         name: string;
@@ -126,7 +126,7 @@ export const useImageInsertStore = defineStore('imageInsert', () => {
     }
     function close() {
         cancel();
-        windows.closeModal('imageInsert');
+        editorDialogs.close('imageInsert');
     }
     async function insert(input: {
         files?: File[];
