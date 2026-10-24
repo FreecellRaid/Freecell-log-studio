@@ -201,12 +201,13 @@
             </span>
             <div class="search-actions">
                 <button
+                    type="button"
                     class="action-button"
-                    :disabled="!jumpTarget"
-                    @click="dispatch('jump')"
-                    title="跳转"
+                    title="替换选中消息"
+                    aria-label="替换选中消息"
+                    @click="openReplacement"
                 >
-                    <CornerDownRight class="ui-icon" />
+                    <Replace class="ui-icon" />
                 </button>
                 <button
                     class="action-button"
@@ -229,7 +230,13 @@
             </div>
         </div>
 
-        <div class="results-container">
+        <div
+            ref="resultsRef"
+            class="results-container"
+            tabindex="0"
+            aria-label="搜索结果"
+            @focus="windowStore.setFocus('search')"
+        >
             <div
                 v-if="searchStore.searchResults.length === 0"
                 class="panel-empty-hint"
@@ -286,6 +293,15 @@
                             <div class="result-content">
                                 {{ truncate(msg.content, 60) }}
                             </div>
+                            <button
+                                type="button"
+                                class="action-button result-jump"
+                                title="跳转到此消息"
+                                aria-label="跳转到此消息"
+                                @click.stop="jumpToMessage(msg.messageId)"
+                            >
+                                <CornerDownRight class="ui-icon" />
+                            </button>
                         </div>
                     </DynamicScrollerItem>
                 </template>
@@ -300,13 +316,13 @@ import {
     FunnelIcon,
     FunnelXIcon,
     RegexIcon,
+    Replace,
     SquareCheckBig,
     Trash2,
 } from '@lucide/vue';
 import { computed, nextTick, ref, watch, type CSSProperties } from 'vue';
 import { buildIdentityStats } from '@/editor/identity';
 import { useActiveContext } from '@/composables/application/useActiveContext';
-import type { Message } from '@/types/log';
 import { formatDate } from '@/utils/date';
 import { useCommandDispatcher } from '@/composables/application/useCommandDispatcher';
 import { useWindowStore } from '@/stores/ui/windowStore';
@@ -465,15 +481,15 @@ watch(
     },
 );
 
-const jumpTarget = computed<Message | null>(() => {
-    const selectedIds = activeContext.selectedMessageIds.value;
-    const selectedTarget = searchStore.searchResults.find((msg) =>
-        selectedIds.has(msg.messageId),
-    );
-    return selectedTarget || searchStore.searchResults[0] || null;
-});
+const resultsRef = ref<HTMLElement | null>(null);
+
+function jumpToMessage(msgId: string) {
+    windowStore.setFocus('search');
+    dispatch('jump', { msgId });
+}
 
 function handleItemClick(event: MouseEvent, msgId: string) {
+    resultsRef.value?.focus({ preventScroll: true });
     windowStore.setFocus('search');
 
     dispatch('select', {
@@ -484,9 +500,13 @@ function handleItemClick(event: MouseEvent, msgId: string) {
 }
 
 function selectAllMatches() {
-    dispatch('selectAll', {
-        messages: searchStore.searchResults,
-    });
+    windowStore.setFocus('search');
+    dispatch('selectAll');
+}
+
+function openReplacement() {
+    windowStore.setFocus('search');
+    dispatch('replace');
 }
 
 function deleteSelectedMessages() {
@@ -639,6 +659,7 @@ const truncate = (str: string, len: number) => {
 }
 
 .result-item {
+    position: relative;
     padding: 10px 10px 10px 8px;
     cursor: pointer;
 }
@@ -676,6 +697,34 @@ const truncate = (str: string, len: number) => {
     font-size: 13px;
     color: var(--text-primary);
     line-height: 1.4;
+}
+
+.result-jump {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.result-item:hover .result-jump,
+.result-item.is-selected .result-jump,
+.result-item:focus-within .result-jump {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.results-container:focus-visible,
+.result-jump:focus-visible {
+    outline: 1px solid var(--active-accent);
+    outline-offset: -1px;
+}
+
+@media (hover: none) {
+    .result-jump {
+        opacity: 1;
+        pointer-events: auto;
+    }
 }
 
 .result-time {

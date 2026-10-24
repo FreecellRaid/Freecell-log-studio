@@ -370,18 +370,20 @@ export function useCommandDispatcher() {
             }
         }
         if (cmd === 'selectAll') {
-            if (payload?.messages) {
-                const ids = payload.messages.map((m: any) => m.messageId);
-                searchFilter.setMessagesSelection(ids);
-            }
+            searchFilter.setMessagesSelection(
+                searchStore.searchResults.map((message) => message.messageId),
+            );
         }
 
         if (cmd === 'jump') {
             const selectedIds = searchFilter.selectedMessageIds.value;
-            const target =
-                searchStore.searchResults.find((msg) =>
-                    selectedIds.has(msg.messageId),
-                ) || searchStore.searchResults[0];
+            const target = payload?.msgId
+                ? searchStore.searchResults.find(
+                      (msg) => msg.messageId === payload.msgId,
+                  )
+                : searchStore.searchResults.find((msg) =>
+                      selectedIds.has(msg.messageId),
+                  ) || searchStore.searchResults[0];
 
             if (!target) {
                 return;
