@@ -440,7 +440,7 @@ body,
     width: 100%;
     box-sizing: border-box;
     padding: 6px 8px;
-    background: var(--bg-primary);
+    background: transparent;
     border: 1px solid var(--border-color);
     color: var(--text-primary);
     border-radius: 4px;

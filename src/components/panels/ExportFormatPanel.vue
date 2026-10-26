@@ -459,7 +459,6 @@ function handleDelete(id: string) {
     display: flex;
     flex-direction: column;
     padding: 12px;
-    background-color: var(--bg-primary);
 }
 
 .form-group {

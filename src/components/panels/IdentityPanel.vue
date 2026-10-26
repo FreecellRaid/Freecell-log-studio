@@ -308,7 +308,7 @@ const vFocus = {
     width: 100%;
     box-sizing: border-box;
     padding: 4px;
-    background: var(--bg-primary);
+    background: var(--bg-workspace);
     border: 1px solid var(--active-accent);
     border-radius: 4px;
     color: var(--text-primary);
@@ -339,11 +339,17 @@ const vFocus = {
     width: 100%;
     box-sizing: border-box;
     padding: 4px 2px;
-    background-color: var(--bg-primary);
+    background-color: var(--bg-workspace);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
     border-radius: 4px;
     font-size: 12px;
     outline: none;
+}
+
+/* 原生下拉菜单在 Windows 上可能使用系统背景，需同时指定选项的前景和背景色。 */
+.role-select option {
+    background-color: var(--bg-workspace);
+    color: var(--text-primary);
 }
 </style>

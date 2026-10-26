@@ -622,7 +622,7 @@ function withScrollAnchor(action: () => void) {
     min-width: 0;
     box-sizing: border-box;
     padding: 6px 8px;
-    background: var(--bg-primary);
+    background: var(--bg-workspace);
     border: 1px solid var(--border-color);
     border-radius: 4px;
     color: var(--text-primary);
@@ -691,7 +691,6 @@ function withScrollAnchor(action: () => void) {
 }
 
 .chunk-items-container {
-    background-color: var(--bg-primary);
     position: relative;
 }
 
@@ -755,7 +754,7 @@ function withScrollAnchor(action: () => void) {
 .rename-input {
     width: 100px;
     padding: 4px;
-    background: var(--bg-primary);
+    background: var(--bg-workspace);
     border: 1px solid var(--active-accent);
     border-radius: 4px;
     color: var(--text-primary);
