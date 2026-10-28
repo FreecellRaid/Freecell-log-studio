@@ -8,24 +8,35 @@
             <div class="header-title">
                 <h3>搜索与筛选</h3>
             </div>
-            <button
-                class="panel-header-action-button icon-interactive"
-                @click="
-                    searchStore.isAdvancedExpanded =
-                        !searchStore.isAdvancedExpanded
-                "
-                :title="
-                    searchStore.isAdvancedExpanded
-                        ? '收起高级筛选'
-                        : '展开高级筛选'
-                "
-            >
-                <FunnelXIcon
-                    v-if="searchStore.isAdvancedExpanded"
-                    class="ui-icon"
-                />
-                <FunnelIcon v-else class="ui-icon" />
-            </button>
+            <div class="search-header-actions">
+                <button
+                    type="button"
+                    class="panel-header-action-button icon-interactive"
+                    title="清空筛选"
+                    aria-label="清空筛选"
+                    @click="searchStore.clearAllFilters()"
+                >
+                    <RefreshCcw class="ui-icon" />
+                </button>
+                <button
+                    class="panel-header-action-button icon-interactive"
+                    @click="
+                        searchStore.isAdvancedExpanded =
+                            !searchStore.isAdvancedExpanded
+                    "
+                    :title="
+                        searchStore.isAdvancedExpanded
+                            ? '收起高级筛选'
+                            : '展开高级筛选'
+                    "
+                >
+                    <FunnelXIcon
+                        v-if="searchStore.isAdvancedExpanded"
+                        class="ui-icon"
+                    />
+                    <FunnelIcon v-else class="ui-icon" />
+                </button>
+            </div>
         </div>
 
         <div ref="controlsRef" class="search-controls" :style="controlsStyle">
@@ -315,6 +326,7 @@ import {
     CornerDownRight,
     FunnelIcon,
     FunnelXIcon,
+    RefreshCcw,
     RegexIcon,
     Replace,
     SquareCheckBig,
@@ -520,6 +532,12 @@ const truncate = (str: string, len: number) => {
 </script>
 
 <style scoped>
+.search-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
 .form-row > .form-group {
     flex: 1 1 0;
     min-width: 0;

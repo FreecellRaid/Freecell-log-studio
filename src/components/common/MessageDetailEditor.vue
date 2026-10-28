@@ -196,7 +196,7 @@ void props;
 .prop-item select,
 .prop-item textarea {
     width: 100%;
-    background-color: var(--bg-primary);
+    background-color: var(--bg-workspace);
     border: 1px solid var(--border-color);
     color: var(--text-primary);
     padding: 6px 8px;

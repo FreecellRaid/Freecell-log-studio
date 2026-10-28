@@ -1,5 +1,5 @@
 import { useDialogStore } from '@/stores/ui/dialogStore';
-import { computed, reactive, ref, shallowRef } from 'vue';
+import { computed, reactive, ref, shallowRef, watch } from 'vue';
 import { defineStore } from 'pinia';
 import type { LogDocument } from '@/types/log';
 import { planReplacement, type ReplacementOptions } from '@/editor/replacement';
@@ -21,7 +21,13 @@ export const useReplacementStore = defineStore('replacement', () => {
     const originalProject = ref('');
     const originalDocuments = shallowRef<LogDocument[] | null>(null);
     const feedback = ref('');
-    const completed = ref(false);
+    watch(
+        options,
+        () => {
+            feedback.value = '';
+        },
+        { flush: 'sync' },
+    );
     const stale = computed(
         () =>
             originalProject.value !== log.projectId ||
@@ -54,7 +60,6 @@ export const useReplacementStore = defineStore('replacement', () => {
         options.find = defaults[options.field];
         options.replacement = '';
         feedback.value = '';
-        completed.value = false;
         editorDialogs.open('replace');
     }
 
@@ -63,13 +68,18 @@ export const useReplacementStore = defineStore('replacement', () => {
         originalDocuments.value = null;
     }
 
+    function clearInputs() {
+        options.find = '';
+        options.replacement = '';
+        feedback.value = '';
+    }
+
     function apply() {
-        if (stale.value || completed.value || !changes.value.length) return;
+        if (stale.value || !changes.value.length) return;
         const result = commands.replaceMessageText(new Set(targetIds.value), {
             ...options,
         });
-        feedback.value = `已修改 ${result.messages} 条消息、${result.occurrences} 处。关闭弹窗后可撤销。`;
-        completed.value = true;
+        feedback.value = `已修改 ${result.messages} 条消息、${result.occurrences} 处。`;
     }
 
     return {
@@ -81,7 +91,7 @@ export const useReplacementStore = defineStore('replacement', () => {
         changes,
         occurrences,
         feedback,
-        completed,
+        clearInputs,
         open,
         apply,
         reset,

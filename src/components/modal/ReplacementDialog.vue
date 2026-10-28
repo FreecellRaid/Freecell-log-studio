@@ -7,11 +7,7 @@
     >
         <template #icon><Replace class="ui-icon" /></template>
         <div class="replacement-form">
-            <fieldset
-                :disabled="
-                    store.completed || store.stale || !store.messages.length
-                "
-            >
+            <fieldset :disabled="store.stale || !store.messages.length">
                 <div class="options-row">
                     <label>
                         替换位置 (已选中{{ store.messages.length }} 条)
@@ -61,7 +57,7 @@
                 当前无选中消息，请关闭弹窗后选中消息再进行替换
             </div>
             <div v-if="store.feedback" role="status">{{ store.feedback }}</div>
-            <template v-else-if="store.messages.length && !store.stale">
+            <template v-if="store.messages.length && !store.stale">
                 <div aria-live="polite">
                     将修改 {{ store.changes.length }} 条消息，共
                     {{ store.occurrences }} 处
@@ -139,11 +135,14 @@
         </div>
         <template #footer>
             <div class="replacement-buttons">
-                <button type="button" class="text-button" @click="close">
-                    {{ store.completed ? '完成' : '取消' }}
+                <button
+                    type="button"
+                    class="text-button"
+                    @click="store.clearInputs()"
+                >
+                    清空
                 </button>
                 <button
-                    v-if="!store.completed"
                     type="button"
                     class="text-button is-primary"
                     :disabled="store.stale || !store.changes.length"
