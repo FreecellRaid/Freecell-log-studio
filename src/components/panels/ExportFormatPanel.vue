@@ -329,6 +329,30 @@ type FormatDraftField = Extract<
     | 'imageTemplate'
 >;
 const formatDrafts = useDraftValues<FormatDraftField>();
+// 面板内所有输入框（含 textarea）显示转义值；提交时还原，导出仍使用原始字符。
+function escapeInputValue(value: string) {
+    return value
+        .replace(/\\/g, '\\\\')
+        .replace(/\r/g, '\\r')
+        .replace(/\n/g, '\\n')
+        .replace(/\t/g, '\\t');
+}
+
+function unescapeInputValue(value: string) {
+    return value.replace(/\\([\\rnt])/g, (_, char: string) => {
+        switch (char) {
+            case 'r':
+                return '\r';
+            case 'n':
+                return '\n';
+            case 't':
+                return '\t';
+            default:
+                return '\\';
+        }
+    });
+}
+
 const previewedFormatIds = computed(() => {
     const ids = new Set<string>();
 
@@ -360,7 +384,11 @@ function isPreset(id: string) {
 }
 
 function getFormatDraftValue(fmt: ExportFormat, field: FormatDraftField) {
-    return formatDrafts.getValue(fmt.formatId, field, fmt[field]);
+    return formatDrafts.getValue(
+        fmt.formatId,
+        field,
+        escapeInputValue(fmt[field]),
+    );
 }
 
 function updateFormatDraft(
@@ -373,7 +401,7 @@ function updateFormatDraft(
 
 function commitFormatDraft(fmt: ExportFormat, field: FormatDraftField) {
     formatDrafts.commit(fmt.formatId, field, (value) => {
-        fmt[field] = value;
+        fmt[field] = unescapeInputValue(value);
     });
 }
 
