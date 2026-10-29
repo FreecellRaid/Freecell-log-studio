@@ -13,6 +13,7 @@ import { buildLogDocument } from '@/io/import/parser';
 import { useResourceTasksStore } from '@/stores/io/resourceTasksStore';
 import { resourceRepository } from '@/io/storage/resourceStorage';
 import { workspaceProjectToFile } from '@/io/storage/workspaceProject';
+import { useWorkspaceStore } from '@/stores/ui/workspaceStore';
 
 vi.mock('@/io/storage/projectStorage', () => ({
     projectRepository: {
@@ -180,6 +181,8 @@ describe('asynchronous project operations', () => {
 
     it('awaits restoration and honors a canceled confirmation', async () => {
         const manager = useProjectManager();
+        const workspace = useWorkspaceStore();
+        workspace.showPreview('standard');
         const file = migrateProjectFileTo(
             manager.createCurrentWorkspaceProject(),
         ).project;
@@ -188,9 +191,47 @@ describe('asynchronous project operations', () => {
         vi.mocked(window.confirm).mockReturnValueOnce(false);
         expect(await manager.openStoredProject(file.projectId)).toBe(false);
         expect(useLogStore().projectName).not.toBe('saved name');
+        expect(workspace.activePane.view).toEqual({
+            kind: 'preview',
+            formatId: 'standard',
+        });
         expect(await manager.openStoredProject(file.projectId)).toBe(true);
         expect(useLogStore().projectName).toBe('saved name');
         expect(useLogStore().allMessages[0].time).toBeInstanceOf(Date);
+        expect(workspace.activePane.view).toEqual({
+            kind: 'scene',
+            chunkId: file.documents[0].chunks[0].chunkId,
+        });
+    });
+
+    it('opens the first available chunk when restoring past an empty document', async () => {
+        const manager = useProjectManager();
+        const project = manager.createCurrentWorkspaceProject();
+        const firstChunkId = project.documents[0].chunks[0].chunkId;
+        const empty = buildLogDocument([], 'empty', 0);
+        empty.chunks = [];
+        project.documents.unshift(empty);
+        vi.mocked(projectRepository.get).mockResolvedValue(
+            workspaceProjectToFile(project),
+        );
+
+        expect(await manager.openStoredProject(project.projectId)).toBe(true);
+        expect(useWorkspaceStore().activePane.view).toEqual({
+            kind: 'scene',
+            chunkId: firstChunkId,
+        });
+    });
+
+    it('keeps an empty workspace when restoring a project without chunks', async () => {
+        const manager = useProjectManager();
+        const project = manager.createCurrentWorkspaceProject();
+        project.documents = [];
+        vi.mocked(projectRepository.get).mockResolvedValue(
+            workspaceProjectToFile(project),
+        );
+
+        expect(await manager.openStoredProject(project.projectId)).toBe(true);
+        expect(useWorkspaceStore().activePane.view).toEqual({ kind: 'empty' });
     });
 
     it('shows save errors and does not run success feedback before persistence finishes', async () => {
@@ -224,6 +265,10 @@ describe('asynchronous project operations', () => {
         ).toBe(1);
         expect(useLogStore().projectId).not.toBe(file.projectId);
         expect(useLogStore().allMessages[0].content).toBe('original');
+        expect(useWorkspaceStore().activePane.view).toEqual({
+            kind: 'scene',
+            chunkId: useLogStore().allChunks[0].chunkId,
+        });
     });
 
     it('exports v3 JSON with serialized regex filters and no schema downgrade', async () => {

@@ -126,7 +126,9 @@ export function useProjectManager() {
         historyStore.clearHistory();
         navigation.pruneScenes((id) => Boolean(logStore.findChunkById(id)));
         editorWorkspace.reset();
-        navigation.focusWorkspace();
+        const firstChunk = logStore.allChunks[0];
+        if (firstChunk) navigation.showScene(firstChunk.chunkId);
+        else navigation.focusWorkspace();
 
         return true;
     }

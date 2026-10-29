@@ -174,9 +174,6 @@ export function useFileImport() {
                     confirmIfNeeded: true,
                 },
             );
-            if (applied) {
-                openFirstChunkViewIfNeeded();
-            }
             return applied ? 1 : 0;
         }
 

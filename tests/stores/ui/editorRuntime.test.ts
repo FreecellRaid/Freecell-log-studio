@@ -220,10 +220,14 @@ describe('editor lifecycle coordination', () => {
         expect(useEditorSessionStore().activeTarget).toBeNull();
         expect(useMessageRevealStore().pending).toBeNull();
         expect(workspace.panes).toHaveLength(1);
-        expect(workspace.activePane.view.kind).toBe('empty');
+        expect(workspace.activePane.view).toEqual({
+            kind: 'scene',
+            chunkId: useLogStore().allChunks[0].chunkId,
+        });
         expect(useCommandContextStore().current).toEqual({
-            area: 'empty',
+            area: 'scene',
             paneId: workspace.activePaneId,
+            chunkId: useLogStore().allChunks[0].chunkId,
         });
     });
 });
