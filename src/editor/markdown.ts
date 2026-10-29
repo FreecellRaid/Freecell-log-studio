@@ -3,7 +3,7 @@ import MarkdownIt, { type Token } from 'markdown-it';
 export type MarkdownToken = Token;
 
 const markdown = new MarkdownIt({
-    breaks: false,
+    breaks: true,
     html: false,
     linkify: true,
     typographer: false,
