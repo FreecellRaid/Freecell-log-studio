@@ -16,27 +16,18 @@
             <div class="welcome-content">
                 <FolderOpen class="bg-icon" />
                 <h2 class="title">导入跑团 Log</h2>
-                <p class="subtitle">
-                    <template v-if="!isMobile">
-                        将文件拖拽至工作台区域，或
-                    </template>
-                    点击右上角
-                    <Upload class="ui-icon" />
-                    进行导入
-                    <br />
-                    <br />
-                    点击左下角打开场景列表
-                </p>
-
-                <div class="shortcuts-hint" v-if="!isMobile">
-                    <div class="shortcut-item">
-                        <span>切换侧边栏</span>
-                        <span>Ctrl + B</span>
+                <div class="subtitle">
+                    <div v-if="!isMobile">
+                        将文件拖拽至工作台区域，或点击
+                        <Upload class="ui-icon" />
+                        进行导入
                     </div>
-                    <div class="shortcut-item">
-                        <span>打开帮助文档</span>
-                        <span>Ctrl + K</span>
+                    <div v-if="isMobile">
+                        点击
+                        <Upload class="ui-icon" />
+                        进行导入
                     </div>
+                    <div>点击左上角查看帮助文档</div>
                 </div>
             </div>
         </div>
@@ -74,26 +65,14 @@ const navigation = useEditorNavigation();
     font-weight: 600;
     color: var(--active-accent);
     opacity: 0.8;
+    margin-bottom: 10px;
 }
 
 .subtitle {
     font-size: 14px;
     color: var(--text-muted);
-}
-
-.shortcuts-hint {
-    margin-top: 4px;
-    font-size: 12px;
-    min-width: 200px;
-    color: var(--text-muted);
-}
-
-.shortcut-item {
     display: flex;
-    justify-content: space-between;
-    margin: 4px 0;
-    padding: 4px 8px;
-    background-color: var(--bg-secondary);
-    border-radius: 4px;
+    flex-direction: column;
+    gap: 10px;
 }
 </style>

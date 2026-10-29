@@ -279,7 +279,9 @@
                 v-if="logStore.documents.length === 0"
                 class="panel-empty-hint"
             >
-                暂无数据，点击右上角或拖入文件进行导入
+                暂无数据，点击
+                <Upload class="ui-icon" />
+                或拖入文件进行导入
             </div>
         </div>
     </div>
@@ -289,7 +291,7 @@
 import { useWorkspaceStore } from '@/stores/ui/workspaceStore';
 
 import { vCommandScope } from '@/directives/commandScope';
-import { ChevronRight, ChevronsDown, Plus, Trash2 } from '@lucide/vue';
+import { ChevronRight, ChevronsDown, Plus, Trash2, Upload } from '@lucide/vue';
 import { nextTick, reactive, ref, watch } from 'vue';
 import {
     useChunkDragDrop,

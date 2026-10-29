@@ -13,7 +13,7 @@
                 },
                 {
                     "term": "保存与备份",
-                    "description": "保存到本地用于当前浏览器恢复(通过链接导入时不会影响服务器数据)；导出为工程文件用于备份或迁移"
+                    "description": "保存到本地用于当前浏览器恢复(通过链接导入时不会影响服务器数据)，导出为工程文件用于备份或迁移"
                 }
             ]
         },
@@ -36,7 +36,7 @@
                 },
                 {
                     "term": "从链接导入",
-                    "description": "支持青果、海豹日志链接及公开的 HTTPS 文本/JSON 直链；直链服务须允许跨域读取，默认下载上限 10 MiB、超时 30 秒"
+                    "description": "支持青果、海豹日志链接及公开的 HTTPS 文本/JSON 直链，直链服务须允许跨域读取"
                 },
                 {
                     "term": "删除场外括号",
@@ -47,12 +47,8 @@
                     "description": "只提取纯文本，不保留原文件的样式和图片；提取出的文字仍须符合支持的日志格式"
                 },
                 {
-                    "term": "文本清洗",
-                    "description": "提取 CQ 图片和 HTML img，其他 CQ 码暂时删除，HTML 保留可见纯文本；图片显示在正文之后"
-                },
-                {
                     "term": "工程导入",
-                    "description": "工程 JSON 仅支持单文件导入，会替换当前工作区；普通日志追加为新文档。导入成功会清空撤销历史"
+                    "description": "工程 JSON 仅支持单文件导入，会替换当前工作区，普通日志追加为新文档。"
                 }
             ]
         },
@@ -79,7 +75,7 @@
                 },
                 {
                     "term": "Markdown",
-                    "description": "启用后在消息、导出预览和 HTML 中渲染；DOCX 支持部分格式，TEXT 保留源文本"
+                    "description": "启用后在消息、导出预览和 HTML 中渲染，DOCX 支持部分格式，TEXT 保留源文本"
                 }
             ]
         },
@@ -90,7 +86,7 @@
             "items": [
                 {
                     "term": "场景划分",
-                    "description": "默认按相邻消息的日期变化分块，不自动识别剧情场景；可手动拆分与合并"
+                    "description": "默认按相邻消息的日期变化划分，可手动拆分与合并"
                 },
                 {
                     "term": "双击名称",
@@ -113,7 +109,7 @@
             "items": [
                 {
                     "term": "切换模式",
-                    "description": "点击角色/账号标题旁图标可切换管理模式"
+                    "description": "点击角色/账号标题旁图标可切换管理模式，在偏好设置中可切换染色模式"
                 },
                 {
                     "term": "双击名称",
@@ -175,11 +171,11 @@
                 },
                 {
                     "term": "{{nameColor}}",
-                    "description": "样式规则叠加后的姓名颜色；未设置颜色时为空字符串"
+                    "description": "样式规则叠加后的姓名颜色"
                 },
                 {
                     "term": "{{contentColor}}",
-                    "description": "样式规则叠加后的内容颜色；未设置颜色时为空字符串"
+                    "description": "样式规则叠加后的内容颜色"
                 },
                 {
                     "term": "{{imageName}}",
@@ -227,10 +223,6 @@
                 {
                     "term": "显示已隐藏消息",
                     "description": "只影响编辑区显示，不会把隐藏消息重新加入导出"
-                },
-                {
-                    "term": "Markdown 限制",
-                    "description": "图片附件可单独导出：HTML/DOC 内嵌本地副本，DOCX 内嵌并缩小大图，WebP 转为 PNG；TEXT 输出 Data URI。"
                 }
             ]
         },
@@ -299,11 +291,11 @@
                 },
                 {
                     "key": "Ctrl + C",
-                    "description": "复制消息或场景（应用内部剪贴板）"
+                    "description": "复制消息或场景"
                 },
                 {
                     "key": "Ctrl + V",
-                    "description": "粘贴消息或场景（应用内部剪贴板）"
+                    "description": "粘贴消息或场景"
                 },
                 {
                     "key": "Ctrl + Z",
@@ -319,11 +311,11 @@
                 },
                 {
                     "key": "Ctrl + F",
-                    "description": "打开或切换到搜索面板，聚焦并选中搜索词"
+                    "description": "打开或切换到搜索面板"
                 },
                 {
                     "key": "Ctrl + H",
-                    "description": "替换当前消息区或搜索结果中选中消息的内容/备注，支持文字替换和整体覆盖，macOS 使用 cmd + opt + F"
+                    "description": "替换当前消息区或搜索结果中选中消息的内容/备注，macOS 使用 cmd + opt + F"
                 },
                 {
                     "key": "Ctrl + E",
