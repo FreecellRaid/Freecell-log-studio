@@ -207,8 +207,6 @@ body,
     height: 40px;
     display: flex;
     color: var(--text-primary);
-    justify-content: space-between;
-    align-items: center;
     padding: 0 16px;
     background-color: var(--bg-topbar);
     border-bottom: 1px solid var(--border-color);

@@ -29,6 +29,24 @@
             </div>
             <div>跑团Log编辑器</div>
         </div>
+        <div class="topbar-links">
+            <a
+                target="_blank"
+                href="https://github.com/FreecellRaid/Freecell-log-studio/issues"
+                class="link-item"
+            >
+                建议反馈
+                <ExternalLink class="ui-icon link-icon" />
+            </a>
+            <a
+                target="_blank"
+                href="https://github.com/FreecellRaid/Freecell-log-studio/releases"
+                class="link-item"
+            >
+                离线版下载
+                <ExternalLink class="ui-icon link-icon" />
+            </a>
+        </div>
         <div class="global-actions" v-click-outside="closeAllPopovers">
             <button
                 class="icon-interactive icon-button-warning"
@@ -135,7 +153,14 @@
 import { useDialogStore } from '@/stores/ui/dialogStore';
 
 import { ref } from 'vue';
-import { Download, Trash2, Save, FolderOpen, Upload } from '@lucide/vue';
+import {
+    Download,
+    Trash2,
+    Save,
+    FolderOpen,
+    Upload,
+    ExternalLink,
+} from '@lucide/vue';
 import { useLogStore } from '@/stores/project/logStore';
 import { useFileImportInput } from '@/composables/application/useImporter';
 import { useProjectManager } from '@/composables/application/useProjectManager';
@@ -240,6 +265,10 @@ function handleClearAll() {
     height: 16px;
 }
 
+.global-actions {
+    margin-left: auto;
+}
+
 .global-actions > button,
 .snapshot-container > button,
 .import-container > button {
@@ -263,9 +292,13 @@ function handleClearAll() {
     cursor: not-allowed;
 }
 
+.ui-icon.link-icon {
+    width: 14px;
+    height: 14px;
+}
+
 .top-bar {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     padding: 0 12px;
 }
@@ -328,5 +361,28 @@ function handleClearAll() {
 .import-popover {
     top: 35px;
     right: -10px;
+}
+
+.topbar-links {
+    display: flex;
+    align-items: left;
+    gap: 12px;
+    margin-left: 16px;
+    margin-top: 4px;
+}
+
+.link-item {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.link-item:hover {
+    color: var(--active-accent);
+    transition: color 0.2s;
 }
 </style>
