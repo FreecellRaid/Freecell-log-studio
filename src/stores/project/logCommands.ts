@@ -253,26 +253,37 @@ export const useLogCommands = defineStore('logCommands', () => {
     }
 
     function removeImageResources(resourceIds: Set<string>) {
-        return executeEdit(
-            () =>
-                logStore.allMessages.some((message) =>
-                    message.images?.some((image) =>
-                        resourceIds.has(image.resourceId),
-                    ),
-                ),
-            () => {
-                for (const message of logStore.allMessages) {
-                    if (
-                        message.images?.some((image) =>
+        const affectedMessages = logStore.allMessages.filter((message) =>
+            message.images?.some((image) => resourceIds.has(image.resourceId)),
+        );
+        const deletedMessageIds = new Set(
+            affectedMessages
+                .filter(
+                    (message) =>
+                        message.content === '' &&
+                        message.images!.every((image) =>
                             resourceIds.has(image.resourceId),
-                        )
-                    )
-                        message.images = message.images.filter(
+                        ),
+                )
+                .map((message) => message.messageId),
+        );
+        return executeEdit(
+            affectedMessages.length > 0,
+            () => {
+                for (const message of affectedMessages) {
+                    if (!deletedMessageIds.has(message.messageId))
+                        message.images = message.images!.filter(
                             (image) => !resourceIds.has(image.resourceId),
                         );
                 }
+                if (deletedMessageIds.size)
+                    for (const chunk of logStore.allChunks)
+                        chunk.messages = chunk.messages.filter(
+                            (message) =>
+                                !deletedMessageIds.has(message.messageId),
+                        );
             },
-            { syncSystemRules: false },
+            { syncSystemRules: deletedMessageIds.size > 0 },
         );
     }
 
