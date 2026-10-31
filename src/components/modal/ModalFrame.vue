@@ -61,6 +61,12 @@ function close() {
 
 function handleKeydown(event: KeyboardEvent) {
     if (!props.isTop) return;
+    // 下拉框内的 Esc 和 Tab 键交由下拉框处理，避免触发外层对话框的按键逻辑。
+    if (
+        event.target instanceof Element &&
+        event.target.closest('[data-popover-select-content]')
+    )
+        return;
     if (event.key === 'Escape') {
         event.preventDefault();
         event.stopPropagation();

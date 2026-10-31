@@ -350,10 +350,8 @@ watch(isOpen, (openState) => {
     cursor: text;
 }
 
-.tag-control:hover {
-    border-color: var(--active-accent);
-}
-
+.tag-control:hover,
+.tag-control:focus-within,
 .tag-control.is-open {
     border-color: var(--active-accent);
 }

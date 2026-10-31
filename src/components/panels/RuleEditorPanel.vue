@@ -184,74 +184,53 @@
                         </div>
                         <div class="form-group">
                             <label>作用范围</label>
-                            <select
+                            <PopoverSelect
                                 class="form-control"
-                                v-model="rule.area"
-                                @change="
+                                :model-value="rule.area"
+                                @update:model-value="
                                     handleUpdate(rule.ruleId, {
-                                        area: rule.area,
+                                        area: $event,
                                     })
                                 "
-                            >
-                                <option value="all">全部</option>
-                                <option value="playerName">仅名字</option>
-                                <option value="content">仅内容</option>
-                            </select>
+                                aria-label="作用范围"
+                                :options="
+                                    [
+                                        { value: 'all', label: '全部' },
+                                        {
+                                            value: 'playerName',
+                                            label: '仅名字',
+                                        },
+                                        { value: 'content', label: '仅内容' },
+                                    ] as const
+                                "
+                            />
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label>角色名</label>
-                        <input
-                            class="form-control filter-text-input"
-                            :value="
-                                getRuleDraftValue(
-                                    rule.ruleId,
-                                    'filter.playerName',
-                                    formatArray(rule.filter.playerName),
-                                )
+                        <MultiTagSelect
+                            :model-value="
+                                getIdentityFilterValues(rule.filter.playerName)
                             "
-                            @input="
-                                updateRuleDraft(
-                                    rule.ruleId,
-                                    'filter.playerName',
-                                    $event,
-                                )
+                            :options="playerNameOptions"
+                            @update:model-value="
+                                updateIdentityFilter(rule, 'playerName', $event)
                             "
-                            v-click-outside="
-                                () => commitFilterDraft(rule, 'playerName')
-                            "
-                            @keydown.enter.exact.prevent="
-                                commitFilterDraft(rule, 'playerName')
-                            "
-                            placeholder="如: KP, 骰娘……"
+                            placeholder="可下拉选择或手动输入，回车确认"
                         />
                     </div>
                     <div class="form-group">
                         <label>账号</label>
-                        <input
-                            class="form-control filter-text-input"
-                            :value="
-                                getRuleDraftValue(
-                                    rule.ruleId,
-                                    'filter.account',
-                                    formatArray(rule.filter.account),
-                                )
+                        <MultiTagSelect
+                            :model-value="
+                                getIdentityFilterValues(rule.filter.account)
                             "
-                            @input="
-                                updateRuleDraft(
-                                    rule.ruleId,
-                                    'filter.account',
-                                    $event,
-                                )
+                            :options="accountOptions"
+                            @update:model-value="
+                                updateIdentityFilter(rule, 'account', $event)
                             "
-                            v-click-outside="
-                                () => commitFilterDraft(rule, 'account')
-                            "
-                            @keydown.enter.exact.prevent="
-                                commitFilterDraft(rule, 'account')
-                            "
-                            placeholder="如: 表情差分1, 表情差分2……"
+                            placeholder="可下拉选择或手动输入，回车确认"
                         />
                     </div>
                     <div class="form-group">
@@ -312,51 +291,78 @@
                     <div class="form-row two-col">
                         <div class="form-group">
                             <label>身份</label>
-                            <select
+                            <PopoverSelect
                                 class="form-control"
-                                :value="rule.filter.role || ''"
-                                @change="updateFilter(rule, 'role', $event)"
-                            >
-                                <option value="">任意</option>
-                                <option value="pl">玩家</option>
-                                <option value="gm">主持人</option>
-                                <option value="npc">NPC</option>
-                                <option value="bot">骰子</option>
-                                <option value="ob">观众</option>
-                            </select>
+                                :model-value="
+                                    Array.isArray(rule.filter.role)
+                                        ? ''
+                                        : rule.filter.role || ''
+                                "
+                                @update:model-value="
+                                    updateFilterValue(rule, 'role', $event)
+                                "
+                                aria-label="身份"
+                                :options="
+                                    [
+                                        { value: '', label: '任意' },
+                                        { value: 'pl', label: '玩家' },
+                                        { value: 'gm', label: '主持人' },
+                                        { value: 'npc', label: 'NPC' },
+                                        { value: 'bot', label: '骰子' },
+                                        { value: 'ob', label: '观众' },
+                                    ] as const
+                                "
+                            />
                         </div>
                         <div class="form-group">
                             <label>是否场外</label>
-                            <select
+                            <PopoverSelect
                                 class="form-control"
-                                :value="rule.filter.isOoc?.toString() || ''"
-                                @change="
-                                    updateFilter(rule, 'isOoc', $event, true)
+                                :model-value="
+                                    rule.filter.isOoc?.toString() || ''
                                 "
-                            >
-                                <option value="">任意</option>
-                                <option value="true">是</option>
-                                <option value="false">否</option>
-                            </select>
+                                @update:model-value="
+                                    updateFilterValue(
+                                        rule,
+                                        'isOoc',
+                                        $event,
+                                        true,
+                                    )
+                                "
+                                aria-label="是否场外"
+                                :options="
+                                    [
+                                        { value: '', label: '任意' },
+                                        { value: 'true', label: '是' },
+                                        { value: 'false', label: '否' },
+                                    ] as const
+                                "
+                            />
                         </div>
                         <div class="form-group">
                             <label>是否指令</label>
-                            <select
+                            <PopoverSelect
                                 class="form-control"
-                                :value="rule.filter.isCommand?.toString() || ''"
-                                @change="
-                                    updateFilter(
+                                :model-value="
+                                    rule.filter.isCommand?.toString() || ''
+                                "
+                                @update:model-value="
+                                    updateFilterValue(
                                         rule,
                                         'isCommand',
                                         $event,
                                         true,
                                     )
                                 "
-                            >
-                                <option value="">任意</option>
-                                <option value="true">是</option>
-                                <option value="false">否</option>
-                            </select>
+                                aria-label="是否指令"
+                                :options="
+                                    [
+                                        { value: '', label: '任意' },
+                                        { value: 'true', label: '是' },
+                                        { value: 'false', label: '否' },
+                                    ] as const
+                                "
+                            />
                         </div>
                     </div>
 
@@ -403,6 +409,11 @@
 </template>
 
 <script setup lang="ts">
+import PopoverSelect from '@/components/common/PopoverSelect.vue';
+import MultiTagSelect, {
+    type SelectOption,
+} from '@/components/common/MultiTagSelect.vue';
+import { buildIdentityStats } from '@/editor/identity';
 import { useWorkspaceStore } from '@/stores/ui/workspaceStore';
 
 import type { SelectionScope } from '@/types/selection';
@@ -412,7 +423,7 @@ import { useStyleStore } from '@/stores/project/styleStore';
 import { useLogStore } from '@/stores/project/logStore';
 import { useSelectionContext } from '@/composables/application/useSelectionContext';
 import { useDraftValues } from '@/composables/application/useDraftValues';
-import type { StyleRule } from '@/types/style';
+import type { ColorMode, StyleRule } from '@/types/style';
 import type { MessageFilter } from '@/types/log';
 import { matchesMessageFilter } from '@/editor/filter';
 import { vClickOutside } from '@/directives/clickOutside';
@@ -435,8 +446,6 @@ const expandedRules = ref<Set<string>>(new Set());
 type RuleDraftField =
     | 'ruleName'
     | 'priority'
-    | 'filter.playerName'
-    | 'filter.account'
     | 'filter.content'
     | 'filter.note';
 const ruleDrafts = useDraftValues<RuleDraftField>();
@@ -529,30 +538,43 @@ function toggleRuleActive(rule: StyleRule) {
 }
 
 // ---- Filter 编辑逻辑 ----
+const playerNameOptions = computed(() => buildIdentityOptions('playerName'));
+const accountOptions = computed(() => buildIdentityOptions('account'));
+
+function buildIdentityOptions(mode: ColorMode): SelectOption[] {
+    const stats = buildIdentityStats(logStore.allMessages, mode);
+    return Array.from(stats.entries()).map(([label, data]) => ({
+        label,
+        count: data.count,
+    }));
+}
+
+function getIdentityFilterValues(value: MessageFilter['playerName']): string[] {
+    if (value === undefined || value === '') return [];
+    return Array.isArray(value) ? value : [String(value)];
+}
+
+function updateIdentityFilter(
+    rule: StyleRule,
+    key: 'playerName' | 'account',
+    values: string[],
+) {
+    const filter = { ...rule.filter };
+    // 空数组不会匹配任何消息；清空选择时删除该字段，表示不限制此条件。
+    if (values.length === 0) delete filter[key];
+    else filter[key] = values.length === 1 ? values[0] : [...values];
+    handleUpdate(rule.ruleId, { filter });
+}
+
 // 将数组或字符串格式化为逗号分隔的形式，方便展示在 input 中
 function formatArray(val: any): string {
     if (Array.isArray(val)) return val.join(', ');
     return val || '';
 }
 
-function updateFilter(
-    rule: StyleRule,
-    key: keyof StyleRule['filter'],
-    event: Event,
-    isBoolean = false,
-) {
-    const val = (
-        event.target as HTMLInputElement | HTMLSelectElement
-    ).value.trim();
-    updateFilterValue(rule, key, val, isBoolean);
-}
-
 function commitFilterDraft(
     rule: StyleRule,
-    key: Extract<
-        keyof StyleRule['filter'],
-        'playerName' | 'account' | 'content' | 'note'
-    >,
+    key: Extract<keyof StyleRule['filter'], 'content' | 'note'>,
 ) {
     ruleDrafts.commit(rule.ruleId, `filter.${key}`, (value) => {
         updateFilterValue(rule, key, value);

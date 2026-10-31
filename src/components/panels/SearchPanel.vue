@@ -163,6 +163,7 @@
                                     <div class="form-group boolean-filter-item">
                                         <label>场外</label>
                                         <PopoverSelect
+                                            aria-label="场外"
                                             v-model="searchStore.filter.isOoc"
                                             :options="booleanOptions"
                                         />
@@ -170,6 +171,7 @@
                                     <div class="form-group boolean-filter-item">
                                         <label>指令</label>
                                         <PopoverSelect
+                                            aria-label="指令"
                                             v-model="
                                                 searchStore.filter.isCommand
                                             "
@@ -179,6 +181,7 @@
                                     <div class="form-group boolean-filter-item">
                                         <label>包含图片</label>
                                         <PopoverSelect
+                                            aria-label="包含图片"
                                             v-model="
                                                 searchStore.filter.hasImage
                                             "

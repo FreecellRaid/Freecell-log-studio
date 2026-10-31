@@ -11,20 +11,32 @@
                 <div class="options-row">
                     <label>
                         替换位置 (已选中{{ store.messages.length }} 条)
-                        <select
+                        <PopoverSelect
                             v-model="store.options.field"
-                            @change="updateFind"
-                        >
-                            <option value="content">消息内容</option>
-                            <option value="note">备注</option>
-                        </select>
+                            @update:model-value="updateFind"
+                            :disabled="store.stale || !store.messages.length"
+                            aria-label="替换位置"
+                            :options="
+                                [
+                                    { value: 'content', label: '消息内容' },
+                                    { value: 'note', label: '备注' },
+                                ] as const
+                            "
+                        />
                     </label>
                     <label>
                         替换方式
-                        <select v-model="store.options.mode">
-                            <option value="text">替换匹配文本</option>
-                            <option value="whole">覆盖全部内容</option>
-                        </select>
+                        <PopoverSelect
+                            v-model="store.options.mode"
+                            :disabled="store.stale || !store.messages.length"
+                            aria-label="替换方式"
+                            :options="
+                                [
+                                    { value: 'text', label: '替换匹配文本' },
+                                    { value: 'whole', label: '覆盖全部内容' },
+                                ] as const
+                            "
+                        />
                     </label>
                 </div>
                 <label v-if="store.options.mode === 'text'">
@@ -156,6 +168,7 @@
 </template>
 
 <script setup lang="ts">
+import PopoverSelect from '@/components/common/PopoverSelect.vue';
 import { useDialogStore } from '@/stores/ui/dialogStore';
 
 import { computed, onUnmounted } from 'vue';
@@ -228,7 +241,6 @@ label {
     flex-wrap: wrap;
     gap: 12px;
 }
-select,
 textarea {
     box-sizing: border-box;
     width: 100%;
@@ -239,6 +251,11 @@ textarea {
     background: var(--bg-input);
     border: 1px solid var(--border-color);
     border-radius: 4px;
+}
+.replacement-form :deep(.select-trigger) {
+    padding: 8px;
+    font: inherit;
+    background: var(--bg-input);
 }
 textarea {
     resize: vertical;
@@ -313,7 +330,6 @@ fieldset:disabled {
 button:disabled {
     cursor: default;
 }
-select:focus-visible,
 textarea:focus-visible,
 summary:focus-visible,
 button:focus-visible {

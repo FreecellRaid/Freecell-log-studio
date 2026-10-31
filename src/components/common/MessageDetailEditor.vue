@@ -28,17 +28,21 @@
 
         <div class="prop-item">
             <label>身份</label>
-            <select
-                :value="values.role"
-                @change="emitFieldChange('role', getRoleValue($event))"
-            >
-                <option value="pl">玩家</option>
-                <option value="gm">主持人</option>
-                <option value="npc">NPC</option>
-                <option value="ob">观众</option>
-                <option value="bot">骰子</option>
-                <option value="unknown">未知</option>
-            </select>
+            <PopoverSelect
+                :model-value="values.role"
+                @update:model-value="emitFieldChange('role', $event)"
+                aria-label="身份"
+                :options="
+                    [
+                        { value: 'pl', label: '玩家' },
+                        { value: 'gm', label: '主持人' },
+                        { value: 'npc', label: 'NPC' },
+                        { value: 'ob', label: '观众' },
+                        { value: 'bot', label: '骰子' },
+                        { value: 'unknown', label: '未知' },
+                    ] as const
+                "
+            />
         </div>
 
         <div class="prop-row">
@@ -88,6 +92,7 @@
 </template>
 
 <script setup lang="ts">
+import PopoverSelect from '@/components/common/PopoverSelect.vue';
 import ToggleButton from '@/components/common/ToggleButton.vue';
 import MessageImages from '@/components/common/MessageImages.vue';
 
@@ -154,10 +159,6 @@ function getEventValue(event: Event) {
     return (event.target as HTMLInputElement | HTMLTextAreaElement).value;
 }
 
-function getRoleValue(event: Event): RoleType {
-    return (event.target as HTMLSelectElement).value as RoleType;
-}
-
 void props;
 </script>
 
@@ -193,7 +194,6 @@ void props;
 }
 
 .prop-item input[type='text'],
-.prop-item select,
 .prop-item textarea {
     width: 100%;
     background-color: var(--bg-workspace);
@@ -205,8 +205,13 @@ void props;
     outline: none;
 }
 
+.prop-item :deep(.select-trigger) {
+    background-color: var(--bg-workspace);
+    padding: 6px 8px;
+    font-size: 13px;
+}
+
 .prop-item input:focus,
-.prop-item select:focus,
 .prop-item textarea:focus {
     border-color: var(--active-accent);
 }

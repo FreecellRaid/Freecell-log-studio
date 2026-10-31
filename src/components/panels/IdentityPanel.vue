@@ -59,21 +59,22 @@
                 </div>
 
                 <div class="col-role">
-                    <select
-                        :value="item.role"
+                    <PopoverSelect
+                        :model-value="item.role"
                         class="role-select"
-                        @change="
-                            (e) =>
-                                updateRole(item.id, getRoleFromSelectEvent(e))
+                        aria-label="身份"
+                        @update:model-value="updateRole(item.id, $event)"
+                        :options="
+                            [
+                                { value: 'pl', label: '玩家' },
+                                { value: 'npc', label: 'NPC' },
+                                { value: 'gm', label: '主持人' },
+                                { value: 'bot', label: '骰子' },
+                                { value: 'ob', label: '观众' },
+                                { value: 'unknown', label: '其他' },
+                            ] as const
                         "
-                    >
-                        <option value="pl">玩家</option>
-                        <option value="npc">NPC</option>
-                        <option value="gm">主持人</option>
-                        <option value="bot">骰子</option>
-                        <option value="ob">观众</option>
-                        <option value="unknown">其他</option>
-                    </select>
+                    />
                 </div>
 
                 <div class="col-color">
@@ -104,6 +105,7 @@
 </template>
 
 <script setup lang="ts">
+import PopoverSelect from '@/components/common/PopoverSelect.vue';
 import { ref, computed } from 'vue';
 import { ChevronRight, IdCard, UserRound } from '@lucide/vue';
 import { useStyleStore } from '@/stores/project/styleStore';
@@ -199,11 +201,6 @@ function getMessageIdsForIdentity(id: string) {
         localDisplayMode.value,
         id,
     );
-}
-
-function getRoleFromSelectEvent(event: Event): RoleType {
-    const value = (event.target as HTMLSelectElement).value;
-    return value as RoleType;
 }
 
 const vFocus = {
@@ -335,21 +332,8 @@ const vFocus = {
     opacity: 0;
 }
 
-.role-select {
-    width: 100%;
-    box-sizing: border-box;
+:deep(.select-trigger.role-select) {
     padding: 4px 2px;
     background-color: var(--bg-workspace);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    font-size: 12px;
-    outline: none;
-}
-
-/* 原生下拉菜单在 Windows 上可能使用系统背景，需同时指定选项的前景和背景色。 */
-.role-select option {
-    background-color: var(--bg-workspace);
-    color: var(--text-primary);
 }
 </style>

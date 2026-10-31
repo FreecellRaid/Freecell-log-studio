@@ -1,174 +1,112 @@
 <template>
     <div ref="rootRef" class="popover-select">
-        <button
-            type="button"
-            class="select-trigger"
-            :class="{ 'is-open': isOpen }"
-            @pointerdown.prevent="toggle"
-            @keydown="handleKeydown"
+        <SelectRoot
+            v-model:open="isOpen"
+            :model-value="selectedKey"
+            :disabled="disabled"
+            @update:model-value="selectKey"
         >
-            <span class="trigger-label">{{ selectedLabel }}</span>
-            <ChevronDown class="chevron" :class="{ 'is-open': isOpen }" />
-        </button>
-
-        <Teleport defer to="#editor">
-            <Transition name="popover-dropdown">
-                <div
-                    v-if="isOpen"
-                    ref="dropdownRef"
-                    class="select-dropdown"
-                    :style="dropdownStyle"
+            <SelectTrigger v-bind="$attrs" class="select-trigger">
+                <SelectValue class="trigger-label">
+                    {{ selectedLabel }}
+                </SelectValue>
+                <ChevronDown class="chevron" />
+            </SelectTrigger>
+            <SelectPortal v-if="portalTarget" :to="portalTarget">
+                <SelectContent
+                    class="popover-select-dropdown"
+                    data-popover-select-content
+                    position="popper"
+                    align="start"
+                    :side-offset="4"
+                    :collision-padding="8"
+                    @keydown.esc.stop="isOpen = false"
                 >
-                    <button
-                        v-for="(item, index) in options"
-                        :key="String(item.value)"
-                        type="button"
-                        class="dropdown-item"
-                        :class="{ 'is-highlighted': index === highlightIndex }"
-                        @mouseenter="highlightIndex = index"
-                        @click="select(item.value)"
-                    >
-                        <Check
-                            class="check-icon"
-                            :class="{ 'is-checked': item.value === modelValue }"
-                        />
-                        <span class="item-label" :title="item.label">
-                            {{ item.label }}
-                        </span>
-                    </button>
-                </div>
-            </Transition>
-        </Teleport>
+                    <SelectViewport class="popover-select-viewport">
+                        <SelectItem
+                            v-for="(item, index) in options"
+                            :key="index"
+                            :value="String(index)"
+                            :text-value="item.label"
+                            class="dropdown-item"
+                        >
+                            <Check
+                                class="check-icon"
+                                :class="{
+                                    'is-checked': index === selectedIndex,
+                                }"
+                            />
+                            <span class="item-label" :title="item.label">
+                                <SelectItemText>
+                                    {{ item.label }}
+                                </SelectItemText>
+                            </span>
+                        </SelectItem>
+                    </SelectViewport>
+                </SelectContent>
+            </SelectPortal>
+        </SelectRoot>
     </div>
 </template>
 
-<script setup lang="ts" generic="T">
-import { computed, nextTick, ref, watch } from 'vue';
-import { Check, ChevronDown } from '@lucide/vue';
-import { onClickOutside, useEventListener } from '@vueuse/core';
-
+<script lang="ts">
 export interface PopoverOption<T> {
     label: string;
     value: T;
 }
+</script>
+
+<script setup lang="ts" generic="T">
+import { computed, onMounted, ref } from 'vue';
+import { Check, ChevronDown } from '@lucide/vue';
+import {
+    SelectContent,
+    SelectItem,
+    SelectItemText,
+    SelectPortal,
+    SelectRoot,
+    SelectTrigger,
+    SelectValue,
+    SelectViewport,
+} from 'reka-ui';
+
+defineOptions({ inheritAttrs: false });
 
 const props = defineProps<{
     modelValue: T;
-    options: PopoverOption<T>[];
+    options: readonly PopoverOption<T>[];
+    disabled?: boolean;
 }>();
-
 const emit = defineEmits<{
     'update:modelValue': [value: T];
 }>();
-
 const rootRef = ref<HTMLElement | null>(null);
-const dropdownRef = ref<HTMLElement | null>(null);
-
+const portalTarget = ref<HTMLElement>();
 const isOpen = ref(false);
-const highlightIndex = ref(0);
-const dropdownStyle = ref<Record<string, string>>({});
-
-const selectedLabel = computed(() => {
-    const match = props.options.find((item) => item.value === props.modelValue);
-    return match ? match.label : '';
-});
-
-function open() {
-    if (isOpen.value) return;
-    isOpen.value = true;
-
-    const current = props.options.findIndex(
-        (item) => item.value === props.modelValue,
-    );
-    highlightIndex.value = current >= 0 ? current : 0;
-    updatePosition();
-}
-
-function close() {
-    isOpen.value = false;
-}
-
-function toggle() {
-    if (isOpen.value) {
-        close();
-    } else {
-        open();
-    }
-}
-
-function updatePosition() {
-    const trigger = rootRef.value?.querySelector('.select-trigger');
-    if (!trigger) return;
-
-    const rect = trigger.getBoundingClientRect();
-    dropdownStyle.value = {
-        position: 'fixed',
-        top: `${Math.round(rect.bottom + 4)}px`,
-        left: `${Math.round(rect.left)}px`,
-        minWidth: `${Math.round(rect.width)}px`,
-    };
-}
-
-function select(value: T) {
-    emit('update:modelValue', value);
-    close();
-}
-
-function handleKeydown(event: KeyboardEvent) {
-    switch (event.key) {
-        case 'ArrowDown':
-        case 'ArrowUp': {
-            event.preventDefault();
-            if (!isOpen.value) {
-                open();
-                return;
-            }
-            const delta = event.key === 'ArrowDown' ? 1 : -1;
-            const count = props.options.length;
-            if (count === 0) return;
-            highlightIndex.value =
-                (highlightIndex.value + delta + count) % count;
-            break;
-        }
-        case 'Enter':
-        case ' ':
-            event.preventDefault();
-            if (isOpen.value) {
-                select(props.options[highlightIndex.value].value);
-            } else {
-                open();
-            }
-            break;
-        case 'Escape':
-            close();
-            break;
-    }
-}
-
-onClickOutside(
-    rootRef,
-    () => {
-        close();
-    },
-    { ignore: [dropdownRef] },
+const selectedIndex = computed(() =>
+    props.options.findIndex((item) => item.value === props.modelValue),
 );
-
-useEventListener(
-    window,
-    'scroll',
-    () => {
-        if (isOpen.value) updatePosition();
-    },
-    true,
+// Reka 将空字符串保留为清空选择的标记，使用内部键值映射，
+// 在不改变组件对外接口的前提下保留空字符串、false 和 undefined 等选项值。
+const selectedKey = computed(() =>
+    selectedIndex.value < 0 ? undefined : String(selectedIndex.value),
 );
-useEventListener('resize', () => {
-    if (isOpen.value) updatePosition();
-});
-
-watch(isOpen, (openState) => {
-    if (openState) {
-        nextTick(updatePosition);
-    }
+const selectedLabel = computed(
+    () => props.options[selectedIndex.value]?.label ?? '',
+);
+function selectKey(key: unknown) {
+    const index = Number(key);
+    if (typeof key !== 'string' || key === '' || !Number.isInteger(index))
+        return;
+    const option = props.options[index];
+    if (option) emit('update:modelValue', option.value);
+}
+onMounted(() => {
+    // 将弹层挂载到所属对话框内以保持焦点约束，并继承编辑器主题
+    portalTarget.value =
+        rootRef.value?.closest<HTMLElement>('.modal-backdrop') ??
+        document.getElementById('editor') ??
+        undefined;
 });
 </script>
 
@@ -191,15 +129,23 @@ watch(isOpen, (openState) => {
     border: 1px solid var(--border-color);
     border-radius: 4px;
     color: var(--text-primary);
+    font-family: inherit;
     font-size: 12px;
     text-align: left;
     cursor: pointer;
     transition: border-color 0.15s;
     background-color: transparent;
+    outline: none;
 }
 
-.select-trigger:hover,
-.select-trigger.is-open {
+.select-trigger.form-control {
+    padding: 6px 8px;
+    font-size: 13px;
+}
+
+.select-trigger:hover:not(:disabled),
+.select-trigger:focus,
+.select-trigger[data-state='open'] {
     border-color: var(--active-accent);
 }
 
@@ -216,18 +162,14 @@ watch(isOpen, (openState) => {
     width: 14px;
     height: 14px;
     color: var(--text-muted);
-    transition: transform 0.2s ease;
 }
 
-.chevron.is-open {
-    transform: rotate(180deg);
-}
-
-.select-dropdown {
-    position: fixed;
+:global(.popover-select-dropdown) {
     z-index: 100;
-    max-height: 240px;
-    overflow-y: auto;
+    min-width: var(--reka-select-trigger-width);
+    max-width: var(--reka-select-content-available-width);
+    max-height: min(240px, var(--reka-select-content-available-height));
+    overflow: hidden;
     padding: 4px;
     background: var(--bg-topbar);
     border: 1px solid var(--border-color);
@@ -245,12 +187,15 @@ watch(isOpen, (openState) => {
     border-radius: 4px;
     background: transparent;
     color: var(--text-primary);
+    font-family: inherit;
     font-size: 12px;
     text-align: left;
     cursor: pointer;
+    outline: none;
+    user-select: none;
 }
 
-.dropdown-item.is-highlighted {
+.dropdown-item[data-highlighted] {
     background: var(--hover-bg);
 }
 
@@ -273,22 +218,15 @@ watch(isOpen, (openState) => {
     text-overflow: ellipsis;
 }
 
-/* 弹层过渡 */
-.popover-dropdown-enter-active,
-.popover-dropdown-leave-active {
-    transition:
-        opacity 0.15s ease,
-        transform 0.15s ease;
+:global(.popover-select-viewport) {
+    max-height: min(
+        230px,
+        calc(var(--reka-select-content-available-height) - 10px)
+    );
+    overflow-y: auto;
 }
-
-.popover-dropdown-enter-from,
-.popover-dropdown-leave-to {
-    opacity: 0;
-    transform: translateY(-4px);
-}
-
-/* 消失动画期间不再拦截点击，避免误点下方的输入控件 */
-.popover-dropdown-leave-active {
-    pointer-events: none;
+.select-trigger:disabled {
+    opacity: 0.55;
+    cursor: default;
 }
 </style>
