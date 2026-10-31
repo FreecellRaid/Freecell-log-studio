@@ -167,28 +167,34 @@
                         aria-label="启用 Markdown"
                     />
                 </div>
-                <div class="drawer-row">
-                    <span class="drawer-row-icon">
-                        <Palette class="ui-icon" />
-                    </span>
-                    <span>按角色名染色</span>
-                    <ToggleButton
-                        v-model="styleStore.viewSettings.colorMode"
-                        value="playerName"
-                        aria-label="按角色名染色"
-                    />
-                </div>
-                <div class="drawer-row">
-                    <span class="drawer-row-icon">
-                        <AtSign class="ui-icon" />
-                    </span>
-                    <span>按账号染色</span>
-                    <ToggleButton
-                        v-model="styleStore.viewSettings.colorMode"
-                        value="account"
-                        aria-label="按账号染色"
-                    />
-                </div>
+                <RadioGroupRoot
+                    :model-value="styleStore.viewSettings.colorMode"
+                    orientation="vertical"
+                    aria-label="染色方式"
+                >
+                    <div class="drawer-row">
+                        <span class="drawer-row-icon">
+                            <Palette class="ui-icon" />
+                        </span>
+                        <span>按角色名染色</span>
+                        <ToggleButton
+                            v-model="styleStore.viewSettings.colorMode"
+                            value="playerName"
+                            aria-label="按角色名染色"
+                        />
+                    </div>
+                    <div class="drawer-row">
+                        <span class="drawer-row-icon">
+                            <AtSign class="ui-icon" />
+                        </span>
+                        <span>按账号染色</span>
+                        <ToggleButton
+                            v-model="styleStore.viewSettings.colorMode"
+                            value="account"
+                            aria-label="按账号染色"
+                        />
+                    </div>
+                </RadioGroupRoot>
                 <div class="drawer-row">
                     <span class="drawer-row-icon">
                         <Monitor class="ui-icon" />
@@ -218,6 +224,7 @@
 </template>
 
 <script setup lang="ts">
+import { RadioGroupRoot } from 'reka-ui';
 import { useDialogStore } from '@/stores/ui/dialogStore';
 
 import { ref } from 'vue';

@@ -30,20 +30,27 @@
             >
                 启用 Markdown
             </ToggleButton>
-            <ToggleButton
-                v-model="styleStore.viewSettings.colorMode"
-                class="setting-item"
-                value="playerName"
+            <RadioGroupRoot
+                :model-value="styleStore.viewSettings.colorMode"
+                orientation="vertical"
+                aria-label="染色方式"
+                class="setting-radio"
             >
-                按角色名染色
-            </ToggleButton>
-            <ToggleButton
-                v-model="styleStore.viewSettings.colorMode"
-                class="setting-item"
-                value="account"
-            >
-                按账号染色
-            </ToggleButton>
+                <ToggleButton
+                    v-model="styleStore.viewSettings.colorMode"
+                    class="setting-item"
+                    value="playerName"
+                >
+                    按角色名染色
+                </ToggleButton>
+                <ToggleButton
+                    v-model="styleStore.viewSettings.colorMode"
+                    class="setting-item"
+                    value="account"
+                >
+                    按账号染色
+                </ToggleButton>
+            </RadioGroupRoot>
             <ToggleButton
                 class="setting-item"
                 :model-value="uiStore.followSystem"
@@ -76,6 +83,7 @@
 </template>
 
 <script setup lang="ts">
+import { RadioGroupRoot } from 'reka-ui';
 import ToggleButton from '@/components/common/ToggleButton.vue';
 import { useStyleStore } from '@/stores/project/styleStore';
 import { useUiStore } from '@/stores/ui/uiStore';
@@ -88,8 +96,7 @@ const importSettingsStore = useImportSettingsStore();
 
 <style scoped>
 .popover {
-    width: 180px;
-    padding: 12px;
+    padding: 16px;
     box-shadow: 5px -3px 12px var(--box-shadow);
 }
 
@@ -102,18 +109,25 @@ const importSettingsStore = useImportSettingsStore();
 }
 
 .settings-section {
-    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
-.setting-item {
+.setting-radio {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.settings-section :deep(.setting-item) {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 8px;
-    font-size: 13px;
+    font-size: 14px;
 }
 
-.setting-item:hover {
+.settings-section :deep(.setting-item:hover) {
     color: var(--active-accent);
 }
 </style>

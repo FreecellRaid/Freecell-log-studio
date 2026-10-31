@@ -1,12 +1,11 @@
 <template>
-    <button
+    <component
+        :is="usesOptionValue ? RadioGroupItem : SwitchRoot"
+        v-bind="controlProps"
         class="toggle-button"
-        :class="{ 'is-checked': isChecked }"
-        type="button"
-        :role="role"
-        :aria-checked="isChecked"
         :disabled="disabled"
-        @click="toggle"
+        @update:model-value="updateSwitch"
+        @select="selectOption"
     >
         <span class="toggle-button-track" aria-hidden="true">
             <span class="toggle-button-thumb"></span>
@@ -14,11 +13,12 @@
         <span v-if="$slots.default" class="toggle-button-label">
             <slot></slot>
         </span>
-    </button>
+    </component>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { RadioGroupItem, SwitchRoot } from 'reka-ui';
 
 type ToggleValue = boolean | string | number | null | undefined;
 
@@ -39,30 +39,27 @@ const emit = defineEmits<{
 }>();
 
 const usesOptionValue = computed(() => props.value !== undefined);
+const controlProps = computed(() =>
+    usesOptionValue.value
+        ? { value: props.value }
+        : { modelValue: Boolean(props.modelValue) },
+);
 
-const isChecked = computed(() => {
-    if (usesOptionValue.value) {
-        return props.modelValue === props.value;
+function updateSwitch(value: boolean) {
+    if (!props.disabled && !usesOptionValue.value) {
+        emit('update:modelValue', value);
     }
+}
 
-    return Boolean(props.modelValue);
-});
-
-const role = computed(() => (usesOptionValue.value ? 'radio' : 'switch'));
-
-function toggle() {
-    if (props.disabled) {
-        return;
+// 选项模式由外层单选组统一管理焦点，保留原有的值绑定接口。
+function selectOption() {
+    if (
+        !props.disabled &&
+        usesOptionValue.value &&
+        props.modelValue !== props.value
+    ) {
+        emit('update:modelValue', props.value);
     }
-
-    if (usesOptionValue.value) {
-        if (!isChecked.value) {
-            emit('update:modelValue', props.value);
-        }
-        return;
-    }
-
-    emit('update:modelValue', !isChecked.value);
 }
 </script>
 
@@ -113,12 +110,12 @@ function toggle() {
     line-height: 1.35;
 }
 
-.toggle-button.is-checked .toggle-button-track {
+.toggle-button[data-state='checked'] .toggle-button-track {
     border-color: var(--active-accent);
     background-color: var(--active-accent);
 }
 
-.toggle-button.is-checked .toggle-button-thumb {
+.toggle-button[data-state='checked'] .toggle-button-thumb {
     transform: translateX(13px);
 }
 
