@@ -287,6 +287,6 @@ function handleNavClick(panelName: typeof editorLayout.activePanel) {
     position: absolute;
     left: 48px;
     bottom: 0px;
-    z-index: 10;
+    z-index: 100;
 }
 </style>

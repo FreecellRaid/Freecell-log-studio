@@ -98,6 +98,7 @@ const importSettingsStore = useImportSettingsStore();
 .popover {
     padding: 16px;
     box-shadow: 5px -3px 12px var(--box-shadow);
+    min-width: 200px;
 }
 
 .popover-header {
