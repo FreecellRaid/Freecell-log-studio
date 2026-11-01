@@ -1,32 +1,34 @@
 <template>
-    <div
-        v-if="mobileUiStore.bottomPanelOpen"
-        class="mobile-bottom-backdrop"
-        @click.self="mobileUiStore.closeOverlay"
-        @touchstart="closeGesture.onTouchStart"
-        @touchend="closeGesture.onTouchEnd"
-        @touchcancel="closeGesture.onTouchCancel"
-    >
-        <section class="mobile-bottom-drawer">
-            <div class="mobile-drawer-body">
-                <ChunkListPanel
-                    v-if="editorLayout.activePanel === 'chunkList'"
-                />
-                <ColoringPanel
-                    v-else-if="editorLayout.activePanel === 'coloring'"
-                />
-                <SearchPanel
-                    v-else-if="editorLayout.activePanel === 'search'"
-                />
-                <ExportFormatPanel
-                    v-else-if="editorLayout.activePanel === 'exportFormat'"
-                />
-                <ResourcePanel
-                    v-else-if="editorLayout.activePanel === 'resources'"
-                />
-            </div>
-        </section>
-    </div>
+    <Transition name="mobile-bottom-drawer">
+        <div
+            v-if="mobileUiStore.bottomPanelOpen"
+            class="mobile-bottom-backdrop"
+            @click.self="mobileUiStore.closeOverlay"
+            @touchstart="closeGesture.onTouchStart"
+            @touchend="closeGesture.onTouchEnd"
+            @touchcancel="closeGesture.onTouchCancel"
+        >
+            <section class="mobile-bottom-drawer">
+                <div class="mobile-drawer-body">
+                    <ChunkListPanel
+                        v-if="editorLayout.activePanel === 'chunkList'"
+                    />
+                    <ColoringPanel
+                        v-else-if="editorLayout.activePanel === 'coloring'"
+                    />
+                    <SearchPanel
+                        v-else-if="editorLayout.activePanel === 'search'"
+                    />
+                    <ExportFormatPanel
+                        v-else-if="editorLayout.activePanel === 'exportFormat'"
+                    />
+                    <ResourcePanel
+                        v-else-if="editorLayout.activePanel === 'resources'"
+                    />
+                </div>
+            </section>
+        </div>
+    </Transition>
 </template>
 
 <script setup lang="ts">

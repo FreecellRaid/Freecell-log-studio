@@ -1,3 +1,11 @@
+/* 在页面根节点阻止下拉刷新，内部滚动容器仍可正常滚动。 */
+@media (max-width: 768px), (pointer: coarse) and (max-width: 1024px) {
+    html,
+    body {
+        overscroll-behavior-y: none;
+    }
+}
+
 .mobile-editor {
     width: 100%;
     height: 100dvh;
@@ -6,6 +14,12 @@
     overflow: hidden;
     color: var(--text-primary);
     background: var(--bg-workspace);
+}
+
+/* 阻止嵌套滚动容器在到达边界后将手势传递给页面。 */
+.mobile-editor,
+.mobile-editor * {
+    overscroll-behavior-y: none;
 }
 
 .mobile-icon-button,
@@ -160,4 +174,49 @@
 
 .drawer-row:disabled {
     opacity: 0.5;
+}
+
+/* 遮罩与抽屉同步过渡，关闭期间保持遮挡，避免误触底层内容。 */
+.mobile-left-drawer-enter-active,
+.mobile-left-drawer-leave-active,
+.mobile-bottom-drawer-enter-active,
+.mobile-bottom-drawer-leave-active {
+    transition: opacity 0.22s ease;
+}
+
+.mobile-left-drawer-enter-active .mobile-left-drawer,
+.mobile-left-drawer-leave-active .mobile-left-drawer,
+.mobile-bottom-drawer-enter-active .mobile-bottom-drawer,
+.mobile-bottom-drawer-leave-active .mobile-bottom-drawer {
+    transition: transform 0.22s ease;
+}
+
+.mobile-left-drawer-enter-from,
+.mobile-left-drawer-leave-to,
+.mobile-bottom-drawer-enter-from,
+.mobile-bottom-drawer-leave-to {
+    opacity: 0;
+}
+
+.mobile-left-drawer-enter-from .mobile-left-drawer,
+.mobile-left-drawer-leave-to .mobile-left-drawer {
+    transform: translateX(-100%);
+}
+
+.mobile-bottom-drawer-enter-from .mobile-bottom-drawer,
+.mobile-bottom-drawer-leave-to .mobile-bottom-drawer {
+    transform: translateY(100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mobile-left-drawer-enter-active,
+    .mobile-left-drawer-leave-active,
+    .mobile-bottom-drawer-enter-active,
+    .mobile-bottom-drawer-leave-active,
+    .mobile-left-drawer-enter-active .mobile-left-drawer,
+    .mobile-left-drawer-leave-active .mobile-left-drawer,
+    .mobile-bottom-drawer-enter-active .mobile-bottom-drawer,
+    .mobile-bottom-drawer-leave-active .mobile-bottom-drawer {
+        transition: none;
+    }
 }

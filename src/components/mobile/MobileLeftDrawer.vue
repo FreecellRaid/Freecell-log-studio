@@ -1,226 +1,231 @@
 <template>
-    <div
-        v-if="mobileUiStore.leftDrawerOpen"
-        class="mobile-left-backdrop"
-        @click.self="mobileUiStore.closeOverlay"
-        @touchstart="closeGesture.onTouchStart"
-        @touchend="closeGesture.onTouchEnd"
-        @touchcancel="closeGesture.onTouchCancel"
-    >
-        <aside class="mobile-left-drawer">
-            <header class="mobile-drawer-header">
-                <h2>{{ logStore.projectName || '未命名工程' }}</h2>
-                <p>{{ logStore.totalMessages }} 条消息</p>
-            </header>
+    <Transition name="mobile-left-drawer">
+        <div
+            v-if="mobileUiStore.leftDrawerOpen"
+            class="mobile-left-backdrop"
+            @click.self="mobileUiStore.closeOverlay"
+            @touchstart="closeGesture.onTouchStart"
+            @touchend="closeGesture.onTouchEnd"
+            @touchcancel="closeGesture.onTouchCancel"
+        >
+            <aside class="mobile-left-drawer">
+                <header class="mobile-drawer-header">
+                    <h2>{{ logStore.projectName || '未命名工程' }}</h2>
+                    <p>{{ logStore.totalMessages }} 条消息</p>
+                </header>
 
-            <div class="mobile-left-actions">
-                <button
-                    class="drawer-row"
-                    type="button"
-                    @click="startProjectNameEdit"
-                >
-                    <span class="drawer-row-icon">
-                        <Pencil class="ui-icon" />
-                    </span>
-                    <span>编辑项目名</span>
-                </button>
-                <button
-                    class="drawer-row"
-                    type="button"
-                    @click="workspaceActions.saveCurrentProjectWithFeedback()"
-                    :disabled="workspaceActions.storageState.isSaving"
-                >
-                    <span class="drawer-row-icon">
-                        <Save class="ui-icon" />
-                    </span>
-                    <span>保存到本地</span>
-                </button>
-                <button
-                    class="drawer-row"
-                    type="button"
-                    @click="openLatestStoredProject"
-                    :disabled="
-                        openingProject || workspaceActions.storageState.isSaving
-                    "
-                >
-                    <span class="drawer-row-icon">
-                        <FolderOpen class="ui-icon" />
-                    </span>
-                    <span>恢复本地快照</span>
-                </button>
-                <button
-                    class="drawer-row"
-                    type="button"
-                    @click="() => editorDialogs.open('help')"
-                >
-                    <span class="drawer-row-icon">
-                        <BookOpen class="ui-icon" />
-                    </span>
-                    <span>帮助文档</span>
-                </button>
-                <button
-                    class="drawer-row"
-                    type="button"
-                    @click="uiStore.toggleDarkMode"
-                >
-                    <span class="drawer-row-icon">
-                        <Moon v-if="uiStore.isDarkMode" class="ui-icon" />
-                        <SunMedium v-else class="ui-icon" />
-                    </span>
-                    <span>
-                        {{ uiStore.isDarkMode ? '浅色模式' : '深色模式' }}
-                    </span>
-                </button>
-                <button
-                    class="drawer-row is-warning"
-                    type="button"
-                    :disabled="!workspaceActions.hasWorkspaceState.value"
-                    @click="clearAll"
-                >
-                    <span class="drawer-row-icon">
-                        <Trash2 class="ui-icon" />
-                    </span>
-                    <span>清空数据</span>
-                </button>
-            </div>
+                <div class="mobile-left-actions">
+                    <button
+                        class="drawer-row"
+                        type="button"
+                        @click="startProjectNameEdit"
+                    >
+                        <span class="drawer-row-icon">
+                            <Pencil class="ui-icon" />
+                        </span>
+                        <span>编辑项目名</span>
+                    </button>
+                    <button
+                        class="drawer-row"
+                        type="button"
+                        @click="
+                            workspaceActions.saveCurrentProjectWithFeedback()
+                        "
+                        :disabled="workspaceActions.storageState.isSaving"
+                    >
+                        <span class="drawer-row-icon">
+                            <Save class="ui-icon" />
+                        </span>
+                        <span>保存到本地</span>
+                    </button>
+                    <button
+                        class="drawer-row"
+                        type="button"
+                        @click="openLatestStoredProject"
+                        :disabled="
+                            openingProject ||
+                            workspaceActions.storageState.isSaving
+                        "
+                    >
+                        <span class="drawer-row-icon">
+                            <FolderOpen class="ui-icon" />
+                        </span>
+                        <span>恢复本地快照</span>
+                    </button>
+                    <button
+                        class="drawer-row"
+                        type="button"
+                        @click="() => editorDialogs.open('help')"
+                    >
+                        <span class="drawer-row-icon">
+                            <BookOpen class="ui-icon" />
+                        </span>
+                        <span>帮助文档</span>
+                    </button>
+                    <button
+                        class="drawer-row"
+                        type="button"
+                        @click="uiStore.toggleDarkMode"
+                    >
+                        <span class="drawer-row-icon">
+                            <Moon v-if="uiStore.isDarkMode" class="ui-icon" />
+                            <SunMedium v-else class="ui-icon" />
+                        </span>
+                        <span>
+                            {{ uiStore.isDarkMode ? '浅色模式' : '深色模式' }}
+                        </span>
+                    </button>
+                    <button
+                        class="drawer-row is-warning"
+                        type="button"
+                        :disabled="!workspaceActions.hasWorkspaceState.value"
+                        @click="clearAll"
+                    >
+                        <span class="drawer-row-icon">
+                            <Trash2 class="ui-icon" />
+                        </span>
+                        <span>清空数据</span>
+                    </button>
+                </div>
 
-            <div class="mobile-settings-list">
-                <div class="drawer-row">
-                    <span class="drawer-row-icon">
-                        <MessageSquareOff class="ui-icon" />
-                    </span>
-                    <span>隐藏场外消息</span>
-                    <ToggleButton
-                        v-model="styleStore.viewSettings.hideOoc"
-                        aria-label="隐藏场外消息"
-                    />
-                </div>
-                <div class="drawer-row">
-                    <span class="drawer-row-icon">
-                        <Terminal class="ui-icon" />
-                    </span>
-                    <span>隐藏指令消息</span>
-                    <ToggleButton
-                        v-model="styleStore.viewSettings.hideCommand"
-                        aria-label="隐藏指令消息"
-                    />
-                </div>
-                <div class="drawer-row">
-                    <span class="drawer-row-icon">
-                        <MessageSquare class="ui-icon" />
-                    </span>
-                    <span>导入时删除场外括号</span>
-                    <ToggleButton
-                        v-model="importSettingsStore.stripOocParentheses"
-                        aria-label="导入时删除场外括号"
-                        title="删除首尾的（）和()，不删除场外消息"
-                    />
-                </div>
-                <div class="drawer-row">
-                    <span class="drawer-row-icon">
-                        <FolderOpen class="ui-icon" />
-                    </span>
-                    <span>远程导入后自动关闭</span>
-                    <ToggleButton
-                        v-model="importSettingsStore.autoCloseRemoteImport"
-                        aria-label="导入后自动关闭弹窗"
-                        title="关闭此选项可保留弹窗下载原始文件"
-                    />
-                </div>
-                <div class="drawer-row">
-                    <span class="drawer-row-icon">
-                        <Clock3 class="ui-icon" />
-                    </span>
-                    <span>显示时间</span>
-                    <ToggleButton
-                        v-model="uiStore.showTime"
-                        aria-label="显示时间"
-                    />
-                </div>
-                <div class="drawer-row">
-                    <span class="drawer-row-icon">
-                        <AtSign class="ui-icon" />
-                    </span>
-                    <span>显示账号</span>
-                    <ToggleButton
-                        v-model="uiStore.showAccount"
-                        aria-label="显示账号"
-                    />
-                </div>
-                <div class="drawer-row">
-                    <span class="drawer-row-icon">
-                        <Eye class="ui-icon" />
-                    </span>
-                    <span>显示被过滤消息</span>
-                    <ToggleButton
-                        v-model="uiStore.showHidden"
-                        aria-label="显示被过滤消息"
-                    />
-                </div>
-                <div class="drawer-row">
-                    <span class="drawer-row-icon">
-                        <Code class="ui-icon" />
-                    </span>
-                    <span>启用 Markdown</span>
-                    <ToggleButton
-                        v-model="styleStore.viewSettings.enableMarkdown"
-                        aria-label="启用 Markdown"
-                    />
-                </div>
-                <RadioGroupRoot
-                    :model-value="styleStore.viewSettings.colorMode"
-                    orientation="vertical"
-                    aria-label="染色方式"
-                >
+                <div class="mobile-settings-list">
                     <div class="drawer-row">
                         <span class="drawer-row-icon">
-                            <Palette class="ui-icon" />
+                            <MessageSquareOff class="ui-icon" />
                         </span>
-                        <span>按角色名染色</span>
+                        <span>隐藏场外消息</span>
                         <ToggleButton
-                            v-model="styleStore.viewSettings.colorMode"
-                            value="playerName"
-                            aria-label="按角色名染色"
+                            v-model="styleStore.viewSettings.hideOoc"
+                            aria-label="隐藏场外消息"
+                        />
+                    </div>
+                    <div class="drawer-row">
+                        <span class="drawer-row-icon">
+                            <Terminal class="ui-icon" />
+                        </span>
+                        <span>隐藏指令消息</span>
+                        <ToggleButton
+                            v-model="styleStore.viewSettings.hideCommand"
+                            aria-label="隐藏指令消息"
+                        />
+                    </div>
+                    <div class="drawer-row">
+                        <span class="drawer-row-icon">
+                            <MessageSquare class="ui-icon" />
+                        </span>
+                        <span>导入时删除场外括号</span>
+                        <ToggleButton
+                            v-model="importSettingsStore.stripOocParentheses"
+                            aria-label="导入时删除场外括号"
+                            title="删除首尾的（）和()，不删除场外消息"
+                        />
+                    </div>
+                    <div class="drawer-row">
+                        <span class="drawer-row-icon">
+                            <FolderOpen class="ui-icon" />
+                        </span>
+                        <span>远程导入后自动关闭</span>
+                        <ToggleButton
+                            v-model="importSettingsStore.autoCloseRemoteImport"
+                            aria-label="导入后自动关闭弹窗"
+                            title="关闭此选项可保留弹窗下载原始文件"
+                        />
+                    </div>
+                    <div class="drawer-row">
+                        <span class="drawer-row-icon">
+                            <Clock3 class="ui-icon" />
+                        </span>
+                        <span>显示时间</span>
+                        <ToggleButton
+                            v-model="uiStore.showTime"
+                            aria-label="显示时间"
                         />
                     </div>
                     <div class="drawer-row">
                         <span class="drawer-row-icon">
                             <AtSign class="ui-icon" />
                         </span>
-                        <span>按账号染色</span>
+                        <span>显示账号</span>
                         <ToggleButton
-                            v-model="styleStore.viewSettings.colorMode"
-                            value="account"
-                            aria-label="按账号染色"
+                            v-model="uiStore.showAccount"
+                            aria-label="显示账号"
                         />
                     </div>
-                </RadioGroupRoot>
-                <div class="drawer-row">
-                    <span class="drawer-row-icon">
-                        <Monitor class="ui-icon" />
-                    </span>
-                    <span>深色模式跟随系统</span>
-                    <ToggleButton
-                        :model-value="uiStore.followSystem"
-                        aria-label="深色模式跟随系统"
-                        @update:model-value="
-                            uiStore.setFollowSystem(Boolean($event))
-                        "
-                    />
+                    <div class="drawer-row">
+                        <span class="drawer-row-icon">
+                            <Eye class="ui-icon" />
+                        </span>
+                        <span>显示被过滤消息</span>
+                        <ToggleButton
+                            v-model="uiStore.showHidden"
+                            aria-label="显示被过滤消息"
+                        />
+                    </div>
+                    <div class="drawer-row">
+                        <span class="drawer-row-icon">
+                            <Code class="ui-icon" />
+                        </span>
+                        <span>启用 Markdown</span>
+                        <ToggleButton
+                            v-model="styleStore.viewSettings.enableMarkdown"
+                            aria-label="启用 Markdown"
+                        />
+                    </div>
+                    <RadioGroupRoot
+                        :model-value="styleStore.viewSettings.colorMode"
+                        orientation="vertical"
+                        aria-label="染色方式"
+                    >
+                        <div class="drawer-row">
+                            <span class="drawer-row-icon">
+                                <Palette class="ui-icon" />
+                            </span>
+                            <span>按角色名染色</span>
+                            <ToggleButton
+                                v-model="styleStore.viewSettings.colorMode"
+                                value="playerName"
+                                aria-label="按角色名染色"
+                            />
+                        </div>
+                        <div class="drawer-row">
+                            <span class="drawer-row-icon">
+                                <AtSign class="ui-icon" />
+                            </span>
+                            <span>按账号染色</span>
+                            <ToggleButton
+                                v-model="styleStore.viewSettings.colorMode"
+                                value="account"
+                                aria-label="按账号染色"
+                            />
+                        </div>
+                    </RadioGroupRoot>
+                    <div class="drawer-row">
+                        <span class="drawer-row-icon">
+                            <Monitor class="ui-icon" />
+                        </span>
+                        <span>深色模式跟随系统</span>
+                        <ToggleButton
+                            :model-value="uiStore.followSystem"
+                            aria-label="深色模式跟随系统"
+                            @update:model-value="
+                                uiStore.setFollowSystem(Boolean($event))
+                            "
+                        />
+                    </div>
+                    <div class="drawer-row">
+                        <span class="drawer-row-icon">
+                            <FileImage class="ui-icon" />
+                        </span>
+                        <span>预览始终白色背景</span>
+                        <ToggleButton
+                            v-model="uiStore.exportPreviewAlwaysWhite"
+                            aria-label="预览始终白色背景"
+                        />
+                    </div>
                 </div>
-                <div class="drawer-row">
-                    <span class="drawer-row-icon">
-                        <FileImage class="ui-icon" />
-                    </span>
-                    <span>预览始终白色背景</span>
-                    <ToggleButton
-                        v-model="uiStore.exportPreviewAlwaysWhite"
-                        aria-label="预览始终白色背景"
-                    />
-                </div>
-            </div>
-        </aside>
-    </div>
+            </aside>
+        </div>
+    </Transition>
 </template>
 
 <script setup lang="ts">

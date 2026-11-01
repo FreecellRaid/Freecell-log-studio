@@ -9,8 +9,8 @@
         <MobileWorkspace />
         <MobileHistoryFloat />
         <MobilePanelDock />
-        <MobileBottomPanelDrawer v-if="mobileUiStore.bottomPanelOpen" />
-        <MobileLeftDrawer v-if="mobileUiStore.leftDrawerOpen" />
+        <MobileBottomPanelDrawer />
+        <MobileLeftDrawer />
         <MobileActiveSheet v-if="mobileUiStore.activeSheet" />
     </div>
 </template>
