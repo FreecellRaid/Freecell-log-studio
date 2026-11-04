@@ -248,14 +248,12 @@ textarea {
     padding: 8px;
     font: inherit;
     color: var(--text-primary);
-    background: var(--bg-input);
     border: 1px solid var(--border-color);
     border-radius: 4px;
 }
 .replacement-form :deep(.select-trigger) {
     padding: 8px;
     font: inherit;
-    background: var(--bg-input);
 }
 textarea {
     resize: vertical;

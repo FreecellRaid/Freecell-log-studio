@@ -158,27 +158,14 @@
                     <div class="form-row two-col">
                         <div class="form-group">
                             <label>优先级</label>
-                            <input
-                                class="form-control"
-                                type="number"
-                                min="1"
-                                :value="
-                                    getRuleDraftValue(
-                                        rule.ruleId,
-                                        'priority',
-                                        String(rule.priority),
-                                    )
-                                "
-                                @input="
-                                    updateRuleDraft(
-                                        rule.ruleId,
-                                        'priority',
-                                        $event,
-                                    )
-                                "
-                                v-click-outside="() => commitRulePriority(rule)"
-                                @keydown.enter.exact.prevent="
-                                    commitRulePriority(rule)
+                            <NumberInput
+                                :model-value="rule.priority"
+                                :min="1"
+                                aria-label="规则优先级"
+                                @update:model-value="
+                                    handleUpdate(rule.ruleId, {
+                                        priority: $event,
+                                    })
                                 "
                             />
                         </div>
@@ -217,7 +204,6 @@
                             @update:model-value="
                                 updateIdentityFilter(rule, 'playerName', $event)
                             "
-                            placeholder="可下拉选择或手动输入，回车确认"
                         />
                     </div>
                     <div class="form-group">
@@ -230,7 +216,6 @@
                             @update:model-value="
                                 updateIdentityFilter(rule, 'account', $event)
                             "
-                            placeholder="可下拉选择或手动输入，回车确认"
                         />
                     </div>
                     <div class="form-group">
@@ -409,6 +394,7 @@
 </template>
 
 <script setup lang="ts">
+import NumberInput from '@/components/common/NumberInput.vue';
 import PopoverSelect from '@/components/common/PopoverSelect.vue';
 import MultiTagSelect, {
     type SelectOption,
@@ -443,11 +429,7 @@ const activeViewScope = computed<SelectionScope>(() => {
 const activeContext = useSelectionContext(activeViewScope);
 const expandedRules = ref<Set<string>>(new Set());
 
-type RuleDraftField =
-    | 'ruleName'
-    | 'priority'
-    | 'filter.content'
-    | 'filter.note';
+type RuleDraftField = 'ruleName' | 'filter.content' | 'filter.note';
 const ruleDrafts = useDraftValues<RuleDraftField>();
 
 function toggleExpand(ruleId: string) {
@@ -500,13 +482,6 @@ function updateRuleDraft(ruleId: string, field: RuleDraftField, event: Event) {
 function commitRuleName(rule: StyleRule) {
     ruleDrafts.commit(rule.ruleId, 'ruleName', (value) => {
         handleUpdate(rule.ruleId, { ruleName: value });
-    });
-}
-
-function commitRulePriority(rule: StyleRule) {
-    ruleDrafts.commit(rule.ruleId, 'priority', (value) => {
-        const priority = Math.max(1, parseInt(value, 10) || 1);
-        handleUpdate(rule.ruleId, { priority });
     });
 }
 
@@ -783,5 +758,8 @@ const clearIds = (rule: StyleRule) => {
     margin-top: 8px;
     font-size: 12px;
     color: var(--text-secondary);
+}
+:deep(.number-input) {
+    font-size: 15px;
 }
 </style>

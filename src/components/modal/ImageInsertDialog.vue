@@ -25,11 +25,10 @@
                 </label>
                 <label v-if="editing" for="image-order">
                     <strong>图片位置（共 {{ imageCount }} 张）</strong>
-                    <input
+                    <NumberInput
                         id="image-order"
-                        v-model.number="position"
-                        type="number"
-                        min="1"
+                        v-model="position"
+                        :min="1"
                         :max="imageCount"
                         required
                         :disabled="store.loading"
@@ -121,6 +120,7 @@
     </ModalDialog>
 </template>
 <script setup lang="ts">
+import NumberInput from '@/components/common/NumberInput.vue';
 import { imageResourceText } from '@/data/imageResourceText';
 import { normalizeImageUrl } from '@/utils/imageUrl';
 import { ref, computed, watch, onUnmounted } from 'vue';
@@ -291,10 +291,13 @@ onUnmounted(store.cancel);
     min-width: 0;
     box-sizing: border-box;
     padding: 8px;
-    background: var(--bg-input);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
     border-radius: 4px;
+}
+.image-fields :deep(.number-input) {
+    padding: 7px;
+    font: inherit;
 }
 .image-buttons {
     width: 100%;

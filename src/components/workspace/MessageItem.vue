@@ -342,7 +342,6 @@ watch(
     line-height: inherit;
     border: 1px solid var(--active-accent);
     border-radius: 4px;
-    background: var(--bg-input);
     color: var(--text-main);
     resize: vertical;
     outline: none;

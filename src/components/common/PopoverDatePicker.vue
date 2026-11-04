@@ -623,9 +623,12 @@ function toggle() {
     flex-shrink: 0;
     border: none;
     border-radius: 4px;
+    padding: 0px;
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
+    height: 22px;
+    width: 22px;
 }
 
 .calendar-button:hover {
